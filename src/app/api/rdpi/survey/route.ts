@@ -4,6 +4,7 @@ import { submitRdpiSurvey, validateRdpiAnswers } from "@/lib/rdpi/survey";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 const recentIp = new Map<string, number[]>();
 
@@ -37,6 +38,35 @@ export async function POST(req: Request) {
   }
 
   const ipHash = createHash("sha256").update(ip).digest("hex").slice(0, 32);
+
+  let account: {
+    created: boolean;
+    emailVerified: boolean;
+    verificationSent: boolean;
+  } = {
+    created: false,
+    emailVerified: false,
+    verificationSent: false,
+  };
+
+  try {
+    const { ensureRdpiSurveyUser } = await import("@/lib/rdpi/ensure-user");
+    const user = await ensureRdpiSurveyUser({
+      email: validated.answers.email,
+      fullName: validated.answers.fullName,
+      phone: validated.answers.phone,
+      locale: "fr",
+    });
+    account = {
+      created: user.created,
+      emailVerified: user.emailVerified,
+      verificationSent: user.verificationSent,
+    };
+    validated.answers.mcbuleliContactOptIn = true;
+  } catch (err) {
+    console.warn("[api/rdpi/survey] ensure user failed", err);
+  }
+
   const row = await submitRdpiSurvey({
     answers: validated.answers,
     meta: {
@@ -46,5 +76,9 @@ export async function POST(req: Request) {
     },
   });
 
-  return NextResponse.json({ ok: true, id: row?.id });
+  return NextResponse.json({
+    ok: true,
+    id: row?.id,
+    account,
+  });
 }

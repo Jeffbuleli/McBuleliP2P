@@ -199,7 +199,7 @@ function ScaleRow({
   labels?: readonly string[];
 }) {
   return (
-    <div className="rounded-2xl border border-[#E5E5E0] bg-white px-3.5 py-3.5 sm:px-4">
+    <div className="rounded-2xl border border-[#E5E5E0] bg-white px-3.5 py-3.5 shadow-[0_10px_28px_-22px_rgba(34,34,34,0.45)] sm:px-4">
       <p className="mb-3 text-sm font-semibold leading-snug text-[#1c1917]">
         {label}
       </p>
@@ -239,18 +239,34 @@ function ScaleRow({
   );
 }
 
+function FieldCard({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`rounded-2xl border border-[#E5E5E0] bg-white p-4 shadow-[0_10px_28px_-22px_rgba(34,34,34,0.45)] ${className}`}
+    >
+      {children}
+    </div>
+  );
+}
+
 function TextInput(
   props: React.InputHTMLAttributes<HTMLInputElement> & { label: string },
 ) {
   const { label, className, ...rest } = props;
   return (
-    <div>
+    <FieldCard>
       <FieldLabel>{label}</FieldLabel>
       <input
         {...rest}
-        className={`w-full rounded-2xl border border-[#E5E5E0] bg-white px-4 py-3.5 text-sm text-[#1c1917] outline-none transition placeholder:text-[#a8a29e] focus:border-[color:var(--rdpi-blue)] focus:ring-2 focus:ring-[color:var(--rdpi-blue)]/15 ${className ?? ""}`}
+        className={`mt-2 w-full rounded-xl border border-[#E5E5E0] bg-[#FAFAF8] px-4 py-3 text-sm text-[#1c1917] outline-none transition placeholder:text-[#a8a29e] focus:border-[color:var(--rdpi-blue)] focus:bg-white focus:ring-2 focus:ring-[color:var(--rdpi-blue)]/15 ${className ?? ""}`}
       />
-    </div>
+    </FieldCard>
   );
 }
 
@@ -259,13 +275,13 @@ function TextArea(
 ) {
   const { label, className, ...rest } = props;
   return (
-    <div>
+    <FieldCard>
       <FieldLabel>{label}</FieldLabel>
       <textarea
         {...rest}
-        className={`min-h-[120px] w-full rounded-2xl border border-[#E5E5E0] bg-white px-4 py-3.5 text-sm text-[#1c1917] outline-none transition placeholder:text-[#a8a29e] focus:border-[color:var(--rdpi-blue)] focus:ring-2 focus:ring-[color:var(--rdpi-blue)]/15 ${className ?? ""}`}
+        className={`mt-2 min-h-[120px] w-full rounded-xl border border-[#E5E5E0] bg-[#FAFAF8] px-4 py-3 text-sm text-[#1c1917] outline-none transition placeholder:text-[#a8a29e] focus:border-[color:var(--rdpi-blue)] focus:bg-white focus:ring-2 focus:ring-[color:var(--rdpi-blue)]/15 ${className ?? ""}`}
       />
-    </div>
+    </FieldCard>
   );
 }
 
@@ -276,8 +292,12 @@ export function RdpiSurveyForm() {
   );
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const [accountInfo, setAccountInfo] = useState<{
+    created: boolean;
+    emailVerified: boolean;
+    verificationSent: boolean;
+  } | null>(null);
   const [submittedEmail, setSubmittedEmail] = useState("");
-  const [submittedOptIn, setSubmittedOptIn] = useState(false);
   const [pending, startTransition] = useTransition();
 
   const progress = useMemo(() => {
@@ -384,6 +404,11 @@ export function RdpiSurveyForm() {
       const json = (await res.json().catch(() => null)) as {
         ok?: boolean;
         error?: string;
+        account?: {
+          created?: boolean;
+          emailVerified?: boolean;
+          verificationSent?: boolean;
+        };
       } | null;
       if (!res.ok || !json?.ok) {
         const code = json?.error;
@@ -399,7 +424,11 @@ export function RdpiSurveyForm() {
         return;
       }
       setSubmittedEmail(answers.email.trim().toLowerCase());
-      setSubmittedOptIn(Boolean(answers.mcbuleliContactOptIn));
+      setAccountInfo({
+        created: Boolean(json.account?.created),
+        emailVerified: Boolean(json.account?.emailVerified),
+        verificationSent: Boolean(json.account?.verificationSent),
+      });
       setDone(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     });
@@ -421,8 +450,12 @@ export function RdpiSurveyForm() {
               Merci pour votre contribution
             </h2>
             <p className="relative mt-3 text-sm leading-relaxed text-white/80">
-              Vos réponses ont bien été enregistrées. RDPI pourra vous recontacter
-              pour le résumé des résultats.
+              Vos réponses ont bien été enregistrées pour RDPI Think Tank.
+              {accountInfo?.verificationSent
+                ? " Un email de confirmation McBuleli vient de vous être envoyé."
+                : accountInfo?.emailVerified
+                  ? " Votre compte McBuleli était déjà confirmé."
+                  : ""}
             </p>
           </div>
           <div className="space-y-3 bg-[#FAFAF8] px-5 py-5">
@@ -433,12 +466,26 @@ export function RdpiSurveyForm() {
                 un écosystème numérique plus compétitif en RDC.
               </p>
             </div>
-            {submittedOptIn && submittedEmail ? (
+            {accountInfo?.verificationSent && submittedEmail ? (
+              <>
+                <a
+                  href="/verify-email/pending"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[color:var(--rdpi-blue)] px-5 py-3 text-sm font-bold text-white"
+                >
+                  Confirmer mon email McBuleli
+                </a>
+                <p className="text-center text-xs text-[#78716c]">
+                  Après confirmation, utilisez « Mot de passe oublié » sur la
+                  page de connexion pour définir votre mot de passe.
+                </p>
+              </>
+            ) : null}
+            {accountInfo?.emailVerified ? (
               <a
-                href={`/register?email=${encodeURIComponent(submittedEmail)}&from=rdpi`}
+                href="/login"
                 className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[color:var(--rdpi-blue)] px-5 py-3 text-sm font-bold text-white"
               >
-                Créer un compte McBuleli avec cet email
+                Se connecter à McBuleli
               </a>
             ) : null}
             <a
@@ -542,66 +589,58 @@ export function RdpiSurveyForm() {
                 placeholder="0812 345 678 ou +243…"
                 autoComplete="tel"
               />
-              <p className="-mt-2 text-xs leading-relaxed text-[#78716c]">
-                Pour le suivi de l&apos;étude RDPI (résumé des résultats). Format
-                RDC : 08… / 09… ou +243…
+              <p className="-mt-1 px-1 text-xs leading-relaxed text-[#78716c]">
+                Obligatoire pour RDPI (suivi de l&apos;étude). Un compte McBuleli
+                est créé avec votre email à l&apos;envoi - confirmation par
+                email si besoin.
               </p>
-              <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-[#E5E5E0] bg-[#FAFAF8] px-4 py-3 text-sm text-[#44403c]">
-                <input
-                  type="checkbox"
-                  className="mt-1 h-4 w-4 shrink-0 accent-[color:var(--rdpi-blue)]"
-                  checked={answers.mcbuleliContactOptIn}
-                  onChange={(e) =>
-                    patch({ mcbuleliContactOptIn: e.target.checked })
-                  }
-                />
-                <span>
-                  J&apos;accepte aussi d&apos;être contacté(e) par McBuleli sur
-                  des outils utiles aux acteurs du numérique{" "}
-                  <span className="text-[#a8a29e]">(optionnel)</span>.
-                </span>
-              </label>
-              <div>
+              <FieldCard>
                 <FieldLabel>Sexe</FieldLabel>
-                <ChoiceGrid
-                  name="sex"
-                  options={SEX_OPTIONS}
-                  value={answers.sex}
-                  onChange={(sex) =>
-                    patch({ sex: sex as RdpiSurveyAnswers["sex"] })
-                  }
-                />
-              </div>
-              <div>
+                <div className="mt-2">
+                  <ChoiceGrid
+                    name="sex"
+                    options={SEX_OPTIONS}
+                    value={answers.sex}
+                    onChange={(sex) =>
+                      patch({ sex: sex as RdpiSurveyAnswers["sex"] })
+                    }
+                  />
+                </div>
+              </FieldCard>
+              <FieldCard>
                 <FieldLabel>Âge</FieldLabel>
-                <ChoiceGrid
-                  name="age"
-                  options={AGE_OPTIONS}
-                  value={answers.age}
-                  onChange={(age) =>
-                    patch({ age: age as RdpiSurveyAnswers["age"] })
-                  }
-                />
-              </div>
+                <div className="mt-2">
+                  <ChoiceGrid
+                    name="age"
+                    options={AGE_OPTIONS}
+                    value={answers.age}
+                    onChange={(age) =>
+                      patch({ age: age as RdpiSurveyAnswers["age"] })
+                    }
+                  />
+                </div>
+              </FieldCard>
               <TextInput
                 label="Province d'exercice principal"
                 value={answers.province}
                 onChange={(e) => patch({ province: e.target.value })}
                 placeholder="Ex. Kinshasa, Nord-Kivu..."
               />
-              <div>
+              <FieldCard>
                 <FieldLabel>Activité principale</FieldLabel>
-                <ChoiceGrid
-                  name="activity"
-                  options={ACTIVITY_OPTIONS}
-                  value={answers.activity}
-                  onChange={(activity) =>
-                    patch({
-                      activity: activity as RdpiSurveyAnswers["activity"],
-                    })
-                  }
-                />
-              </div>
+                <div className="mt-2">
+                  <ChoiceGrid
+                    name="activity"
+                    options={ACTIVITY_OPTIONS}
+                    value={answers.activity}
+                    onChange={(activity) =>
+                      patch({
+                        activity: activity as RdpiSurveyAnswers["activity"],
+                      })
+                    }
+                  />
+                </div>
+              </FieldCard>
               {answers.activity === "Autre" ? (
                 <TextInput
                   label="Précisez"
@@ -609,34 +648,38 @@ export function RdpiSurveyForm() {
                   onChange={(e) => patch({ activityOther: e.target.value })}
                 />
               ) : null}
-              <div>
+              <FieldCard>
                 <FieldLabel>Ancienneté dans cette activité</FieldLabel>
-                <ChoiceGrid
-                  name="years"
-                  options={YEARS_OPTIONS}
-                  value={answers.yearsActive}
-                  onChange={(yearsActive) =>
-                    patch({
-                      yearsActive:
-                        yearsActive as RdpiSurveyAnswers["yearsActive"],
-                    })
-                  }
-                />
-              </div>
-              <div>
+                <div className="mt-2">
+                  <ChoiceGrid
+                    name="years"
+                    options={YEARS_OPTIONS}
+                    value={answers.yearsActive}
+                    onChange={(yearsActive) =>
+                      patch({
+                        yearsActive:
+                          yearsActive as RdpiSurveyAnswers["yearsActive"],
+                      })
+                    }
+                  />
+                </div>
+              </FieldCard>
+              <FieldCard>
                 <FieldLabel>Effectif de l&apos;entreprise</FieldLabel>
-                <ChoiceGrid
-                  name="employees"
-                  options={EMPLOYEES_OPTIONS}
-                  value={answers.employees}
-                  onChange={(employees) =>
-                    patch({
-                      employees:
-                        employees as RdpiSurveyAnswers["employees"],
-                    })
-                  }
-                />
-              </div>
+                <div className="mt-2">
+                  <ChoiceGrid
+                    name="employees"
+                    options={EMPLOYEES_OPTIONS}
+                    value={answers.employees}
+                    onChange={(employees) =>
+                      patch({
+                        employees:
+                          employees as RdpiSurveyAnswers["employees"],
+                      })
+                    }
+                  />
+                </div>
+              </FieldCard>
             </section>
           ) : null}
 
@@ -676,54 +719,62 @@ export function RdpiSurveyForm() {
               <SectionTitle sectionId="impact">
                 Section D - Impact économique attendu
               </SectionTitle>
-              <div>
+              <FieldCard>
                 <FieldLabel>D1. Impact sur votre organisation</FieldLabel>
-                <ChoiceGrid
-                  name="impactOrg"
-                  options={IMPACT_ORG_OPTIONS}
-                  value={answers.impactOrg}
-                  onChange={(impactOrg) =>
-                    patch({
-                      impactOrg: impactOrg as RdpiSurveyAnswers["impactOrg"],
-                    })
-                  }
-                />
-              </div>
-              <div>
+                <div className="mt-2">
+                  <ChoiceGrid
+                    name="impactOrg"
+                    options={IMPACT_ORG_OPTIONS}
+                    value={answers.impactOrg}
+                    onChange={(impactOrg) =>
+                      patch({
+                        impactOrg: impactOrg as RdpiSurveyAnswers["impactOrg"],
+                      })
+                    }
+                  />
+                </div>
+              </FieldCard>
+              <FieldCard>
                 <FieldLabel>D2. Domaine(s) le(s) plus affecté(s)</FieldLabel>
-                <MultiChoice
-                  options={IMPACT_DOMAIN_OPTIONS}
-                  values={answers.impactDomain}
-                  onChange={(impactDomain) => patch({ impactDomain })}
-                />
-              </div>
-              <div>
+                <div className="mt-2">
+                  <MultiChoice
+                    options={IMPACT_DOMAIN_OPTIONS}
+                    values={answers.impactDomain}
+                    onChange={(impactDomain) => patch({ impactDomain })}
+                  />
+                </div>
+              </FieldCard>
+              <FieldCard>
                 <FieldLabel>
                   D3. Si les taxes restent inchangées, envisagez-vous de...
                 </FieldLabel>
-                <MultiChoice
-                  options={ACTION_OPTIONS}
-                  values={answers.actions}
-                  onChange={(actions) => patch({ actions })}
-                />
-              </div>
-              <div>
+                <div className="mt-2">
+                  <MultiChoice
+                    options={ACTION_OPTIONS}
+                    values={answers.actions}
+                    onChange={(actions) => patch({ actions })}
+                  />
+                </div>
+              </FieldCard>
+              <FieldCard>
                 <FieldLabel>
                   D4. Les nouvelles taxes augmenteront-elles le coût des services
                   numériques pour les consommateurs ?
                 </FieldLabel>
-                <ChoiceGrid
-                  name="consumerCost"
-                  options={YES_NO_UNCERTAIN}
-                  value={answers.consumerCost}
-                  onChange={(consumerCost) =>
-                    patch({
-                      consumerCost:
-                        consumerCost as RdpiSurveyAnswers["consumerCost"],
-                    })
-                  }
-                />
-              </div>
+                <div className="mt-2">
+                  <ChoiceGrid
+                    name="consumerCost"
+                    options={YES_NO_UNCERTAIN}
+                    value={answers.consumerCost}
+                    onChange={(consumerCost) =>
+                      patch({
+                        consumerCost:
+                          consumerCost as RdpiSurveyAnswers["consumerCost"],
+                      })
+                    }
+                  />
+                </div>
+              </FieldCard>
               <TextArea
                 label="D5. Les nouvelles taxes décourageront-elles les investisseurs étrangers ? Si oui, pourquoi ?"
                 value={answers.foreignInvestors}
@@ -762,42 +813,46 @@ export function RdpiSurveyForm() {
               <SectionTitle sectionId="opportunites">
                 Section F - Opportunités
               </SectionTitle>
-              <div>
+              <FieldCard>
                 <FieldLabel>
                   Ces taxes et redevances présentent-elles une opportunité pour
                   la RDC de se positionner comme pays réglementaire du secteur
                   numérique ?
                 </FieldLabel>
-                <ChoiceGrid
-                  name="opp"
-                  options={YES_NO}
-                  value={answers.opportunityRegulation}
-                  onChange={(opportunityRegulation) =>
-                    patch({
-                      opportunityRegulation:
-                        opportunityRegulation as RdpiSurveyAnswers["opportunityRegulation"],
-                    })
-                  }
-                />
-              </div>
-              <div>
+                <div className="mt-2">
+                  <ChoiceGrid
+                    name="opp"
+                    options={YES_NO}
+                    value={answers.opportunityRegulation}
+                    onChange={(opportunityRegulation) =>
+                      patch({
+                        opportunityRegulation:
+                          opportunityRegulation as RdpiSurveyAnswers["opportunityRegulation"],
+                      })
+                    }
+                  />
+                </div>
+              </FieldCard>
+              <FieldCard>
                 <FieldLabel>
                   Le Code du numérique prévoit trois régimes (autorisation,
                   déclaration, homologation). Leur réglementation favorise-t-elle
                   la formalisation et une économie numérique inclusive ?
                 </FieldLabel>
-                <ChoiceGrid
-                  name="régimes"
-                  options={YES_NO}
-                  value={answers.threeRegimes}
-                  onChange={(threeRegimes) =>
-                    patch({
-                      threeRegimes:
-                        threeRegimes as RdpiSurveyAnswers["threeRegimes"],
-                    })
-                  }
-                />
-              </div>
+                <div className="mt-2">
+                  <ChoiceGrid
+                    name="régimes"
+                    options={YES_NO}
+                    value={answers.threeRegimes}
+                    onChange={(threeRegimes) =>
+                      patch({
+                        threeRegimes:
+                          threeRegimes as RdpiSurveyAnswers["threeRegimes"],
+                      })
+                    }
+                  />
+                </div>
+              </FieldCard>
             </section>
           ) : null}
 
@@ -850,25 +905,27 @@ export function RdpiSurveyForm() {
                 value={answers.reconcileFiscal}
                 onChange={(e) => patch({ reconcileFiscal: e.target.value })}
               />
-              <div>
+              <FieldCard>
                 <FieldLabel>
                   G5. Même en cas de réduction des taxes, cette mesure
                   produirait-elle les effets escomptés si le système de
                   perception n&apos;etait pas entièrement numérisé (corruption,
                   informalité, lourdeurs) ?
                 </FieldLabel>
-                <ChoiceGrid
-                  name="digitize"
-                  options={YES_NO}
-                  value={answers.digitizePerception}
-                  onChange={(digitizePerception) =>
-                    patch({
-                      digitizePerception:
-                        digitizePerception as RdpiSurveyAnswers["digitizePerception"],
-                    })
-                  }
-                />
-              </div>
+                <div className="mt-2">
+                  <ChoiceGrid
+                    name="digitize"
+                    options={YES_NO}
+                    value={answers.digitizePerception}
+                    onChange={(digitizePerception) =>
+                      patch({
+                        digitizePerception:
+                          digitizePerception as RdpiSurveyAnswers["digitizePerception"],
+                      })
+                    }
+                  />
+                </div>
+              </FieldCard>
               <TextArea
                 label="G6. Observations ou recommandations supplémentaires"
                 value={answers.extraObservations}

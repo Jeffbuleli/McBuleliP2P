@@ -273,7 +273,7 @@ export const SURVEY_INTRO = {
     "En date du 20 juillet 2026, le Ministère de l'Economie numérique et le Ministère des Finances en République démocratique du Congo ont pris, en application du Code du numérique, l'Arrêté interministériel n°015/CAB/MIN/EN/AKIM/MLNS/ALM/2026 et CAB/MIN/FINACES/2026/096 portant fixation des taux des droits, taxes et redevances à percevoir à l'initiative du Ministère de l'Economie Numérique.",
     "La publication de cet arrêté a suscité de vives réactions. Les acteurs du secteur numérique ont exprimé leur inquiétude face au nouveau barème - perçu comme une barrière majeure pour les startups aux ressources limitées, pourtant porteuses d'innovation et d'emplois.",
     "C'est dans ce contexte que le Research for Development and Prosperity Institute (RDPI Think Tank) mène une étude afin d'évaluer les effets de cette fiscalité. Les résultats permettront de formuler des recommandations fondées sur le terrain.",
-    "Vos réponses resteront confidentielles. L'email et le téléphone servent au suivi de l'étude par RDPI Think Tank (résumé des résultats). McBuleli n'utilise vos coordonnées que si vous l'acceptez explicitement.",
+    "Vos réponses restent confidentielles pour l'étude RDPI. Email et téléphone sont requis pour le suivi. À l'envoi, un compte McBuleli est créé avec votre email ; un email de confirmation est envoyé uniquement si le compte n'est pas déjà vérifié.",
   ],
 } as const;
 
