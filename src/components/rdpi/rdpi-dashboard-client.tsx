@@ -2,16 +2,22 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import {
-  AvecDonut,
-  AvecHorizontalBars,
-} from "@/components/groups/avec-charts";
 import { RdpiPoweredFooter } from "@/components/rdpi/rdpi-powered-footer";
 import {
   RdpiIlluChart,
   RdpiIlluShield,
   RdpiIlluSunburst,
 } from "@/components/rdpi/rdpi-illustrations";
+import {
+  RDPI_CHART,
+  RDPI_SERIES,
+  RdpiDonutLegend,
+  RdpiGauge,
+  RdpiHorizontalBars,
+  RdpiScoreRing,
+  RdpiStatTile,
+  RdpiVerticalBars,
+} from "@/components/rdpi/rdpi-stats-visuals";
 
 type CountBucket = { label: string; value: number };
 type Stats = {
@@ -38,16 +44,6 @@ type Stats = {
   }>;
 };
 
-const CHART_COLORS = [
-  "#1E5EFF",
-  "#E8B923",
-  "#0A0A0A",
-  "#4C7DFF",
-  "#C9A227",
-  "#64748B",
-  "#93A8FF",
-];
-
 function VisualCard({
   children,
   className = "",
@@ -64,28 +60,6 @@ function VisualCard({
   );
 }
 
-function StatCard({
-  label,
-  value,
-  hint,
-}: {
-  label: string;
-  value: string | number;
-  hint?: string;
-}) {
-  return (
-    <VisualCard className="p-4">
-      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#78716c]">
-        {label}
-      </p>
-      <p className="mt-2 font-[family-name:var(--font-rdpi-display)] text-3xl font-semibold tracking-tight text-[#0c0a09]">
-        {value}
-      </p>
-      {hint ? <p className="mt-1 text-xs text-[#a8a29e]">{hint}</p> : null}
-    </VisualCard>
-  );
-}
-
 function ChartPanel({
   title,
   children,
@@ -98,49 +72,6 @@ function ChartPanel({
       <h3 className="mb-4 text-sm font-bold text-[#0c0a09]">{title}</h3>
       {children}
     </VisualCard>
-  );
-}
-
-function DonutWithLegend({ items }: { items: CountBucket[] }) {
-  if (items.length === 0) {
-    return (
-      <p className="text-sm text-[#a8a29e]">Pas encore de données.</p>
-    );
-  }
-  const total = items.reduce((s, x) => s + x.value, 0) || 1;
-  return (
-    <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start">
-      <div className="shrink-0 rounded-2xl border border-[#E5E5E0] bg-white p-3">
-        <AvecDonut
-          size={128}
-          segments={items.map((it, i) => ({
-            value: it.value,
-            color: CHART_COLORS[i % CHART_COLORS.length],
-          }))}
-        />
-      </div>
-      <ul className="w-full space-y-2.5 text-sm">
-        {items.map((it, i) => (
-          <li
-            key={it.label}
-            className="flex items-center justify-between gap-3 rounded-xl border border-[#E5E5E0] bg-white px-3 py-2"
-          >
-            <span className="flex min-w-0 items-center gap-2">
-              <span
-                className="h-2.5 w-2.5 shrink-0 rounded-full"
-                style={{ background: CHART_COLORS[i % CHART_COLORS.length] }}
-              />
-              <span className="truncate font-medium text-[#1c1917]">
-                {it.label}
-              </span>
-            </span>
-            <span className="shrink-0 font-mono text-xs tabular-nums text-[#78716c]">
-              {it.value} - {Math.round((it.value / total) * 100)}%
-            </span>
-          </li>
-        ))}
-      </ul>
-    </div>
   );
 }
 
@@ -275,6 +206,10 @@ export function RdpiDashboardClient() {
   const negImpact =
     (stats.byImpactOrg.find((x) => x.label === "Négatif")?.value ?? 0) +
     (stats.byImpactOrg.find((x) => x.label === "Très négatif")?.value ?? 0);
+  const negImpactPct =
+    stats.total > 0 ? Math.round((negImpact / stats.total) * 100) : 0;
+  const reformMax =
+    Math.max(...stats.reformPriority.map((r) => r.avgRank), 1) || 1;
 
   return (
     <div className="mx-auto max-w-5xl px-4 pb-10 pt-6">
@@ -315,43 +250,84 @@ export function RdpiDashboardClient() {
           </div>
         </div>
         <div className="grid gap-3 bg-[#FAFAF8] p-4 sm:grid-cols-2 lg:grid-cols-4 sm:p-5">
-          <StatCard label="Réponses" value={stats.total} hint="Total collecté" />
-          <StatCard
+          <RdpiStatTile
+            label="Réponses"
+            value={stats.total}
+            hint="Total collecté"
+            color={RDPI_CHART.blue}
+            maxHint={40}
+          />
+          <RdpiStatTile
             label="Impact négatif"
             value={negImpact}
             hint="Négatif + Très négatif"
+            color={RDPI_CHART.gold}
+            maxHint={Math.max(stats.total, 1)}
           />
-          <StatCard
+          <RdpiStatTile
             label="Activité dominante"
             value={
               topActivity.length > 18
                 ? `${topActivity.slice(0, 18)}...`
                 : topActivity
             }
+            color={RDPI_CHART.soft}
           />
-          <StatCard
+          <RdpiStatTile
             label="Provinces"
             value={stats.byProvince.length}
             hint="Localisations distinctes"
+            color={RDPI_CHART.ink}
+            maxHint={26}
           />
         </div>
       </VisualCard>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <ChartPanel title="Répartition par sexe">
-          <DonutWithLegend items={stats.bySex} />
+          <RdpiVerticalBars
+            buckets={stats.bySex.map((x) => ({
+              label: x.label,
+              count: x.value,
+            }))}
+            totalLabel={`${stats.total} réponses`}
+          />
         </ChartPanel>
+
         <ChartPanel title="Tranches d'âge">
-          <DonutWithLegend items={stats.byAge} />
+          <RdpiVerticalBars
+            buckets={stats.byAge.map((x) => ({
+              label: x.label,
+              count: x.value,
+            }))}
+          />
         </ChartPanel>
+
         <ChartPanel title="Impact sur l'organisation">
-          <DonutWithLegend items={stats.byImpactOrg} />
+          <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start">
+            <RdpiScoreRing
+              value={negImpactPct}
+              label="Négatif"
+              color={RDPI_CHART.gold}
+            />
+            <div className="min-w-0 flex-1">
+              <RdpiDonutLegend items={stats.byImpactOrg} />
+            </div>
+          </div>
         </ChartPanel>
+
         <ChartPanel title="Coût pour les consommateurs">
-          <DonutWithLegend items={stats.byConsumerCost} />
+          <RdpiVerticalBars
+            buckets={stats.byConsumerCost.map((x) => ({
+              label: x.label,
+              count: x.value,
+            }))}
+          />
         </ChartPanel>
+
         <ChartPanel title="Activités (top)">
-          <AvecHorizontalBars
+          <RdpiHorizontalBars
+            color={RDPI_CHART.blue}
             items={stats.byActivity.slice(0, 8).map((x) => ({
               label: x.label,
               value: x.value,
@@ -359,8 +335,10 @@ export function RdpiDashboardClient() {
             }))}
           />
         </ChartPanel>
+
         <ChartPanel title="Provinces (top)">
-          <AvecHorizontalBars
+          <RdpiHorizontalBars
+            color={RDPI_CHART.gold}
             items={stats.byProvince.slice(0, 8).map((x) => ({
               label: x.label,
               value: x.value,
@@ -368,8 +346,11 @@ export function RdpiDashboardClient() {
             }))}
           />
         </ChartPanel>
+
         <ChartPanel title="Perception (moyenne Likert 1-5)">
-          <AvecHorizontalBars
+          <RdpiHorizontalBars
+            color={RDPI_CHART.soft}
+            valueDecimals={1}
             items={stats.likertAvg.map((x) => ({
               label:
                 x.label.length > 42 ? `${x.label.slice(0, 42)}...` : x.label,
@@ -378,49 +359,65 @@ export function RdpiDashboardClient() {
             }))}
           />
         </ChartPanel>
+
         <ChartPanel title="Obstacles (intensité moyenne)">
-          <AvecHorizontalBars
-            items={stats.obstaclesAvg.map((x) => ({
-              label: x.label,
-              value: x.avg,
-              max: 5,
+          {stats.obstaclesAvg.length === 0 ? (
+            <p className="text-sm text-[#a8a29e]">Pas encore de données.</p>
+          ) : (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {stats.obstaclesAvg.map((x, i) => (
+                <RdpiGauge
+                  key={x.key}
+                  value={x.avg}
+                  max={5}
+                  label={x.label}
+                  color={RDPI_SERIES[i % RDPI_SERIES.length]}
+                />
+              ))}
+            </div>
+          )}
+        </ChartPanel>
+
+        <ChartPanel title="Priorités de réforme (score moyen - 1 = plus important)">
+          <RdpiHorizontalBars
+            color={RDPI_CHART.blue}
+            valueDecimals={1}
+            invertFill
+            items={stats.reformPriority.map((r) => ({
+              label: r.label,
+              value: r.avgRank,
+              max: Math.max(reformMax, 7),
             }))}
           />
         </ChartPanel>
-        <ChartPanel title="Priorités de réforme (rang moyen - 1 = plus important)">
-          <ol className="space-y-2 text-sm">
-            {stats.reformPriority.map((r, i) => (
-              <li
-                key={r.key}
-                className="flex items-center justify-between gap-3 rounded-xl border border-[#E5E5E0] bg-white px-3 py-2.5"
-              >
-                <span>
-                  <span className="mr-2 font-mono text-xs font-bold text-[color:var(--rdpi-blue)]">
-                    #{i + 1}
-                  </span>
-                  {r.label}
-                </span>
-                <span className="font-mono text-xs tabular-nums text-[#78716c]">
-                  {r.avgRank.toFixed(1)}
-                </span>
-              </li>
-            ))}
-          </ol>
-        </ChartPanel>
+
         <ChartPanel title="Opportunités & numérisation">
-          <div className="space-y-5">
+          <div className="space-y-6">
             <div>
-              <p className="mb-2 text-[10px] font-bold uppercase tracking-wide text-[#78716c]">
+              <p className="mb-3 text-[10px] font-bold uppercase tracking-wide text-[#78716c]">
                 Positionnement réglementaire
               </p>
-              <DonutWithLegend items={stats.byOpportunity} />
+              <RdpiDonutLegend items={stats.byOpportunity} />
             </div>
             <div>
-              <p className="mb-2 text-[10px] font-bold uppercase tracking-wide text-[#78716c]">
+              <p className="mb-3 text-[10px] font-bold uppercase tracking-wide text-[#78716c]">
                 Perception numérisée nécessaire
               </p>
-              <DonutWithLegend items={stats.byDigitize} />
+              <RdpiDonutLegend items={stats.byDigitize} />
             </div>
+            {stats.byThreeRegimes.length > 0 ? (
+              <div>
+                <p className="mb-3 text-[10px] font-bold uppercase tracking-wide text-[#78716c]">
+                  Trois régimes
+                </p>
+                <RdpiVerticalBars
+                  buckets={stats.byThreeRegimes.map((x) => ({
+                    label: x.label,
+                    count: x.value,
+                  }))}
+                />
+              </div>
+            ) : null}
           </div>
         </ChartPanel>
       </div>
