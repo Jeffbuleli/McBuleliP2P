@@ -297,7 +297,6 @@ export function RdpiSurveyForm() {
     emailVerified: boolean;
     verificationSent: boolean;
   } | null>(null);
-  const [submittedEmail, setSubmittedEmail] = useState("");
   const [pending, startTransition] = useTransition();
 
   const progress = useMemo(() => {
@@ -312,58 +311,72 @@ export function RdpiSurveyForm() {
 
   function validateStep(s: number): string | null {
     if (s === 1) {
-      if (answers.fullName.trim().length < 2) return "Indiquez votre nom complet.";
+      if (answers.fullName.trim().length < 2) return "Complétez toutes les réponses.";
       const email = answers.email.trim().toLowerCase();
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        return "Indiquez une adresse email valide.";
+        return "Complétez toutes les réponses.";
       }
       const phoneDigits = answers.phone.replace(/\D/g, "");
-      if (phoneDigits.length < 9) {
-        return "Indiquez un numéro WhatsApp / téléphone valide (ex. 0812… ou +243…).";
-      }
-      if (!answers.sex) return "Sélectionnez votre sexe.";
-      if (!answers.age) return "Sélectionnez votre tranche d'âge.";
-      if (!answers.province.trim()) return "Indiquez votre province.";
-      if (!answers.activity) return "Sélectionnez votre activité principale.";
+      if (phoneDigits.length < 9) return "Complétez toutes les réponses.";
+      if (!answers.sex) return "Complétez toutes les réponses.";
+      if (!answers.age) return "Complétez toutes les réponses.";
+      if (!answers.province.trim()) return "Complétez toutes les réponses.";
+      if (!answers.activity) return "Complétez toutes les réponses.";
       if (answers.activity === "Autre" && !answers.activityOther.trim()) {
-        return "Précisez votre activité.";
+        return "Complétez toutes les réponses.";
       }
       if (!answers.yearsActive || !answers.employees) {
-        return "Complétez les informations sur votre activité.";
+        return "Complétez toutes les réponses.";
       }
     }
     if (s === 2) {
       for (const item of LIKERT_ITEMS) {
         const v = answers.likert[item.key] ?? 0;
-        if (v < 1 || v > 5) return "Répondez à toutes les affirmations (échelle 1-5).";
+        if (v < 1 || v > 5) return "Complétez toutes les réponses.";
       }
     }
     if (s === 3) {
-      if (!answers.impactOrg) return "Indiquez l'impact sur votre organisation.";
-      if (answers.impactDomain.length === 0) return "Sélectionnez au moins un domaine.";
-      if (answers.actions.length === 0) return "Sélectionnez au moins une option.";
-      if (!answers.consumerCost) return "Répondez à la question sur les coûts consommateurs.";
+      if (!answers.impactOrg) return "Complétez toutes les réponses.";
+      if (answers.impactDomain.length === 0) return "Complétez toutes les réponses.";
+      if (answers.actions.length === 0) return "Complétez toutes les réponses.";
+      if (!answers.consumerCost) return "Complétez toutes les réponses.";
+      if (answers.foreignInvestors.trim().length < 3) {
+        return "Complétez toutes les réponses.";
+      }
     }
     if (s === 4) {
       for (const item of OBSTACLE_ITEMS) {
         const v = answers.obstacles[item.key] ?? 0;
-        if (v < 1 || v > 5) return "Classez tous les obstacles.";
+        if (v < 1 || v > 5) return "Complétez toutes les réponses.";
       }
     }
     if (s === 5) {
       if (!answers.opportunityRegulation || !answers.threeRegimes) {
-        return "Répondez aux deux questions d'opportunités.";
+        return "Complétez toutes les réponses.";
       }
     }
     if (s === 6) {
       const ranks = REFORM_ITEMS.map((r) => answers.reformRanks[r.key] ?? 0);
       if (ranks.some((r) => r < 1 || r > 7)) {
-        return "Répondez à chaque réforme (1 à 7).";
+        return "Complétez toutes les réponses.";
       }
     }
     if (s === 7) {
-      if (!answers.digitizePerception) {
-        return "Répondez à la question sur la numérisation de la perception.";
+      if (!answers.digitizePerception) return "Complétez toutes les réponses.";
+      if (answers.concernDisposition.trim().length < 3) {
+        return "Complétez toutes les réponses.";
+      }
+      if (answers.innovationEffects.trim().length < 3) {
+        return "Complétez toutes les réponses.";
+      }
+      if (answers.startupMeasures.trim().length < 3) {
+        return "Complétez toutes les réponses.";
+      }
+      if (answers.reconcileFiscal.trim().length < 3) {
+        return "Complétez toutes les réponses.";
+      }
+      if (answers.extraObservations.trim().length < 3) {
+        return "Complétez toutes les réponses.";
       }
     }
     return null;
@@ -423,7 +436,6 @@ export function RdpiSurveyForm() {
         );
         return;
       }
-      setSubmittedEmail(answers.email.trim().toLowerCase());
       setAccountInfo({
         created: Boolean(json.account?.created),
         emailVerified: Boolean(json.account?.emailVerified),
@@ -451,11 +463,6 @@ export function RdpiSurveyForm() {
             </h2>
             <p className="relative mt-3 text-sm leading-relaxed text-white/80">
               Vos réponses ont bien été enregistrées pour RDPI Think Tank.
-              {accountInfo?.verificationSent
-                ? " Un email de confirmation McBuleli vient de vous être envoyé."
-                : accountInfo?.emailVerified
-                  ? " Votre compte McBuleli était déjà confirmé."
-                  : ""}
             </p>
           </div>
           <div className="space-y-3 bg-[#FAFAF8] px-5 py-5">
@@ -466,26 +473,20 @@ export function RdpiSurveyForm() {
                 un écosystème numérique plus compétitif en RDC.
               </p>
             </div>
-            {accountInfo?.verificationSent && submittedEmail ? (
-              <>
-                <a
-                  href="/verify-email/pending"
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[color:var(--rdpi-blue)] px-5 py-3 text-sm font-bold text-white"
-                >
-                  Confirmer mon email McBuleli
-                </a>
-                <p className="text-center text-xs text-[#78716c]">
-                  Après confirmation, utilisez « Mot de passe oublié » sur la
-                  page de connexion pour définir votre mot de passe.
-                </p>
-              </>
+            {accountInfo?.verificationSent ? (
+              <a
+                href="/verify-email/pending"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[color:var(--rdpi-blue)] px-5 py-3 text-sm font-bold text-white"
+              >
+                Confirmer mon email
+              </a>
             ) : null}
             {accountInfo?.emailVerified ? (
               <a
                 href="/login"
                 className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[color:var(--rdpi-blue)] px-5 py-3 text-sm font-bold text-white"
               >
-                Se connecter à McBuleli
+                Se connecter
               </a>
             ) : null}
             <a

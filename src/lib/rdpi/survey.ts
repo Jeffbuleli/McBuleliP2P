@@ -135,6 +135,25 @@ export function validateRdpiAnswers(
   a.reconcileFiscal = (a.reconcileFiscal ?? "").trim().slice(0, 4000);
   a.extraObservations = (a.extraObservations ?? "").trim().slice(0, 4000);
 
+  if (!isNonEmpty(a.foreignInvestors) || a.foreignInvestors.length < 3) {
+    return { ok: false, error: "foreignInvestors_required" };
+  }
+  if (!isNonEmpty(a.concernDisposition) || a.concernDisposition.length < 3) {
+    return { ok: false, error: "concernDisposition_required" };
+  }
+  if (!isNonEmpty(a.innovationEffects) || a.innovationEffects.length < 3) {
+    return { ok: false, error: "innovationEffects_required" };
+  }
+  if (!isNonEmpty(a.startupMeasures) || a.startupMeasures.length < 3) {
+    return { ok: false, error: "startupMeasures_required" };
+  }
+  if (!isNonEmpty(a.reconcileFiscal) || a.reconcileFiscal.length < 3) {
+    return { ok: false, error: "reconcileFiscal_required" };
+  }
+  if (!isNonEmpty(a.extraObservations) || a.extraObservations.length < 3) {
+    return { ok: false, error: "extraObservations_required" };
+  }
+
   return { ok: true, answers: a };
 }
 
