@@ -29,7 +29,7 @@ export function RdpiShell({
 }) {
   return (
     <div
-      className={`${display.variable} ${sans.variable} relative min-h-screen overflow-x-hidden font-[family-name:var(--font-rdpi-sans)]`}
+      className={`${display.variable} ${sans.variable} rdpi-theme relative min-h-screen overflow-x-hidden font-[family-name:var(--font-rdpi-sans)]`}
       style={
         {
           "--rdpi-blue": RDPI_BRAND.blue,

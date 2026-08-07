@@ -579,6 +579,23 @@ html {
   transition: background-color 99999s ease-out 0s;
 }
 
+/* RDPI survey — name / email / phone / textareas keep ink text on autofill */
+.rdpi-theme input.rdpi-field:-webkit-autofill,
+.rdpi-theme input.rdpi-field:-webkit-autofill:hover,
+.rdpi-theme input.rdpi-field:-webkit-autofill:focus,
+.rdpi-theme input.rdpi-field:-webkit-autofill:active,
+.rdpi-theme textarea.rdpi-field:-webkit-autofill,
+.rdpi-theme textarea.rdpi-field:-webkit-autofill:hover,
+.rdpi-theme textarea.rdpi-field:-webkit-autofill:focus,
+.rdpi-theme textarea.rdpi-field:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #fafaf8 inset !important;
+  box-shadow: 0 0 0 1000px #fafaf8 inset !important;
+  -webkit-text-fill-color: #1c1917 !important;
+  caret-color: #1c1917;
+  border-color: #e5e5e0 !important;
+  transition: background-color 99999s ease-out 0s;
+}
+
 .fd-public-light .fd-card,
 .fd-public-light.home-theme .fd-card {
   border-radius: 1rem;

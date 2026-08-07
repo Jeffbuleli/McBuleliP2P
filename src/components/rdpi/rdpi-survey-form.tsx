@@ -297,7 +297,7 @@ function TextInput(
       <FieldLabel>{label}</FieldLabel>
       <input
         {...rest}
-        className={`mt-2 w-full rounded-xl border border-[#E5E5E0] bg-[#FAFAF8] px-4 py-3 text-sm text-[#1c1917] outline-none transition placeholder:text-[#a8a29e] focus:border-[color:var(--rdpi-blue)] focus:bg-white focus:ring-2 focus:ring-[color:var(--rdpi-blue)]/15 ${className ?? ""}`}
+        className={`rdpi-field mt-2 w-full rounded-xl border border-[#E5E5E0] bg-[#FAFAF8] px-4 py-3 text-sm text-[#1c1917] outline-none transition placeholder:text-[#a8a29e] focus:border-[color:var(--rdpi-blue)] focus:bg-white focus:ring-2 focus:ring-[color:var(--rdpi-blue)]/15 ${className ?? ""}`}
       />
     </FieldCard>
   );
@@ -312,7 +312,7 @@ function TextArea(
       <FieldLabel>{label}</FieldLabel>
       <textarea
         {...rest}
-        className={`mt-2 min-h-[120px] w-full rounded-xl border border-[#E5E5E0] bg-[#FAFAF8] px-4 py-3 text-sm text-[#1c1917] outline-none transition placeholder:text-[#a8a29e] focus:border-[color:var(--rdpi-blue)] focus:bg-white focus:ring-2 focus:ring-[color:var(--rdpi-blue)]/15 ${className ?? ""}`}
+        className={`rdpi-field mt-2 min-h-[120px] w-full rounded-xl border border-[#E5E5E0] bg-[#FAFAF8] px-4 py-3 text-sm text-[#1c1917] outline-none transition placeholder:text-[#a8a29e] focus:border-[color:var(--rdpi-blue)] focus:bg-white focus:ring-2 focus:ring-[color:var(--rdpi-blue)]/15 ${className ?? ""}`}
       />
     </FieldCard>
   );
