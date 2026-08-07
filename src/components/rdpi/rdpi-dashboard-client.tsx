@@ -671,12 +671,12 @@ export function RdpiDashboardClient() {
                         <td className="whitespace-nowrap px-4 py-3 align-top font-medium">
                           {r.fullName ?? "-"}
                         </td>
-                        <td className="max-w-[14rem] px-4 py-3 align-top text-xs md:max-w-[18rem]">
+                        <td className="whitespace-nowrap px-4 py-3 align-top text-xs">
                           {r.email ? (
                             <a
                               href={`mailto:${r.email}`}
                               onClick={(e) => e.stopPropagation()}
-                              className="break-all text-[color:var(--rdpi-blue)] underline-offset-2 hover:underline"
+                              className="inline-block font-medium text-[color:var(--rdpi-blue)] underline-offset-2 hover:underline"
                             >
                               {r.email}
                             </a>
