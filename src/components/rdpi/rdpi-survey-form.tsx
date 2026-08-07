@@ -279,7 +279,7 @@ function renderIntroParagraph(text: string): React.ReactNode {
     }
     if (earliest > 0) parts.push(rest.slice(0, earliest));
     parts.push(
-      <strong key={`b-${key++}`} className="font-bold text-[#0c0a09]">
+      <strong key={`b-${key++}`} className="font-extrabold text-[#0c0a09]">
         {match}
       </strong>,
     );
@@ -570,7 +570,7 @@ export function RdpiSurveyForm() {
             </h1>
             <div className="space-y-3 text-[14px] leading-relaxed text-[#57534e]">
               {SURVEY_INTRO.paragraphs.map((p) => (
-                <p key={p.slice(0, 48)}>{p}</p>
+                <p key={p.slice(0, 48)}>{renderIntroParagraph(p)}</p>
               ))}
             </div>
             <button
