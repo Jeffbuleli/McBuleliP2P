@@ -41,6 +41,9 @@ type Stats = {
     activity: string | null;
     createdAt: string;
     impactOrg: string;
+    email: string;
+    phone: string;
+    mcbuleliContactOptIn: boolean;
     foreignInvestors: string;
     concernDisposition: string;
     innovationEffects: string;
@@ -548,11 +551,15 @@ export function RdpiDashboardClient() {
           </div>
         </div>
         <div className="overflow-x-auto">
-          <table className="min-w-[1100px] w-full text-left text-sm">
+          <table className="min-w-[1280px] w-full text-left text-sm">
             <thead className="bg-black/[0.03] text-[10px] uppercase tracking-wide text-[#78716c]">
               <tr>
                 <th className="whitespace-nowrap px-4 py-3 font-bold">Date</th>
                 <th className="whitespace-nowrap px-4 py-3 font-bold">Nom</th>
+                <th className="whitespace-nowrap px-4 py-3 font-bold">Email</th>
+                <th className="whitespace-nowrap px-4 py-3 font-bold">
+                  Téléphone
+                </th>
                 <th className="whitespace-nowrap px-4 py-3 font-bold">
                   Province
                 </th>
@@ -584,7 +591,7 @@ export function RdpiDashboardClient() {
               {stats.recent.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={11}
+                    colSpan={13}
                     className="px-4 py-8 text-center text-[#a8a29e]"
                   >
                     Aucune réponse pour l&apos;instant.
@@ -602,6 +609,32 @@ export function RdpiDashboardClient() {
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 align-top">
                         {r.fullName ?? "-"}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 align-top text-xs">
+                        {r.email ? (
+                          <a
+                            href={`mailto:${r.email}`}
+                            className="text-[color:var(--rdpi-blue)] underline-offset-2 hover:underline"
+                          >
+                            {r.email}
+                          </a>
+                        ) : (
+                          "-"
+                        )}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 align-top text-xs">
+                        {r.phone ? (
+                          <a
+                            href={`https://wa.me/${r.phone.replace(/\D/g, "")}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-[color:var(--rdpi-blue)] underline-offset-2 hover:underline"
+                          >
+                            {r.phone}
+                          </a>
+                        ) : (
+                          "-"
+                        )}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 align-top">
                         {r.province ?? "-"}

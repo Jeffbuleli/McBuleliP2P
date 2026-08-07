@@ -198,6 +198,10 @@ export const OPEN_TEXT_FIELDS = [
 
 export type RdpiSurveyAnswers = {
   fullName: string;
+  email: string;
+  phone: string;
+  /** Soft opt-in: McBuleli may follow up (unchecked by default). */
+  mcbuleliContactOptIn: boolean;
   sex: (typeof SEX_OPTIONS)[number] | "";
   age: (typeof AGE_OPTIONS)[number] | "";
   province: string;
@@ -232,6 +236,9 @@ export function emptyRdpiAnswers(): RdpiSurveyAnswers {
   for (const item of REFORM_ITEMS) reformRanks[item.key] = 0;
   return {
     fullName: "",
+    email: "",
+    phone: "",
+    mcbuleliContactOptIn: false,
     sex: "",
     age: "",
     province: "",
@@ -266,7 +273,7 @@ export const SURVEY_INTRO = {
     "En date du 20 juillet 2026, le Ministère de l'Economie numérique et le Ministère des Finances en République démocratique du Congo ont pris, en application du Code du numérique, l'Arrêté interministériel n°015/CAB/MIN/EN/AKIM/MLNS/ALM/2026 et CAB/MIN/FINACES/2026/096 portant fixation des taux des droits, taxes et redevances à percevoir à l'initiative du Ministère de l'Economie Numérique.",
     "La publication de cet arrêté a suscité de vives réactions. Les acteurs du secteur numérique ont exprimé leur inquiétude face au nouveau barème - perçu comme une barrière majeure pour les startups aux ressources limitées, pourtant porteuses d'innovation et d'emplois.",
     "C'est dans ce contexte que le Research for Development and Prosperity Institute (RDPI Think Tank) mène une étude afin d'évaluer les effets de cette fiscalité. Les résultats permettront de formuler des recommandations fondées sur le terrain.",
-    "Vos réponses resteront strictement confidentielles et seront utilisées uniquement à des fins de la présente recherche.",
+    "Vos réponses resteront confidentielles. L'email et le téléphone servent au suivi de l'étude par RDPI Think Tank (résumé des résultats). McBuleli n'utilise vos coordonnées que si vous l'acceptez explicitement.",
   ],
 } as const;
 

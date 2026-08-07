@@ -1,6 +1,10 @@
 import { desc, eq, sql } from "drizzle-orm";
 import { getDb, rdpiSurveyResponses } from "@/db";
 import {
+  isValidCodMsisdn,
+  normalizeCodPhoneNumber,
+} from "@/lib/freshpay/normalize-phone";
+import {
   ACTIVITY_OPTIONS,
   AGE_OPTIONS,
   IMPACT_ORG_OPTIONS,
@@ -21,6 +25,10 @@ function isNonEmpty(s: unknown): s is string {
   return typeof s === "string" && s.trim().length > 0;
 }
 
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 export function validateRdpiAnswers(
   raw: unknown,
 ): { ok: true; answers: RdpiSurveyAnswers } | { ok: false; error: string } {
@@ -32,6 +40,24 @@ export function validateRdpiAnswers(
   if (!isNonEmpty(a.fullName) || a.fullName.trim().length < 2) {
     return { ok: false, error: "fullName_required" };
   }
+
+  const email = (a.email ?? "").trim().toLowerCase();
+  if (!email || !isValidEmail(email)) {
+    return { ok: false, error: "email_required" };
+  }
+  a.email = email.slice(0, 200);
+
+  const phoneRaw = (a.phone ?? "").trim();
+  if (!phoneRaw) {
+    return { ok: false, error: "phone_required" };
+  }
+  const phoneNorm = normalizeCodPhoneNumber(phoneRaw);
+  if (!isValidCodMsisdn(phoneNorm)) {
+    return { ok: false, error: "phone_invalid" };
+  }
+  a.phone = phoneNorm;
+  a.mcbuleliContactOptIn = Boolean(a.mcbuleliContactOptIn);
+
   if (!(SEX_OPTIONS as readonly string[]).includes(a.sex)) {
     return { ok: false, error: "sex_required" };
   }
@@ -267,6 +293,9 @@ export async function getRdpiSurveyStats() {
       activity: r.activity,
       createdAt: r.createdAt.toISOString(),
       impactOrg: r.answers.impactOrg,
+      email: r.answers.email ?? "",
+      phone: r.answers.phone ?? "",
+      mcbuleliContactOptIn: Boolean(r.answers.mcbuleliContactOptIn),
       foreignInvestors: r.answers.foreignInvestors ?? "",
       concernDisposition: r.answers.concernDisposition ?? "",
       innovationEffects: r.answers.innovationEffects ?? "",
@@ -299,6 +328,9 @@ export function rdpiResponsesToCsv(
     "ID",
     "Date de soumission",
     "Nom complet",
+    "Email",
+    "Téléphone / WhatsApp",
+    "Opt-in contact McBuleli",
     "Sexe",
     "Âge",
     "Province d'exercice principal",
@@ -338,6 +370,9 @@ export function rdpiResponsesToCsv(
       row.id,
       row.createdAt.toISOString(),
       a.fullName,
+      a.email ?? "",
+      a.phone ?? "",
+      a.mcbuleliContactOptIn ? "Oui" : "Non",
       a.sex,
       a.age,
       a.province,

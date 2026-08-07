@@ -276,6 +276,8 @@ export function RdpiSurveyForm() {
   );
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const [submittedEmail, setSubmittedEmail] = useState("");
+  const [submittedOptIn, setSubmittedOptIn] = useState(false);
   const [pending, startTransition] = useTransition();
 
   const progress = useMemo(() => {
@@ -291,6 +293,14 @@ export function RdpiSurveyForm() {
   function validateStep(s: number): string | null {
     if (s === 1) {
       if (answers.fullName.trim().length < 2) return "Indiquez votre nom complet.";
+      const email = answers.email.trim().toLowerCase();
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return "Indiquez une adresse email valide (suivi RDPI).";
+      }
+      const phoneDigits = answers.phone.replace(/\D/g, "");
+      if (phoneDigits.length < 9) {
+        return "Indiquez un numéro WhatsApp / téléphone valide (ex. 0812… ou +243…).";
+      }
       if (!answers.sex) return "Sélectionnez votre sexe.";
       if (!answers.age) return "Sélectionnez votre tranche d'âge.";
       if (!answers.province.trim()) return "Indiquez votre province.";
@@ -376,13 +386,20 @@ export function RdpiSurveyForm() {
         error?: string;
       } | null;
       if (!res.ok || !json?.ok) {
+        const code = json?.error;
         setError(
-          json?.error === "rate_limited"
+          code === "rate_limited"
             ? "Trop de soumissions. Réessayez dans quelques minutes."
-            : "Envoi impossible. Vérifiez vos réponses et réessayez.",
+            : code === "email_required"
+              ? "Indiquez une adresse email valide."
+              : code === "phone_required" || code === "phone_invalid"
+                ? "Indiquez un numéro WhatsApp / téléphone valide (ex. 0812… ou +243…)."
+                : "Envoi impossible. Vérifiez vos réponses et réessayez.",
         );
         return;
       }
+      setSubmittedEmail(answers.email.trim().toLowerCase());
+      setSubmittedOptIn(Boolean(answers.mcbuleliContactOptIn));
       setDone(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     });
@@ -404,9 +421,8 @@ export function RdpiSurveyForm() {
               Merci pour votre contribution
             </h2>
             <p className="relative mt-3 text-sm leading-relaxed text-white/80">
-              Vos réponses ont bien été enregistrées. Elles restent
-              confidentielles et serviront uniquement à l&apos;étude RDPI Think
-              Tank.
+              Vos réponses ont bien été enregistrées. RDPI pourra vous recontacter
+              pour le résumé des résultats.
             </p>
           </div>
           <div className="space-y-3 bg-[#FAFAF8] px-5 py-5">
@@ -417,6 +433,14 @@ export function RdpiSurveyForm() {
                 un écosystème numérique plus compétitif en RDC.
               </p>
             </div>
+            {submittedOptIn && submittedEmail ? (
+              <a
+                href={`/register?email=${encodeURIComponent(submittedEmail)}&from=rdpi`}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[color:var(--rdpi-blue)] px-5 py-3 text-sm font-bold text-white"
+              >
+                Créer un compte McBuleli avec cet email
+              </a>
+            ) : null}
             <a
               href="https://rdpithinktank.org/"
               className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-black px-5 py-3 text-sm font-bold text-white"
@@ -502,6 +526,41 @@ export function RdpiSurveyForm() {
                 placeholder="Prénom et nom"
                 autoComplete="name"
               />
+              <TextInput
+                label="Email"
+                type="email"
+                value={answers.email}
+                onChange={(e) => patch({ email: e.target.value })}
+                placeholder="vous@exemple.com"
+                autoComplete="email"
+              />
+              <TextInput
+                label="WhatsApp / téléphone"
+                type="tel"
+                value={answers.phone}
+                onChange={(e) => patch({ phone: e.target.value })}
+                placeholder="0812 345 678 ou +243…"
+                autoComplete="tel"
+              />
+              <p className="-mt-2 text-xs leading-relaxed text-[#78716c]">
+                Pour le suivi de l&apos;étude RDPI (résumé des résultats). Format
+                RDC : 08… / 09… ou +243…
+              </p>
+              <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-[#E5E5E0] bg-[#FAFAF8] px-4 py-3 text-sm text-[#44403c]">
+                <input
+                  type="checkbox"
+                  className="mt-1 h-4 w-4 shrink-0 accent-[color:var(--rdpi-blue)]"
+                  checked={answers.mcbuleliContactOptIn}
+                  onChange={(e) =>
+                    patch({ mcbuleliContactOptIn: e.target.checked })
+                  }
+                />
+                <span>
+                  J&apos;accepte aussi d&apos;être contacté(e) par McBuleli sur
+                  des outils utiles aux acteurs du numérique{" "}
+                  <span className="text-[#a8a29e]">(optionnel)</span>.
+                </span>
+              </label>
               <div>
                 <FieldLabel>Sexe</FieldLabel>
                 <ChoiceGrid
