@@ -1,5 +1,5 @@
 /**
- * RDPI Think Tank — questionnaire fiscalité / secteur numérique RDC.
+ * RDPI Think Tank - questionnaire fiscalité / secteur numérique RDC.
  * Source: RESEARCH FOR DEVELOPMENT AND PROSPERITY INSTITUTE.docx
  */
 
@@ -8,7 +8,7 @@ export const RDPI_SURVEY_SLUG = "fiscalite-numerique-rdc-2026";
 export const RDPI_BRAND = {
   name: "RDPI Think Tank",
   fullName: "Research for Development and Prosperity Institute",
-  logoUrl: "/partners/rdpi-thinktank-logo.png?v=20260807",
+  logoUrl: "/partners/rdpi-thinktank-logo.png?v=20260807b",
   website: "https://rdpithinktank.org/",
   blue: "#1E5EFF",
   gold: "#E8B923",
@@ -25,9 +25,9 @@ export const SEX_OPTIONS = [
 
 export const AGE_OPTIONS = [
   "Moins de 25 ans",
-  "25–34 ans",
-  "35–44 ans",
-  "45–54 ans",
+  "25-34 ans",
+  "35-44 ans",
+  "45-54 ans",
   "55 ans et plus",
 ] as const;
 
@@ -55,10 +55,10 @@ export const YEARS_OPTIONS = [
 ] as const;
 
 export const EMPLOYEES_OPTIONS = [
-  "1–5",
-  "6–10",
-  "11–20",
-  "21–50",
+  "1-5",
+  "6-10",
+  "11-20",
+  "21-50",
   "Plus de 50",
 ] as const;
 
@@ -225,7 +225,7 @@ export const SURVEY_INTRO = {
   duration: "8 à 10 minutes",
   paragraphs: [
     "En date du 20 juillet 2026, Monsieur le Ministre de l'Economie numérique et le Ministre des Finances en République démocratique du Congo ont pris, en application du Code du numérique, l'Arrêté interministériel n°015/CAB/MIN/EN/AKIM/MLNS/ALM/2026 et CAB/MIN/FINACES/2026/096 portant fixation des taux des droits, taxes et redevances à percevoir à l'initiative du Ministère de l'Economie Numérique.",
-    "La publication de cet arrêté a suscité de vives réactions. Les acteurs du secteur numérique ont exprimé leur inquiétude face au nouveau barème — perçu comme une barrière majeure pour les startups aux ressources limitées, pourtant porteuses d'innovation et d'emplois.",
+    "La publication de cet arrêté a suscité de vives réactions. Les acteurs du secteur numérique ont exprimé leur inquiétude face au nouveau barème - perçu comme une barrière majeure pour les startups aux ressources limitées, pourtant porteuses d'innovation et d'emplois.",
     "C'est dans ce contexte que le Research for Development and Prosperity Institute (RDPI Think Tank) mène une étude afin d'évaluer les effets de cette fiscalité. Les résultats permettront de formuler des recommandations fondées sur le terrain.",
     "Vos réponses resteront strictement confidentielles et seront utilisées uniquement à des fins de la présente recherche.",
   ],

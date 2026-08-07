@@ -1,13 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import {
   AvecDonut,
   AvecHorizontalBars,
 } from "@/components/groups/avec-charts";
-import { RDPI_BRAND } from "@/lib/rdpi/survey-questions";
+import { RdpiPoweredFooter } from "@/components/rdpi/rdpi-powered-footer";
 
 type CountBucket = { label: string; value: number };
 type Stats = {
@@ -38,11 +37,27 @@ const CHART_COLORS = [
   "#1E5EFF",
   "#E8B923",
   "#0A0A0A",
-  "#5B8CFF",
-  "#C4921A",
-  "#6B7280",
+  "#4C7DFF",
+  "#C9A227",
+  "#64748B",
   "#93A8FF",
 ];
+
+function VisualCard({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`rounded-[22px] border border-[#E5E5E0] bg-[#FAFAF8]/95 shadow-[0_18px_48px_-28px_rgba(34,34,34,0.45)] backdrop-blur-sm ${className}`}
+    >
+      {children}
+    </div>
+  );
+}
 
 function StatCard({
   label,
@@ -54,17 +69,15 @@ function StatCard({
   hint?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-black/8 bg-white/80 p-4 shadow-sm">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[color:var(--rdpi-muted)]">
+    <VisualCard className="p-4">
+      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#78716c]">
         {label}
       </p>
-      <p className="mt-2 font-[family-name:var(--font-rdpi-display)] text-3xl font-semibold tracking-tight text-[color:var(--rdpi-ink)]">
+      <p className="mt-2 font-[family-name:var(--font-rdpi-display)] text-3xl font-semibold tracking-tight text-[#0c0a09]">
         {value}
       </p>
-      {hint ? (
-        <p className="mt-1 text-xs text-[color:var(--rdpi-muted)]">{hint}</p>
-      ) : null}
-    </div>
+      {hint ? <p className="mt-1 text-xs text-[#a8a29e]">{hint}</p> : null}
+    </VisualCard>
   );
 }
 
@@ -76,40 +89,48 @@ function ChartPanel({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-3xl border border-black/8 bg-white/80 p-5 shadow-sm">
-      <h3 className="mb-4 text-sm font-semibold text-[color:var(--rdpi-ink)]">
-        {title}
-      </h3>
+    <VisualCard className="p-5">
+      <h3 className="mb-4 text-sm font-bold text-[#0c0a09]">{title}</h3>
       {children}
-    </section>
+    </VisualCard>
   );
 }
 
 function DonutWithLegend({ items }: { items: CountBucket[] }) {
+  if (items.length === 0) {
+    return (
+      <p className="text-sm text-[#a8a29e]">Pas encore de données.</p>
+    );
+  }
   const total = items.reduce((s, x) => s + x.value, 0) || 1;
   return (
-    <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
-      <AvecDonut
-        size={120}
-        segments={items.map((it, i) => ({
-          value: it.value,
-          color: CHART_COLORS[i % CHART_COLORS.length],
-        }))}
-      />
-      <ul className="w-full space-y-2 text-sm">
+    <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start">
+      <div className="shrink-0 rounded-2xl border border-[#E5E5E0] bg-white p-3">
+        <AvecDonut
+          size={128}
+          segments={items.map((it, i) => ({
+            value: it.value,
+            color: CHART_COLORS[i % CHART_COLORS.length],
+          }))}
+        />
+      </div>
+      <ul className="w-full space-y-2.5 text-sm">
         {items.map((it, i) => (
-          <li key={it.label} className="flex items-center justify-between gap-3">
-            <span className="flex items-center gap-2 truncate">
+          <li
+            key={it.label}
+            className="flex items-center justify-between gap-3 rounded-xl border border-[#E5E5E0] bg-white px-3 py-2"
+          >
+            <span className="flex min-w-0 items-center gap-2">
               <span
                 className="h-2.5 w-2.5 shrink-0 rounded-full"
                 style={{ background: CHART_COLORS[i % CHART_COLORS.length] }}
               />
-              <span className="truncate text-[color:var(--rdpi-ink)]">
+              <span className="truncate font-medium text-[#1c1917]">
                 {it.label}
               </span>
             </span>
-            <span className="shrink-0 font-mono text-xs tabular-nums text-[color:var(--rdpi-muted)]">
-              {it.value} · {Math.round((it.value / total) * 100)}%
+            <span className="shrink-0 font-mono text-xs tabular-nums text-[#78716c]">
+              {it.value} - {Math.round((it.value / total) * 100)}%
             </span>
           </li>
         ))}
@@ -120,11 +141,10 @@ function DonutWithLegend({ items }: { items: CountBucket[] }) {
 
 export function RdpiDashboardClient() {
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<"unauthenticated" | "forbidden" | "error" | null>(
-    null,
-  );
+  const [error, setError] = useState<
+    "unauthenticated" | "forbidden" | "error" | null
+  >(null);
   const [email, setEmail] = useState<string | null>(null);
-  const [via, setVia] = useState<string | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
 
   useEffect(() => {
@@ -148,7 +168,6 @@ export function RdpiDashboardClient() {
         if (!cancelled) {
           setStats(json.stats as Stats);
           setEmail(json.email ?? null);
-          setVia(json.via ?? null);
         }
       } catch {
         if (!cancelled) setError("error");
@@ -163,50 +182,74 @@ export function RdpiDashboardClient() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-5xl px-4 py-20 text-center text-sm text-[color:var(--rdpi-muted)]">
-        Chargement des réponses…
+      <div className="mx-auto max-w-5xl px-4 py-20 text-center text-sm text-[#78716c]">
+        Chargement des réponses...
       </div>
     );
   }
 
   if (error === "unauthenticated") {
     return (
-      <div className="mx-auto max-w-lg px-4 py-20 text-center">
-        <h1 className="font-[family-name:var(--font-rdpi-display)] text-2xl font-semibold">
-          Connexion requise
-        </h1>
-        <p className="mt-3 text-sm text-[color:var(--rdpi-muted)]">
-          L&apos;espace partenaire RDPI est réservé à l&apos;équipe RDPI Think
-          Tank et aux administrateurs McBuleli.
-        </p>
-        <Link
-          href={`/login?next=${encodeURIComponent("/rdpi/dashboard")}`}
-          className="mt-6 inline-flex rounded-full bg-[color:var(--rdpi-blue)] px-5 py-2.5 text-sm font-semibold text-white"
-        >
-          Se connecter
-        </Link>
+      <div className="mx-auto max-w-[440px] px-4 py-12">
+        <VisualCard className="overflow-hidden !p-0 text-center">
+          <div className="bg-black px-6 py-8 text-white">
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[color:var(--rdpi-gold)]">
+              Accès RDPI
+            </p>
+            <h1 className="mt-2 font-[family-name:var(--font-rdpi-display)] text-2xl font-semibold">
+              Connexion requise
+            </h1>
+            <p className="mt-3 text-sm text-white/75">
+              Cet espace est réservé à l&apos;équipe RDPI Think Tank.
+            </p>
+          </div>
+          <div className="bg-[#FAFAF8] px-6 py-5">
+            <Link
+              href={`/login?next=${encodeURIComponent("/rdpi/dashboard")}`}
+              className="inline-flex w-full items-center justify-center rounded-full bg-[color:var(--rdpi-blue)] px-5 py-3 text-sm font-bold text-white"
+            >
+              Se connecter
+            </Link>
+          </div>
+        </VisualCard>
+        <RdpiPoweredFooter />
       </div>
     );
   }
 
   if (error === "forbidden") {
     return (
-      <div className="mx-auto max-w-lg px-4 py-20 text-center">
-        <h1 className="font-[family-name:var(--font-rdpi-display)] text-2xl font-semibold">
-          Accès restreint
-        </h1>
-        <p className="mt-3 text-sm text-[color:var(--rdpi-muted)]">
-          Seuls les comptes RDPI autorisés (
-          <span className="font-medium">maristote@</span> /{" "}
-          <span className="font-medium">info@rdpithinktank.org</span>) et les
-          administrateurs peuvent consulter les réponses.
-        </p>
-        <Link
-          href="/rdpi"
-          className="mt-6 inline-flex rounded-full border border-black/12 bg-white px-5 py-2.5 text-sm font-semibold"
-        >
-          Retour au questionnaire
-        </Link>
+      <div className="mx-auto max-w-[440px] px-4 py-12">
+        <VisualCard className="overflow-hidden !p-0 text-center">
+          <div className="bg-black px-6 py-8 text-white">
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[color:var(--rdpi-gold)]">
+              Accès restreint
+            </p>
+            <h1 className="mt-2 font-[family-name:var(--font-rdpi-display)] text-2xl font-semibold">
+              Compte non autorisé
+            </h1>
+            <p className="mt-3 text-sm text-white/75">
+              Connectez-vous avec un email RDPI (
+              <span className="text-[color:var(--rdpi-gold)]">
+                maristote@
+              </span>{" "}
+              /{" "}
+              <span className="text-[color:var(--rdpi-gold)]">
+                info@rdpithinktank.org
+              </span>
+              ).
+            </p>
+          </div>
+          <div className="bg-[#FAFAF8] px-6 py-5">
+            <Link
+              href="/rdpi"
+              className="inline-flex w-full items-center justify-center rounded-full border border-[#E5E5E0] bg-white px-5 py-3 text-sm font-bold"
+            >
+              Retour au questionnaire
+            </Link>
+          </div>
+        </VisualCard>
+        <RdpiPoweredFooter />
       </div>
     );
   }
@@ -219,68 +262,70 @@ export function RdpiDashboardClient() {
     );
   }
 
-  const topActivity = stats.byActivity[0]?.label ?? "—";
+  const topActivity = stats.byActivity[0]?.label ?? "-";
   const negImpact =
     (stats.byImpactOrg.find((x) => x.label === "Négatif")?.value ?? 0) +
     (stats.byImpactOrg.find((x) => x.label === "Très négatif")?.value ?? 0);
 
   return (
-    <div className="mx-auto max-w-5xl px-4 pb-16 pt-6">
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--rdpi-gold)]">
-            Tableau de bord partenaire
-          </p>
-          <h1 className="mt-1 font-[family-name:var(--font-rdpi-display)] text-3xl font-semibold tracking-tight text-[color:var(--rdpi-ink)]">
-            Réponses à l&apos;enquête
-          </h1>
-          <p className="mt-2 text-sm text-[color:var(--rdpi-muted)]">
-            Connecté · {email}
-            {via === "admin" ? " (admin)" : " (RDPI)"}
-          </p>
+    <div className="mx-auto max-w-5xl px-4 pb-10 pt-6">
+      <VisualCard className="mb-5 overflow-hidden !p-0">
+        <div className="flex flex-col gap-4 border-b border-[#E5E5E0] bg-black px-5 py-5 text-white sm:flex-row sm:items-end sm:justify-between sm:px-6">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[color:var(--rdpi-gold)]">
+              Tableau de bord
+            </p>
+            <h1 className="mt-1 font-[family-name:var(--font-rdpi-display)] text-2xl font-semibold tracking-tight sm:text-3xl">
+              Réponses à l&apos;enquête
+            </h1>
+            <p className="mt-2 text-sm text-white/70">Connecté - {email}</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <a
+              href="/api/rdpi/export"
+              className="inline-flex items-center gap-2 rounded-full bg-[color:var(--rdpi-gold)] px-4 py-2.5 text-sm font-bold text-black"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <path
+                  d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              Télécharger CSV
+            </a>
+            <Link
+              href="/rdpi"
+              className="inline-flex rounded-full border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-bold text-white"
+            >
+              Questionnaire
+            </Link>
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <a
-            href="/api/rdpi/export"
-            className="inline-flex items-center gap-2 rounded-full bg-[color:var(--rdpi-ink)] px-4 py-2.5 text-sm font-semibold text-white"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
-              <path
-                d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            Télécharger CSV
-          </a>
-          <Link
-            href="/rdpi"
-            className="inline-flex rounded-full border border-black/12 bg-white px-4 py-2.5 text-sm font-semibold"
-          >
-            Voir le formulaire
-          </Link>
+        <div className="grid gap-3 bg-[#FAFAF8] p-4 sm:grid-cols-2 lg:grid-cols-4 sm:p-5">
+          <StatCard label="Réponses" value={stats.total} hint="Total collecté" />
+          <StatCard
+            label="Impact négatif"
+            value={negImpact}
+            hint="Négatif + Très négatif"
+          />
+          <StatCard
+            label="Activité dominante"
+            value={
+              topActivity.length > 18
+                ? `${topActivity.slice(0, 18)}...`
+                : topActivity
+            }
+          />
+          <StatCard
+            label="Provinces"
+            value={stats.byProvince.length}
+            hint="Localisations distinctes"
+          />
         </div>
-      </div>
-
-      <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Réponses" value={stats.total} hint="Total collecté" />
-        <StatCard
-          label="Impact négatif"
-          value={negImpact}
-          hint="Négatif + Très négatif"
-        />
-        <StatCard
-          label="Activité dominante"
-          value={topActivity.length > 18 ? `${topActivity.slice(0, 18)}…` : topActivity}
-        />
-        <StatCard
-          label="Provinces"
-          value={stats.byProvince.length}
-          hint="Localisations distinctes"
-        />
-      </div>
+      </VisualCard>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <ChartPanel title="Répartition par sexe">
@@ -313,10 +358,11 @@ export function RdpiDashboardClient() {
             }))}
           />
         </ChartPanel>
-        <ChartPanel title="Perception (moyenne Likert 1–5)">
+        <ChartPanel title="Perception (moyenne Likert 1-5)">
           <AvecHorizontalBars
             items={stats.likertAvg.map((x) => ({
-              label: x.label.length > 42 ? `${x.label.slice(0, 42)}…` : x.label,
+              label:
+                x.label.length > 42 ? `${x.label.slice(0, 42)}...` : x.label,
               value: x.avg,
               max: 5,
             }))}
@@ -331,20 +377,20 @@ export function RdpiDashboardClient() {
             }))}
           />
         </ChartPanel>
-        <ChartPanel title="Priorités de réforme (rang moyen · 1 = plus important)">
+        <ChartPanel title="Priorités de réforme (rang moyen - 1 = plus important)">
           <ol className="space-y-2 text-sm">
             {stats.reformPriority.map((r, i) => (
               <li
                 key={r.key}
-                className="flex items-center justify-between gap-3 rounded-xl border border-black/6 bg-[color:var(--rdpi-paper)]/60 px-3 py-2"
+                className="flex items-center justify-between gap-3 rounded-xl border border-[#E5E5E0] bg-white px-3 py-2.5"
               >
                 <span>
-                  <span className="mr-2 font-mono text-xs text-[color:var(--rdpi-blue)]">
+                  <span className="mr-2 font-mono text-xs font-bold text-[color:var(--rdpi-blue)]">
                     #{i + 1}
                   </span>
                   {r.label}
                 </span>
-                <span className="font-mono text-xs tabular-nums text-[color:var(--rdpi-muted)]">
+                <span className="font-mono text-xs tabular-nums text-[#78716c]">
                   {r.avgRank.toFixed(1)}
                 </span>
               </li>
@@ -352,15 +398,15 @@ export function RdpiDashboardClient() {
           </ol>
         </ChartPanel>
         <ChartPanel title="Opportunités & numérisation">
-          <div className="space-y-4">
+          <div className="space-y-5">
             <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[color:var(--rdpi-muted)]">
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-wide text-[#78716c]">
                 Positionnement réglementaire
               </p>
               <DonutWithLegend items={stats.byOpportunity} />
             </div>
             <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[color:var(--rdpi-muted)]">
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-wide text-[#78716c]">
                 Perception numérisée nécessaire
               </p>
               <DonutWithLegend items={stats.byDigitize} />
@@ -369,19 +415,19 @@ export function RdpiDashboardClient() {
         </ChartPanel>
       </div>
 
-      <section className="mt-4 overflow-hidden rounded-3xl border border-black/8 bg-white/80 shadow-sm">
-        <div className="border-b border-black/8 px-5 py-4">
-          <h3 className="text-sm font-semibold">Dernières réponses</h3>
+      <VisualCard className="mt-4 overflow-hidden">
+        <div className="border-b border-[#E5E5E0] px-5 py-4">
+          <h3 className="text-sm font-bold">Dernières réponses</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full text-left text-sm">
-            <thead className="bg-black/[0.03] text-[11px] uppercase tracking-wide text-[color:var(--rdpi-muted)]">
+            <thead className="bg-black/[0.03] text-[10px] uppercase tracking-wide text-[#78716c]">
               <tr>
-                <th className="px-4 py-3 font-semibold">Date</th>
-                <th className="px-4 py-3 font-semibold">Nom</th>
-                <th className="px-4 py-3 font-semibold">Province</th>
-                <th className="px-4 py-3 font-semibold">Activité</th>
-                <th className="px-4 py-3 font-semibold">Impact</th>
+                <th className="px-4 py-3 font-bold">Date</th>
+                <th className="px-4 py-3 font-bold">Nom</th>
+                <th className="px-4 py-3 font-bold">Province</th>
+                <th className="px-4 py-3 font-bold">Activité</th>
+                <th className="px-4 py-3 font-bold">Impact</th>
               </tr>
             </thead>
             <tbody>
@@ -389,51 +435,32 @@ export function RdpiDashboardClient() {
                 <tr>
                   <td
                     colSpan={5}
-                    className="px-4 py-8 text-center text-[color:var(--rdpi-muted)]"
+                    className="px-4 py-8 text-center text-[#a8a29e]"
                   >
                     Aucune réponse pour l&apos;instant.
                   </td>
                 </tr>
               ) : (
                 stats.recent.map((r) => (
-                  <tr key={r.id} className="border-t border-black/6">
-                    <td className="whitespace-nowrap px-4 py-3 text-xs text-[color:var(--rdpi-muted)]">
+                  <tr key={r.id} className="border-t border-[#E5E5E0]">
+                    <td className="whitespace-nowrap px-4 py-3 text-xs text-[#78716c]">
                       {new Date(r.createdAt).toLocaleString("fr-CD", {
                         timeZone: "Africa/Kinshasa",
                       })}
                     </td>
-                    <td className="px-4 py-3">{r.fullName ?? "—"}</td>
-                    <td className="px-4 py-3">{r.province ?? "—"}</td>
-                    <td className="px-4 py-3">{r.activity ?? "—"}</td>
-                    <td className="px-4 py-3">{r.impactOrg || "—"}</td>
+                    <td className="px-4 py-3">{r.fullName ?? "-"}</td>
+                    <td className="px-4 py-3">{r.province ?? "-"}</td>
+                    <td className="px-4 py-3">{r.activity ?? "-"}</td>
+                    <td className="px-4 py-3">{r.impactOrg || "-"}</td>
                   </tr>
                 ))
               )}
             </tbody>
           </table>
         </div>
-      </section>
+      </VisualCard>
 
-      <footer className="mt-12 border-t border-black/8 pt-8 text-center">
-        <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--rdpi-muted)]">
-          Powered by
-        </p>
-        <Link
-          href="https://x.com/McBuleli"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 text-sm text-[color:var(--rdpi-muted)]"
-        >
-          <Image
-            src="/brand/logo-256.png"
-            alt="McBuleli"
-            width={22}
-            height={22}
-            className="rounded-full"
-          />
-          <span className="font-semibold">McBuleli</span>
-        </Link>
-      </footer>
+      <RdpiPoweredFooter />
     </div>
   );
 }
