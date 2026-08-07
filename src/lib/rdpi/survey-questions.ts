@@ -224,7 +224,7 @@ export const SURVEY_INTRO = {
     "L'impact de la fiscalité sur l'entrepreneuriat, l'innovation et le développement du secteur numérique en République démocratique du Congo",
   duration: "8 à 10 minutes",
   paragraphs: [
-    "En date du 20 juillet 2026, Monsieur le Ministre de l'Economie numérique et le Ministre des Finances en République démocratique du Congo ont pris, en application du Code du numérique, l'Arrêté interministériel n°015/CAB/MIN/EN/AKIM/MLNS/ALM/2026 et CAB/MIN/FINACES/2026/096 portant fixation des taux des droits, taxes et redevances à percevoir à l'initiative du Ministère de l'Economie Numérique.",
+    "En date du 20 juillet 2026, le Ministère de l'Economie numérique et le Ministère des Finances en République démocratique du Congo ont pris, en application du Code du numérique, l'Arrêté interministériel n°015/CAB/MIN/EN/AKIM/MLNS/ALM/2026 et CAB/MIN/FINACES/2026/096 portant fixation des taux des droits, taxes et redevances à percevoir à l'initiative du Ministère de l'Economie Numérique.",
     "La publication de cet arrêté a suscité de vives réactions. Les acteurs du secteur numérique ont exprimé leur inquiétude face au nouveau barème - perçu comme une barrière majeure pour les startups aux ressources limitées, pourtant porteuses d'innovation et d'emplois.",
     "C'est dans ce contexte que le Research for Development and Prosperity Institute (RDPI Think Tank) mène une étude afin d'évaluer les effets de cette fiscalité. Les résultats permettront de formuler des recommandations fondées sur le terrain.",
     "Vos réponses resteront strictement confidentielles et seront utilisées uniquement à des fins de la présente recherche.",

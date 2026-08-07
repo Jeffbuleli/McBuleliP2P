@@ -1,20 +1,22 @@
+import { eq } from "drizzle-orm";
+import { getDb, users } from "@/db";
+import { userNeedsEmailVerification } from "@/lib/auth/email-verified-gate";
 import { getSessionUser, type SessionUser } from "@/lib/session-user";
 
-/** Partner emails allowed to view RDPI survey dashboard (plus super_admin). */
-export const RDPI_DASHBOARD_EMAILS = [
-  "maristote@rdpithinktank.org",
-  "info@rdpithinktank.org",
-] as const;
+/** Any verified McBuleli account on this org domain can view survey responses. */
+export const RDPI_EMAIL_DOMAIN = "rdpithinktank.org";
 
-export function isRdpiDashboardEmail(email: string | null | undefined): boolean {
+export function isRdpiOrgEmail(email: string | null | undefined): boolean {
   if (!email) return false;
-  const n = email.trim().toLowerCase();
-  return (RDPI_DASHBOARD_EMAILS as readonly string[]).includes(n);
+  return email.trim().toLowerCase().endsWith(`@${RDPI_EMAIL_DOMAIN}`);
 }
 
 export type RdpiDashboardAccess =
   | { ok: true; user: SessionUser; via: "admin" | "partner" }
-  | { ok: false; reason: "unauthenticated" | "forbidden" };
+  | {
+      ok: false;
+      reason: "unauthenticated" | "forbidden" | "unverified";
+    };
 
 export async function resolveRdpiDashboardAccess(): Promise<RdpiDashboardAccess> {
   const user = await getSessionUser();
@@ -22,8 +24,25 @@ export async function resolveRdpiDashboardAccess(): Promise<RdpiDashboardAccess>
   if (user.role === "super_admin") {
     return { ok: true, user, via: "admin" };
   }
-  if (isRdpiDashboardEmail(user.email)) {
-    return { ok: true, user, via: "partner" };
+  if (!isRdpiOrgEmail(user.email)) {
+    return { ok: false, reason: "forbidden" };
   }
-  return { ok: false, reason: "forbidden" };
+
+  const db = getDb();
+  const [row] = await db
+    .select({ emailVerifiedAt: users.emailVerifiedAt })
+    .from(users)
+    .where(eq(users.id, user.id))
+    .limit(1);
+
+  if (
+    userNeedsEmailVerification({
+      email: user.email,
+      emailVerifiedAt: row?.emailVerifiedAt,
+    })
+  ) {
+    return { ok: false, reason: "unverified" };
+  }
+
+  return { ok: true, user, via: "partner" };
 }

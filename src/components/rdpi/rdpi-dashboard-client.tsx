@@ -78,7 +78,7 @@ function ChartPanel({
 export function RdpiDashboardClient() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<
-    "unauthenticated" | "forbidden" | "error" | null
+    "unauthenticated" | "forbidden" | "unverified" | "error" | null
   >(null);
   const [email, setEmail] = useState<string | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -93,7 +93,12 @@ export function RdpiDashboardClient() {
           return;
         }
         if (res.status === 403) {
-          if (!cancelled) setError("forbidden");
+          const body = (await res.json().catch(() => null)) as {
+            error?: string;
+          } | null;
+          if (!cancelled) {
+            setError(body?.error === "unverified" ? "unverified" : "forbidden");
+          }
           return;
         }
         const json = await res.json();
@@ -138,7 +143,11 @@ export function RdpiDashboardClient() {
               Connexion requise
             </h1>
             <p className="relative mt-3 text-sm text-white/75">
-              Cet espace est réservé à l&apos;équipe RDPI Think Tank.
+              Créez un compte McBuleli avec votre email professionnel{" "}
+              <span className="text-[color:var(--rdpi-gold)]">
+                @rdpithinktank.org
+              </span>{" "}
+              (email vérifié) pour consulter les réponses.
             </p>
           </div>
           <div className="bg-[#FAFAF8] px-6 py-5">
@@ -147,6 +156,41 @@ export function RdpiDashboardClient() {
               className="inline-flex w-full items-center justify-center rounded-full bg-[color:var(--rdpi-blue)] px-5 py-3 text-sm font-bold text-white"
             >
               Se connecter
+            </Link>
+          </div>
+        </VisualCard>
+        <RdpiPoweredFooter />
+      </div>
+    );
+  }
+
+  if (error === "unverified") {
+    return (
+      <div className="mx-auto max-w-lg sm:max-w-xl md:max-w-2xl px-4 py-12">
+        <VisualCard className="overflow-hidden !p-0 text-center">
+          <div className="relative overflow-hidden bg-black px-6 py-8 text-white">
+            <RdpiIlluSunburst className="pointer-events-none absolute -left-6 top-0 h-28 w-28 opacity-20" />
+            <RdpiIlluShield className="relative mx-auto mb-4 h-16 w-16" />
+            <p className="relative text-[10px] font-bold uppercase tracking-[0.18em] text-[color:var(--rdpi-gold)]">
+              Vérification requise
+            </p>
+            <h1 className="relative mt-2 font-[family-name:var(--font-rdpi-display)] text-2xl font-semibold">
+              Email non vérifié
+            </h1>
+            <p className="relative mt-3 text-sm text-white/75">
+              Confirmez votre adresse{" "}
+              <span className="text-[color:var(--rdpi-gold)]">
+                @rdpithinktank.org
+              </span>{" "}
+              sur McBuleli pour accéder aux réponses.
+            </p>
+          </div>
+          <div className="bg-[#FAFAF8] px-6 py-5">
+            <Link
+              href="/verify-email/pending"
+              className="inline-flex w-full items-center justify-center rounded-full bg-[color:var(--rdpi-blue)] px-5 py-3 text-sm font-bold text-white"
+            >
+              Vérifier mon email
             </Link>
           </div>
         </VisualCard>
@@ -169,15 +213,11 @@ export function RdpiDashboardClient() {
               Compte non autorisé
             </h1>
             <p className="relative mt-3 text-sm text-white/75">
-              Connectez-vous avec un email RDPI (
+              Réservé aux comptes McBuleli avec un email professionnel{" "}
               <span className="text-[color:var(--rdpi-gold)]">
-                maristote@
+                @rdpithinktank.org
               </span>{" "}
-              /{" "}
-              <span className="text-[color:var(--rdpi-gold)]">
-                info@rdpithinktank.org
-              </span>
-              ).
+              vérifié.
             </p>
           </div>
           <div className="bg-[#FAFAF8] px-6 py-5">
