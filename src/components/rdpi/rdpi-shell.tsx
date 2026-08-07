@@ -65,9 +65,6 @@ export function RdpiShell({
         <Link href="/rdpi" className="inline-flex justify-center" aria-label={RDPI_BRAND.name}>
           <RdpiLogoMark size="hero" />
         </Link>
-        <p className="mt-3 max-w-sm text-[11px] font-semibold uppercase tracking-[0.18em] text-[#78716c]">
-          {RDPI_BRAND.fullName}
-        </p>
       </header>
 
       <main className="relative z-10">{children}</main>
