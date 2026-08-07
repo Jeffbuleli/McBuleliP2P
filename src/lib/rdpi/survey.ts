@@ -7,6 +7,7 @@ import {
   LIKERT_ITEMS,
   OBSTACLE_ITEMS,
   OBSTACLE_LEVELS,
+  OPEN_TEXT_FIELDS,
   REFORM_ITEMS,
   RDPI_SURVEY_SLUG,
   SEX_OPTIONS,
@@ -259,13 +260,19 @@ export async function getRdpiSurveyStats() {
     likertAvg: avgLikert(typed),
     obstaclesAvg: avgObstacles(typed),
     reformPriority: reformPriority(typed),
-    recent: typed.slice(0, 30).map((r) => ({
+    recent: typed.map((r) => ({
       id: r.id,
       fullName: r.fullName,
       province: r.province,
       activity: r.activity,
       createdAt: r.createdAt.toISOString(),
       impactOrg: r.answers.impactOrg,
+      foreignInvestors: r.answers.foreignInvestors ?? "",
+      concernDisposition: r.answers.concernDisposition ?? "",
+      innovationEffects: r.answers.innovationEffects ?? "",
+      startupMeasures: r.answers.startupMeasures ?? "",
+      reconcileFiscal: r.answers.reconcileFiscal ?? "",
+      extraObservations: r.answers.extraObservations ?? "",
     })),
   };
 }
@@ -289,32 +296,39 @@ export function rdpiResponsesToCsv(
   rows: Awaited<ReturnType<typeof listRdpiResponsesForExport>>,
 ): string {
   const headers = [
-    "id",
-    "created_at",
-    "full_name",
-    "sex",
-    "age",
-    "province",
-    "activity",
-    "activity_other",
-    "years_active",
-    "employees",
-    ...LIKERT_ITEMS.map((i) => `likert_${i.key}`),
-    "impact_org",
-    "impact_domain",
-    "actions",
-    "consumer_cost",
-    "foreign_investors",
-    ...OBSTACLE_ITEMS.map((i) => `obstacle_${i.key}`),
-    "opportunity_regulation",
-    "three_regimes",
-    ...REFORM_ITEMS.map((i) => `reform_${i.key}`),
-    "concern_disposition",
-    "innovation_effects",
-    "startup_measures",
-    "reconcile_fiscal",
-    "digitize_perception",
-    "extra_observations",
+    "ID",
+    "Date de soumission",
+    "Nom complet",
+    "Sexe",
+    "Âge",
+    "Province d'exercice principal",
+    "Activité principale",
+    "Activité (précision)",
+    "Ancienneté",
+    "Effectif",
+    ...LIKERT_ITEMS.map((i) => i.label),
+    "D1. Impact sur l'organisation",
+    "D2. Domaine(s) le(s) plus affecté(s)",
+    "D3. Actions envisagées",
+    "D4. Coût pour les consommateurs",
+    ...OPEN_TEXT_FIELDS.filter((f) => f.key === "foreignInvestors").map(
+      (f) => f.csvHeader,
+    ),
+    ...OBSTACLE_ITEMS.map((i) => `Obstacle - ${i.label}`),
+    "Opportunité réglementaire (Oui/Non)",
+    "Trois régimes (Oui/Non)",
+    ...REFORM_ITEMS.map((i) => `Priorité réforme - ${i.label}`),
+    ...OPEN_TEXT_FIELDS.filter(
+      (f) =>
+        f.key === "concernDisposition" ||
+        f.key === "innovationEffects" ||
+        f.key === "startupMeasures" ||
+        f.key === "reconcileFiscal",
+    ).map((f) => f.csvHeader),
+    "G5. Perception numérisée nécessaire (Oui/Non)",
+    ...OPEN_TEXT_FIELDS.filter((f) => f.key === "extraObservations").map(
+      (f) => f.csvHeader,
+    ),
   ];
 
   const lines = [headers.join(",")];
@@ -338,7 +352,9 @@ export function rdpiResponsesToCsv(
       a.consumerCost,
       a.foreignInvestors,
       ...OBSTACLE_ITEMS.map(
-        (i) => OBSTACLE_LEVELS[(a.obstacles?.[i.key] ?? 1) - 1] ?? a.obstacles?.[i.key],
+        (i) =>
+          OBSTACLE_LEVELS[(a.obstacles?.[i.key] ?? 1) - 1] ??
+          a.obstacles?.[i.key],
       ),
       a.opportunityRegulation,
       a.threeRegimes,
@@ -352,5 +368,5 @@ export function rdpiResponsesToCsv(
     ];
     lines.push(vals.map(csvEscape).join(","));
   }
-  return lines.join("\n");
+  return `\uFEFF${lines.join("\n")}`;
 }

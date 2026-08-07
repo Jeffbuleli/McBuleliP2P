@@ -41,6 +41,12 @@ type Stats = {
     activity: string | null;
     createdAt: string;
     impactOrg: string;
+    foreignInvestors: string;
+    concernDisposition: string;
+    innovationEffects: string;
+    startupMeasures: string;
+    reconcileFiscal: string;
+    extraObservations: string;
   }>;
 };
 
@@ -82,6 +88,8 @@ export function RdpiDashboardClient() {
   >(null);
   const [email, setEmail] = useState<string | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
+  const [pageSize, setPageSize] = useState<20 | 30 | 50>(20);
+  const [page, setPage] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -470,44 +478,160 @@ export function RdpiDashboardClient() {
       </div>
 
       <VisualCard className="mt-4 overflow-hidden">
-        <div className="border-b border-[#E5E5E0] px-5 py-4">
-          <h3 className="text-sm font-bold">Dernières réponses</h3>
+        <div className="flex flex-col gap-3 border-b border-[#E5E5E0] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="text-sm font-bold">Dernières réponses</h3>
+            <p className="mt-1 text-xs text-[#78716c]">
+              Questions ouvertes incluses - glissez horizontalement pour tout
+              voir.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[10px] font-bold uppercase tracking-wide text-[#78716c]">
+              Afficher
+            </span>
+            {([20, 30, 50] as const).map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => {
+                  setPageSize(n);
+                  setPage(0);
+                }}
+                className={`rounded-full px-3 py-1.5 text-xs font-bold transition ${
+                  pageSize === n
+                    ? "bg-[color:var(--rdpi-blue)] text-white"
+                    : "border border-[#E5E5E0] bg-white text-[#1c1917]"
+                }`}
+              >
+                {n}
+              </button>
+            ))}
+            <div className="ml-1 flex items-center gap-1">
+              <button
+                type="button"
+                aria-label="Page précédente"
+                disabled={page <= 0}
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#E5E5E0] bg-white text-sm font-bold disabled:opacity-35"
+              >
+                ←
+              </button>
+              <span className="min-w-[4.5rem] text-center font-mono text-[11px] tabular-nums text-[#78716c]">
+                {stats.recent.length === 0
+                  ? "0 / 0"
+                  : `${page + 1} / ${Math.max(
+                      1,
+                      Math.ceil(stats.recent.length / pageSize),
+                    )}`}
+              </span>
+              <button
+                type="button"
+                aria-label="Page suivante"
+                disabled={
+                  stats.recent.length === 0 ||
+                  page >= Math.ceil(stats.recent.length / pageSize) - 1
+                }
+                onClick={() =>
+                  setPage((p) =>
+                    Math.min(
+                      Math.max(0, Math.ceil(stats.recent.length / pageSize) - 1),
+                      p + 1,
+                    ),
+                  )
+                }
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#E5E5E0] bg-white text-sm font-bold disabled:opacity-35"
+              >
+                →
+              </button>
+            </div>
+          </div>
         </div>
         <div className="overflow-x-auto">
-          <table className="min-w-full text-left text-sm">
+          <table className="min-w-[1100px] w-full text-left text-sm">
             <thead className="bg-black/[0.03] text-[10px] uppercase tracking-wide text-[#78716c]">
               <tr>
-                <th className="px-4 py-3 font-bold">Date</th>
-                <th className="px-4 py-3 font-bold">Nom</th>
-                <th className="px-4 py-3 font-bold">Province</th>
-                <th className="px-4 py-3 font-bold">Activité</th>
-                <th className="px-4 py-3 font-bold">Impact</th>
+                <th className="whitespace-nowrap px-4 py-3 font-bold">Date</th>
+                <th className="whitespace-nowrap px-4 py-3 font-bold">Nom</th>
+                <th className="whitespace-nowrap px-4 py-3 font-bold">
+                  Province
+                </th>
+                <th className="whitespace-nowrap px-4 py-3 font-bold">
+                  Activité
+                </th>
+                <th className="whitespace-nowrap px-4 py-3 font-bold">Impact</th>
+                <th className="min-w-[12rem] px-4 py-3 font-bold">
+                  Préoccupation (G1)
+                </th>
+                <th className="min-w-[12rem] px-4 py-3 font-bold">
+                  Effets innovation (G2)
+                </th>
+                <th className="min-w-[12rem] px-4 py-3 font-bold">
+                  Mesures startups (G3)
+                </th>
+                <th className="min-w-[12rem] px-4 py-3 font-bold">
+                  Conciliation (G4)
+                </th>
+                <th className="min-w-[12rem] px-4 py-3 font-bold">
+                  Investisseurs (D5)
+                </th>
+                <th className="min-w-[12rem] px-4 py-3 font-bold">
+                  Observations (G6)
+                </th>
               </tr>
             </thead>
             <tbody>
               {stats.recent.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={11}
                     className="px-4 py-8 text-center text-[#a8a29e]"
                   >
                     Aucune réponse pour l&apos;instant.
                   </td>
                 </tr>
               ) : (
-                stats.recent.map((r) => (
-                  <tr key={r.id} className="border-t border-[#E5E5E0]">
-                    <td className="whitespace-nowrap px-4 py-3 text-xs text-[#78716c]">
-                      {new Date(r.createdAt).toLocaleString("fr-CD", {
-                        timeZone: "Africa/Kinshasa",
-                      })}
-                    </td>
-                    <td className="px-4 py-3">{r.fullName ?? "-"}</td>
-                    <td className="px-4 py-3">{r.province ?? "-"}</td>
-                    <td className="px-4 py-3">{r.activity ?? "-"}</td>
-                    <td className="px-4 py-3">{r.impactOrg || "-"}</td>
-                  </tr>
-                ))
+                stats.recent
+                  .slice(page * pageSize, page * pageSize + pageSize)
+                  .map((r) => (
+                    <tr key={r.id} className="border-t border-[#E5E5E0]">
+                      <td className="whitespace-nowrap px-4 py-3 align-top text-xs text-[#78716c]">
+                        {new Date(r.createdAt).toLocaleString("fr-CD", {
+                          timeZone: "Africa/Kinshasa",
+                        })}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 align-top">
+                        {r.fullName ?? "-"}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 align-top">
+                        {r.province ?? "-"}
+                      </td>
+                      <td className="max-w-[10rem] px-4 py-3 align-top">
+                        {r.activity ?? "-"}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 align-top">
+                        {r.impactOrg || "-"}
+                      </td>
+                      <td className="max-w-[16rem] px-4 py-3 align-top text-xs leading-relaxed text-[#44403c]">
+                        {r.concernDisposition.trim() || "-"}
+                      </td>
+                      <td className="max-w-[16rem] px-4 py-3 align-top text-xs leading-relaxed text-[#44403c]">
+                        {r.innovationEffects.trim() || "-"}
+                      </td>
+                      <td className="max-w-[16rem] px-4 py-3 align-top text-xs leading-relaxed text-[#44403c]">
+                        {r.startupMeasures.trim() || "-"}
+                      </td>
+                      <td className="max-w-[16rem] px-4 py-3 align-top text-xs leading-relaxed text-[#44403c]">
+                        {r.reconcileFiscal.trim() || "-"}
+                      </td>
+                      <td className="max-w-[16rem] px-4 py-3 align-top text-xs leading-relaxed text-[#44403c]">
+                        {r.foreignInvestors.trim() || "-"}
+                      </td>
+                      <td className="max-w-[16rem] px-4 py-3 align-top text-xs leading-relaxed text-[#44403c]">
+                        {r.extraObservations.trim() || "-"}
+                      </td>
+                    </tr>
+                  ))
               )}
             </tbody>
           </table>

@@ -157,6 +157,45 @@ export const REFORM_ITEMS = [
   { key: "abolishTaxes", label: "Supprimer les taxes" },
 ] as const;
 
+/** Open / free-text fields shown in CSV + dashboard table. */
+export const OPEN_TEXT_FIELDS = [
+  {
+    key: "foreignInvestors",
+    csvHeader:
+      "D5. Les nouvelles taxes décourageront-elles les investisseurs étrangers ? Si oui, pourquoi ?",
+    tableHeader: "Investisseurs étrangers (D5)",
+  },
+  {
+    key: "concernDisposition",
+    csvHeader:
+      "G1. Quelle disposition du nouvel arrêté vous préoccupe le plus ? Pourquoi ?",
+    tableHeader: "Préoccupation (G1)",
+  },
+  {
+    key: "innovationEffects",
+    csvHeader:
+      "G2. Quels seront les principaux effets de ces nouvelles taxes sur l'innovation ?",
+    tableHeader: "Effets innovation (G2)",
+  },
+  {
+    key: "startupMeasures",
+    csvHeader:
+      "G3. Quelles mesures proposeriez-vous pour soutenir davantage les startups numériques ?",
+    tableHeader: "Mesures startups (G3)",
+  },
+  {
+    key: "reconcileFiscal",
+    csvHeader:
+      "G4. Comment mieux concilier mobilisation fiscale et entrepreneuriat numérique ?",
+    tableHeader: "Conciliation fiscale (G4)",
+  },
+  {
+    key: "extraObservations",
+    csvHeader: "G6. Observations ou recommandations supplémentaires",
+    tableHeader: "Observations (G6)",
+  },
+] as const;
+
 export type RdpiSurveyAnswers = {
   fullName: string;
   sex: (typeof SEX_OPTIONS)[number] | "";
