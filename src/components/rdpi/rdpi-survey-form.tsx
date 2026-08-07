@@ -203,7 +203,13 @@ function ScaleRow({
       <p className="mb-3 text-sm font-semibold leading-snug text-[#1c1917]">
         {label}
       </p>
-      <div className="flex flex-wrap gap-2">
+      <div
+        className={`grid gap-2 ${
+          max >= 7
+            ? "grid-cols-7"
+            : "grid-cols-5 sm:flex sm:flex-wrap"
+        }`}
+      >
         {Array.from({ length: max }, (_, i) => i + 1).map((n) => {
           const active = value === n;
           return (
@@ -211,7 +217,7 @@ function ScaleRow({
               key={n}
               type="button"
               onClick={() => onChange(n)}
-              className={`min-w-[2.75rem] rounded-xl border px-2.5 py-2.5 text-sm font-bold tabular-nums transition ${
+              className={`rounded-xl border py-2.5 text-sm font-bold tabular-nums transition sm:min-w-[2.75rem] sm:px-2.5 ${
                 active
                   ? "border-[color:var(--rdpi-blue)] bg-[color:var(--rdpi-blue)] text-white shadow-[0_8px_20px_-10px_rgba(30,94,255,0.7)]"
                   : "border-[#E5E5E0] bg-[#FAFAF8] text-[#1c1917] hover:border-[color:var(--rdpi-blue)]/45"
@@ -322,10 +328,7 @@ export function RdpiSurveyForm() {
     if (s === 6) {
       const ranks = REFORM_ITEMS.map((r) => answers.reformRanks[r.key] ?? 0);
       if (ranks.some((r) => r < 1 || r > 7)) {
-        return "Attribuez un numéro (de 1 à 7) à chaque réforme.";
-      }
-      if (new Set(ranks).size !== 7) {
-        return "Deux réformes ont le même numéro. Choisissez un classement différent pour chacune (1 = la plus importante, 7 = la moins importante).";
+        return "Répondez à chaque réforme (1 à 7).";
       }
     }
     if (s === 7) {
@@ -387,7 +390,7 @@ export function RdpiSurveyForm() {
 
   if (done) {
     return (
-      <div className="mx-auto max-w-[440px] px-4 pb-6 pt-6">
+      <div className="mx-auto max-w-lg sm:max-w-xl md:max-w-2xl px-4 pb-6 pt-6">
         <VisualCard className="overflow-hidden !p-0">
           <div className="relative bg-gradient-to-br from-[color:var(--rdpi-blue)] to-[#0B2F9F] px-6 pb-8 pt-10 text-center text-white">
             <RdpiIlluSunburst className="pointer-events-none absolute -right-6 -top-4 h-36 w-36 opacity-20" />
@@ -427,7 +430,7 @@ export function RdpiSurveyForm() {
   }
 
   return (
-    <div className="mx-auto max-w-[440px] px-4 pb-6 pt-6 sm:pt-8">
+    <div className="mx-auto max-w-lg sm:max-w-xl md:max-w-2xl px-4 pb-6 pt-6 sm:pt-8">
       {step > 0 ? (
         <div className="mb-5">
           <div className="mb-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.16em] text-[#78716c]">
@@ -744,66 +747,22 @@ export function RdpiSurveyForm() {
               <SectionTitle sectionId="reformes">
                 Section G - Priorités de réforme
               </SectionTitle>
-              <div className="rounded-2xl border border-[color:var(--rdpi-blue)]/20 bg-[color:var(--rdpi-blue)]/[0.06] px-4 py-3 text-sm leading-relaxed text-[#44403c]">
-                <p className="font-semibold text-[#0c0a09]">
-                  Classez ces 7 réformes par ordre d&apos;importance.
-                </p>
-                <p className="mt-1.5">
-                  <strong>1</strong> = la plus importante pour vous ·{" "}
-                  <strong>7</strong> = la moins importante.
-                </p>
-                <p className="mt-1.5 text-[#78716c]">
-                  Donnez un numéro différent à chaque réforme (pas de doublon).
-                </p>
-              </div>
-              {REFORM_ITEMS.map((item) => {
-                const current = answers.reformRanks[item.key] || 0;
-                const taken = new Set(
-                  REFORM_ITEMS.filter((r) => r.key !== item.key)
-                    .map((r) => answers.reformRanks[r.key] ?? 0)
-                    .filter((n) => n >= 1),
-                );
-                return (
-                  <div
-                    key={item.key}
-                    className="flex flex-col gap-3 rounded-2xl border border-[#E5E5E0] bg-white px-3.5 py-3.5 sm:flex-row sm:items-center sm:justify-between"
-                  >
-                    <p className="text-sm font-semibold text-[#1c1917]">
-                      {item.label}
-                    </p>
-                    <select
-                      className="rounded-xl border border-[#E5E5E0] bg-[#FAFAF8] px-3 py-2.5 text-sm font-semibold outline-none focus:border-[color:var(--rdpi-blue)]"
-                      value={current || ""}
-                      onChange={(e) => {
-                        const n = Number(e.target.value);
-                        patch({
-                          reformRanks: {
-                            ...answers.reformRanks,
-                            [item.key]: n,
-                          },
-                        });
-                      }}
-                    >
-                      <option value="">Choisir le rang...</option>
-                      {[1, 2, 3, 4, 5, 6, 7].map((n) => {
-                        const used = taken.has(n);
-                        const label =
-                          n === 1
-                            ? "1 - Plus importante"
-                            : n === 7
-                              ? "7 - Moins importante"
-                              : String(n);
-                        return (
-                          <option key={n} value={n} disabled={used}>
-                            {label}
-                            {used ? " (déjà pris)" : ""}
-                          </option>
-                        );
-                      })}
-                    </select>
-                  </div>
-                );
-              })}
+              {REFORM_ITEMS.map((item) => (
+                <ScaleRow
+                  key={item.key}
+                  label={item.label}
+                  value={answers.reformRanks[item.key] ?? 0}
+                  max={7}
+                  onChange={(n) =>
+                    patch({
+                      reformRanks: {
+                        ...answers.reformRanks,
+                        [item.key]: n,
+                      },
+                    })
+                  }
+                />
+              ))}
             </section>
           ) : null}
 

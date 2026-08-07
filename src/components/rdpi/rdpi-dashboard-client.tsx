@@ -195,7 +195,7 @@ export function RdpiDashboardClient() {
 
   if (error === "unauthenticated") {
     return (
-      <div className="mx-auto max-w-[440px] px-4 py-12">
+      <div className="mx-auto max-w-lg sm:max-w-xl md:max-w-2xl px-4 py-12">
         <VisualCard className="overflow-hidden !p-0 text-center">
           <div className="relative overflow-hidden bg-black px-6 py-8 text-white">
             <RdpiIlluSunburst className="pointer-events-none absolute -right-4 -top-2 h-28 w-28 opacity-25" />
@@ -226,7 +226,7 @@ export function RdpiDashboardClient() {
 
   if (error === "forbidden") {
     return (
-      <div className="mx-auto max-w-[440px] px-4 py-12">
+      <div className="mx-auto max-w-lg sm:max-w-xl md:max-w-2xl px-4 py-12">
         <VisualCard className="overflow-hidden !p-0 text-center">
           <div className="relative overflow-hidden bg-black px-6 py-8 text-white">
             <RdpiIlluSunburst className="pointer-events-none absolute -left-6 top-0 h-28 w-28 opacity-20" />

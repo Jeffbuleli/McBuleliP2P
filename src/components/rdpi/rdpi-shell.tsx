@@ -59,7 +59,7 @@ export function RdpiShell({
 
       <header
         className={`relative z-10 mx-auto flex flex-col items-center px-4 pt-7 text-center sm:pt-10 ${
-          wide ? "max-w-5xl" : "max-w-[440px]"
+          wide ? "max-w-5xl" : "max-w-lg sm:max-w-xl md:max-w-2xl"
         }`}
       >
         <Link href="/rdpi" className="inline-flex justify-center" aria-label={RDPI_BRAND.name}>
@@ -70,7 +70,11 @@ export function RdpiShell({
       <main className="relative z-10">{children}</main>
 
       {showFooter ? (
-        <div className={`relative z-10 mx-auto px-4 pb-10 ${wide ? "max-w-5xl" : "max-w-[440px]"}`}>
+        <div
+          className={`relative z-10 mx-auto px-4 pb-10 ${
+            wide ? "max-w-5xl" : "max-w-lg sm:max-w-xl md:max-w-2xl"
+          }`}
+        >
           <RdpiPoweredFooter />
         </div>
       ) : null}

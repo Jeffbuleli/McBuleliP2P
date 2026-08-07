@@ -90,9 +90,6 @@ export function validateRdpiAnswers(
   if (ranks.some((r) => !Number.isInteger(r) || r < 1 || r > 7)) {
     return { ok: false, error: "reformRanks_incomplete" };
   }
-  if (new Set(ranks).size !== 7) {
-    return { ok: false, error: "reformRanks_unique" };
-  }
   for (const item of REFORM_ITEMS) {
     a.reformRanks[item.key] = Number(a.reformRanks[item.key]);
   }
