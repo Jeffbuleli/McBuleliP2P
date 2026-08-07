@@ -344,14 +344,21 @@ export function RdpiDashboardClient() {
         </ChartPanel>
 
         <ChartPanel title="Impact sur l'organisation">
-          <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start">
+          <div className="flex flex-col items-center gap-5">
             <RdpiScoreRing
               value={negImpactPct}
               label="Négatif"
               color={RDPI_CHART.gold}
             />
-            <div className="min-w-0 flex-1">
-              <RdpiDonutLegend items={stats.byImpactOrg} />
+            <div className="w-full">
+              <RdpiHorizontalBars
+                color={RDPI_CHART.gold}
+                items={stats.byImpactOrg.map((x) => ({
+                  label: x.label,
+                  value: x.value,
+                  max: Math.max(...stats.byImpactOrg.map((y) => y.value), 1),
+                }))}
+              />
             </div>
           </div>
         </ChartPanel>
