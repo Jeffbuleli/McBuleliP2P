@@ -553,3 +553,130 @@ export async function listHackathonLeads(args: {
 
   return { leads: filtered, total: count };
 }
+
+function csvEscape(v: unknown): string {
+  const s = v == null ? "" : String(v);
+  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+}
+
+/** Full list for CSV export (filters applied; hard cap 20k). */
+export async function listHackathonLeadsForExport(args: {
+  editionId: string;
+  category?: string;
+  segment?: string;
+  q?: string;
+}) {
+  const db = getDb();
+  const conditions = [eq(hackathonLeads.editionId, args.editionId)];
+  if (args.category) {
+    conditions.push(eq(hackathonLeads.category, args.category));
+  }
+  if (args.segment) {
+    conditions.push(eq(hackathonLeads.segment, args.segment));
+  }
+
+  const rows = await db
+    .select({
+      id: hackathonLeads.id,
+      firstName: hackathonLeads.firstName,
+      lastName: hackathonLeads.lastName,
+      email: hackathonLeads.email,
+      phone: hackathonLeads.phone,
+      company: hackathonLeads.company,
+      jobTitle: hackathonLeads.jobTitle,
+      location: hackathonLeads.location,
+      source: hackathonLeads.source,
+      score: hackathonLeads.score,
+      category: hackathonLeads.category,
+      segment: hackathonLeads.segment,
+      priority: hackathonLeads.priority,
+      qualificationReason: hackathonLeads.qualificationReason,
+      recommendedProfile: hackathonLeads.recommendedProfile,
+      lifecycle: hackathonLeads.lifecycle,
+      emailValid: hackathonLeads.emailValid,
+      suppressed: hackathonLeads.suppressed,
+      alreadyRegistered: hackathonLeads.alreadyRegistered,
+      contactCount: hackathonLeads.contactCount,
+      lastContactedAt: hackathonLeads.lastContactedAt,
+      createdAt: hackathonLeads.createdAt,
+    })
+    .from(hackathonLeads)
+    .where(and(...conditions))
+    .orderBy(sql`${hackathonLeads.score} DESC, ${hackathonLeads.createdAt} DESC`)
+    .limit(20_000);
+
+  if (!args.q?.trim()) return rows;
+  const q = args.q.trim().toLowerCase();
+  return rows.filter(
+    (r) =>
+      r.email.toLowerCase().includes(q) ||
+      r.firstName.toLowerCase().includes(q) ||
+      r.lastName.toLowerCase().includes(q) ||
+      (r.company ?? "").toLowerCase().includes(q),
+  );
+}
+
+export function hackathonLeadsToCsv(
+  rows: Awaited<ReturnType<typeof listHackathonLeadsForExport>>,
+): string {
+  const headers = [
+    "firstName",
+    "lastName",
+    "email",
+    "phone",
+    "company",
+    "jobTitle",
+    "location",
+    "source",
+    "score",
+    "category",
+    "segment",
+    "priority",
+    "lifecycle",
+    "emailValid",
+    "suppressed",
+    "alreadyRegistered",
+    "contactCount",
+    "lastContactedAt",
+    "qualificationReason",
+    "recommendedProfile",
+    "createdAt",
+    "id",
+  ] as const;
+
+  const lines = [headers.join(",")];
+  for (const r of rows) {
+    lines.push(
+      [
+        r.firstName,
+        r.lastName,
+        r.email,
+        r.phone,
+        r.company,
+        r.jobTitle,
+        r.location,
+        r.source,
+        r.score,
+        r.category,
+        r.segment,
+        r.priority,
+        r.lifecycle,
+        r.emailValid,
+        r.suppressed,
+        r.alreadyRegistered,
+        r.contactCount,
+        r.lastContactedAt
+          ? new Date(r.lastContactedAt).toISOString()
+          : "",
+        r.qualificationReason,
+        r.recommendedProfile,
+        r.createdAt ? new Date(r.createdAt).toISOString() : "",
+        r.id,
+      ]
+        .map(csvEscape)
+        .join(","),
+    );
+  }
+  return `\uFEFF${lines.join("\n")}\n`;
+}

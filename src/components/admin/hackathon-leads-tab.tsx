@@ -347,6 +347,40 @@ export function HackathonLeadsTab({ editionId, isAdmin }: Props) {
     }
   }
 
+  async function downloadCsv() {
+    if (!editionId || total === 0) return;
+    setBusy(true);
+    setErr(null);
+    try {
+      const params = new URLSearchParams({
+        editionId,
+        export: "csv",
+      });
+      if (q.trim()) params.set("q", q.trim());
+      if (category) params.set("category", category);
+      if (segment) params.set("segment", segment);
+      const res = await fetch(`/api/admin/hackathon/leads?${params}`, {
+        credentials: "include",
+        cache: "no-store",
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        setErr(typeof j.error === "string" ? j.error : "Export CSV impossible");
+        return;
+      }
+      const blob = await res.blob();
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `hackathon-leads-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch {
+      setErr("Export CSV impossible");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const statusLabel: Record<string, string> = {
     new: "Nouveau",
     duplicate_in_file: "Doublon fichier",
@@ -601,6 +635,14 @@ export function HackathonLeadsTab({ editionId, isAdmin }: Props) {
             onClick={() => void load()}
           >
             ↻
+          </button>
+          <button
+            type="button"
+            className={adminCls.btnSecondary}
+            disabled={busy || total === 0}
+            onClick={() => void downloadCsv()}
+          >
+            Télécharger CSV
           </button>
         </div>
         {leads.length === 0 ? (

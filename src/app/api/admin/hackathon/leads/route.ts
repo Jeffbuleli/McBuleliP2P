@@ -3,7 +3,9 @@ import { z } from "zod";
 import { StaffAuthError, requireSuperAdmin } from "@/lib/session-user";
 import {
   commitLeadImportFromFile,
+  hackathonLeadsToCsv,
   listHackathonLeads,
+  listHackathonLeadsForExport,
   previewLeadImportFromFile,
 } from "@/lib/hackathon/leads/lead-import";
 import {
@@ -39,13 +41,36 @@ export async function GET(req: Request) {
     return NextResponse.json({ ok: true, ...stats });
   }
 
+  const category = url.searchParams.get("category") || undefined;
+  const segment = url.searchParams.get("segment") || undefined;
+  const q = url.searchParams.get("q") || undefined;
+
+  if (url.searchParams.get("export") === "csv") {
+    const rows = await listHackathonLeadsForExport({
+      editionId,
+      category,
+      segment,
+      q,
+    });
+    const csv = hackathonLeadsToCsv(rows);
+    const stamp = new Date().toISOString().slice(0, 10);
+    return new NextResponse(csv, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="hackathon-leads-${stamp}.csv"`,
+        "Cache-Control": "no-store",
+      },
+    });
+  }
+
   const result = await listHackathonLeads({
     editionId,
     limit: Number(url.searchParams.get("limit") || 100) || 100,
     offset: Number(url.searchParams.get("offset") || 0) || 0,
-    category: url.searchParams.get("category") || undefined,
-    segment: url.searchParams.get("segment") || undefined,
-    q: url.searchParams.get("q") || undefined,
+    category,
+    segment,
+    q,
   });
 
   return NextResponse.json(result);
