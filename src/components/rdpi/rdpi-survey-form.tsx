@@ -383,14 +383,14 @@ export function RdpiSurveyForm() {
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-white/80">
               Vos réponses ont bien été enregistrées. Elles restent
-              confidentielles et serviront uniquement à l&apos;etude RDPI Think
+              confidentielles et serviront uniquement à l&apos;étude RDPI Think
               Tank.
             </p>
           </div>
           <div className="space-y-3 bg-[#FAFAF8] px-5 py-5">
             <div className="rounded-2xl border border-[#E5E5E0] bg-white px-4 py-3 text-left text-sm text-[#57534e]">
               Votre voix nourrit des recommandations fondées sur le terrain pour
-              un écosystème numérique plus competitif en RDC.
+              un écosystème numérique plus compétitif en RDC.
             </div>
             <a
               href="https://rdpithinktank.org/"
