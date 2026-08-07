@@ -171,7 +171,7 @@ export function RdpiDashboardClient() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-5xl px-4 py-20 text-center text-sm text-[#78716c]">
+      <div className="mx-auto w-full max-w-6xl px-4 py-20 text-center text-sm text-[#78716c] sm:px-6 md:px-8">
         Chargement des réponses...
       </div>
     );
@@ -304,9 +304,9 @@ export function RdpiDashboardClient() {
     RDPI_CHART.gold;
 
   return (
-    <div className="mx-auto max-w-5xl px-4 pb-10 pt-6">
+    <div className="mx-auto w-full max-w-6xl px-4 pb-10 pt-6 sm:px-6 md:px-8">
       <VisualCard className="mb-5 overflow-hidden !p-0">
-        <div className="relative flex flex-col gap-4 overflow-hidden border-b border-[#E5E5E0] bg-black px-5 py-5 text-white sm:flex-row sm:items-end sm:justify-between sm:px-6">
+        <div className="relative flex flex-col gap-4 overflow-hidden border-b border-[#E5E5E0] bg-black px-5 py-5 text-white sm:flex-row sm:items-end sm:justify-between sm:px-6 md:px-8">
           <RdpiIlluChart className="pointer-events-none absolute -right-2 top-2 h-28 w-36 opacity-25" />
           <div className="relative">
             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[color:var(--rdpi-gold)]">
@@ -684,18 +684,15 @@ export function RdpiDashboardClient() {
                             "-"
                           )}
                         </td>
-                        <td className="px-4 py-3 align-top text-xs">
+                        <td className="whitespace-nowrap px-4 py-3 align-top text-xs">
                           {r.phone ? (
                             <a
                               href={`https://wa.me/${r.phone.replace(/\D/g, "")}`}
                               target="_blank"
                               rel="noreferrer"
                               onClick={(e) => e.stopPropagation()}
-                              className="inline-flex min-w-[9.5rem] items-center gap-1.5 rounded-lg border border-[#E5E5E0] bg-white px-2.5 py-1.5 font-mono text-[11px] tabular-nums tracking-wide text-[color:var(--rdpi-blue)] shadow-sm hover:border-[color:var(--rdpi-blue)]/40 md:min-w-[10.5rem] md:text-xs"
+                              className="font-mono tabular-nums tracking-wide text-[color:var(--rdpi-blue)] underline-offset-2 hover:underline"
                             >
-                              <span aria-hidden className="text-[10px]">
-                                WA
-                              </span>
                               {formatRdpiPhone(r.phone)}
                             </a>
                           ) : (
