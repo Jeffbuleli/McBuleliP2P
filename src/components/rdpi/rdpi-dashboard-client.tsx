@@ -19,9 +19,11 @@ import {
   RdpiVerticalBars,
 } from "@/components/rdpi/rdpi-stats-visuals";
 
-type CountBucket = { label: string; value: number };
+type CountBucket = { label: string; value: number; color?: string };
 type Stats = {
   total: number;
+  provinceCoverage: number;
+  provinceTotal: number;
   bySex: CountBucket[];
   byAge: CountBucket[];
   byActivity: CountBucket[];
@@ -41,6 +43,7 @@ type Stats = {
     activity: string | null;
     createdAt: string;
     impactOrg: string;
+    impactOrgColor: string | null;
     email: string;
     phone: string;
     mcbuleliContactOptIn: boolean;
@@ -52,6 +55,21 @@ type Stats = {
     extraObservations: string;
   }>;
 };
+
+function OpenAnswerCell({ text }: { text: string }) {
+  const t = text.trim();
+  if (!t) {
+    return <span className="text-[#a8a29e]">-</span>;
+  }
+  return (
+    <p
+      className="max-w-[18rem] whitespace-pre-wrap break-words text-xs leading-relaxed text-[#44403c] line-clamp-5"
+      title={t}
+    >
+      {t}
+    </p>
+  );
+}
 
 function VisualCard({
   children,
@@ -259,8 +277,12 @@ export function RdpiDashboardClient() {
     (stats.byImpactOrg.find((x) => x.label === "Très négatif")?.value ?? 0);
   const negImpactPct =
     stats.total > 0 ? Math.round((negImpact / stats.total) * 100) : 0;
+  const impactMax = Math.max(...stats.byImpactOrg.map((y) => y.value), 1);
   const reformMax =
     Math.max(...stats.reformPriority.map((r) => r.avgRank), 1) || 1;
+  const negColor =
+    stats.byImpactOrg.find((x) => x.label === "Négatif")?.color ??
+    RDPI_CHART.gold;
 
   return (
     <div className="mx-auto max-w-5xl px-4 pb-10 pt-6">
@@ -312,7 +334,7 @@ export function RdpiDashboardClient() {
             label="Impact négatif"
             value={negImpact}
             hint="Négatif + Très négatif"
-            color={RDPI_CHART.gold}
+            color={negColor}
             maxHint={Math.max(stats.total, 1)}
           />
           <RdpiStatTile
@@ -326,10 +348,10 @@ export function RdpiDashboardClient() {
           />
           <RdpiStatTile
             label="Provinces"
-            value={stats.byProvince.length}
-            hint="Localisations distinctes"
+            value={stats.provinceCoverage ?? stats.byProvince.length}
+            hint={`sur ${stats.provinceTotal ?? 26}`}
             color={RDPI_CHART.ink}
-            maxHint={26}
+            maxHint={stats.provinceTotal ?? 26}
           />
         </div>
       </VisualCard>
@@ -337,9 +359,10 @@ export function RdpiDashboardClient() {
       <div className="grid gap-4 lg:grid-cols-2">
         <ChartPanel title="Répartition par sexe">
           <RdpiVerticalBars
-            buckets={stats.bySex.map((x) => ({
+            buckets={stats.bySex.map((x, i) => ({
               label: x.label,
               count: x.value,
+              color: x.color ?? RDPI_SERIES[i % RDPI_SERIES.length],
             }))}
             totalLabel={`${stats.total} réponses`}
           />
@@ -347,9 +370,10 @@ export function RdpiDashboardClient() {
 
         <ChartPanel title="Tranches d'âge">
           <RdpiVerticalBars
-            buckets={stats.byAge.map((x) => ({
+            buckets={stats.byAge.map((x, i) => ({
               label: x.label,
               count: x.value,
+              color: x.color ?? RDPI_SERIES[i % RDPI_SERIES.length],
             }))}
           />
         </ChartPanel>
@@ -359,15 +383,15 @@ export function RdpiDashboardClient() {
             <RdpiScoreRing
               value={negImpactPct}
               label="Négatif"
-              color={RDPI_CHART.gold}
+              color={negColor}
             />
             <div className="w-full">
               <RdpiHorizontalBars
-                color={RDPI_CHART.gold}
                 items={stats.byImpactOrg.map((x) => ({
                   label: x.label,
                   value: x.value,
-                  max: Math.max(...stats.byImpactOrg.map((y) => y.value), 1),
+                  max: impactMax,
+                  color: x.color,
                 }))}
               />
             </div>
@@ -376,9 +400,15 @@ export function RdpiDashboardClient() {
 
         <ChartPanel title="Coût pour les consommateurs">
           <RdpiVerticalBars
-            buckets={stats.byConsumerCost.map((x) => ({
+            buckets={stats.byConsumerCost.map((x, i) => ({
               label: x.label,
               count: x.value,
+              color:
+                x.label === "Oui"
+                  ? "#DC2626"
+                  : x.label === "Non"
+                    ? "#15803D"
+                    : RDPI_SERIES[i % RDPI_SERIES.length],
             }))}
           />
         </ChartPanel>
@@ -485,8 +515,7 @@ export function RdpiDashboardClient() {
           <div>
             <h3 className="text-sm font-bold">Dernières réponses</h3>
             <p className="mt-1 text-xs text-[#78716c]">
-              Questions ouvertes incluses - glissez horizontalement pour tout
-              voir.
+              Aperçu des questions ouvertes — texte complet dans le CSV.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -568,6 +597,9 @@ export function RdpiDashboardClient() {
                 </th>
                 <th className="whitespace-nowrap px-4 py-3 font-bold">Impact</th>
                 <th className="min-w-[12rem] px-4 py-3 font-bold">
+                  Investisseurs (D5)
+                </th>
+                <th className="min-w-[12rem] px-4 py-3 font-bold">
                   Préoccupation (G1)
                 </th>
                 <th className="min-w-[12rem] px-4 py-3 font-bold">
@@ -578,9 +610,6 @@ export function RdpiDashboardClient() {
                 </th>
                 <th className="min-w-[12rem] px-4 py-3 font-bold">
                   Conciliation (G4)
-                </th>
-                <th className="min-w-[12rem] px-4 py-3 font-bold">
-                  Investisseurs (D5)
                 </th>
                 <th className="min-w-[12rem] px-4 py-3 font-bold">
                   Observations (G6)
@@ -643,25 +672,32 @@ export function RdpiDashboardClient() {
                         {r.activity ?? "-"}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 align-top">
-                        {r.impactOrg || "-"}
+                        <span
+                          className="font-semibold"
+                          style={{
+                            color: r.impactOrgColor ?? undefined,
+                          }}
+                        >
+                          {r.impactOrg || "-"}
+                        </span>
                       </td>
-                      <td className="max-w-[16rem] px-4 py-3 align-top text-xs leading-relaxed text-[#44403c]">
-                        {r.concernDisposition.trim() || "-"}
+                      <td className="px-4 py-3 align-top">
+                        <OpenAnswerCell text={r.foreignInvestors} />
                       </td>
-                      <td className="max-w-[16rem] px-4 py-3 align-top text-xs leading-relaxed text-[#44403c]">
-                        {r.innovationEffects.trim() || "-"}
+                      <td className="px-4 py-3 align-top">
+                        <OpenAnswerCell text={r.concernDisposition} />
                       </td>
-                      <td className="max-w-[16rem] px-4 py-3 align-top text-xs leading-relaxed text-[#44403c]">
-                        {r.startupMeasures.trim() || "-"}
+                      <td className="px-4 py-3 align-top">
+                        <OpenAnswerCell text={r.innovationEffects} />
                       </td>
-                      <td className="max-w-[16rem] px-4 py-3 align-top text-xs leading-relaxed text-[#44403c]">
-                        {r.reconcileFiscal.trim() || "-"}
+                      <td className="px-4 py-3 align-top">
+                        <OpenAnswerCell text={r.startupMeasures} />
                       </td>
-                      <td className="max-w-[16rem] px-4 py-3 align-top text-xs leading-relaxed text-[#44403c]">
-                        {r.foreignInvestors.trim() || "-"}
+                      <td className="px-4 py-3 align-top">
+                        <OpenAnswerCell text={r.reconcileFiscal} />
                       </td>
-                      <td className="max-w-[16rem] px-4 py-3 align-top text-xs leading-relaxed text-[#44403c]">
-                        {r.extraObservations.trim() || "-"}
+                      <td className="px-4 py-3 align-top">
+                        <OpenAnswerCell text={r.extraObservations} />
                       </td>
                     </tr>
                   ))

@@ -62,6 +62,99 @@ export const EMPLOYEES_OPTIONS = [
   "Plus de 50",
 ] as const;
 
+/** 26 provinces de la RDC (libellés canoniques dashboard / formulaire). */
+export const DRC_PROVINCES = [
+  "Kinshasa",
+  "Kongo Central",
+  "Kwango",
+  "Kwilu",
+  "Mai-Ndombe",
+  "Équateur",
+  "Mongala",
+  "Nord-Ubangi",
+  "Sud-Ubangi",
+  "Tshuapa",
+  "Tshopo",
+  "Bas-Uele",
+  "Haut-Uele",
+  "Ituri",
+  "Nord-Kivu",
+  "Sud-Kivu",
+  "Maniema",
+  "Haut-Katanga",
+  "Lualaba",
+  "Haut-Lomami",
+  "Tanganyika",
+  "Lomami",
+  "Sankuru",
+  "Kasaï",
+  "Kasaï Central",
+  "Kasaï Oriental",
+] as const;
+
+export type DrcProvince = (typeof DRC_PROVINCES)[number];
+
+function stripDiacritics(s: string): string {
+  return s.normalize("NFD").replace(/\p{M}/gu, "");
+}
+
+/** Clé de comparaison : minuscule, sans accents, espaces/traits unifiés. */
+export function provinceMatchKey(raw: string): string {
+  return stripDiacritics(raw)
+    .toLowerCase()
+    .replace(/[''`´]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .replace(/\s+/g, " ");
+}
+
+const PROVINCE_ALIAS_TO_CANONICAL = (() => {
+  const map = new Map<string, DrcProvince>();
+  for (const p of DRC_PROVINCES) {
+    map.set(provinceMatchKey(p), p);
+  }
+  const extras: Array<[string, DrcProvince]> = [
+    ["kin", "Kinshasa"],
+    ["kinshsa", "Kinshasa"],
+    ["ville de kinshasa", "Kinshasa"],
+    ["bas congo", "Kongo Central"],
+    ["bascongo", "Kongo Central"],
+    ["congo central", "Kongo Central"],
+    ["mai ndombe", "Mai-Ndombe"],
+    ["maindombe", "Mai-Ndombe"],
+    ["equateur", "Équateur"],
+    ["nord ubangi", "Nord-Ubangi"],
+    ["sud ubangi", "Sud-Ubangi"],
+    ["bas uele", "Bas-Uele"],
+    ["haut uele", "Haut-Uele"],
+    ["nord kivu", "Nord-Kivu"],
+    ["nkivu", "Nord-Kivu"],
+    ["sud kivu", "Sud-Kivu"],
+    ["skivu", "Sud-Kivu"],
+    ["haut katanga", "Haut-Katanga"],
+    ["haut lomami", "Haut-Lomami"],
+    ["kasai", "Kasaï"],
+    ["kasai central", "Kasaï Central"],
+    ["kasai oriental", "Kasaï Oriental"],
+    ["east kasai", "Kasaï Oriental"],
+    ["west kasai", "Kasaï"],
+  ];
+  for (const [alias, canon] of extras) {
+    map.set(provinceMatchKey(alias), canon);
+  }
+  return map;
+})();
+
+/**
+ * Mappe une saisie libre vers une province canonique (26).
+ * Retourne null si non reconnue.
+ */
+export function canonicalizeProvince(raw: string): DrcProvince | null {
+  const key = provinceMatchKey(raw);
+  if (!key) return null;
+  return PROVINCE_ALIAS_TO_CANONICAL.get(key) ?? null;
+}
+
 export const LIKERT_ITEMS = [
   { key: "taxesJustified", label: "Les nouvelles taxes sont justifiées." },
   { key: "amountsProportional", label: "Les montants sont proportionnés." },
@@ -103,6 +196,18 @@ export const IMPACT_ORG_OPTIONS = [
   "Positif",
   "Très positif",
 ] as const;
+
+/** Couleurs sémantiques pour l'échelle d'impact (API + charts). */
+export const IMPACT_ORG_COLORS: Record<
+  (typeof IMPACT_ORG_OPTIONS)[number],
+  string
+> = {
+  "Très négatif": "#991B1B",
+  Négatif: "#DC2626",
+  Aucun: "#64748B",
+  Positif: "#1E5EFF",
+  "Très positif": "#15803D",
+};
 
 export const IMPACT_DOMAIN_OPTIONS = [
   "Investissement",

@@ -62,7 +62,8 @@ export async function POST(req: Request) {
       emailVerified: user.emailVerified,
       verificationSent: user.verificationSent,
     };
-    validated.answers.mcbuleliContactOptIn = true;
+    validated.answers.mcbuleliContactOptIn =
+      validated.answers.mcbuleliContactOptIn || user.created;
   } catch (err) {
     console.warn("[api/rdpi/survey] ensure user failed", err);
   }

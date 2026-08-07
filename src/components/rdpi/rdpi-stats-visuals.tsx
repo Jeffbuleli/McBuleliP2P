@@ -313,7 +313,7 @@ export function RdpiHorizontalBars({
   valueDecimals = 0,
   invertFill = false,
 }: {
-  items: { label: string; value: number; max: number }[];
+  items: { label: string; value: number; max: number; color?: string }[];
   color?: string;
   valueDecimals?: number;
   /** When true, lower values fill more of the bar (rank / priority). */
@@ -325,6 +325,7 @@ export function RdpiHorizontalBars({
   return (
     <ul className="space-y-2.5">
       {items.map((it) => {
+        const barColor = it.color ?? color;
         const ratio =
           it.max > 0
             ? invertFill
@@ -335,7 +336,7 @@ export function RdpiHorizontalBars({
           <li key={it.label}>
             <div className="mb-1 flex justify-between gap-2 text-[11px]">
               <span className="truncate font-semibold text-[#1c1917]">{it.label}</span>
-              <span className="shrink-0 font-mono tabular-nums" style={{ color }}>
+              <span className="shrink-0 font-mono tabular-nums" style={{ color: barColor }}>
                 {it.value.toFixed(valueDecimals)}
               </span>
             </div>
@@ -344,7 +345,7 @@ export function RdpiHorizontalBars({
                 className="h-full rounded-full"
                 style={{
                   width: `${ratio * 100}%`,
-                  background: `linear-gradient(90deg, ${color}, ${RDPI_CHART.gold})`,
+                  background: barColor,
                 }}
               />
             </div>

@@ -1,4 +1,4 @@
-import { desc, eq, sql } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { getDb, rdpiSurveyResponses } from "@/db";
 import {
   isValidCodMsisdn,
@@ -7,7 +7,13 @@ import {
 import {
   ACTIVITY_OPTIONS,
   AGE_OPTIONS,
+  canonicalizeProvince,
+  DRC_PROVINCES,
+  EMPLOYEES_OPTIONS,
+  IMPACT_DOMAIN_OPTIONS,
+  IMPACT_ORG_COLORS,
   IMPACT_ORG_OPTIONS,
+  ACTION_OPTIONS,
   LIKERT_ITEMS,
   OBSTACLE_ITEMS,
   OBSTACLE_LEVELS,
@@ -15,6 +21,7 @@ import {
   REFORM_ITEMS,
   RDPI_SURVEY_SLUG,
   SEX_OPTIONS,
+  YEARS_OPTIONS,
   YES_NO,
   YES_NO_UNCERTAIN,
   type RdpiSurveyAnswers,
@@ -67,14 +74,22 @@ export function validateRdpiAnswers(
   if (!isNonEmpty(a.province)) {
     return { ok: false, error: "province_required" };
   }
+  const provinceCanon = canonicalizeProvince(a.province);
+  if (!provinceCanon) {
+    return { ok: false, error: "province_invalid" };
+  }
+  a.province = provinceCanon;
   if (!(ACTIVITY_OPTIONS as readonly string[]).includes(a.activity)) {
     return { ok: false, error: "activity_required" };
   }
   if (a.activity === "Autre" && !isNonEmpty(a.activityOther)) {
     return { ok: false, error: "activityOther_required" };
   }
-  if (!a.yearsActive || !a.employees) {
-    return { ok: false, error: "profile_incomplete" };
+  if (!(YEARS_OPTIONS as readonly string[]).includes(a.yearsActive)) {
+    return { ok: false, error: "yearsActive_required" };
+  }
+  if (!(EMPLOYEES_OPTIONS as readonly string[]).includes(a.employees)) {
+    return { ok: false, error: "employees_required" };
   }
 
   for (const item of LIKERT_ITEMS) {
@@ -91,7 +106,19 @@ export function validateRdpiAnswers(
   if (!Array.isArray(a.impactDomain) || a.impactDomain.length === 0) {
     return { ok: false, error: "impactDomain_required" };
   }
+  a.impactDomain = a.impactDomain.filter((x) =>
+    (IMPACT_DOMAIN_OPTIONS as readonly string[]).includes(x),
+  );
+  if (a.impactDomain.length === 0) {
+    return { ok: false, error: "impactDomain_required" };
+  }
   if (!Array.isArray(a.actions) || a.actions.length === 0) {
+    return { ok: false, error: "actions_required" };
+  }
+  a.actions = a.actions.filter((x) =>
+    (ACTION_OPTIONS as readonly string[]).includes(x),
+  );
+  if (a.actions.length === 0) {
     return { ok: false, error: "actions_required" };
   }
   if (!(YES_NO_UNCERTAIN as readonly string[]).includes(a.consumerCost)) {
@@ -117,6 +144,9 @@ export function validateRdpiAnswers(
   if (ranks.some((r) => !Number.isInteger(r) || r < 1 || r > 7)) {
     return { ok: false, error: "reformRanks_incomplete" };
   }
+  if (new Set(ranks).size !== REFORM_ITEMS.length) {
+    return { ok: false, error: "reformRanks_duplicate" };
+  }
   for (const item of REFORM_ITEMS) {
     a.reformRanks[item.key] = Number(a.reformRanks[item.key]);
   }
@@ -126,7 +156,6 @@ export function validateRdpiAnswers(
   }
 
   a.fullName = a.fullName.trim().slice(0, 200);
-  a.province = a.province.trim().slice(0, 120);
   a.activityOther = (a.activityOther ?? "").trim().slice(0, 200);
   a.foreignInvestors = (a.foreignInvestors ?? "").trim().slice(0, 2000);
   a.concernDisposition = (a.concernDisposition ?? "").trim().slice(0, 4000);
@@ -182,21 +211,65 @@ export async function submitRdpiSurvey(args: {
   return row;
 }
 
-export type CountBucket = { label: string; value: number };
+export type CountBucket = {
+  label: string;
+  value: number;
+  color?: string;
+};
 
 function countField(
-  rows: Array<{ answers: RdpiSurveyAnswers }>,
-  pick: (a: RdpiSurveyAnswers) => string | null | undefined,
+  rows: Array<{ answers: RdpiSurveyAnswers; province?: string | null }>,
+  pick: (a: RdpiSurveyAnswers, row: { province?: string | null }) =>
+    | string
+    | null
+    | undefined,
 ): CountBucket[] {
   const map = new Map<string, number>();
   for (const row of rows) {
-    const v = pick(row.answers);
+    const v = pick(row.answers, row);
     if (!v) continue;
     map.set(v, (map.get(v) ?? 0) + 1);
   }
   return [...map.entries()]
     .map(([label, value]) => ({ label, value }))
     .sort((a, b) => b.value - a.value);
+}
+
+/** Keep canonical option order (include zeros). */
+function orderedCount(
+  rows: Array<{ answers: RdpiSurveyAnswers }>,
+  pick: (a: RdpiSurveyAnswers) => string | null | undefined,
+  order: readonly string[],
+  colors?: Record<string, string>,
+): CountBucket[] {
+  const map = new Map<string, number>();
+  for (const label of order) map.set(label, 0);
+  for (const row of rows) {
+    const v = pick(row.answers);
+    if (!v || !map.has(v)) continue;
+    map.set(v, (map.get(v) ?? 0) + 1);
+  }
+  return order.map((label) => ({
+    label,
+    value: map.get(label) ?? 0,
+    ...(colors?.[label] ? { color: colors[label] } : {}),
+  }));
+}
+
+function resolveProvinceLabel(
+  answers: RdpiSurveyAnswers,
+  columnProvince?: string | null,
+): string {
+  const raw = (answers.province || columnProvince || "").trim();
+  if (!raw) return "";
+  return canonicalizeProvince(raw) ?? raw;
+}
+
+function previewOpenText(raw: string, max = 220): string {
+  const t = (raw ?? "").replace(/\r\n/g, "\n").trim();
+  if (!t) return "";
+  if (t.length <= max) return t;
+  return `${t.slice(0, max).trimEnd()}…`;
 }
 
 function avgLikert(
@@ -282,46 +355,72 @@ export async function getRdpiSurveyStats() {
     answers: r.answers as RdpiSurveyAnswers,
   }));
 
-  const [{ count }] = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(rdpiSurveyResponses)
-    .where(eq(rdpiSurveyResponses.surveySlug, RDPI_SURVEY_SLUG));
+  const byProvince = countField(typed, (a, row) =>
+    resolveProvinceLabel(a, row.province),
+  );
+  const provinceCoverage = byProvince.filter((b) =>
+    (DRC_PROVINCES as readonly string[]).includes(b.label),
+  ).length;
 
   return {
-    total: count ?? typed.length,
-    bySex: countField(typed, (a) => a.sex),
-    byAge: countField(typed, (a) => a.age),
+    total: typed.length,
+    provinceCoverage,
+    provinceTotal: DRC_PROVINCES.length,
+    bySex: orderedCount(typed, (a) => a.sex, SEX_OPTIONS),
+    byAge: orderedCount(typed, (a) => a.age, AGE_OPTIONS),
     byActivity: countField(typed, (a) =>
       a.activity === "Autre" && a.activityOther
         ? `Autre: ${a.activityOther}`
         : a.activity,
     ),
-    byProvince: countField(typed, (a) => a.province),
-    byImpactOrg: countField(typed, (a) => a.impactOrg),
-    byConsumerCost: countField(typed, (a) => a.consumerCost),
-    byOpportunity: countField(typed, (a) => a.opportunityRegulation),
-    byThreeRegimes: countField(typed, (a) => a.threeRegimes),
-    byDigitize: countField(typed, (a) => a.digitizePerception),
+    byProvince,
+    byImpactOrg: orderedCount(
+      typed,
+      (a) => a.impactOrg,
+      IMPACT_ORG_OPTIONS,
+      IMPACT_ORG_COLORS,
+    ),
+    byConsumerCost: orderedCount(
+      typed,
+      (a) => a.consumerCost,
+      YES_NO_UNCERTAIN,
+    ),
+    byOpportunity: orderedCount(
+      typed,
+      (a) => a.opportunityRegulation,
+      YES_NO,
+    ),
+    byThreeRegimes: orderedCount(typed, (a) => a.threeRegimes, YES_NO),
+    byDigitize: orderedCount(typed, (a) => a.digitizePerception, YES_NO),
     likertAvg: avgLikert(typed),
     obstaclesAvg: avgObstacles(typed),
     reformPriority: reformPriority(typed),
-    recent: typed.map((r) => ({
-      id: r.id,
-      fullName: r.fullName,
-      province: r.province,
-      activity: r.activity,
-      createdAt: r.createdAt.toISOString(),
-      impactOrg: r.answers.impactOrg,
-      email: r.answers.email ?? "",
-      phone: r.answers.phone ?? "",
-      mcbuleliContactOptIn: Boolean(r.answers.mcbuleliContactOptIn),
-      foreignInvestors: r.answers.foreignInvestors ?? "",
-      concernDisposition: r.answers.concernDisposition ?? "",
-      innovationEffects: r.answers.innovationEffects ?? "",
-      startupMeasures: r.answers.startupMeasures ?? "",
-      reconcileFiscal: r.answers.reconcileFiscal ?? "",
-      extraObservations: r.answers.extraObservations ?? "",
-    })),
+    recent: typed.map((r) => {
+      const province = resolveProvinceLabel(r.answers, r.province) || null;
+      return {
+        id: r.id,
+        fullName: r.fullName,
+        province,
+        activity: r.activity,
+        createdAt: r.createdAt.toISOString(),
+        impactOrg: r.answers.impactOrg,
+        impactOrgColor:
+          IMPACT_ORG_COLORS[
+            r.answers.impactOrg as keyof typeof IMPACT_ORG_COLORS
+          ] ?? null,
+        email: r.answers.email ?? "",
+        phone: r.answers.phone ?? "",
+        mcbuleliContactOptIn: Boolean(r.answers.mcbuleliContactOptIn),
+        foreignInvestors: previewOpenText(r.answers.foreignInvestors ?? ""),
+        concernDisposition: previewOpenText(
+          r.answers.concernDisposition ?? "",
+        ),
+        innovationEffects: previewOpenText(r.answers.innovationEffects ?? ""),
+        startupMeasures: previewOpenText(r.answers.startupMeasures ?? ""),
+        reconcileFiscal: previewOpenText(r.answers.reconcileFiscal ?? ""),
+        extraObservations: previewOpenText(r.answers.extraObservations ?? ""),
+      };
+    }),
   };
 }
 
@@ -394,7 +493,7 @@ export function rdpiResponsesToCsv(
       a.mcbuleliContactOptIn ? "Oui" : "Non",
       a.sex,
       a.age,
-      a.province,
+      canonicalizeProvince(a.province) ?? a.province,
       a.activity,
       a.activityOther,
       a.yearsActive,

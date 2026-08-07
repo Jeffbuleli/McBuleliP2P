@@ -5,6 +5,7 @@ import {
   ACTION_OPTIONS,
   ACTIVITY_OPTIONS,
   AGE_OPTIONS,
+  DRC_PROVINCES,
   EMPLOYEES_OPTIONS,
   IMPACT_DOMAIN_OPTIONS,
   IMPACT_ORG_OPTIONS,
@@ -288,6 +289,32 @@ function renderIntroParagraph(text: string): React.ReactNode {
   return parts;
 }
 
+function FieldSelect(
+  props: React.SelectHTMLAttributes<HTMLSelectElement> & {
+    label: string;
+    options: readonly string[];
+    placeholder?: string;
+  },
+) {
+  const { label, options, placeholder, className, ...rest } = props;
+  return (
+    <FieldCard>
+      <FieldLabel>{label}</FieldLabel>
+      <select
+        {...rest}
+        className={`rdpi-field mt-2 w-full rounded-xl border border-[#E5E5E0] bg-[#FAFAF8] px-4 py-3 text-sm text-[#1c1917] outline-none transition focus:border-[color:var(--rdpi-blue)] focus:bg-white focus:ring-2 focus:ring-[color:var(--rdpi-blue)]/15 ${className ?? ""}`}
+      >
+        <option value="">{placeholder ?? "Choisir…"}</option>
+        {options.map((o) => (
+          <option key={o} value={o}>
+            {o}
+          </option>
+        ))}
+      </select>
+    </FieldCard>
+  );
+}
+
 function TextInput(
   props: React.InputHTMLAttributes<HTMLInputElement> & { label: string },
 ) {
@@ -465,7 +492,11 @@ export function RdpiSurveyForm() {
               ? "Indiquez une adresse email valide."
               : code === "phone_required" || code === "phone_invalid"
                 ? "Indiquez un numéro WhatsApp / téléphone valide (ex. 0812… ou +243…)."
-                : "Envoi impossible. Vérifiez vos réponses et réessayez.",
+                : code === "province_invalid" || code === "province_required"
+                  ? "Sélectionnez une province parmi les 26 provinces de la RDC."
+                  : code === "reformRanks_duplicate"
+                    ? "Attribuez un rang unique (1 à 7) à chaque priorité de réforme."
+                    : "Envoi impossible. Vérifiez vos réponses et réessayez.",
         );
         return;
       }
@@ -649,11 +680,12 @@ export function RdpiSurveyForm() {
                   />
                 </div>
               </FieldCard>
-              <TextInput
+              <FieldSelect
                 label="Province d'exercice principal"
+                options={DRC_PROVINCES}
                 value={answers.province}
                 onChange={(e) => patch({ province: e.target.value })}
-                placeholder="Ex. Kinshasa, Nord-Kivu..."
+                placeholder="Sélectionner une province"
               />
               <FieldCard>
                 <FieldLabel>Activité principale</FieldLabel>
