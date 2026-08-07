@@ -92,8 +92,11 @@ export async function POST(req: Request) {
       scheduledAt: z.string().datetime().optional(),
       dryRun: z.boolean().optional(),
       regenerate: z.boolean().optional(),
-      limit: z.number().int().min(1).max(50).optional(),
+      limit: z.number().int().min(1).max(60).optional(),
       corporateOnly: z.boolean().optional(),
+      domainMode: z
+        .enum(["gmail_icloud_first", "corporate_only", "any"])
+        .optional(),
     })
     .safeParse(body);
 
@@ -142,8 +145,11 @@ export async function POST(req: Request) {
       );
       const result = await sendDailyLeadCampaignBatch({
         editionId: data.editionId,
-        limit: data.limit ?? 50,
-        corporateOnly: data.corporateOnly !== false,
+        limit: data.limit ?? 60,
+        domainMode:
+          data.domainMode ??
+          (data.corporateOnly === false ? "any" : "gmail_icloud_first"),
+        corporateOnly: data.corporateOnly,
       });
       return NextResponse.json({
         action: "send_daily_batch",

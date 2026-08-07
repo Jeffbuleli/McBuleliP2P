@@ -1,6 +1,7 @@
 /**
  * Progressive Resend send for hackathon lead campaigns.
- * Daily batch default: 50 (Resend daily limit 100 - leave headroom).
+ * Daily batch default: 60 @ 09h Africa/Kinshasa (Resend mcbuleli.org).
+ * Phase A: Gmail + iCloud → Phase B: corporate not yet contacted.
  */
 
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
@@ -17,18 +18,36 @@ import { canonicalEmailForDedup } from "@/lib/auth/email-normalize";
 import { sendEmail, canSendViaResendApi, resendSendBlockedReason } from "@/lib/email/send";
 import { SUPPORT_EMAIL } from "@/lib/support-contact";
 
-export const LEAD_CAMPAIGN_DAILY_BATCH = 50;
+export const LEAD_CAMPAIGN_DAILY_BATCH = 60;
 
+/** Broad freemail set (corporate = everything else). */
 const FREE_DOMAINS = new Set([
   "gmail.com",
+  "googlemail.com",
   "yahoo.fr",
   "yahoo.com",
   "hotmail.com",
   "hotmail.fr",
   "outlook.com",
   "icloud.com",
+  "me.com",
+  "mac.com",
   "live.com",
 ]);
+
+/** Phase A priority: Gmail + Apple iCloud family only. */
+const PRIORITY_INBOX_DOMAINS = new Set([
+  "gmail.com",
+  "googlemail.com",
+  "icloud.com",
+  "me.com",
+  "mac.com",
+]);
+
+export type LeadCampaignDomainMode =
+  | "gmail_icloud_first"
+  | "corporate_only"
+  | "any";
 
 function emailDomain(email: string): string {
   const at = email.lastIndexOf("@");
@@ -38,6 +57,20 @@ function emailDomain(email: string): string {
 function isCorporateEmail(email: string): boolean {
   const d = emailDomain(email);
   return Boolean(d) && !FREE_DOMAINS.has(d);
+}
+
+export function isGmailOrIcloudEmail(email: string): boolean {
+  const d = emailDomain(email);
+  return Boolean(d) && PRIORITY_INBOX_DOMAINS.has(d);
+}
+
+function resolveDomainMode(args: {
+  domainMode?: LeadCampaignDomainMode;
+  corporateOnly?: boolean;
+}): LeadCampaignDomainMode {
+  if (args.domainMode) return args.domainMode;
+  if (args.corporateOnly === false) return "any";
+  return "corporate_only";
 }
 
 export async function approveEditionCampaigns(args: {
@@ -75,7 +108,7 @@ export async function approveEditionCampaigns(args: {
       type: "APPROVED",
       meta: {
         dryRun: args.dryRun ?? false,
-        note: "Approved for progressive daily send (50/day Kinshasa 09h)",
+        note: "Approved for progressive daily send (60/day Kinshasa 09h · Gmail/iCloud then corporate)",
       },
     });
   }
@@ -91,39 +124,63 @@ export type DailySendResult = {
   skipped: number;
   dryRunBlocked: boolean;
   limit: number;
+  domainMode: LeadCampaignDomainMode;
+  domainPhase: "gmail_icloud" | "corporate" | "any";
   samples: Array<{ email: string; subject: string; status: string }>;
   blockedReason?: string;
 };
 
+function emptySendResult(
+  limit: number,
+  domainMode: LeadCampaignDomainMode,
+  extra: Partial<DailySendResult> = {},
+): DailySendResult {
+  const domainPhase =
+    domainMode === "corporate_only"
+      ? "corporate"
+      : domainMode === "gmail_icloud_first"
+        ? "gmail_icloud"
+        : "any";
+  return {
+    ok: true,
+    attempted: 0,
+    sent: 0,
+    failed: 0,
+    skipped: 0,
+    dryRunBlocked: false,
+    limit,
+    domainMode,
+    domainPhase,
+    samples: [],
+    ...extra,
+  };
+}
+
 /**
  * Send up to `limit` PENDING recipients across APPROVED campaigns for an edition.
- * Prefers corporate / annuaire-fec-company sources, then higher lead scores.
+ * `gmail_icloud_first`: Gmail/iCloud until exhausted, then corporate not contacted.
  */
 export async function sendDailyLeadCampaignBatch(args: {
   editionId: string;
   limit?: number;
-  /** Prefer enterprise inboxes for partnership tone */
+  /** Prefer enterprise inboxes for partnership tone (legacy). */
   corporateOnly?: boolean;
+  /** gmail_icloud_first (cron) | corporate_only | any */
+  domainMode?: LeadCampaignDomainMode;
   force?: boolean;
 }): Promise<DailySendResult> {
   const limit = Math.min(
     Math.max(args.limit ?? LEAD_CAMPAIGN_DAILY_BATCH, 1),
     LEAD_CAMPAIGN_DAILY_BATCH,
   );
+  const domainMode = resolveDomainMode(args);
   const db = getDb();
 
   if (!canSendViaResendApi()) {
-    return {
-      ok: true,
-      attempted: 0,
-      sent: 0,
-      failed: 0,
-      skipped: 0,
+    return emptySendResult(limit, domainMode, {
       dryRunBlocked: true,
-      limit,
-      samples: [],
       blockedReason: resendSendBlockedReason() ?? "resend_blocked",
-    };
+    });
   }
 
   const campaigns = await db
@@ -141,17 +198,9 @@ export async function sendDailyLeadCampaignBatch(args: {
     );
 
   if (campaigns.length === 0) {
-    return {
-      ok: true,
-      attempted: 0,
-      sent: 0,
-      failed: 0,
-      skipped: 0,
-      dryRunBlocked: false,
-      limit,
-      samples: [],
+    return emptySendResult(limit, domainMode, {
       blockedReason: "no_approved_campaigns",
-    };
+    });
   }
 
   const liveCampaignIds = campaigns
@@ -159,17 +208,10 @@ export async function sendDailyLeadCampaignBatch(args: {
     .map((c) => c.id);
 
   if (liveCampaignIds.length === 0) {
-    return {
-      ok: true,
-      attempted: 0,
-      sent: 0,
-      failed: 0,
-      skipped: 0,
+    return emptySendResult(limit, domainMode, {
       dryRunBlocked: true,
-      limit,
-      samples: [],
       blockedReason: "all_campaigns_dry_run",
-    };
+    });
   }
 
   // Mark SENDING
@@ -216,20 +258,34 @@ export async function sendDailyLeadCampaignBatch(args: {
       ),
     )
     .orderBy(
-      // Prefer corporate domains, then preferred sources, then score
-      sql`case when lower(split_part(${hackathonLeads.email}, '@', 2)) in ('gmail.com','yahoo.fr','yahoo.com','hotmail.com','hotmail.fr','outlook.com','icloud.com','live.com') then 1 else 0 end`,
+      // Gmail/iCloud first (phase A); corporate follow when phase B / filters apply
+      sql`case when lower(split_part(${hackathonLeads.email}, '@', 2)) in ('gmail.com','googlemail.com','icloud.com','me.com','mac.com') then 0 else 1 end`,
       sql`case when ${hackathonLeads.source} in ('annuaire','fec','company','directory') then 0 else 1 end`,
       desc(hackathonLeads.score),
       asc(hackathonCampaignRecipients.createdAt),
     )
     .limit(Math.max(limit * 12, 300));
 
-  const ranked = rows.filter((row) => {
-    if (args.corporateOnly !== false && !isCorporateEmail(row.email)) {
-      return false;
+  let domainPhase: DailySendResult["domainPhase"] =
+    domainMode === "corporate_only"
+      ? "corporate"
+      : domainMode === "gmail_icloud_first"
+        ? "gmail_icloud"
+        : "any";
+
+  let ranked = rows;
+  if (domainMode === "corporate_only") {
+    ranked = rows.filter((row) => isCorporateEmail(row.email));
+  } else if (domainMode === "gmail_icloud_first") {
+    const priority = rows.filter((row) => isGmailOrIcloudEmail(row.email));
+    if (priority.length > 0) {
+      ranked = priority;
+      domainPhase = "gmail_icloud";
+    } else {
+      ranked = rows.filter((row) => isCorporateEmail(row.email));
+      domainPhase = "corporate";
     }
-    return true;
-  });
+  }
 
   // Addresses / companies already SENT or leads already contacted on this edition
   const alreadySentKeys = new Set<string>();
@@ -395,7 +451,7 @@ export async function sendDailyLeadCampaignBatch(args: {
         recipientId: row.recipientId,
         leadId: row.leadId,
         type: "SENT",
-        meta: { to: row.email, batch: "daily_50" },
+        meta: { to: row.email, batch: "daily_60", domainPhase },
       });
 
       sent += 1;
@@ -464,6 +520,8 @@ export async function sendDailyLeadCampaignBatch(args: {
     skipped,
     dryRunBlocked: false,
     limit,
+    domainMode,
+    domainPhase,
     samples,
   };
 }

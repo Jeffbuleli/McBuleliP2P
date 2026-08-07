@@ -3,6 +3,7 @@ import {
   approveEditionCampaigns,
   sendDailyLeadCampaignBatch,
   LEAD_CAMPAIGN_DAILY_BATCH,
+  type LeadCampaignDomainMode,
 } from "@/lib/hackathon/leads/campaign-send";
 
 export const dynamic = "force-dynamic";
@@ -22,8 +23,8 @@ function authorize(req: Request): boolean {
 }
 
 /**
- * Progressive lead campaign send - 50/day @ ~09h Africa/Kinshasa (cron UTC 08:00).
- * POST { editionId?, limit?, corporateOnly?, approve? }
+ * Progressive lead campaign send - 60/day @ ~09h Africa/Kinshasa (cron UTC 08:00).
+ * POST { editionId?, limit?, domainMode?, corporateOnly?, approve? }
  */
 export async function POST(req: Request) {
   if (!authorize(req)) {
@@ -34,12 +35,16 @@ export async function POST(req: Request) {
     editionId?: string;
     limit?: number;
     corporateOnly?: boolean;
+    domainMode?: LeadCampaignDomainMode;
     approve?: boolean;
     dryRun?: boolean;
   };
 
   const editionId = body.editionId?.trim() || DEFAULT_EDITION;
   const limit = body.limit ?? LEAD_CAMPAIGN_DAILY_BATCH;
+  const domainMode: LeadCampaignDomainMode =
+    body.domainMode ??
+    (body.corporateOnly === false ? "any" : "gmail_icloud_first");
 
   if (body.approve) {
     await approveEditionCampaigns({
@@ -51,12 +56,12 @@ export async function POST(req: Request) {
   const result = await sendDailyLeadCampaignBatch({
     editionId,
     limit,
-    corporateOnly: body.corporateOnly !== false,
+    domainMode,
   });
 
   return NextResponse.json({
     editionId,
     ...result,
-    note: "Lot quotidien max 50 - priorité emails entreprise (hors Gmail).",
+    note: "Lot quotidien max 60 — Gmail/iCloud d'abord, puis emails pro non contactés.",
   });
 }

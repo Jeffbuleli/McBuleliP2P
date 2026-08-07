@@ -13,7 +13,8 @@ on:
     # journey-nudge daily disabled — burns Resend free transactional quota (~1k/day).
     # Marketing blasts → Resend Broadcasts. Re-enable only with ACADEMY_JOURNEY_NUDGE_EMAIL=true on API.
     - cron: "0 1 * * 0"
-    # Hackathon lead partnership emails — 50/day at 09h00 Africa/Kinshasa (08:00 UTC)
+    # Hackathon lead partnership emails — 60/day at 09h00 Africa/Kinshasa (08:00 UTC)
+    # Gmail/iCloud first, then corporate not yet contacted
     - cron: "0 8 * * *"
   workflow_dispatch:
     inputs:
@@ -157,5 +158,5 @@ jobs:
             echo "::error::Missing MCBULELI_API_URL. Use https://mcbuleli.org"
             exit 1
           fi
-      - name: Hackathon lead campaign daily batch (50)
+      - name: Hackathon lead campaign daily batch (60)
         run: node scripts/cron-hackathon-lead-campaign.mjs

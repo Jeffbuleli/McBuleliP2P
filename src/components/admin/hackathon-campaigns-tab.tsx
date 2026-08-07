@@ -248,7 +248,7 @@ export function HackathonCampaignsTab({ editionId, isAdmin }: Props) {
     askConfirm({
       title: "Approuver l'envoi réel",
       message:
-        "Les campagnes passeront en envoi réel.\nLots de 50/jour à 09h Kinshasa (GitHub Actions).\n1 email par entreprise.",
+        "Les campagnes passeront en envoi réel.\nLots de 60/jour à 09h Kinshasa (GitHub Actions).\nGmail/iCloud d'abord, puis pro non contactés.\n1 email par entreprise.",
       confirmLabel: "Approuver",
       tone: "danger",
       body: { action: "approve", dryRun: false },
@@ -265,15 +265,21 @@ export function HackathonCampaignsTab({ editionId, isAdmin }: Props) {
     askConfirm({
       title: "Envoyer le lot du jour",
       message:
-        "Envoi immédiat via Resend — max 50 emails entreprise.\nLes campagnes doivent être approuvées (mode réel).",
-      confirmLabel: "Envoyer 50",
+        "Envoi immédiat via Resend — max 60 emails.\nGmail/iCloud d'abord, sinon pro non contactés.\nLes campagnes doivent être approuvées (mode réel).",
+      confirmLabel: "Envoyer 60",
       tone: "danger",
-      body: { action: "send_daily_batch", limit: 50, corporateOnly: true },
+      body: {
+        action: "send_daily_batch",
+        limit: 60,
+        domainMode: "gmail_icloud_first",
+      },
       onDone: async (j) => {
         const blocked =
           typeof j.blockedReason === "string" ? ` — ${j.blockedReason}` : "";
+        const phase =
+          typeof j.domainPhase === "string" ? ` · phase ${j.domainPhase}` : "";
         setMsg(
-          `Lot : ${Number(j.sent ?? 0)} envoyés · ${Number(j.failed ?? 0)} échecs · ${Number(j.skipped ?? 0)} exclus${blocked}`,
+          `Lot : ${Number(j.sent ?? 0)} envoyés · ${Number(j.failed ?? 0)} échecs · ${Number(j.skipped ?? 0)} exclus${phase}${blocked}`,
         );
         await load();
         if (selectedId) await loadCampaign(selectedId);
@@ -364,7 +370,7 @@ export function HackathonCampaignsTab({ editionId, isAdmin }: Props) {
               className={adminCls.btnPrimary}
               onClick={() => void sendDailyBatch()}
             >
-              Envoyer lot 50 maintenant
+              Envoyer lot 60 maintenant
             </button>
             <button
               type="button"
