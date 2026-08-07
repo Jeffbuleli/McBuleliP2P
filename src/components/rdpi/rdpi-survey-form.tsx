@@ -315,7 +315,7 @@ export function RdpiSurveyForm() {
       if (answers.fullName.trim().length < 2) return "Indiquez votre nom complet.";
       const email = answers.email.trim().toLowerCase();
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        return "Indiquez une adresse email valide (suivi RDPI).";
+        return "Indiquez une adresse email valide.";
       }
       const phoneDigits = answers.phone.replace(/\D/g, "");
       if (phoneDigits.length < 9) {
@@ -589,11 +589,6 @@ export function RdpiSurveyForm() {
                 placeholder="0812 345 678 ou +243…"
                 autoComplete="tel"
               />
-              <p className="-mt-1 px-1 text-xs leading-relaxed text-[#78716c]">
-                Obligatoire pour RDPI (suivi de l&apos;étude). Un compte McBuleli
-                est créé avec votre email à l&apos;envoi - confirmation par
-                email si besoin.
-              </p>
               <FieldCard>
                 <FieldLabel>Sexe</FieldLabel>
                 <div className="mt-2">
