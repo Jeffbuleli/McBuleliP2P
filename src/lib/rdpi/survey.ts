@@ -265,13 +265,6 @@ function resolveProvinceLabel(
   return canonicalizeProvince(raw) ?? raw;
 }
 
-function previewOpenText(raw: string, max = 220): string {
-  const t = (raw ?? "").replace(/\r\n/g, "\n").trim();
-  if (!t) return "";
-  if (t.length <= max) return t;
-  return `${t.slice(0, max).trimEnd()}…`;
-}
-
 function avgLikert(
   rows: Array<{ answers: RdpiSurveyAnswers }>,
 ): Array<{ key: string; label: string; avg: number }> {
@@ -411,14 +404,12 @@ export async function getRdpiSurveyStats() {
         email: r.answers.email ?? "",
         phone: r.answers.phone ?? "",
         mcbuleliContactOptIn: Boolean(r.answers.mcbuleliContactOptIn),
-        foreignInvestors: previewOpenText(r.answers.foreignInvestors ?? ""),
-        concernDisposition: previewOpenText(
-          r.answers.concernDisposition ?? "",
-        ),
-        innovationEffects: previewOpenText(r.answers.innovationEffects ?? ""),
-        startupMeasures: previewOpenText(r.answers.startupMeasures ?? ""),
-        reconcileFiscal: previewOpenText(r.answers.reconcileFiscal ?? ""),
-        extraObservations: previewOpenText(r.answers.extraObservations ?? ""),
+        foreignInvestors: (r.answers.foreignInvestors ?? "").trim(),
+        concernDisposition: (r.answers.concernDisposition ?? "").trim(),
+        innovationEffects: (r.answers.innovationEffects ?? "").trim(),
+        startupMeasures: (r.answers.startupMeasures ?? "").trim(),
+        reconcileFiscal: (r.answers.reconcileFiscal ?? "").trim(),
+        extraObservations: (r.answers.extraObservations ?? "").trim(),
       };
     }),
   };

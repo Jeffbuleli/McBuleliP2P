@@ -56,15 +56,33 @@ type Stats = {
   }>;
 };
 
-function OpenAnswerCell({ text }: { text: string }) {
+function formatRdpiPhone(raw: string): string {
+  const digits = raw.replace(/\D/g, "");
+  if (digits.length === 12 && digits.startsWith("243")) {
+    return `+243 ${digits.slice(3, 6)} ${digits.slice(6, 9)} ${digits.slice(9)}`;
+  }
+  if (digits.length === 9 && digits.startsWith("8")) {
+    return `+243 ${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`;
+  }
+  return raw.trim();
+}
+
+function OpenAnswerCell({
+  text,
+  expanded,
+}: {
+  text: string;
+  expanded: boolean;
+}) {
   const t = text.trim();
   if (!t) {
     return <span className="text-[#a8a29e]">-</span>;
   }
   return (
     <p
-      className="max-w-[18rem] whitespace-pre-wrap break-words text-xs leading-relaxed text-[#44403c] line-clamp-5"
-      title={t}
+      className={`max-w-[18rem] whitespace-pre-wrap break-words text-xs leading-relaxed text-[#44403c] md:max-w-[22rem] ${
+        expanded ? "" : "line-clamp-3"
+      }`}
     >
       {t}
     </p>
@@ -111,6 +129,7 @@ export function RdpiDashboardClient() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [pageSize, setPageSize] = useState<20 | 30 | 50>(20);
   const [page, setPage] = useState(0);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -515,7 +534,7 @@ export function RdpiDashboardClient() {
           <div>
             <h3 className="text-sm font-bold">Dernières réponses</h3>
             <p className="mt-1 text-xs text-[#78716c]">
-              Aperçu des questions ouvertes — texte complet dans le CSV.
+              Cliquez une ligne pour afficher les réponses ouvertes en entier.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -529,6 +548,7 @@ export function RdpiDashboardClient() {
                 onClick={() => {
                   setPageSize(n);
                   setPage(0);
+                  setExpandedId(null);
                 }}
                 className={`rounded-full px-3 py-1.5 text-xs font-bold transition ${
                   pageSize === n
@@ -629,78 +649,114 @@ export function RdpiDashboardClient() {
               ) : (
                 stats.recent
                   .slice(page * pageSize, page * pageSize + pageSize)
-                  .map((r) => (
-                    <tr key={r.id} className="border-t border-[#E5E5E0]">
-                      <td className="whitespace-nowrap px-4 py-3 align-top text-xs text-[#78716c]">
-                        {new Date(r.createdAt).toLocaleString("fr-CD", {
-                          timeZone: "Africa/Kinshasa",
-                        })}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3 align-top">
-                        {r.fullName ?? "-"}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3 align-top text-xs">
-                        {r.email ? (
-                          <a
-                            href={`mailto:${r.email}`}
-                            className="text-[color:var(--rdpi-blue)] underline-offset-2 hover:underline"
+                  .map((r) => {
+                    const expanded = expandedId === r.id;
+                    return (
+                      <tr
+                        key={r.id}
+                        className={`cursor-pointer border-t border-[#E5E5E0] transition-colors ${
+                          expanded
+                            ? "bg-[color:var(--rdpi-blue)]/[0.04]"
+                            : "hover:bg-black/[0.02]"
+                        }`}
+                        onClick={() =>
+                          setExpandedId((id) => (id === r.id ? null : r.id))
+                        }
+                      >
+                        <td className="whitespace-nowrap px-4 py-3 align-top text-xs text-[#78716c]">
+                          {new Date(r.createdAt).toLocaleString("fr-CD", {
+                            timeZone: "Africa/Kinshasa",
+                          })}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 align-top font-medium">
+                          {r.fullName ?? "-"}
+                        </td>
+                        <td className="max-w-[14rem] px-4 py-3 align-top text-xs md:max-w-[18rem]">
+                          {r.email ? (
+                            <a
+                              href={`mailto:${r.email}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="break-all text-[color:var(--rdpi-blue)] underline-offset-2 hover:underline"
+                            >
+                              {r.email}
+                            </a>
+                          ) : (
+                            "-"
+                          )}
+                        </td>
+                        <td className="px-4 py-3 align-top text-xs">
+                          {r.phone ? (
+                            <a
+                              href={`https://wa.me/${r.phone.replace(/\D/g, "")}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="inline-flex min-w-[9.5rem] items-center gap-1.5 rounded-lg border border-[#E5E5E0] bg-white px-2.5 py-1.5 font-mono text-[11px] tabular-nums tracking-wide text-[color:var(--rdpi-blue)] shadow-sm hover:border-[color:var(--rdpi-blue)]/40 md:min-w-[10.5rem] md:text-xs"
+                            >
+                              <span aria-hidden className="text-[10px]">
+                                WA
+                              </span>
+                              {formatRdpiPhone(r.phone)}
+                            </a>
+                          ) : (
+                            "-"
+                          )}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 align-top">
+                          {r.province ?? "-"}
+                        </td>
+                        <td className="max-w-[10rem] px-4 py-3 align-top">
+                          {r.activity ?? "-"}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 align-top">
+                          <span
+                            className="font-semibold"
+                            style={{
+                              color: r.impactOrgColor ?? undefined,
+                            }}
                           >
-                            {r.email}
-                          </a>
-                        ) : (
-                          "-"
-                        )}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3 align-top text-xs">
-                        {r.phone ? (
-                          <a
-                            href={`https://wa.me/${r.phone.replace(/\D/g, "")}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-[color:var(--rdpi-blue)] underline-offset-2 hover:underline"
-                          >
-                            {r.phone}
-                          </a>
-                        ) : (
-                          "-"
-                        )}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3 align-top">
-                        {r.province ?? "-"}
-                      </td>
-                      <td className="max-w-[10rem] px-4 py-3 align-top">
-                        {r.activity ?? "-"}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3 align-top">
-                        <span
-                          className="font-semibold"
-                          style={{
-                            color: r.impactOrgColor ?? undefined,
-                          }}
-                        >
-                          {r.impactOrg || "-"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 align-top">
-                        <OpenAnswerCell text={r.foreignInvestors} />
-                      </td>
-                      <td className="px-4 py-3 align-top">
-                        <OpenAnswerCell text={r.concernDisposition} />
-                      </td>
-                      <td className="px-4 py-3 align-top">
-                        <OpenAnswerCell text={r.innovationEffects} />
-                      </td>
-                      <td className="px-4 py-3 align-top">
-                        <OpenAnswerCell text={r.startupMeasures} />
-                      </td>
-                      <td className="px-4 py-3 align-top">
-                        <OpenAnswerCell text={r.reconcileFiscal} />
-                      </td>
-                      <td className="px-4 py-3 align-top">
-                        <OpenAnswerCell text={r.extraObservations} />
-                      </td>
-                    </tr>
-                  ))
+                            {r.impactOrg || "-"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 align-top">
+                          <OpenAnswerCell
+                            text={r.foreignInvestors}
+                            expanded={expanded}
+                          />
+                        </td>
+                        <td className="px-4 py-3 align-top">
+                          <OpenAnswerCell
+                            text={r.concernDisposition}
+                            expanded={expanded}
+                          />
+                        </td>
+                        <td className="px-4 py-3 align-top">
+                          <OpenAnswerCell
+                            text={r.innovationEffects}
+                            expanded={expanded}
+                          />
+                        </td>
+                        <td className="px-4 py-3 align-top">
+                          <OpenAnswerCell
+                            text={r.startupMeasures}
+                            expanded={expanded}
+                          />
+                        </td>
+                        <td className="px-4 py-3 align-top">
+                          <OpenAnswerCell
+                            text={r.reconcileFiscal}
+                            expanded={expanded}
+                          />
+                        </td>
+                        <td className="px-4 py-3 align-top">
+                          <OpenAnswerCell
+                            text={r.extraObservations}
+                            expanded={expanded}
+                          />
+                        </td>
+                      </tr>
+                    );
+                  })
               )}
             </tbody>
           </table>
