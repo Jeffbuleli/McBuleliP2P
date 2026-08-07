@@ -49,6 +49,14 @@ function SectionTitle({
   );
 }
 
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <label className="mb-2.5 block text-[10px] font-bold uppercase tracking-[0.16em] text-[#78716c]">
+      {children}
+    </label>
+  );
+}
+
 
 function VisualCard({
   children,
