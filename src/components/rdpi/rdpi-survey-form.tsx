@@ -192,13 +192,17 @@ function ScaleRow({
   onChange,
   max = 5,
   labels,
+  takenRanks,
 }: {
   label: string;
   value: number;
   onChange: (n: number) => void;
   max?: number;
   labels?: readonly string[];
+  /** Ranks already used by other rows (shown dimmed but still clickable to swap). */
+  takenRanks?: readonly number[];
 }) {
+  const taken = new Set(takenRanks ?? []);
   return (
     <div className="rounded-2xl border border-[#E5E5E0] bg-white px-3.5 py-3.5 shadow-[0_10px_28px_-22px_rgba(34,34,34,0.45)] sm:px-4">
       <p className="mb-3 text-sm font-semibold leading-snug text-[#1c1917]">
@@ -213,6 +217,7 @@ function ScaleRow({
       >
         {Array.from({ length: max }, (_, i) => i + 1).map((n) => {
           const active = value === n;
+          const usedElsewhere = !active && taken.has(n);
           return (
             <button
               key={n}
@@ -221,10 +226,16 @@ function ScaleRow({
               className={`rounded-xl border py-2.5 text-sm font-bold tabular-nums transition sm:min-w-[2.75rem] sm:px-2.5 ${
                 active
                   ? "border-[color:var(--rdpi-blue)] bg-[color:var(--rdpi-blue)] text-white shadow-[0_8px_20px_-10px_rgba(30,94,255,0.7)]"
-                  : "border-[#E5E5E0] bg-[#FAFAF8] text-[#1c1917] hover:border-[color:var(--rdpi-blue)]/45"
+                  : usedElsewhere
+                    ? "border-[#E5E5E0] bg-[#F0EFEC] text-[#a8a29e] hover:border-[color:var(--rdpi-blue)]/45 hover:text-[#1c1917]"
+                    : "border-[#E5E5E0] bg-[#FAFAF8] text-[#1c1917] hover:border-[color:var(--rdpi-blue)]/45"
               }`}
               aria-label={labels?.[n - 1] ?? String(n)}
-              title={labels?.[n - 1] ?? String(n)}
+              title={
+                usedElsewhere
+                  ? `${n} déjà attribué - clic pour échanger`
+                  : (labels?.[n - 1] ?? String(n))
+              }
             >
               {n}
             </button>
@@ -418,7 +429,10 @@ export function RdpiSurveyForm() {
     if (s === 6) {
       const ranks = REFORM_ITEMS.map((r) => answers.reformRanks[r.key] ?? 0);
       if (ranks.some((r) => r < 1 || r > 7)) {
-        return "Complétez toutes les réponses.";
+        return "Attribuez un rang (1 à 7) à chaque priorité de réforme.";
+      }
+      if (new Set(ranks).size !== REFORM_ITEMS.length) {
+        return "Attribuez un rang unique (1 à 7) à chaque priorité de réforme.";
       }
     }
     if (s === 7) {
@@ -496,7 +510,9 @@ export function RdpiSurveyForm() {
                   ? "Sélectionnez une province parmi les 26 provinces de la RDC."
                   : code === "reformRanks_duplicate"
                     ? "Attribuez un rang unique (1 à 7) à chaque priorité de réforme."
-                    : "Envoi impossible. Vérifiez vos réponses et réessayez.",
+                    : code === "reformRanks_incomplete"
+                      ? "Attribuez un rang (1 à 7) à chaque priorité de réforme."
+                      : "Envoi impossible. Vérifiez vos réponses et réessayez.",
         );
         return;
       }
@@ -922,20 +938,40 @@ export function RdpiSurveyForm() {
               <SectionTitle sectionId="reformes">
                 Section G - Priorités de réforme
               </SectionTitle>
+              <p className="rounded-2xl border border-[#E5E5E0] bg-[#FAFAF8] px-4 py-3 text-sm leading-relaxed text-[#57534e]">
+                Classez les 7 priorités :{" "}
+                <strong className="text-[#1c1917]">1 = la plus importante</strong>
+                ,{" "}
+                <strong className="text-[#1c1917]">7 = la moins importante</strong>
+                . Chaque numéro ne peut être utilisé qu&apos;une seule fois (un
+                clic échange automatiquement si le rang est déjà pris).
+              </p>
               {REFORM_ITEMS.map((item) => (
                 <ScaleRow
                   key={item.key}
                   label={item.label}
                   value={answers.reformRanks[item.key] ?? 0}
                   max={7}
-                  onChange={(n) =>
-                    patch({
-                      reformRanks: {
-                        ...answers.reformRanks,
-                        [item.key]: n,
-                      },
-                    })
-                  }
+                  takenRanks={REFORM_ITEMS.filter(
+                    (r) =>
+                      r.key !== item.key &&
+                      (answers.reformRanks[r.key] ?? 0) >= 1,
+                  ).map((r) => answers.reformRanks[r.key]!)}
+                  onChange={(n) => {
+                    const prev = answers.reformRanks[item.key] ?? 0;
+                    const nextRanks = { ...answers.reformRanks };
+                    const occupant = REFORM_ITEMS.find(
+                      (r) =>
+                        r.key !== item.key &&
+                        (nextRanks[r.key] ?? 0) === n,
+                    );
+                    if (occupant) {
+                      nextRanks[occupant.key] =
+                        prev >= 1 && prev <= 7 ? prev : 0;
+                    }
+                    nextRanks[item.key] = n;
+                    patch({ reformRanks: nextRanks });
+                  }}
                 />
               ))}
             </section>
