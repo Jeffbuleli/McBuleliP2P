@@ -22,7 +22,8 @@ fi
 
 if [[ -f "$MCBULELI_ENV" && -f .env ]]; then
   echo "==> Syncing Postgres + JWT from McBuleli .env"
-  for key in POSTGRES_USER POSTGRES_PASSWORD POSTGRES_DB JWT_SECRET CRON_SECRET; do
+  for key in POSTGRES_USER POSTGRES_PASSWORD POSTGRES_DB JWT_SECRET CRON_SECRET \
+    NEXT_PUBLIC_TURNSTILE_SITE_KEY TURNSTILE_SECRET_KEY; do
     val="$(grep -E "^${key}=" "$MCBULELI_ENV" | head -1 | cut -d= -f2- || true)"
     if [[ -n "$val" ]]; then
       if grep -q "^${key}=" .env; then
