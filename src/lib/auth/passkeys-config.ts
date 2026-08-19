@@ -5,7 +5,15 @@ import type {
 
 export function webAuthnRpId(): string {
   const fromEnv = process.env.WEBAUTHN_RP_ID?.trim();
-  if (fromEnv) return fromEnv;
+  if (fromEnv) {
+    // Browsers require rpId to be a registrable domain.
+    // Public suffixes like "org" (no dot) are rejected and can break passkeys.
+    if (!fromEnv.includes(".")) {
+      // fallback to hostname below
+    } else {
+      return fromEnv;
+    }
+  }
   const base = process.env.NEXT_PUBLIC_APP_URL?.trim() ?? "https://mcbuleli.org";
   try {
     return new URL(base).hostname;
