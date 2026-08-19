@@ -72,6 +72,16 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
       {
+        source: "/app/wallet/groups",
+        destination: "https://e-avec.org/app/wallet/groups",
+        permanent: false,
+      },
+      {
+        source: "/app/wallet/groups/:path*",
+        destination: "https://e-avec.org/app/wallet/groups/:path*",
+        permanent: false,
+      },
+      {
         source: "/:path*",
         has: [{ type: "host", value: "mcbuleli.online" }],
         destination: "https://mcbuleli.org/:path*",

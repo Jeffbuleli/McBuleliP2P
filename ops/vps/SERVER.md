@@ -4,7 +4,7 @@
 |------|--------|
 | **VPS principal** | `162.35.181.98` |
 | **Ancien live only** | `162.35.160.30` (à décommissionner après cutover) |
-| Domaines | `mcbuleli.org` + `www` + `live.mcbuleli.org` |
+| Domaines | `mcbuleli.org` + `www` + `live.mcbuleli.org` + **`e-avec.org`** |
 
 Tout (Next.js, Postgres, crons haute fréquence, ai-relay, **Jitsi Live**) tourne sur **162.35.181.98**.
 
@@ -14,6 +14,7 @@ Tout (Next.js, Postgres, crons haute fréquence, ai-relay, **Jitsi Live**) tourn
 |--------|------|---------------------|--------|
 | `mcbuleli.org` | A / CNAME | via Cloudflare → origin `162.35.181.98` | Aujourd’hui proxy CF (IPs `104.21` / `172.67`) — mettre l’**origin** A/AAAA (DNS only ou proxied) vers le nouveau VPS |
 | `www` | CNAME/A | idem | |
+| `e-avec.org` / `www` | A / CNAME | même origin `162.35.181.98` | App AVEC autonome (port `3001`). Nginx : `ops/vps/nginx-e-avec.conf` dans le repo [avec](https://github.com/Jeffbuleli/avec). Même Postgres. |
 | `live.mcbuleli.org` | **A** | `162.35.181.98` | Aujourd’hui = `162.35.160.30` — **à basculer en dernier** pour le live |
 
 Vérif :
