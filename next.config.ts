@@ -73,12 +73,12 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/app/wallet/groups",
-        destination: "https://e-avec.org/app/wallet/groups",
+        destination: "/app/eavec-handoff?next=%2Fapp%2Fwallet%2Fgroups",
         permanent: false,
       },
       {
         source: "/app/wallet/groups/:path*",
-        destination: "https://e-avec.org/app/wallet/groups/:path*",
+        destination: "/app/eavec-handoff?next=%2Fapp%2Fwallet%2Fgroups%2F:path*",
         permanent: false,
       },
       {

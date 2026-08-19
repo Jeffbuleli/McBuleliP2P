@@ -23,7 +23,9 @@ fi
 if [[ -f "$MCBULELI_ENV" && -f .env ]]; then
   echo "==> Syncing Postgres + JWT from McBuleli .env"
   for key in POSTGRES_USER POSTGRES_PASSWORD POSTGRES_DB JWT_SECRET CRON_SECRET \
-    NEXT_PUBLIC_TURNSTILE_SITE_KEY TURNSTILE_SECRET_KEY; do
+    NEXT_PUBLIC_TURNSTILE_SITE_KEY TURNSTILE_SECRET_KEY \
+    PAWAPAY_API_TOKEN PAWAPAY_ENV PAWAPAY_CALLBACK_SECRET \
+    KYC_ENABLED DIDIT_API_KEY DIDIT_WORKFLOW_ID DIDIT_WEBHOOK_SECRET; do
     val="$(grep -E "^${key}=" "$MCBULELI_ENV" | head -1 | cut -d= -f2- || true)"
     if [[ -n "$val" ]]; then
       if grep -q "^${key}=" .env; then
@@ -33,6 +35,20 @@ if [[ -f "$MCBULELI_ENV" && -f .env ]]; then
       fi
     fi
   done
+  # e-AVEC transactional email (independent Resend key + from address).
+  for key in RESEND_E_AVEC AUTH_EMAIL_FROM AUTH_EMAIL_REPLY_TO; do
+    val="$(grep -E "^${key}=" "$MCBULELI_ENV" | head -1 | cut -d= -f2- || true)"
+    if [[ -n "$val" ]]; then
+      if grep -q "^${key}=" .env; then
+        sed -i "s|^${key}=.*|${key}=${val}|" .env
+      else
+        echo "${key}=${val}" >> .env
+      fi
+    fi
+  done
+  if ! grep -q "^AUTH_EMAIL_FROM=" .env 2>/dev/null; then
+    echo "AUTH_EMAIL_FROM=e-AVEC <noreply@e-avec.org>" >> .env
+  fi
 fi
 
 echo ""
