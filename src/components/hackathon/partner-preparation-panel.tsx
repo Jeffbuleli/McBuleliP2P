@@ -2,6 +2,10 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import {
+  PARTNER_TALK_MINUTES,
+  type PartnerDayBrief,
+} from "@/lib/hackathon/partner-day-brief";
 
 type PassRow = {
   id: string;
@@ -23,6 +27,24 @@ type TaskRow = {
   kind: string;
 };
 
+function talkStatusLabel(
+  status: string,
+  isFr: boolean,
+): string {
+  switch (status) {
+    case "confirmed":
+      return isFr ? "Confirmé" : "Confirmed";
+    case "pending_24h":
+      return isFr ? "À confirmer (24h)" : "Confirm within 24h";
+    case "backup":
+      return isFr ? "Selon planning" : "Per schedule";
+    case "media_only":
+      return isFr ? "Photo seule" : "Photo only";
+    default:
+      return isFr ? "Hors scène" : "Off stage";
+  }
+}
+
 export function PartnerPreparationPanel({
   isFr,
   orgId,
@@ -34,6 +56,7 @@ export function PartnerPreparationPanel({
   const [error, setError] = useState<string | null>(null);
   const [passes, setPasses] = useState<PassRow[]>([]);
   const [tasks, setTasks] = useState<TaskRow[]>([]);
+  const [dayBrief, setDayBrief] = useState<PartnerDayBrief | null>(null);
   const [seatHolderOnly, setSeatHolderOnly] = useState(false);
   const [grantEmail, setGrantEmail] = useState("");
   const [grantName, setGrantName] = useState("");
@@ -55,6 +78,7 @@ export function PartnerPreparationPanel({
       }
       setPasses(json.passes ?? []);
       setTasks(json.tasks ?? []);
+      setDayBrief(json.dayBrief ?? null);
       setSeatHolderOnly(Boolean(json.seatHolderOnly));
     } finally {
       setBusy(false);
@@ -98,17 +122,116 @@ export function PartnerPreparationPanel({
 
   const seat2 = passes.find((p) => p.seatIndex === 2);
   const seat1 = passes.find((p) => p.seatIndex === 1);
+  const talk = dayBrief?.talk ?? null;
+  const bringTech = isFr
+    ? dayBrief?.bringTechFr
+    : dayBrief?.bringTechEn;
+  const bringVis = isFr
+    ? dayBrief?.bringVisibilityFr
+    : dayBrief?.bringVisibilityEn;
 
   return (
     <section className="space-y-5">
+      {dayBrief ? (
+        <>
+          <div className="rounded-2xl border border-[color:var(--hk-accent)]/35 bg-[color:var(--hk-soft)] p-4 sm:p-5">
+            <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--hk-muted)]">
+              {isFr ? dayBrief.dateLabelFr : dayBrief.dateLabelEn}
+            </p>
+            <h2 className="mt-1 text-lg font-extrabold text-[color:var(--hk-text)]">
+              {isFr ? dayBrief.bootcampTitleFr : dayBrief.bootcampTitleEn}
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-[color:var(--hk-text)]">
+              {isFr ? dayBrief.bootcampFr : dayBrief.bootcampEn}
+            </p>
+            <p className="mt-3 text-sm font-semibold text-[color:var(--hk-accent)]">
+              {isFr ? dayBrief.teamFr : dayBrief.teamEn}
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-[color:var(--hk-text)]">
+              {isFr ? dayBrief.setupFr : dayBrief.setupEn}
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-[color:var(--hk-border)] bg-[color:var(--hk-surface)] p-4 sm:p-5">
+            <h2 className="text-lg font-extrabold text-[color:var(--hk-text)]">
+              {isFr ? "Votre créneau" : "Your slot"}
+            </h2>
+            {talk && talk.status !== "none" && talk.start ? (
+              <div className="mt-3 rounded-xl bg-[color:var(--hk-page)] px-3.5 py-3">
+                <p className="text-2xl font-extrabold tabular-nums text-[color:var(--hk-text)]">
+                  {talk.start} – {talk.end}
+                </p>
+                <p className="mt-1 text-sm font-semibold text-[color:var(--hk-accent)]">
+                  {isFr ? talk.domainFr : talk.domainEn}
+                </p>
+                <p className="mt-1 text-xs font-bold uppercase tracking-wide text-[color:var(--hk-muted)]">
+                  {talkStatusLabel(talk.status, isFr)}
+                  {talk.status !== "media_only"
+                    ? ` · ${PARTNER_TALK_MINUTES} min`
+                    : ""}
+                </p>
+                {(isFr ? talk.noteFr : talk.noteEn) ? (
+                  <p className="mt-2 text-sm text-[color:var(--hk-muted)]">
+                    {isFr ? talk.noteFr : talk.noteEn}
+                  </p>
+                ) : null}
+              </div>
+            ) : talk?.status === "media_only" ? (
+              <p className="mt-2 text-sm text-[color:var(--hk-muted)]">
+                {isFr ? talk.noteFr : talk.noteEn}
+              </p>
+            ) : (
+              <p className="mt-2 text-sm text-[color:var(--hk-muted)]">
+                {isFr
+                  ? "Pas de slot scène — mentorat / présence sur site."
+                  : "No stage slot — mentoring / on-site presence."}
+              </p>
+            )}
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="rounded-2xl border border-[color:var(--hk-border)] bg-[color:var(--hk-surface)] p-4 sm:p-5">
+              <h2 className="text-base font-extrabold text-[color:var(--hk-text)]">
+                {isFr ? "À apporter · tech" : "Bring · tech"}
+              </h2>
+              <ul className="mt-3 space-y-1.5 text-sm text-[color:var(--hk-text)]">
+                {(bringTech ?? []).map((item) => (
+                  <li key={item} className="flex gap-2">
+                    <span className="text-[color:var(--hk-accent)]" aria-hidden>
+                      ·
+                    </span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="rounded-2xl border border-[color:var(--hk-border)] bg-[color:var(--hk-surface)] p-4 sm:p-5">
+              <h2 className="text-base font-extrabold text-[color:var(--hk-text)]">
+                {isFr ? "À apporter · visibilité" : "Bring · visibility"}
+              </h2>
+              <ul className="mt-3 space-y-1.5 text-sm text-[color:var(--hk-text)]">
+                {(bringVis ?? []).map((item) => (
+                  <li key={item} className="flex gap-2">
+                    <span className="text-[color:var(--hk-accent)]" aria-hidden>
+                      ·
+                    </span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </>
+      ) : null}
+
       <div className="rounded-2xl border border-[color:var(--hk-border)] bg-[color:var(--hk-surface)] p-4 sm:p-5">
         <h2 className="text-lg font-extrabold text-[color:var(--hk-text)]">
           {isFr ? "Badges partenaires (2 places)" : "Partner badges (2 seats)"}
         </h2>
         <p className="mt-1 text-sm text-[color:var(--hk-muted)]">
           {isFr
-            ? "Accès exclusif au titulaire (compte McBuleli = email du badge). La 2e place peut être octroyée à un collègue."
-            : "Owner-only access (McBuleli account = badge email). Grant seat 2 to a colleague."}
+            ? "Idéal : place 1 = représentant, place 2 = IT. Accès = compte McBuleli = email du badge."
+            : "Ideal: seat 1 = representative, seat 2 = IT. Access = McBuleli account = badge email."}
         </p>
         {error ? (
           <p className="mt-2 text-sm font-semibold text-red-600">{error}</p>
@@ -123,6 +246,17 @@ export function PartnerPreparationPanel({
                 <div>
                   <p className="font-bold text-[color:var(--hk-text)]">
                     {isFr ? `Place ${p.seatIndex}` : `Seat ${p.seatIndex}`}
+                    {p.badgeKind === "media"
+                      ? isFr
+                        ? " · photographe"
+                        : " · photographer"
+                      : p.seatIndex === 1
+                        ? isFr
+                          ? " · représentant"
+                          : " · representative"
+                        : isFr
+                          ? " · IT"
+                          : " · IT"}
                     {p.status === "reserved"
                       ? isFr
                         ? " · disponible"
@@ -163,13 +297,15 @@ export function PartnerPreparationPanel({
         {seat1 && seat2 && seat2.status !== "active" && !seatHolderOnly ? (
           <div className="mt-4 space-y-2 border-t border-[color:var(--hk-border)] pt-4">
             <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--hk-muted)]">
-              {isFr ? "Octroyer la 2e place" : "Grant seat 2"}
+              {isFr
+                ? "Octroyer la 2e place (IT recommandé)"
+                : "Grant seat 2 (IT recommended)"}
             </p>
             <div className="flex flex-wrap gap-2">
               <input
                 value={grantName}
                 onChange={(e) => setGrantName(e.target.value)}
-                placeholder={isFr ? "Nom du collègue" : "Colleague name"}
+                placeholder={isFr ? "Nom du collègue IT" : "IT colleague name"}
                 className="min-w-[10rem] flex-1 rounded-xl border border-[color:var(--hk-border)] bg-[color:var(--hk-page)] px-3 py-2 text-sm"
               />
               <input
@@ -180,7 +316,9 @@ export function PartnerPreparationPanel({
               />
               <button
                 type="button"
-                disabled={busy || !grantEmail.includes("@") || grantName.trim().length < 1}
+                disabled={
+                  busy || !grantEmail.includes("@") || grantName.trim().length < 1
+                }
                 onClick={() =>
                   void post({
                     action: "grant_seat_2",
@@ -206,8 +344,8 @@ export function PartnerPreparationPanel({
         </h2>
         <p className="mt-1 text-sm text-[color:var(--hk-muted)]">
           {isFr
-            ? "Préparez atelier, mentorat, jury et logistique avant Silikin."
-            : "Prep workshop, mentoring, jury and logistics before Silikin."}
+            ? "Préparez talk, mentorat, jury et logistique avant Silikin."
+            : "Prep talk, mentoring, jury and logistics before Silikin."}
         </p>
         <ul className="mt-4 space-y-2">
           {tasks.map((t) => (

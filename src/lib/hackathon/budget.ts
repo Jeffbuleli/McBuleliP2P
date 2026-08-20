@@ -137,7 +137,7 @@ export const BUDGET_PARTNER_ORGS: ReadonlyArray<{
   {
     slug: "bienv-photography",
     name: "Bienv Photography",
-    seats: 2,
+    seats: 1,
     kind: "media",
     talk: false,
     roleFr: "Médias · photo & vidéo",

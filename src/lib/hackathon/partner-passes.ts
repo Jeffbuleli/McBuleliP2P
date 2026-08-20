@@ -88,7 +88,8 @@ export const PARTNER_BADGE_PROFILES: Record<string, OrgBadgeProfile> = {
     roleLabel: "Médias / Photography",
     badgeKind: "media",
     defaultTasks: [
-      { title: "Couverture photo & vidéo (28-29 août)", kind: "other" },
+      { title: "Arrivée 8h00 — mise en place matériel & visibilité", kind: "logistique" },
+      { title: "Couverture photo & vidéo (28 août)", kind: "other" },
       { title: "Interviews & moments forts", kind: "other" },
       { title: "Livraison : 1 vidéo résumé + série photos", kind: "other" },
     ],

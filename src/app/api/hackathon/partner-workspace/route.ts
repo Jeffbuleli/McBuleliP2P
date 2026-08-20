@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
+import { getDb, hackathonPartnerOrgs } from "@/db";
 import { ensurePartnerOrgsSeeded } from "@/lib/hackathon/partner-chat";
 import { resolvePartnerChatAccess } from "@/lib/hackathon/partner-chat-auth";
+import { partnerDayBriefForSlug } from "@/lib/hackathon/partner-day-brief";
 import {
   grantPartnerSeat2,
   listOrgPasses,
@@ -10,7 +13,6 @@ import {
 import {
   addPartnerTask,
   ensureDefaultPartnerTasks,
-  listPartnerTasks,
   setPartnerTaskStatus,
 } from "@/lib/hackathon/partner-tasks";
 
@@ -63,7 +65,16 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "forbidden" }, { status: 403 });
     }
 
-    const [passes, tasks] = await Promise.all([
+    const db = getDb();
+    const [[org], passes, tasks] = await Promise.all([
+      db
+        .select({
+          slug: hackathonPartnerOrgs.slug,
+          shortName: hackathonPartnerOrgs.shortName,
+        })
+        .from(hackathonPartnerOrgs)
+        .where(eq(hackathonPartnerOrgs.id, resolvedOrgId))
+        .limit(1),
       listOrgPasses(resolvedOrgId),
       ensureDefaultPartnerTasks(resolvedOrgId),
     ]);
@@ -76,9 +87,14 @@ export async function GET(req: Request) {
         )
       : passes;
 
+    const dayBrief = partnerDayBriefForSlug(org?.slug ?? "");
+
     return NextResponse.json({
       orgId: resolvedOrgId,
+      orgSlug: org?.slug ?? null,
+      orgShortName: org?.shortName ?? null,
       seatHolderOnly: ctx.session.seatHolderOnly,
+      dayBrief,
       passes: visiblePasses.map(passToPublic),
       tasks: tasks.map((t) => ({
         id: t.id,
