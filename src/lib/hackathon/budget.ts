@@ -83,7 +83,7 @@ export type BudgetOrgKind =
 export const BUDGET_PARTNER_ORGS: ReadonlyArray<{
   slug: string;
   name: string;
-  seats: 2;
+  seats: 1 | 2;
   kind: BudgetOrgKind;
   /** Scène / pitch business (pas seulement mentorat silencieux). */
   talk: boolean;
