@@ -41,25 +41,12 @@ function statusLabel(status: string) {
 export default function PartnerPrepPreviewPage() {
   return (
     <HkShell authReturnPath="/hackathon/partner-prep-preview">
-      <HkPage>
-        <div className="mx-auto max-w-3xl space-y-6 px-4 py-8 sm:px-6">
-          <header className="space-y-2">
-            <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--hk-muted)]">
-              Aperçu local · non indexé
-            </p>
-            <h1 className="text-2xl font-extrabold text-[color:var(--hk-text)]">
-              Préparation partenaires — 28 août
-            </h1>
-            <p className="text-sm text-[color:var(--hk-muted)]">
-              Ce que chaque org voit dans Chat → Préparation. En prod :{" "}
-              <code className="text-[color:var(--hk-accent)]">/hackathon/chat</code>
-              .
-            </p>
-            <p className="text-sm font-semibold text-[color:var(--hk-accent)]">
-              Talks {PARTNER_TALK_MINUTES} min · Agent IA : cursor.com recommandé
-            </p>
-          </header>
-
+      <HkPage
+        eyebrow="Aperçu local · non indexé"
+        title="Préparation partenaires — 28 août"
+        lede={`Talks ${PARTNER_TALK_MINUTES} min · Agent IA : cursor.com recommandé. En prod : /hackathon/chat → Préparation.`}
+      >
+        <div className="space-y-6">
           {ORG_ORDER.map((slug) => {
             const brief = partnerDayBriefForSlug(slug);
             const profile = PARTNER_BADGE_PROFILES[slug];
