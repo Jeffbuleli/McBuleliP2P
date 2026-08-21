@@ -1,5 +1,4 @@
-import { McStageDisplay } from "@/components/hackathon/mc-stage-display";
-import { getMcSession, toMcPublic } from "@/lib/hackathon/mc-state";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -8,7 +7,7 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
+/** Single room projector = /hackathon/live (mode MC). */
 export default function HackathonMcStagePage() {
-  const session = toMcPublic(getMcSession());
-  return <McStageDisplay initialSession={session} />;
+  redirect("/hackathon/live");
 }

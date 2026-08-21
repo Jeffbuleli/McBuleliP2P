@@ -17,6 +17,7 @@ import {
   TEAM_STATUS_LABELS_FR,
   type TeamStatus,
 } from "@/lib/hackathon/team-status";
+import { getMcSession, toMcPublic } from "@/lib/hackathon/mc-state";
 
 function currentProgramSlot(now = new Date()) {
   const days = hackathonProgramDays();
@@ -123,6 +124,8 @@ export async function buildLivePayload() {
     presentation = null;
   }
 
+  const mc = toMcPublic(getMcSession());
+
   return {
     edition: {
       id: edition.id,
@@ -151,6 +154,8 @@ export async function buildLivePayload() {
       labelEn: TEAM_STATUS_LABELS_EN[t.status as TeamStatus] ?? t.status,
     })),
     presentation,
+    projectorMode: mc.projectorMode,
+    mc,
     serverTime: new Date().toISOString(),
   };
 }

@@ -85,9 +85,7 @@ export function McOperatorConsole({
     [key],
   );
 
-  const stageHref = key
-    ? `/hackathon/mc/stage?key=${encodeURIComponent(key)}`
-    : "/hackathon/mc/stage";
+  const stageHref = "/hackathon/live";
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 px-3 py-6 sm:px-4">
@@ -99,8 +97,9 @@ export function McOperatorConsole({
           McBuleli AI · MC
         </h1>
         <p className="max-w-2xl text-sm text-white/65">
-          Tu pilotes l&apos;écran scène. Patty ouvre/clôture, Jeff = bootcamp,
-          partenaires = talks + mentorat, salle = ordre.
+          Un seul projecteur : /hackathon/live. Tu changes le mode ici (MC /
+          Slides / Mur). Patty ouvre/clôture, Jeff = bootcamp, partenaires =
+          talks + mentorat, salle = ordre.
         </p>
         <div className="flex flex-wrap gap-2 pt-1">
           <a
@@ -115,13 +114,13 @@ export function McOperatorConsole({
             rel="noreferrer"
             className="rounded-lg bg-white px-3 py-2 text-sm font-bold text-black"
           >
-            Ouvrir écran scène
+            Ouvrir projecteur Live
           </a>
           <a
             href="/hackathon/slides"
             className="rounded-lg border border-emerald-400/40 px-3 py-2 text-sm font-semibold text-emerald-200"
           >
-            Bootcamp deck → Slides
+            Bootcamp deck - Slides
           </a>
           <button
             type="button"
@@ -133,6 +132,39 @@ export function McOperatorConsole({
           </button>
         </div>
       </header>
+
+      <section className="rounded-2xl border border-emerald-400/30 bg-emerald-400/10 p-4">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-200/80">
+          Projecteur salle (mode actuel : {session.projectorMode})
+        </p>
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          {(
+            [
+              ["mc", "MC"],
+              ["slides", "Slides"],
+              ["wall", "Mur"],
+            ] as const
+          ).map(([mode, label]) => (
+            <button
+              key={mode}
+              type="button"
+              disabled={busy}
+              onClick={() => post({ action: "projector", mode })}
+              className={`rounded-xl py-3 text-sm font-black ${
+                session.projectorMode === mode
+                  ? "bg-white text-black"
+                  : "bg-black/30 text-white/80"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <p className="mt-2 text-xs text-white/55">
+          Matin = MC. Bootcamp = Slides (On Air auto). Build = Mur. Le laptop
+          projecteur reste sur /hackathon/live.
+        </p>
+      </section>
 
       <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
         <label className="block text-xs font-semibold text-white/50">
@@ -185,7 +217,7 @@ export function McOperatorConsole({
                   : "text-white"
               }`}
             >
-              {remainMs == null ? "—" : formatRemain(remainMs)}
+              {remainMs == null ? "-" : formatRemain(remainMs)}
             </p>
           </div>
         </div>

@@ -1,5 +1,5 @@
 /**
- * Single inventory of /hackathon/* surfaces — audience + job.
+ * Single inventory of /hackathon/* surfaces - audience + job.
  * Consumed by /hackathon/ops so we stop stacking orphan tools.
  */
 
@@ -72,31 +72,30 @@ export const HACKATHON_SURFACES: HackathonSurface[] = [
   },
   {
     id: "mc-stage",
-    href: "/hackathon/mc/stage",
-    labelFr: "MC scène",
-    labelEn: "MC stage",
-    jobFr: "Projecteur tempo / modération (matin & transitions)",
-    jobEn: "Projector for tempo / moderation (morning & transitions)",
+    href: "/hackathon/live",
+    labelFr: "Projecteur salle",
+    labelEn: "Room projector",
+    jobFr: "Alias de /hackathon/live (redirect /mc/stage)",
+    jobEn: "Alias of /hackathon/live (/mc/stage redirects)",
     audience: "ops",
-    day1Primary: true,
   },
   {
     id: "slides",
     href: "/hackathon/slides",
     labelFr: "Slides",
     labelEn: "Slides",
-    jobFr: "Préparer / présenter un deck (bootcamp Jeff)",
-    jobEn: "Prepare / present a deck (Jeff bootcamp)",
+    jobFr: "Contrôle deck bootcamp (On Air → Live mode Slides)",
+    jobEn: "Bootcamp deck control (On Air → Live Slides mode)",
     audience: "ops",
     day1Primary: true,
   },
   {
     id: "live",
     href: "/hackathon/live",
-    labelFr: "Live",
-    labelEn: "Live",
-    jobFr: "Mur salle + projecteur slides quand On Air (pas le MC)",
-    jobEn: "Room wall + slide projector when On Air (not the MC)",
+    labelFr: "Live (projecteur)",
+    labelEn: "Live (projector)",
+    jobFr: "Écran unique salle - bascule via console MC",
+    jobEn: "Single room screen - switch via MC console",
     audience: "ops",
     day1Primary: true,
   },
@@ -158,19 +157,19 @@ export const HACKATHON_SURFACES: HackathonSurface[] = [
 ];
 
 export const HACKATHON_DAY1_CHECKLIST_FR = [
-  "Projecteur matin → MC scène (Patty ouvre, AI modère, talks 10′).",
-  "Bootcamp Jeff → Slides présent + Live On Air (même deck). Couper MC scène.",
-  "Builders → Mon espace. Partenaires → Chat. Salle → Scan + ordre.",
-  "Build / mentors → MC pour rappels tempo si besoin ; Live = mur salle.",
-  "Clôture → MC scène (synthèse AI) puis Patty. Un seul projecteur à la fois.",
+  "Projecteur unique = /hackathon/live (ne change plus d'URL).",
+  "Matin : console MC → mode MC (Patty, talks, transitions).",
+  "Bootcamp : Jeff Present + Passer On Air → mode Slides auto.",
+  "Build : mode Mur. Partenaires mentorent ; builders = Mon espace.",
+  "Clôture : mode MC puis Patty. Un projecteur, trois modes.",
 ] as const;
 
 export const HACKATHON_DAY1_CHECKLIST_EN = [
-  "Morning projector → MC stage (Patty opens, AI moderates, 10′ talks).",
-  "Jeff bootcamp → Slides present + Live On Air (same deck). Turn off MC stage.",
-  "Builders → My hub. Partners → Chat. Door team → Scan + room order.",
-  "Build / mentors → MC for tempo cues if needed; Live = room wall.",
-  "Close → MC stage (AI wrap) then Patty. One projector at a time.",
+  "Single projector = /hackathon/live (do not change the URL).",
+  "Morning: MC console → MC mode (Patty, talks, transitions).",
+  "Bootcamp: Jeff Present + Go On Air → Slides mode auto.",
+  "Build: Wall mode. Partners mentor; builders = My hub.",
+  "Close: MC mode then Patty. One projector, three modes.",
 ] as const;
 
 export function surfacesByAudience(

@@ -11,7 +11,7 @@ import {
 export const MC_EVENT_DATE_FR = "Vendredi 28 août 2026";
 export const MC_VENUE_FR = "Silikin Village";
 
-/** Magic handoff phrases — whole team learns these. */
+/** Magic handoff phrases - whole team learns these. */
 export const MC_MAGIC_PHRASES = {
   pattyToAi:
     "Bienvenue au McBuleli Hackathon. Nous accueillons McBuleli AI pour présenter McBuleli et modérer le déroulé.",
@@ -152,7 +152,7 @@ export const MC_CUES: McCue[] = [
     humanScriptFr: [
       "Bonjour et bienvenue au McBuleli Hackathon, ici à Silikin Village.",
       MC_MAGIC_PHRASES.pattyToAi,
-      "(Puis silence — l'opérateur lance INTRO AI.)",
+      "(Puis silence - l'opérateur lance INTRO AI.)",
     ].join(" "),
   },
   {
@@ -257,7 +257,7 @@ export function findMcCueIndex(id: string): number {
   return i >= 0 ? i : 0;
 }
 
-/** Next cue after current (skips nothing — operator chooses). */
+/** Next cue after current (skips nothing - operator chooses). */
 export function peekNextCue(index: number): McCue | null {
   return MC_CUES[index + 1] ?? null;
 }
@@ -271,7 +271,7 @@ export type McRoleCard = {
 export const MC_ROLE_CARDS: McRoleCard[] = [
   {
     id: "patty",
-    titleFr: "Mme Patty B. — Ouverture & clôture",
+    titleFr: "Mme Patty B. - Ouverture & clôture",
     bodyFr: [
       "Ouvre avec la phrase magique vers McBuleli AI.",
       "Ne reste pas MC au milieu de la journée.",
@@ -280,7 +280,7 @@ export const MC_ROLE_CARDS: McRoleCard[] = [
   },
   {
     id: "ai",
-    titleFr: "McBuleli AI — Tempo & modération",
+    titleFr: "McBuleli AI - Tempo & modération",
     bodyFr: [
       "Parle seulement quand l'opérateur lance un cue.",
       "Appelle partenaires, Jeff, Patty.",
@@ -289,7 +289,7 @@ export const MC_ROLE_CARDS: McRoleCard[] = [
   },
   {
     id: "jeff",
-    titleFr: "Jeff Buleli — Bootcamp seulement",
+    titleFr: "Jeff Buleli - Bootcamp seulement",
     bodyFr: [
       "Entre après : « Je passe la parole à Jeff Buleli… »",
       "Enseigne 1 h. Fin : « Merci McBuleli AI. »",
@@ -298,7 +298,7 @@ export const MC_ROLE_CARDS: McRoleCard[] = [
   },
   {
     id: "partners",
-    titleFr: "Partenaires — Talk + mentorat terrain",
+    titleFr: "Partenaires - Talk + mentorat terrain",
     bodyFr: [
       "10 min scène au signal AI.",
       "Mentorat / aide physique en circulant pendant le build.",
@@ -307,7 +307,7 @@ export const MC_ROLE_CARDS: McRoleCard[] = [
   },
   {
     id: "salle",
-    titleFr: "Équipe salle (2) — Participants & ordre",
+    titleFr: "Équipe salle (2) - Participants & ordre",
     bodyFr: [
       "Badges, places, silence, files, orientation mentors.",
       "Signaux discrets vers l'opérateur.",

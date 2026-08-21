@@ -13,10 +13,16 @@ function formatRemain(ms: number) {
 
 export function McStageDisplay({
   initialSession,
+  session: controlled,
+  poll = true,
 }: {
   initialSession: McSessionPublic;
+  /** When provided by Live, skip local fetch and use parent state */
+  session?: McSessionPublic;
+  poll?: boolean;
 }) {
-  const [session, setSession] = useState(initialSession);
+  const [localSession, setLocalSession] = useState(initialSession);
+  const session = controlled ?? localSession;
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -25,17 +31,22 @@ export function McStageDisplay({
   }, []);
 
   useEffect(() => {
+    if (!poll || controlled) return;
     const t = setInterval(async () => {
       try {
         const res = await fetch("/api/hackathon/mc", { cache: "no-store" });
         const data = await res.json();
-        if (data?.session) setSession(data.session);
+        if (data?.session) setLocalSession(data.session);
       } catch {
         /* ignore */
       }
     }, 1000);
     return () => clearInterval(t);
-  }, []);
+  }, [poll, controlled]);
+
+  useEffect(() => {
+    if (controlled) setLocalSession(controlled);
+  }, [controlled]);
 
   const remainMs = useMemo(() => {
     if (!session.timerEndsAt) return null;
@@ -130,7 +141,7 @@ export function McStageDisplay({
             Ensuite
           </p>
           <p className="text-sm font-semibold text-white/70">
-            {session.nextCue?.labelFr ?? "—"}
+            {session.nextCue?.labelFr ?? "-"}
           </p>
         </div>
         <p className="text-xs text-white/35">mcbuleli.org · Silikin Village</p>

@@ -1,6 +1,6 @@
 /**
- * Shared MC session state (operator ↔ stage).
- * In-memory on the web process (single VPS container) — fine for Day 1 control.
+ * Shared MC session state (operator <-> Live projector).
+ * In-memory on the web process (single VPS container) - fine for Day 1 control.
  */
 import {
   findMcCueIndex,
@@ -8,6 +8,9 @@ import {
   peekNextCue,
   type McCue,
 } from "@/lib/hackathon/mc-day";
+
+/** What the single room projector (/hackathon/live) shows. */
+export type ProjectorMode = "wall" | "mc" | "slides";
 
 export type McSessionState = {
   cueId: string;
@@ -17,6 +20,8 @@ export type McSessionState = {
   /** Soft pause: show human banner instead of AI line */
   humanOverride: boolean;
   overrideMessageFr: string;
+  /** Single projector mode for /hackathon/live */
+  projectorMode: ProjectorMode;
   updatedAt: string;
 };
 
@@ -27,7 +32,7 @@ export type McSessionPublic = McSessionState & {
 };
 
 const DEFAULT_OVERRIDE =
-  "Une seconde — l'équipe McBuleli ajuste. Reprise dans un instant.";
+  "Une seconde - l'équipe McBuleli ajuste. Reprise dans un instant.";
 
 type GlobalMc = {
   __mcbuleliMcSession?: McSessionState;
@@ -45,6 +50,7 @@ function defaultState(): McSessionState {
     timerEndsAt: null,
     humanOverride: false,
     overrideMessageFr: DEFAULT_OVERRIDE,
+    projectorMode: "mc",
     updatedAt: new Date().toISOString(),
   };
 }
@@ -53,6 +59,10 @@ export function getMcSession(): McSessionState {
   const g = store();
   if (!g.__mcbuleliMcSession) {
     g.__mcbuleliMcSession = defaultState();
+  }
+  // Backfill if older in-memory state predates projectorMode
+  if (!g.__mcbuleliMcSession.projectorMode) {
+    g.__mcbuleliMcSession.projectorMode = "mc";
   }
   return g.__mcbuleliMcSession;
 }
@@ -120,6 +130,10 @@ export function setMcHumanOverride(
     overrideMessageFr: messageFr?.trim() || DEFAULT_OVERRIDE,
     timerEndsAt: on ? null : getMcSession().timerEndsAt,
   });
+}
+
+export function setProjectorMode(mode: ProjectorMode): McSessionPublic {
+  return touch({ projectorMode: mode });
 }
 
 export function resetMcSession(): McSessionPublic {

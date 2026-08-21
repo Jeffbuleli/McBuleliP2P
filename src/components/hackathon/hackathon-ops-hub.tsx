@@ -84,12 +84,12 @@ export function HackathonOpsHub() {
             {isFr ? "Équipe McBuleli · non indexé" : "McBuleli team · noindex"}
           </p>
           <h1 className="text-3xl font-black tracking-tight sm:text-4xl">
-            {isFr ? "Ops jour — Hackathon" : "Day ops — Hackathon"}
+            {isFr ? "Ops jour - Hackathon" : "Day ops - Hackathon"}
           </h1>
           <p className="max-w-2xl text-sm leading-relaxed text-white/65">
             {isFr
-              ? "Un seul point d'entrée. MC = tempo. Slides + Live = deck bootcamp. Mon espace = builders. Chat = partenaires. Un projecteur = un outil à la fois."
-              : "Single entry point. MC = tempo. Slides + Live = bootcamp deck. My hub = builders. Chat = partners. One projector = one tool at a time."}
+            ? "Un seul point d'entrée. Projecteur = /hackathon/live (modes MC / Slides / Mur). Mon espace = builders. Chat = partenaires."
+            : "Single entry point. Projector = /hackathon/live (MC / Slides / Wall modes). My hub = builders. Chat = partners."}
           </p>
         </header>
 

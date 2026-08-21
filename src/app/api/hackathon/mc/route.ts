@@ -9,9 +9,11 @@ import {
   setMcCueById,
   setMcCueIndex,
   setMcHumanOverride,
+  setProjectorMode,
   startMcTimer,
   stepMcCue,
   toMcPublic,
+  type ProjectorMode,
 } from "@/lib/hackathon/mc-state";
 
 export const dynamic = "force-dynamic";
@@ -61,6 +63,10 @@ const actionSchema = z.discriminatedUnion("action", [
     on: z.boolean(),
     messageFr: z.string().max(280).optional(),
   }),
+  z.object({
+    action: z.literal("projector"),
+    mode: z.enum(["wall", "mc", "slides"]),
+  }),
   z.object({ action: z.literal("reset") }),
 ]);
 
@@ -108,6 +114,9 @@ export async function POST(req: Request) {
         break;
       case "human_override":
         session = setMcHumanOverride(a.on, a.messageFr);
+        break;
+      case "projector":
+        session = setProjectorMode(a.mode as ProjectorMode);
         break;
       case "reset":
         session = resetMcSession();

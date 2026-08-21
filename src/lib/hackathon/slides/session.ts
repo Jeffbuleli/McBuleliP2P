@@ -97,7 +97,7 @@ export async function goLiveSlideSession(input: {
   if (!deck) throw new Error("deck_not_found");
   const max = deck.slides.length - 1;
   const index = Math.max(0, Math.min(input.slideIndex ?? 0, max));
-  return upsertSession({
+  const session = await upsertSession({
     editionId: input.editionId,
     deckSlug: deck.slug,
     slideIndex: index,
@@ -105,6 +105,13 @@ export async function goLiveSlideSession(input: {
     speakerLabel: input.speakerLabel.slice(0, 160),
     userId: input.userId,
   });
+  try {
+    const { setProjectorMode } = await import("@/lib/hackathon/mc-state");
+    setProjectorMode("slides");
+  } catch {
+    /* ignore */
+  }
+  return session;
 }
 
 export async function setSlideSessionIndex(input: {
@@ -135,7 +142,7 @@ export async function endSlideSession(input: {
   userId: string;
 }): Promise<SlideSessionPublic> {
   const current = await getSlideSessionForEdition(input.editionId);
-  return upsertSession({
+  const session = await upsertSession({
     editionId: input.editionId,
     deckSlug: current?.deckSlug ?? null,
     slideIndex: current?.slideIndex ?? 0,
@@ -143,6 +150,17 @@ export async function endSlideSession(input: {
     speakerLabel: current?.speakerLabel ?? null,
     userId: input.userId,
   });
+  try {
+    const { getMcSession, setProjectorMode } = await import(
+      "@/lib/hackathon/mc-state"
+    );
+    if (getMcSession().projectorMode === "slides") {
+      setProjectorMode("wall");
+    }
+  } catch {
+    /* ignore */
+  }
+  return session;
 }
 
 /** Presentation payload for the live wall projector mode. */

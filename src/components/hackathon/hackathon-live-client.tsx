@@ -11,7 +11,12 @@ import {
   useHkLocale,
 } from "@/components/hackathon/hk-ui";
 import { HackathonSlideFrame } from "@/components/hackathon/hackathon-slide-frame";
+import { McStageDisplay } from "@/components/hackathon/mc-stage-display";
 import type { HackathonSlide } from "@/lib/hackathon/slides/types";
+import type {
+  McSessionPublic,
+  ProjectorMode,
+} from "@/lib/hackathon/mc-state";
 
 type LivePresentation = {
   status: "live";
@@ -58,6 +63,8 @@ type LivePayload = {
     labelEn?: string;
   }>;
   presentation?: LivePresentation | null;
+  projectorMode?: ProjectorMode;
+  mc?: McSessionPublic;
   serverTime: string;
 };
 
@@ -127,12 +134,41 @@ function LiveProjector({
   );
 }
 
+function SlidesWaiting({ isFr }: { isFr: boolean }) {
+  return (
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-[#06140f] px-6 text-center text-white">
+      <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-emerald-300/90">
+        Mode Slides
+      </p>
+      <h1 className="mt-4 max-w-2xl text-3xl font-black tracking-tight sm:text-4xl">
+        {isFr
+          ? "En attente du deck On Air"
+          : "Waiting for On Air deck"}
+      </h1>
+      <p className="mt-3 max-w-lg text-sm text-white/60">
+        {isFr
+          ? "Sur le PC speaker : /hackathon/slides → Présenter → Passer On Air. Le projecteur reste ici."
+          : "On the speaker PC: /hackathon/slides → Present → Go On Air. Projector stays here."}
+      </p>
+      <Link
+        href="/hackathon/mc"
+        className="mt-8 text-sm font-semibold text-emerald-300 hover:underline"
+      >
+        {isFr ? "Console MC (changer de mode)" : "MC console (switch mode)"}
+      </Link>
+    </div>
+  );
+}
+
 export function HackathonLiveClient({ initial }: { initial: LivePayload }) {
   const isFr = useHkLocale();
   const [data, setData] = useState(initial);
   const [now, setNow] = useState(0);
 
+  const mode: ProjectorMode = data.projectorMode ?? "wall";
   const onAir = data.presentation?.status === "live";
+  const showMc = mode === "mc" && Boolean(data.mc);
+  const showSlides = mode === "slides";
 
   useEffect(() => {
     setNow(Date.now());
@@ -141,10 +177,10 @@ export function HackathonLiveClient({ initial }: { initial: LivePayload }) {
   }, []);
 
   useEffect(() => {
-    const intervalMs = onAir ? 2000 : 15000;
+    const intervalMs = showMc || showSlides ? 1500 : 15000;
     const poll = setInterval(async () => {
       try {
-        const res = await fetch("/api/hackathon/live");
+        const res = await fetch("/api/hackathon/live", { cache: "no-store" });
         if (!res.ok) return;
         const json = await res.json();
         if (!json.error) setData(json);
@@ -153,7 +189,7 @@ export function HackathonLiveClient({ initial }: { initial: LivePayload }) {
       }
     }, intervalMs);
     return () => clearInterval(poll);
-  }, [onAir]);
+  }, [showMc, showSlides]);
 
   const countdown = useMemo(
     () => formatCountdown(data.edition.submissionDeadlineAt, now),
@@ -168,12 +204,25 @@ export function HackathonLiveClient({ initial }: { initial: LivePayload }) {
     return [...map.entries()];
   }, [data.teams]);
 
-  if (onAir && data.presentation) {
+  if (showMc && data.mc) {
     return (
-      <div className="min-h-dvh">
-        <LiveProjector presentation={data.presentation} isFr={isFr} />
-      </div>
+      <McStageDisplay
+        initialSession={data.mc}
+        session={data.mc}
+        poll={false}
+      />
     );
+  }
+
+  if (showSlides) {
+    if (onAir && data.presentation) {
+      return (
+        <div className="min-h-dvh">
+          <LiveProjector presentation={data.presentation} isFr={isFr} />
+        </div>
+      );
+    }
+    return <SlidesWaiting isFr={isFr} />;
   }
 
   return (
@@ -183,11 +232,17 @@ export function HackathonLiveClient({ initial }: { initial: LivePayload }) {
         title={isFr ? data.edition.nameFr : data.edition.nameEn ?? data.edition.nameFr}
         lede={
           isFr
-            ? "Mur d'affichage - actualisé toutes les 15 secondes."
-            : "Display wall - refreshes every 15 seconds."
+            ? "Projecteur unique - mode Mur. Console MC pour passer en MC ou Slides."
+            : "Single projector - Wall mode. MC console switches to MC or Slides."
         }
         actions={
           <div className="flex flex-wrap items-end gap-3">
+            <Link
+              href="/hackathon/mc"
+              className="rounded-2xl bg-[color:var(--hk-surface,var(--fd-card))] px-4 py-3 text-sm font-bold text-[color:var(--hk-accent)] shadow-sm ring-1 ring-[color:var(--hk-border,var(--fd-border))]"
+            >
+              Console MC
+            </Link>
             <Link
               href="/hackathon/ops"
               className="rounded-2xl bg-[color:var(--hk-surface,var(--fd-card))] px-4 py-3 text-sm font-bold text-[color:var(--hk-accent)] shadow-sm ring-1 ring-[color:var(--hk-border,var(--fd-border))]"
@@ -211,19 +266,10 @@ export function HackathonLiveClient({ initial }: { initial: LivePayload }) {
           </div>
         }
       >
-        <div className="mb-4 rounded-2xl border border-amber-500/25 bg-amber-500/10 px-4 py-3 text-sm text-[color:var(--hk-text)]">
+        <div className="mb-4 rounded-2xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-[color:var(--hk-text)]">
           {isFr
-            ? "Tableau de bord salle (pas le MC). Pour le tempo / modération McBuleli AI → "
-            : "Room wall (not the MC). For McBuleli AI tempo / moderation → "}
-          <Link
-            href="/hackathon/mc/stage"
-            className="font-bold text-[color:var(--hk-accent)] hover:underline"
-          >
-            /hackathon/mc/stage
-          </Link>
-          {isFr
-            ? ". Bootcamp deck On Air : lancer depuis Slides."
-            : ". Bootcamp deck On Air: start from Slides."}
+            ? "Mode projecteur : Mur. Matin → Console MC (mode MC). Bootcamp → Passer On Air (mode Slides auto)."
+            : "Projector mode: Wall. Morning → MC console (MC mode). Bootcamp → Go On Air (Slides mode auto)."}
         </div>
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="rounded-2xl bg-[color:var(--hk-surface,var(--fd-card))] p-5 shadow-sm ring-1 ring-[color:var(--hk-border,var(--fd-border))] sm:col-span-1">
