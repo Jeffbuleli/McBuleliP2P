@@ -5,10 +5,12 @@ import {
   clearMcTimer,
   getMcSession,
   mcControlKeyOk,
+  requestMcVoiceReplay,
   resetMcSession,
   setMcCueById,
   setMcCueIndex,
   setMcHumanOverride,
+  setMcVoiceEnabled,
   setProjectorMode,
   startMcTimer,
   stepMcCue,
@@ -67,6 +69,11 @@ const actionSchema = z.discriminatedUnion("action", [
     action: z.literal("projector"),
     mode: z.enum(["wall", "mc", "slides"]),
   }),
+  z.object({
+    action: z.literal("voice"),
+    on: z.boolean(),
+  }),
+  z.object({ action: z.literal("voice_replay") }),
   z.object({ action: z.literal("reset") }),
 ]);
 
@@ -117,6 +124,12 @@ export async function POST(req: Request) {
         break;
       case "projector":
         session = setProjectorMode(a.mode as ProjectorMode);
+        break;
+      case "voice":
+        session = setMcVoiceEnabled(a.on);
+        break;
+      case "voice_replay":
+        session = requestMcVoiceReplay();
         break;
       case "reset":
         session = resetMcSession();

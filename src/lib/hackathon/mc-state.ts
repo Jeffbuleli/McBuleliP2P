@@ -22,6 +22,10 @@ export type McSessionState = {
   overrideMessageFr: string;
   /** Single projector mode for /hackathon/live */
   projectorMode: ProjectorMode;
+  /** Projector may speak stage lines (browser TTS) */
+  voiceEnabled: boolean;
+  /** Bump to force projector to re-speak current cue */
+  voiceReplayToken: number;
   updatedAt: string;
 };
 
@@ -51,6 +55,8 @@ function defaultState(): McSessionState {
     humanOverride: false,
     overrideMessageFr: DEFAULT_OVERRIDE,
     projectorMode: "mc",
+    voiceEnabled: true,
+    voiceReplayToken: 0,
     updatedAt: new Date().toISOString(),
   };
 }
@@ -60,9 +66,15 @@ export function getMcSession(): McSessionState {
   if (!g.__mcbuleliMcSession) {
     g.__mcbuleliMcSession = defaultState();
   }
-  // Backfill if older in-memory state predates projectorMode
+  // Backfill if older in-memory state predates new fields
   if (!g.__mcbuleliMcSession.projectorMode) {
     g.__mcbuleliMcSession.projectorMode = "mc";
+  }
+  if (typeof g.__mcbuleliMcSession.voiceEnabled !== "boolean") {
+    g.__mcbuleliMcSession.voiceEnabled = true;
+  }
+  if (typeof g.__mcbuleliMcSession.voiceReplayToken !== "number") {
+    g.__mcbuleliMcSession.voiceReplayToken = 0;
   }
   return g.__mcbuleliMcSession;
 }
@@ -134,6 +146,18 @@ export function setMcHumanOverride(
 
 export function setProjectorMode(mode: ProjectorMode): McSessionPublic {
   return touch({ projectorMode: mode });
+}
+
+export function setMcVoiceEnabled(on: boolean): McSessionPublic {
+  return touch({ voiceEnabled: on });
+}
+
+export function requestMcVoiceReplay(): McSessionPublic {
+  const cur = getMcSession();
+  return touch({
+    voiceEnabled: true,
+    voiceReplayToken: cur.voiceReplayToken + 1,
+  });
 }
 
 export function resetMcSession(): McSessionPublic {

@@ -167,6 +167,40 @@ export function McOperatorConsole({
       </section>
 
       <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-white/50">
+          Voix McBuleli AI (projecteur)
+        </p>
+        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() =>
+              post({ action: "voice", on: !session.voiceEnabled })
+            }
+            className={`rounded-xl py-3 text-sm font-black ${
+              session.voiceEnabled
+                ? "bg-emerald-400 text-black"
+                : "bg-white/10 text-white/80"
+            }`}
+          >
+            {session.voiceEnabled ? "Voix ON" : "Voix OFF"}
+          </button>
+          <button
+            type="button"
+            disabled={busy || !session.voiceEnabled}
+            onClick={() => post({ action: "voice_replay" })}
+            className="rounded-xl bg-white py-3 text-sm font-black text-black disabled:opacity-40"
+          >
+            Rejouer ligne
+          </button>
+        </div>
+        <p className="mt-2 text-xs text-white/55">
+          Sur le projecteur : cliquer une fois « activer le son », puis chaque
+          cue est lu en français.
+        </p>
+      </section>
+
+      <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
         <label className="block text-xs font-semibold text-white/50">
           Clé opérateur {controlConfigured ? "" : "(dev : clé optionnelle)"}
         </label>

@@ -158,18 +158,18 @@ export const HACKATHON_SURFACES: HackathonSurface[] = [
 
 export const HACKATHON_DAY1_CHECKLIST_FR = [
   "Projecteur unique = /hackathon/live (ne change plus d'URL).",
+  "Sur Live mode MC : cliquer une fois pour activer la voix McBuleli AI.",
   "Matin : console MC → mode MC (Patty, talks, transitions).",
   "Bootcamp : Jeff Present + Passer On Air → mode Slides auto.",
-  "Build : mode Mur. Partenaires mentorent ; builders = Mon espace.",
-  "Clôture : mode MC puis Patty. Un projecteur, trois modes.",
+  "Build : mode Mur. Clôture : mode MC puis Patty.",
 ] as const;
 
 export const HACKATHON_DAY1_CHECKLIST_EN = [
   "Single projector = /hackathon/live (do not change the URL).",
+  "On Live MC mode: click once to unlock McBuleli AI voice.",
   "Morning: MC console → MC mode (Patty, talks, transitions).",
   "Bootcamp: Jeff Present + Go On Air → Slides mode auto.",
-  "Build: Wall mode. Partners mentor; builders = My hub.",
-  "Close: MC mode then Patty. One projector, three modes.",
+  "Build: Wall mode. Close: MC mode then Patty.",
 ] as const;
 
 export function surfacesByAudience(

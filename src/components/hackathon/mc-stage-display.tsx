@@ -1,7 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { McSessionPublic } from "@/lib/hackathon/mc-state";
+import {
+  ensureMcVoicesLoaded,
+  speakMcLine,
+  stopMcVoice,
+} from "@/lib/hackathon/mc-voice";
 
 function formatRemain(ms: number) {
   if (ms <= 0) return "0:00";
@@ -24,6 +29,8 @@ export function McStageDisplay({
   const [localSession, setLocalSession] = useState(initialSession);
   const session = controlled ?? localSession;
   const [now, setNow] = useState(() => Date.now());
+  const [voiceUnlocked, setVoiceUnlocked] = useState(false);
+  const lastSpokenKey = useRef<string>("");
 
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 200);
@@ -48,6 +55,44 @@ export function McStageDisplay({
     if (controlled) setLocalSession(controlled);
   }, [controlled]);
 
+  useEffect(() => {
+    if (!voiceUnlocked) return;
+    if (!session.voiceEnabled) {
+      stopMcVoice();
+      return;
+    }
+    if (session.humanOverride) {
+      stopMcVoice();
+      return;
+    }
+
+    const speakKey = `${session.cueId}:${session.voiceReplayToken}`;
+    if (lastSpokenKey.current === speakKey) return;
+    lastSpokenKey.current = speakKey;
+
+    let cancelled = false;
+    void (async () => {
+      await ensureMcVoicesLoaded();
+      if (cancelled) return;
+      speakMcLine(session.cue.stageLineFr);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    voiceUnlocked,
+    session.voiceEnabled,
+    session.humanOverride,
+    session.cueId,
+    session.voiceReplayToken,
+    session.cue.stageLineFr,
+  ]);
+
+  useEffect(() => {
+    return () => stopMcVoice();
+  }, []);
+
   const remainMs = useMemo(() => {
     if (!session.timerEndsAt) return null;
     return new Date(session.timerEndsAt).getTime() - now;
@@ -56,6 +101,16 @@ export function McStageDisplay({
   const urgent = remainMs != null && remainMs <= 60_000;
   const overtime = remainMs != null && remainMs <= 0;
 
+  const unlockVoice = () => {
+    setVoiceUnlocked(true);
+    void ensureMcVoicesLoaded().then(() => {
+      if (session.voiceEnabled && !session.humanOverride) {
+        lastSpokenKey.current = `${session.cueId}:${session.voiceReplayToken}`;
+        speakMcLine(session.cue.stageLineFr);
+      }
+    });
+  };
+
   return (
     <div className="relative flex min-h-dvh flex-col overflow-hidden bg-[#06140f] text-white">
       <div
@@ -63,13 +118,32 @@ export function McStageDisplay({
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_20%_0%,rgba(52,211,153,0.22),transparent_50%),radial-gradient(ellipse_at_90%_10%,rgba(16,185,129,0.12),transparent_40%),linear-gradient(180deg,#06140f_0%,#0a1f18_55%,#04110c_100%)]"
       />
 
+      {!voiceUnlocked ? (
+        <button
+          type="button"
+          onClick={unlockVoice}
+          className="absolute inset-x-4 top-4 z-20 rounded-2xl border border-emerald-300/40 bg-emerald-500/20 px-4 py-3 text-left backdrop-blur-sm sm:inset-x-auto sm:right-6 sm:top-6 sm:max-w-sm"
+        >
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-200">
+            Voix McBuleli AI
+          </p>
+          <p className="mt-1 text-sm font-semibold text-white">
+            Cliquer une fois pour activer le son sur ce projecteur
+          </p>
+        </button>
+      ) : (
+        <div className="absolute right-4 top-4 z-20 rounded-full border border-white/15 bg-black/40 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-white/70 sm:right-6 sm:top-6">
+          {session.voiceEnabled ? "Voix ON" : "Voix OFF"}
+        </div>
+      )}
+
       <header className="relative z-10 flex items-start justify-between gap-4 px-6 pt-6 sm:px-10 sm:pt-8">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-emerald-300/90">
             McBuleli AI
           </p>
           <p className="mt-1 text-sm text-white/50">
-            Modération · piloté avec l&apos;équipe McBuleli
+            Modération - piloté avec l&apos;équipe McBuleli
           </p>
         </div>
         <div className="text-right">
@@ -129,7 +203,11 @@ export function McStageDisplay({
               {overtime ? "0:00" : formatRemain(remainMs)}
             </p>
             <p className="mt-2 text-sm font-semibold uppercase tracking-wider text-white/40">
-              {overtime ? "Temps écoulé" : urgent ? "Dernière minute" : "Chrono"}
+              {overtime
+                ? "Temps écoulé"
+                : urgent
+                  ? "Dernière minute"
+                  : "Chrono"}
             </p>
           </div>
         ) : null}
