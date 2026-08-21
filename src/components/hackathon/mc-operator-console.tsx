@@ -4,6 +4,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { McCue } from "@/lib/hackathon/mc-day";
 import { MC_MAGIC_PHRASES, MC_ROLE_CARDS } from "@/lib/hackathon/mc-day";
 import type { McSessionPublic } from "@/lib/hackathon/mc-state";
+import {
+  ensureMcVoicesLoaded,
+  speakMcLine,
+  stopMcVoice,
+} from "@/lib/hackathon/mc-voice";
 
 function formatRemain(ms: number) {
   if (ms <= 0) return "0:00";
@@ -168,7 +173,7 @@ export function McOperatorConsole({
 
       <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
         <p className="text-[10px] font-bold uppercase tracking-wider text-white/50">
-          Voix McBuleli AI (projecteur)
+          Voix McBuleli AI
         </p>
         <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
           <button
@@ -191,13 +196,35 @@ export function McOperatorConsole({
             onClick={() => post({ action: "voice_replay" })}
             className="rounded-xl bg-white py-3 text-sm font-black text-black disabled:opacity-40"
           >
-            Rejouer ligne
+            Rejouer projecteur
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              void ensureMcVoicesLoaded().then(() => {
+                speakMcLine(
+                  session.humanOverride
+                    ? session.overrideMessageFr
+                    : session.cue.stageLineFr,
+                );
+              });
+            }}
+            className="col-span-2 rounded-xl border border-emerald-300/50 bg-emerald-500/20 py-3 text-sm font-black text-emerald-100 sm:col-span-1"
+          >
+            Écouter ici
           </button>
         </div>
         <p className="mt-2 text-xs text-white/55">
-          Sur le projecteur : cliquer une fois « activer le son », puis chaque
-          cue est lu en français.
+          « Écouter ici » = son sur ce téléphone/PC. Projecteur = Live mode MC +
+          1 clic activer le son, puis cues / Rejouer projecteur.
         </p>
+        <button
+          type="button"
+          onClick={() => stopMcVoice()}
+          className="mt-2 text-xs font-semibold text-white/45 underline-offset-2 hover:underline"
+        >
+          Stop son local
+        </button>
       </section>
 
       <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
