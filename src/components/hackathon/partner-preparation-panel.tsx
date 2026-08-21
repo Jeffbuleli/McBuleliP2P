@@ -159,7 +159,7 @@ export function PartnerPreparationPanel({
             {talk && talk.status !== "none" && talk.start ? (
               <div className="mt-3 rounded-xl bg-[color:var(--hk-page)] px-3.5 py-3">
                 <p className="text-2xl font-extrabold tabular-nums text-[color:var(--hk-text)]">
-                  {talk.start} – {talk.end}
+                  {talk.start} - {talk.end}
                 </p>
                 <p className="mt-1 text-sm font-semibold text-[color:var(--hk-accent)]">
                   {isFr ? talk.domainFr : talk.domainEn}
@@ -183,8 +183,8 @@ export function PartnerPreparationPanel({
             ) : (
               <p className="mt-2 text-sm text-[color:var(--hk-muted)]">
                 {isFr
-                  ? "Pas de slot scène — mentorat / présence sur site."
-                  : "No stage slot — mentoring / on-site presence."}
+                  ? "Pas de slot scène - mentorat / présence sur site."
+                  : "No stage slot - mentoring / on-site presence."}
               </p>
             )}
           </div>

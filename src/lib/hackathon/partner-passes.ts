@@ -88,7 +88,7 @@ export const PARTNER_BADGE_PROFILES: Record<string, OrgBadgeProfile> = {
     roleLabel: "Médias / Photography",
     badgeKind: "media",
     defaultTasks: [
-      { title: "Arrivée 8h00 — mise en place matériel & visibilité", kind: "logistique" },
+      { title: "Arrivée 8h00 - mise en place matériel & visibilité", kind: "logistique" },
       { title: "Couverture photo & vidéo (28 août)", kind: "other" },
       { title: "Interviews & moments forts", kind: "other" },
       { title: "Livraison : 1 vidéo résumé + série photos", kind: "other" },
@@ -123,7 +123,7 @@ export const PARTNER_BADGE_PROFILES: Record<string, OrgBadgeProfile> = {
       { title: "Attribuer la 2e place badge (collègue)", kind: "logistique" },
     ],
   },
-  /** Lieu hôte — pas de badge partenaire (accueil inclus dans la location). */
+  /** Lieu hôte - pas de badge partenaire (accueil inclus dans la location). */
   silikin: {
     seats: 0,
     roleLabel: "Lieu / hub d'innovation (sans badge)",

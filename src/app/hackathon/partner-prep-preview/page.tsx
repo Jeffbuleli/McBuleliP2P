@@ -43,7 +43,7 @@ export default function PartnerPrepPreviewPage() {
     <HkShell authReturnPath="/hackathon/partner-prep-preview">
       <HkPage
         eyebrow="Aperçu local · non indexé"
-        title="Préparation partenaires — 28 août"
+        title="Préparation partenaires - 28 août"
         lede={`Talks ${PARTNER_TALK_MINUTES} min · Agent IA : cursor.com recommandé. En prod : /hackathon/chat → Préparation.`}
       >
         <div className="space-y-6">
@@ -87,7 +87,7 @@ export default function PartnerPrepPreviewPage() {
                   {talk && talk.start ? (
                     <>
                       <p className="mt-1 text-2xl font-extrabold tabular-nums text-[color:var(--hk-text)]">
-                        {talk.start} – {talk.end}
+                        {talk.start} - {talk.end}
                       </p>
                       <p className="mt-1 text-sm font-semibold text-[color:var(--hk-accent)]">
                         {talk.domainFr}

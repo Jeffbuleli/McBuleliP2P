@@ -65,6 +65,7 @@
     "email:partner-chat-invite": "tsx scripts/send-partner-chat-invite-email.ts",
     "email:partner-role-announcement": "tsx scripts/send-partner-role-announcement-email.ts",
     "email:partner-budget-pitch": "tsx scripts/send-partner-budget-pitch-email.ts",
+    "email:partner-venue-ready": "tsx scripts/send-partner-venue-ready-email.ts",
     "email:hackathon-designer-pack": "tsx scripts/send-hackathon-designer-pack-email.ts",
     "email:mayem-design-affiches": "tsx scripts/send-mayem-design-affiches-email.ts",
     "email:bienv-photography": "tsx scripts/send-bienv-photography-email.ts",

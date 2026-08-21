@@ -1,7 +1,7 @@
 /**
- * Partner day brief (28 Aug) — talk slot, what to bring, practical session.
+ * Partner day brief (28 Aug) - talk slot, what to bring, practical session.
  * Shown in /hackathon chat → Préparation.
- * César / e-COM : hors scène (sans retour) — KIMIA & TYTS retenus.
+ * César / e-COM : hors scène (sans retour) - KIMIA & TYTS retenus.
  */
 
 export type PartnerTalkStatus =
@@ -27,7 +27,7 @@ export type PartnerDayBrief = {
   dateLabelEn: string;
   teamFr: string;
   teamEn: string;
-  /** Arrival / setup — all partners */
+  /** Arrival / setup - all partners */
   setupFr: string;
   setupEn: string;
   talk: PartnerTalkSlot | null;
@@ -77,7 +77,7 @@ const BRING_VIS_EN = [
 /** Talk length after redistributing time from a 1h bootcamp. */
 export const PARTNER_TALK_MINUTES = 10;
 
-/** Shared day blocks (Kinshasa) — used by programme, not in partner copy. */
+/** Shared day blocks (Kinshasa) - used by programme, not in partner copy. */
 export const DAY1_BOOTCAMP = { start: "10:30", end: "11:30" } as const;
 export const DAY1_PARTNER_VITRINE = { start: "09:10", end: "10:20" } as const;
 export const DAY1_SETUP = { start: "08:00", end: "08:30" } as const;
@@ -88,15 +88,15 @@ const SETUP_EN =
   "Arrive 8:00 AM to set up your visibility (roll-up, logo, cards).";
 
 const BOOTCAMP_FR =
-  "Moment pratique pour tester un agent IA et croiser vos expériences. Notre recommandation : cursor.com — chacun reste libre de son outil. Idéal : 1 représentant + 1 profil IT.";
+  "Moment pratique pour tester un agent IA et croiser vos expériences. Notre recommandation : cursor.com - chacun reste libre de son outil. Idéal : 1 représentant + 1 profil IT.";
 
 const BOOTCAMP_EN =
-  "Hands-on time to try an AI agent and share experience. Our recommendation: cursor.com — you may use any tool you prefer. Ideal: 1 representative + 1 IT profile.";
+  "Hands-on time to try an AI agent and share experience. Our recommendation: cursor.com - you may use any tool you prefer. Ideal: 1 representative + 1 IT profile.";
 
 const BOOTCAMP_TITLE_FR = "Session pratique";
 const BOOTCAMP_TITLE_EN = "Hands-on session";
 
-/** Per-org talk window (domain order) — 10 min each. Active partners only. */
+/** Per-org talk window (domain order) - 10 min each. Active partners only. */
 const TALK_BY_SLUG: Record<string, PartnerTalkSlot> = {
   rdpi: {
     start: "09:10",
@@ -147,7 +147,7 @@ const TALK_BY_SLUG: Record<string, PartnerTalkSlot> = {
     domainEn: "Agri · Gold sponsor",
     status: "confirmed",
   },
-  /** Sans retour — hors vitrine scène. */
+  /** Sans retour - hors vitrine scène. */
   "cesar-group": {
     start: "",
     end: "",
@@ -168,8 +168,8 @@ const TALK_BY_SLUG: Record<string, PartnerTalkSlot> = {
     domainFr: "Médias · mise en place",
     domainEn: "Media · setup",
     status: "media_only",
-    noteFr: "1 place. Couverture photo/vidéo — pas d'intervention scène.",
-    noteEn: "1 seat. Photo/video coverage — no stage talk.",
+    noteFr: "1 place. Couverture photo/vidéo - pas d'intervention scène.",
+    noteEn: "1 seat. Photo/video coverage - no stage talk.",
   },
 };
 
@@ -206,8 +206,8 @@ export function partnerDayBriefForSlug(slug: string): PartnerDayBrief {
     return {
       dateLabelFr: DATE_FR,
       dateLabelEn: DATE_EN,
-      teamFr: "1 place — photographe de l'événement",
-      teamEn: "1 seat — event photographer",
+      teamFr: "1 place - photographe de l'événement",
+      teamEn: "1 seat - event photographer",
       setupFr: SETUP_FR,
       setupEn: SETUP_EN,
       talk,

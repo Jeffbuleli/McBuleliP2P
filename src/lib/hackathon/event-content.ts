@@ -94,11 +94,11 @@ export const HACKATHON_EVENT_DAYS = 2;
 /** Confirmed schedule at Silikin Village. */
 export const HACKATHON_DATES_CONFIRMED = true;
 
-export const HACKATHON_DATES_LABEL_FR = "28–29 Août 2026";
-export const HACKATHON_DATES_LABEL_EN = "August 28–29, 2026";
+export const HACKATHON_DATES_LABEL_FR = "28-29 Août 2026";
+export const HACKATHON_DATES_LABEL_EN = "August 28-29, 2026";
 
-export const HACKATHON_HOURS_LABEL_FR = "08h00 – 17h00";
-export const HACKATHON_HOURS_LABEL_EN = "8:00 AM – 5:00 PM";
+export const HACKATHON_HOURS_LABEL_FR = "08h00 - 17h00";
+export const HACKATHON_HOURS_LABEL_EN = "8:00 AM - 5:00 PM";
 
 /** Compact hours for badges / tickets (matches spoken form). */
 export const HACKATHON_HOURS_COMPACT_FR = "8h00 - 17h00";
@@ -115,8 +115,8 @@ export const HACKATHON_SCHEDULE_SUMMARY = [
     weekdayEn: "Friday",
     dateFr: "28 Août 2026",
     dateEn: "August 28, 2026",
-    hoursFr: "08h00 – 17h00",
-    hoursEn: "8:00 AM – 5:00 PM",
+    hoursFr: "08h00 - 17h00",
+    hoursEn: "8:00 AM - 5:00 PM",
     focusFr: "Bootcamp & Build",
     focusEn: "Bootcamp & Build",
   },
@@ -125,8 +125,8 @@ export const HACKATHON_SCHEDULE_SUMMARY = [
     weekdayEn: "Saturday",
     dateFr: "29 Août 2026",
     dateEn: "August 29, 2026",
-    hoursFr: "08h00 – 17h00",
-    hoursEn: "8:00 AM – 5:00 PM",
+    hoursFr: "08h00 - 17h00",
+    hoursEn: "8:00 AM - 5:00 PM",
     focusFr: "Build & Demo Day",
     focusEn: "Build & Demo Day",
   },
@@ -717,8 +717,8 @@ export function hackathonProgramDays(): ProgramDay[] {
       day: 1,
       labelFr: "Vendredi 28 Août - Bootcamp & Build",
       labelEn: "Friday, August 28 - Bootcamp & Build",
-      subtitleFr: "08h00 – 17h00 · Silikin Village",
-      subtitleEn: "8:00 AM – 5:00 PM · Silikin Village",
+      subtitleFr: "08h00 - 17h00 · Silikin Village",
+      subtitleEn: "8:00 AM - 5:00 PM · Silikin Village",
       slots: [
         { time: "08h00 - 08h30", activityFr: "Mise en place partenaires (visibilité)", activityEn: "Partner setup (visibility)", icon: "welcome" },
         { time: "08h30 - 08h50", activityFr: "Accueil, badges et networking", activityEn: "Welcome, badges & networking", icon: "welcome" },
@@ -739,8 +739,8 @@ export function hackathonProgramDays(): ProgramDay[] {
       day: 2,
       labelFr: "Samedi 29 Août - Build & Demo Day",
       labelEn: "Saturday, August 29 - Build & Demo Day",
-      subtitleFr: "08h00 – 17h00 · Silikin Village",
-      subtitleEn: "8:00 AM – 5:00 PM · Silikin Village",
+      subtitleFr: "08h00 - 17h00 · Silikin Village",
+      subtitleEn: "8:00 AM - 5:00 PM · Silikin Village",
       slots: [
         { time: "08h00 - 08h20", activityFr: "Accueil et rappel des objectifs", activityEn: "Welcome & goals recap", icon: "welcome" },
         { time: "08h20 - 10h30", activityFr: "Développement intensif des prototypes", activityEn: "Intensive prototype development", icon: "build" },
@@ -862,7 +862,7 @@ export function hackathonFaqNav(isFr: boolean): { q: string; a: string }[] {
       },
       {
         q: "Le hackathon est-il gratuit ?",
-        a: "Non. Tarif unique : 100 USD pour le programme complet (2 Journées, 08h00–17h00). Des bourses partenaires peuvent être annoncées.",
+        a: "Non. Tarif unique : 100 USD pour le programme complet (2 Journées, 08h00-17h00). Des bourses partenaires peuvent être annoncées.",
       },
       {
         q: "Quels sont les critères ?",
@@ -897,7 +897,7 @@ export function hackathonFaqNav(isFr: boolean): { q: string; a: string }[] {
     },
     {
       q: "Is the hackathon free?",
-      a: "No. Single price: 100 USD for the full 2-day program (8:00 AM–5:00 PM). Partner scholarships may be announced.",
+      a: "No. Single price: 100 USD for the full 2-day program (8:00 AM-5:00 PM). Partner scholarships may be announced.",
     },
     {
       q: "What are the criteria?",
