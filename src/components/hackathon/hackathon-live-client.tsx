@@ -189,6 +189,12 @@ export function HackathonLiveClient({ initial }: { initial: LivePayload }) {
         actions={
           <div className="flex flex-wrap items-end gap-3">
             <Link
+              href="/hackathon/ops"
+              className="rounded-2xl bg-[color:var(--hk-surface,var(--fd-card))] px-4 py-3 text-sm font-bold text-[color:var(--hk-accent)] shadow-sm ring-1 ring-[color:var(--hk-border,var(--fd-border))]"
+            >
+              Ops
+            </Link>
+            <Link
               href="/hackathon/slides"
               className="rounded-2xl bg-[color:var(--hk-surface,var(--fd-card))] px-4 py-3 text-sm font-bold text-[color:var(--hk-accent)] shadow-sm ring-1 ring-[color:var(--hk-border,var(--fd-border))]"
             >
@@ -205,6 +211,20 @@ export function HackathonLiveClient({ initial }: { initial: LivePayload }) {
           </div>
         }
       >
+        <div className="mb-4 rounded-2xl border border-amber-500/25 bg-amber-500/10 px-4 py-3 text-sm text-[color:var(--hk-text)]">
+          {isFr
+            ? "Tableau de bord salle (pas le MC). Pour le tempo / modération McBuleli AI → "
+            : "Room wall (not the MC). For McBuleli AI tempo / moderation → "}
+          <Link
+            href="/hackathon/mc/stage"
+            className="font-bold text-[color:var(--hk-accent)] hover:underline"
+          >
+            /hackathon/mc/stage
+          </Link>
+          {isFr
+            ? ". Bootcamp deck On Air : lancer depuis Slides."
+            : ". Bootcamp deck On Air: start from Slides."}
+        </div>
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="rounded-2xl bg-[color:var(--hk-surface,var(--fd-card))] p-5 shadow-sm ring-1 ring-[color:var(--hk-border,var(--fd-border))] sm:col-span-1">
             <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--hk-muted,var(--fd-muted))]">

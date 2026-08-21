@@ -690,8 +690,6 @@ export const HACKATHON_NAV: EventNavItem[] = [
   { id: "about", labelFr: "À propos", labelEn: "About" },
   { id: "partenaires", labelFr: "Écosystème", labelEn: "Ecosystem" },
   { id: "chat", labelFr: "Échange", labelEn: "Exchange", href: "/hackathon/chat" },
-  { id: "slides", labelFr: "Slides", labelEn: "Slides", href: "/hackathon/slides" },
-  { id: "live", labelFr: "Live", labelEn: "Live", href: "/hackathon/live" },
   { id: "faq", labelFr: "FAQ", labelEn: "FAQ" },
   { id: "contact", labelFr: "Contact", labelEn: "Contact" },
 ];

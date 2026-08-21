@@ -202,8 +202,13 @@ export function HackathonEspaceClient({
           <Link
             href="/hackathon/live"
             className="rounded-xl bg-[color:var(--hk-soft,var(--fd-mint))] px-4 py-2.5 text-sm font-bold text-[color:var(--hk-accent,var(--fd-primary))]"
+            title={
+              isFr
+                ? "Tableau de bord salle (pas le MC)"
+                : "Room wall (not the MC)"
+            }
           >
-            Live wall
+            {isFr ? "Tableau de bord salle" : "Room wall"}
           </Link>
         }
       >

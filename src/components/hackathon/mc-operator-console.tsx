@@ -104,12 +104,24 @@ export function McOperatorConsole({
         </p>
         <div className="flex flex-wrap gap-2 pt-1">
           <a
+            href="/hackathon/ops"
+            className="rounded-lg border border-white/20 px-3 py-2 text-sm font-semibold text-white/80"
+          >
+            Ops jour
+          </a>
+          <a
             href={stageHref}
             target="_blank"
             rel="noreferrer"
             className="rounded-lg bg-white px-3 py-2 text-sm font-bold text-black"
           >
             Ouvrir écran scène
+          </a>
+          <a
+            href="/hackathon/slides"
+            className="rounded-lg border border-emerald-400/40 px-3 py-2 text-sm font-semibold text-emerald-200"
+          >
+            Bootcamp deck → Slides
           </a>
           <button
             type="button"

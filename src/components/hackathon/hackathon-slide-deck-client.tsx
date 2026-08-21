@@ -250,7 +250,7 @@ export function HackathonSlideDeckClient({
             </Link>
           ) : null}
           <Link href="/hackathon/live" target="_blank">
-            <HkBtn variant="ghost">Ouvrir Live</HkBtn>
+            <HkBtn variant="ghost">Projecteur slides → Live</HkBtn>
           </Link>
           {isOnAir ? (
             <HkBtn variant="ghost" disabled={busy} onClick={() => void endLive()}>
@@ -261,11 +261,22 @@ export function HackathonSlideDeckClient({
               Passer On Air
             </HkBtn>
           )}
+          <Link href="/hackathon/mc/stage" target="_blank">
+            <HkBtn variant="ghost">Tempo journée → MC</HkBtn>
+          </Link>
+          <Link href="/hackathon/ops">
+            <HkBtn variant="ghost">Ops</HkBtn>
+          </Link>
           <HkBtn variant="ghost" onClick={toggleFullscreen}>
             Plein écran
           </HkBtn>
         </div>
       </div>
+
+      <p className="mx-auto mt-2 max-w-6xl text-xs text-[color:var(--hk-muted)]">
+        Bootcamp : présenter ici, projecteur sur Live On Air. Matin / transitions :
+        utiliser MC scène (pas les deux projecteurs en même temps).
+      </p>
 
       {error ? (
         <p className="mx-auto mt-3 max-w-6xl text-sm text-rose-600">{error}</p>

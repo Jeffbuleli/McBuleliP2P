@@ -31,8 +31,8 @@ export function HackathonSlidesHubClient({
         title={isFr ? "Préparer & présenter" : "Prepare & present"}
         lede={
           isFr
-            ? "Decks speakers pour le bootcamp. Répétez ici, puis diffusez sur le mur Live."
-            : "Speaker decks for the bootcamp. Rehearse here, then push to the Live wall."
+            ? "Decks speakers pour le bootcamp. Répétez ici, puis diffusez sur le mur Live. Tempo matin / transitions → MC scène."
+            : "Speaker decks for the bootcamp. Rehearse here, then push to the Live wall. Morning tempo → MC stage."
         }
         actions={
           <div className="flex flex-wrap gap-2">
@@ -43,8 +43,18 @@ export function HackathonSlidesHubClient({
                 {isFr ? "Hors antenne" : "Off air"}
               </HkStatusPill>
             )}
+            <Link href="/hackathon/ops">
+              <HkBtn variant="ghost">Ops</HkBtn>
+            </Link>
             <Link href="/hackathon/live">
-              <HkBtn variant="ghost">Live</HkBtn>
+              <HkBtn variant="ghost">
+                {isFr ? "Projecteur → Live" : "Projector → Live"}
+              </HkBtn>
+            </Link>
+            <Link href="/hackathon/mc/stage">
+              <HkBtn variant="ghost">
+                {isFr ? "Tempo → MC" : "Tempo → MC"}
+              </HkBtn>
             </Link>
           </div>
         }
