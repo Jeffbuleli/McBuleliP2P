@@ -43,7 +43,7 @@ export const PARTNER_CAMPAIGN_REMINDERS: PartnerCampaignReminder[] = [
     needsLogo: false,
     needsConfirmation: true,
     missingInfo: [
-      "Confirmer l'accueil de l'événement les 28-29 août 2026",
+      "Confirmer l'accueil de l'événement les 28 août 2026",
       "Valider la coordination logistique sur site",
     ],
   },

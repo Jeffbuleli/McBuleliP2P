@@ -38,7 +38,7 @@ export function buildBienvPhotographyEmail(
     "",
     `Merci de couvrir le McBuleli Hackathon 2026 pour ${BIENV_PHOTO_ORG}.`,
     "",
-    "MISSION — 28 & 29 août 2026 · Silikin Village, Kinshasa",
+    "MISSION — 28 août 2026 · Silikin Village, Kinshasa",
     "- Photos des deux journées",
     "- Séquences vidéo (ambiance, ateliers, pitchs)",
     "- Interviews (participants, mentors, partenaires)",

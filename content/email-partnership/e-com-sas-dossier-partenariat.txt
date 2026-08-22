@@ -44,7 +44,6 @@ Partenaires techniques déjà confirmés pour les builders :
 
 Programme détaillé :
 - Jour 1 (12 août, 08h00-13h30) : Bootcamp Vibe Coding (Cursor, Claude, Codex, APIs), formation des équipes, choix des défis
-- Jour 2 (13 août, 08h00-13h30) : Build Day intensif, mentorat tech & business, session partenaire
 - Jour 3 (14 août, 08h00-13h30) : Demo Day, pitch + démo devant jury, remise des prix, networking B2B
 
 Grille d'évaluation : Innovation 25 % · Impact 25 % · Qualité technique 20 % · Business model 15 % · Présentation 15 %
@@ -56,7 +55,6 @@ Rôle proposé : Partenaire Infrastructure FinTech & e-Paiement
 
 Nous envisageons avec e-COM SAS un partenariat sur mesure, adapté à votre cœur de métier :
 
-a) Atelier technique (45 min, Jour 1 ou Jour 2)
    Intégration d'un parcours de paiement sécurisé multi-canal (web / mobile) dans un prototype FinTech ou GovTech : accepteur, porteur, réconciliation, bonnes pratiques de sécurité.
 
 b) Mentorat ciblé
@@ -84,7 +82,6 @@ Calendrier des activités (prévisionnel)
 - 10h25-11h45 Bootcamp IA & APIs (Cursor, Claude, Codex)
 - 12h05-12h25 Formation des équipes et choix des défis
 
-13 août 2026 - Jour 2
 - 08h15-10h00 Développement intensif des prototypes
 - 10h15-10h45 Session partenaire (créneau possible pour e-COM SAS)
 - 10h45-12h15 Build avec mentorat
@@ -117,7 +114,6 @@ Merci de nous confirmer, si possible :
 1. Contact référent (nom, fonction, email, téléphone)
 2. Logo officiel (PNG ou SVG)
 3. Options retenues (atelier, mentorat, jury, démo produit, sponsor)
-4. Disponibilités préférées (Jour 1, Jour 2 ou flexible)
 
 Programme en ligne : https://mcbuleli.org/hackathon
 

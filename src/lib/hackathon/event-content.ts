@@ -932,3 +932,21 @@ export function hackathonScheduleHtmlRowsFr(mintBg: string, textColor: string): 
       `<tr><td style="padding:8px 12px;background:${mintBg};border-radius:10px;font-size:14px;line-height:1.45;color:${textColor};"><strong>${d.dateFr}</strong> - ${d.weekdayFr} ${d.focusFr} (${d.hoursFr})</td></tr>`,
   ).join("\n                <tr><td style=\"height:8px;font-size:0;line-height:0;\">&nbsp;</td></tr>\n                ");
 }
+
+/** Intro paragraph for partnership outreach (single-day event). */
+export function hackathonPartnerIntroFr(): string {
+  const day = HACKATHON_SCHEDULE_SUMMARY[0]!;
+  return `Nous organisons le McBuleli Hackathon à Kinshasa : 1 journée (${day.dateFr}, ${day.hoursFr}) de bootcamp Vibe Coding, build produit et Mini Demo Day au ${HACKATHON_VENUE_SHORT}.`;
+}
+
+export function hackathonPartnerPreheaderFr(): string {
+  const day = HACKATHON_SCHEDULE_SUMMARY[0]!;
+  return `Programme 1 journée (${day.dateFr}, ${HACKATHON_VENUE_SHORT}) - rôle partenaire sur mesure, valeur claire pour votre organisation.`;
+}
+
+export const HACKATHON_PROGRAMME_HEADER_FR = "PROGRAMME (1 JOURNÉE)";
+export const HACKATHON_PROGRAMME_HEADER_HTML_FR = "Programme (1 journée)";
+
+export function hackathonDatesVenueHoursFr(): string {
+  return `${HACKATHON_DATES_LABEL_FR} · ${HACKATHON_VENUE_SHORT} (${HACKATHON_HOURS_LABEL_FR})`;
+}

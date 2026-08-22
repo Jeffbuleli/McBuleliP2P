@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
+import { HACKATHON_DATES_LABEL_FR } from "@/lib/hackathon/event-content";
 import { adminCls } from "@/components/admin/admin-ui";
 import { HackathonPoweredBy } from "@/components/hackathon/hackathon-process-card";
 
@@ -55,7 +56,7 @@ function getNativeQrDetector(): BarcodeDetectorLike | null {
 export function HackathonScanClient() {
   const [editions, setEditions] = useState<Edition[]>([]);
   const [editionId, setEditionId] = useState("");
-  const [dayIndex, setDayIndex] = useState<1 | 2>(1);
+  const dayIndex = 1 as const;
   const [mode, setMode] = useState<"in" | "out">("in");
   const [manualCode, setManualCode] = useState("");
   const [busy, setBusy] = useState(false);
@@ -84,7 +85,7 @@ export function HackathonScanClient() {
   const scanCtx = useRef({
     editionId: "",
     mode: "in" as "in" | "out",
-    dayIndex: 1 as 1 | 2,
+    dayIndex: 1 as const,
   });
   const onDecodeRef = useRef<(text: string) => void>(() => {});
 
@@ -331,7 +332,7 @@ export function HackathonScanClient() {
 
       {err ? <p className={`${adminCls.error} break-words`}>{err}</p> : null}
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <label className="min-w-0 text-sm">
           <span className="mb-1 block font-semibold">Édition</span>
           <select
@@ -344,17 +345,6 @@ export function HackathonScanClient() {
                 {ed.nameFr}
               </option>
             ))}
-          </select>
-        </label>
-        <label className="min-w-0 text-sm">
-          <span className="mb-1 block font-semibold">Jour</span>
-          <select
-            className={`${adminCls.input} w-full max-w-full`}
-            value={dayIndex}
-            onChange={(e) => setDayIndex(Number(e.target.value) as 1 | 2)}
-          >
-            <option value={1}>Jour 1 · 28 Août</option>
-            <option value={2}>Jour 2 · 29 Août</option>
           </select>
         </label>
         <div className="min-w-0 text-sm sm:col-span-2">
@@ -433,8 +423,8 @@ export function HackathonScanClient() {
             <p className="mt-2 break-words text-sm text-rose-700">{camErr}</p>
           ) : (
             <p className="mt-2 text-xs text-[color:var(--fd-muted)]">
-              Mode : <strong>{mode === "in" ? "Entrée" : "Sortie"}</strong> - Jour{" "}
-              {dayIndex}
+              Mode : <strong>{mode === "in" ? "Entrée" : "Sortie"}</strong> -{" "}
+              {HACKATHON_DATES_LABEL_FR}
               {busy ? " - scan..." : ""}
             </p>
           )}

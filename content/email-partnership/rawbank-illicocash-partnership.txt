@@ -9,7 +9,7 @@ Référence produit : https://rawbank.com/banque-a-distance/illicocash/
 APPROCHE GAGNANT-GAGNANT
 
 1) Pour les participants
-- Payer le pack (bootcamp 1 jour ou 2 jours + hackathon) depuis le portefeuille illicocash (CDF/USD), sans dépendre uniquement d'un opérateur telco
+- Payer le pack (bootcamp 1 jour ou 1 journée + hackathon) depuis le portefeuille illicocash (CDF/USD), sans dépendre uniquement d'un opérateur telco
 - Parcours simple (app / USSD), confiance marque Rawbank
 - Option : promo ponctuelle (ex. frais réduits ou cashback illicocash sur le ticket)
 

@@ -256,7 +256,7 @@ export const PARTNER_ROLE_ANNOUNCEMENTS: PartnerRoleAnnouncement[] = [
     status: "in_progress",
     roleTitle: "Lieu / hub d'innovation (en finalisation)",
     entitlements: [
-      "Accueil de l'événement au Silikin Village (28-29 août 2026)",
+      "Accueil de l'événement au Silikin Village (28 août 2026)",
       "Coordination logistique sur site",
       "Accès à l'espace d'échange partenaires pour le suivi opérationnel",
     ],
@@ -488,7 +488,7 @@ export function buildPartnerRoleAnnouncementEmail(
                 Pour la 2e place, utilisez l'onglet <strong style="color:#0c0a09;">Préparation</strong> (to-do + attribution collègue).
               </p>
               <p style="margin:0 0 18px;font-size:14px;line-height:1.5;color:#57534e;">
-                <strong style="color:#0c0a09;">28-29 août 2026</strong> · Silikin Village, Kinshasa · 08h00-17h00<br />
+                <strong style="color:#0c0a09;">28 août 2026</strong> · Silikin Village, Kinshasa · 08h00-17h00<br />
                 <a href="${esc(HACKATHON)}" style="color:#305f33;font-weight:600;">mcbuleli.org/hackathon</a>
               </p>
               <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 0 8px;">
@@ -559,7 +559,7 @@ export function buildPartnerRoleAnnouncementEmail(
     "",
     `Sécurité : badge/ticket visibles uniquement par le titulaire. 2e place + to-do = onglet Préparation.`,
     "",
-    `28-29 août 2026 · Silikin Village, Kinshasa · 08h00-17h00`,
+    `28 août 2026 · Silikin Village, Kinshasa · 08h00-17h00`,
     HACKATHON,
     "",
     `Ambassadeurs (hors partenaires org): ${AMBASSADEUR}`,

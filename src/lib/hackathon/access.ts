@@ -79,11 +79,14 @@ export function extractPassCode(raw: string): string | null {
   return null;
 }
 
-/** Day 1..2 from edition startDate (Africa/Kinshasa calendar). */
+import { HACKATHON_EVENT_DAYS } from "@/lib/hackathon/event-content";
+
+/** Day 1..2 from edition startDate (Africa/Kinshasa calendar). Single-day events always return 1. */
 export function eventDayIndex(
   edition: { startDate: Date | null } | null | undefined,
   now = new Date(),
 ): 1 | 2 {
+  if (HACKATHON_EVENT_DAYS <= 1) return 1;
   if (!edition?.startDate) return 1;
   const fmt = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Africa/Kinshasa",

@@ -4,6 +4,12 @@
  */
 import { EMAIL_BRAND, logoUrl, partnershipPublicBaseUrl } from "@/lib/email/config";
 import {
+  HACKATHON_VENUE_SHORT,
+  hackathonDatesVenueHoursFr,
+  hackathonScheduleHtmlRowsFr,
+  hackathonScheduleLinesFr,
+} from "@/lib/hackathon/event-content";
+import {
   SUPPORT_EMAIL,
   SUPPORT_PHONES_DISPLAY,
   SUPPORT_WA_PATH,
@@ -34,7 +40,7 @@ export function buildKileloFicheEmail(): KileloFicheEmailCopy {
   const subject =
     "Fiche partenaire - Kilelo × McBuleli Hackathon";
   const preheader =
-    "Dates confirmées 28–29 Août 2026 · Silikin Village (08h00–17h00) - merci de nous renvoyer logo, contact référent et confirmation talk / mentorat.";
+    `${hackathonDatesVenueHoursFr()} - merci de nous renvoyer logo, contact référent et confirmation talk / mentorat.`;
 
   const text = [
     "Bonjour Monsieur Kabangu,",
@@ -47,8 +53,7 @@ export function buildKileloFicheEmail(): KileloFicheEmailCopy {
     "McBuleli Hackathon - bootcamp Vibe Coding + compétition + Demo Day",
     "Lieu : Silikin Village, Kinshasa",
     "Dates prévues :",
-    "- 28 Août 2026 - Vendredi Bootcamp & Build (08h00-17h00)",
-    "- 29 Août 2026 - Samedi Build & Demo Day (08h00-17h00)",
+    ...hackathonScheduleLinesFr(),
     "Statut lieu : en attente d'approbation finale de Silikin Village",
     `Page : ${hackathonUrl}`,
     "",
@@ -63,7 +68,7 @@ export function buildKileloFicheEmail(): KileloFicheEmailCopy {
     "ÉLÉMENTS DEMANDÉS",
     "1) Contact référent : Nom · Fonction · Email · Téléphone / WhatsApp",
     "2) Logo officiel (PNG ou SVG, idéalement fond transparent)",
-    "3) Préférence talk : Jour 1, Jour 2, ou flexible",
+    "3) Préférence talk : créneau matin (vitrine partenaires) ou flexible",
     "",
     "CE QUE McBULELI FOURNIT",
     "- Logo partenaire sur mcbuleli.org/hackathon",
@@ -150,9 +155,7 @@ export function buildKileloFicheEmail(): KileloFicheEmailCopy {
                       Dates prévues
                     </p>
                     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 10px;">
-                      <tr><td style="padding:8px 10px;background:${EMAIL_BRAND.mint};border-radius:8px;font-size:13px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>28 Août 2026</strong> · Vendredi Bootcamp &amp; Build · 08h00–17h00</td></tr>
-                      <tr><td style="height:6px;font-size:0;line-height:0;">&nbsp;</td></tr>
-                      <tr><td style="padding:8px 10px;background:${EMAIL_BRAND.mint};border-radius:8px;font-size:13px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>29 Août 2026</strong> · Samedi Build &amp; Demo Day · 08h00–17h00</td></tr>
+                      ${hackathonScheduleHtmlRowsFr(EMAIL_BRAND.mint, EMAIL_BRAND.text)}
                     </table>
                     <p style="margin:0 0 14px;font-size:12px;line-height:1.45;color:${EMAIL_BRAND.muted};">
                       <strong style="color:${EMAIL_BRAND.text};">Statut lieu :</strong>
@@ -191,7 +194,7 @@ export function buildKileloFicheEmail(): KileloFicheEmailCopy {
                 <tr><td style="height:8px;font-size:0;line-height:0;">&nbsp;</td></tr>
                 <tr><td style="padding:10px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>2.</strong> Logo officiel - PNG ou SVG (fond transparent de préférence)</td></tr>
                 <tr><td style="height:8px;font-size:0;line-height:0;">&nbsp;</td></tr>
-                <tr><td style="padding:10px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>3.</strong> Préférence talk - Jour 1, Jour 2, ou flexible</td></tr>
+                <tr><td style="padding:10px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>3.</strong> Préférence talk - créneau matin ou flexible</td></tr>
               </table>
 
               <p style="margin:0 0 22px;text-align:center;">

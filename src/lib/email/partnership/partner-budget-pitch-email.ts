@@ -16,7 +16,7 @@ import {
 export const PARTNER_BUDGET_URL = "https://mcbuleli.org/hackathon/budget";
 
 /** Dates ASCII (pas de tiret long) pour emails. */
-const DATES_FR = "28-29 août 2026";
+const DATES_FR = "28 août 2026";
 const RCCM = "CD/KNG/RCCM/26-A-00382";
 
 export type PartnerBudgetPitchRecipient = {

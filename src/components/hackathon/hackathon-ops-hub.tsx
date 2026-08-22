@@ -94,9 +94,17 @@ export function HackathonOpsHub() {
         </header>
 
         <section className="rounded-2xl border border-emerald-400/25 bg-emerald-400/10 p-5">
-          <h2 className="text-sm font-black uppercase tracking-wider text-emerald-200">
-            {isFr ? "Checklist Jour 1" : "Day 1 checklist"}
-          </h2>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-sm font-black uppercase tracking-wider text-emerald-200">
+              {isFr ? "Checklist Jour 1" : "Day 1 checklist"}
+            </h2>
+            <Link
+              href="/hackathon/ops/runbook"
+              className="rounded-lg bg-white px-3 py-2 text-xs font-bold text-black"
+            >
+              {isFr ? "Runbook PDF" : "Runbook PDF"}
+            </Link>
+          </div>
           <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm leading-relaxed text-white/85">
             {checklist.map((line) => (
               <li key={line}>{line}</li>

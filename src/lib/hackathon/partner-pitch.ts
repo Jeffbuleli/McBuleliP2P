@@ -88,9 +88,9 @@ export const PARTNER_WHY_SUPPORT = {
   bodyEn:
     "McBuleli already covers your seats and your stage. The budget below (Silikin room, catering, camera, outreach) is the real cost of the event. Supporting us means builders and partners work in proper conditions - and your Talk reaches an audience worthy of your business.",
   askFr:
-    "Formes de soutien : contribution cash, sponsoring restauration / salle, ou engagement Partner-Builder confirmé avec présence active les 2 jours.",
+    "Formes de soutien : contribution cash, sponsoring restauration / salle, ou engagement Partner-Builder confirmé avec présence active le jour J.",
   askEn:
-    "Ways to support: cash contribution, catering / room sponsorship, or a confirmed Partner-Builder commitment with active presence over both days.",
+    "Ways to support: cash contribution, catering / room sponsorship, or a confirmed Partner-Builder commitment with active presence on event day.",
 } as const;
 
 export function partnerComplimentaryValueLabel(isFr: boolean): string {

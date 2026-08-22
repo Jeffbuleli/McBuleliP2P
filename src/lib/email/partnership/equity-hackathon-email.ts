@@ -36,7 +36,7 @@ LE PROGRAMME
 McBuleli Hackathon - formation pratique IA + compétition + mentorat + incubation.
 Lieu : Silikin Village, 63 Ave Colonel Mondjiba, Kinshasa.
 Outils : Cursor, Claude, Codex (Vibe Coding).
-Format : Jour 1 bootcamp · Jour 2 hackathon, pitch jury, prix.
+Format : 1 journée - bootcamp Vibe Coding, build, pitch jury et prix.
 Public : builders, étudiants, jeunes talents tech & FinTech en RDC.
 Page : https://mcbuleli.org/hackathon
 

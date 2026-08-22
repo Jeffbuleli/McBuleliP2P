@@ -9,7 +9,6 @@ McBuleli Hackathon - bootcamp Vibe Coding + compétition + Demo Day
 Lieu : Silikin Village, Kinshasa
 Dates prévues :
 - 12 août 2026 - Jour 1 Bootcamp & lancement (08h00-13h30)
-- 13 août 2026 - Jour 2 Build Day & mentorat (08h00-13h30)
 - 14 août 2026 - Jour 3 Demo Day & cérémonie (08h00-13h30)
 Statut lieu : en attente d'approbation finale de Silikin Village
 Page : https://mcbuleli.org/hackathon

@@ -12,7 +12,6 @@ Votre produit : https://www.montana-pay.com/
 
 1) DATES EXACTES
 - Vendredi 28 août 2026 · 08h00-17h00
-- Samedi 29 août 2026 · 08h00-17h00
 - Lieu : Silikin Village, 63 Ave Colonel Mondjiba, Kinshasa
 - Format : ~12 équipes · Bootcamp IA + build + Demo Day
 
@@ -33,7 +32,6 @@ Jour 1 - Vendredi 28 août (Bootcamp & Build)
 14h00-16h30 Développement + mentorat (créneau idéal MontanaPay)
 16h30-17h00 Revue d'avancement
 
-Jour 2 - Samedi 29 août (Build & Demo Day)
 08h00-10h30 Build intensif
 10h45-12h15 Mentorat tech & business
 12h15-12h45 Préparation pitch
@@ -81,7 +79,6 @@ D'ici le 20 août 2026
 - Si sandbox : accès / doc minimale pour les équipes
 - Brief besoins stand / table (si présence physique)
 
-Sur site (28-29 août)
 - Présence aux créneaux convenus
 - Mentorat pendant le build
 - Jury si retenu

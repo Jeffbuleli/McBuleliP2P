@@ -31,7 +31,7 @@ LE PROGRAMME
 Formation pratique IA + hackathon + mentorat + incubation.
 Lieu : Silikin Village, 63 Ave Colonel Mondjiba, Kinshasa.
 Outils : Cursor, Claude, Codex (Vibe Coding).
-Format : Jour 1 bootcamp · Jour 2 compétition, pitch jury, prix.
+Format : 1 journée - bootcamp Vibe Coding, build, pitch jury et prix.
 Page : https://mcbuleli.org/hackathon
 
 NIVEAUX SPONSOR

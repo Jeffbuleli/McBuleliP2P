@@ -7,6 +7,12 @@ import {
   deriveCurrentPhaseId,
 } from "@/components/hackathon/hackathon-phase-stepper";
 import {
+  espaceTabFromPhase,
+  espaceTabPanelClass,
+  HackathonEspaceTabBar,
+  type EspaceTabId,
+} from "@/components/hackathon/hackathon-espace-tabs";
+import {
   HkBtn,
   HkError,
   HkInput,
@@ -188,6 +194,24 @@ export function HackathonEspaceClient({
   const isPresented = data.team?.status === "presented";
   const isJudged = data.team?.status === "judged";
 
+  const [mobileTab, setMobileTab] = useState<EspaceTabId>(() =>
+    espaceTabFromPhase(currentPhase),
+  );
+
+  useEffect(() => {
+    setMobileTab(espaceTabFromPhase(currentPhase));
+  }, [currentPhase]);
+
+  useEffect(() => {
+    const pollAwards =
+      mobileTab === "prix" ||
+      currentPhase === "awards" ||
+      currentPhase === "deliberation";
+    if (!pollAwards) return;
+    const timer = window.setInterval(() => void refresh(), 15_000);
+    return () => window.clearInterval(timer);
+  }, [mobileTab, currentPhase, refresh]);
+
   return (
     <HkShell authReturnPath="/hackathon/espace">
       <HkPage
@@ -214,6 +238,13 @@ export function HackathonEspaceClient({
       >
         <HkError message={error} />
 
+        <HackathonEspaceTabBar
+          active={mobileTab}
+          onChange={setMobileTab}
+          isFr={isFr}
+        />
+
+        <div className={espaceTabPanelClass("accueil", mobileTab)}>
         <div id="phase-registration">
           <HkSection
             title={isFr ? "Inscription" : "Registration"}
@@ -336,7 +367,9 @@ export function HackathonEspaceClient({
             ))}
           </HkSection>
         </div>
+        </div>
 
+        <div className={espaceTabPanelClass("equipe", mobileTab)}>
         <div id="phase-teams" className="space-y-5">
           <HkSection
             title={isFr ? "Équipe" : "Team"}
@@ -786,7 +819,9 @@ export function HackathonEspaceClient({
             </HkSection>
           ) : null}
         </div>
+        </div>
 
+        <div className={espaceTabPanelClass("build", mobileTab)}>
         {data.team && data.isPaid ? (
           <div id="phase-development">
             <HkSection
@@ -930,7 +965,9 @@ export function HackathonEspaceClient({
             </HkSection>
           </div>
         ) : null}
+        </div>
 
+        <div className={espaceTabPanelClass("pitch", mobileTab)}>
         <div id="phase-pitch">
           <HkSection
             title={isFr ? "Pitch" : "Pitch"}
@@ -994,7 +1031,9 @@ export function HackathonEspaceClient({
             </p>
           </HkSection>
         </div>
+        </div>
 
+        <div className={espaceTabPanelClass("prix", mobileTab)}>
         <div id="phase-awards">
           <HkSection
             title={isFr ? "Remise des prix" : "Awards"}
@@ -1066,6 +1105,7 @@ export function HackathonEspaceClient({
               </Link>
             </p>
           </HkSection>
+        </div>
         </div>
       </HkPage>
     </HkShell>

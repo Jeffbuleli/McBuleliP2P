@@ -21,6 +21,7 @@
     "email:optimize-assets": "node scripts/email-optimize-assets.mjs",
     "cron:events-reminders": "node scripts/cron-events-reminders.mjs",
     "test:events": "tsx --test src/lib/events/__tests__/events.test.ts",
+    "test:hackathon": "tsx --test src/lib/hackathon/__tests__/event-consistency.test.ts",
     "test:builders": "tsx --test src/lib/builders/__tests__/builders.test.ts",
     "resend:sync-templates": "node scripts/email-optimize-assets.mjs && tsx scripts/resend-sync-templates.ts",
     "resend:export-broadcasts": "tsx scripts/export-marketing-broadcasts.mjs",

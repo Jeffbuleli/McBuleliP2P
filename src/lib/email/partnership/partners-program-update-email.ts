@@ -1,5 +1,5 @@
 /**
- * Annonce à tous les partenaires : programme confirmé (2 Journées, Silikin Village)
+ * Annonce à tous les partenaires : programme confirmé (1 journée, Silikin Village)
  * + logos / noms des partenaires déjà visibles sur /hackathon.
  */
 import { EMAIL_BRAND, logoUrl, partnershipPublicBaseUrl } from "@/lib/email/config";
@@ -232,7 +232,7 @@ export function buildPartnersProgramUpdateEmail(args?: {
   const partners = featuredPartnersForEmail();
 
   const subject = `Programme confirmé - McBuleli Hackathon · ${HACKATHON_DATES_LABEL_FR} · ${HACKATHON_VENUE_SHORT}`;
-  const preheader = `2 Journées confirmées (${HACKATHON_HOURS_LABEL_FR}) au ${HACKATHON_VENUE_SHORT}. Voir le programme et nos partenaires.`;
+  const preheader = `1 journée confirmées (${HACKATHON_HOURS_LABEL_FR}) au ${HACKATHON_VENUE_SHORT}. Voir le programme et nos partenaires.`;
 
   const greeting =
     audience === "ambassadors"
@@ -363,7 +363,7 @@ export function buildPartnersProgramUpdateEmail(args?: {
               <p style="margin:0 0 14px;font-size:15px;line-height:1.55;color:${EMAIL_BRAND.text};">${esc(greeting.replace(/,$/, ""))},</p>
               <p style="margin:0 0 18px;font-size:15px;line-height:1.55;color:${EMAIL_BRAND.muted};">
                 Nous vous confirmons officiellement le <strong style="color:${EMAIL_BRAND.text};">programme</strong>
-                du McBuleli Hackathon : <strong style="color:${EMAIL_BRAND.text};">2 Journées</strong>
+                du McBuleli Hackathon : <strong style="color:${EMAIL_BRAND.text};">1 journée</strong>
                 au <strong style="color:${EMAIL_BRAND.text};">${esc(HACKATHON_VENUE_SHORT)}</strong>
                 (${esc(HACKATHON_DATES_LABEL_FR)}, ${esc(HACKATHON_HOURS_LABEL_FR)}).
               </p>

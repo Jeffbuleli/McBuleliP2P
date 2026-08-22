@@ -56,6 +56,7 @@ import { HackathonSponsorForm } from "@/components/hackathon/hackathon-sponsor-f
 import { HackathonStickyNav } from "@/components/hackathon/hackathon-sticky-nav";
 import { HackathonChatUnreadBadge } from "@/components/hackathon/hackathon-chat-unread-badge";
 import { HackathonLogo } from "@/components/hackathon/hackathon-logo";
+import { HackathonHeroIllustration } from "@/components/hackathon/hackathon-hero-illustration";
 import { HackathonLandingJourney } from "@/components/hackathon/hackathon-phase-stepper";
 import {
   BenefitIcon,
@@ -554,7 +555,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
         <div className="absolute right-3 top-1.5 z-20 sm:right-6 sm:top-2">
           <HackathonCountdown isFr={isFr} onDark bare />
         </div>
-        <div className="relative mx-auto flex max-w-6xl flex-col justify-end px-4 pb-8 pt-12 sm:px-6 sm:pb-10 sm:pt-16 lg:min-h-[min(48vh,420px)] lg:justify-center">
+        <div className="relative mx-auto flex max-w-6xl flex-col justify-end px-4 pb-8 pt-12 sm:px-6 sm:pb-10 sm:pt-16 lg:min-h-[min(48vh,420px)] lg:flex-row lg:items-center lg:justify-between lg:gap-8">
           <div className="max-w-2xl">
             <div className="mb-4 inline-flex items-center gap-3 rounded-2xl bg-white/10 p-2 ring-1 ring-white/20 backdrop-blur-sm">
               <HackathonLogo className="h-14 w-12 sm:h-16 sm:w-14" />
@@ -605,6 +606,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
               </CtaSecondary>
             </div>
           </div>
+          <HackathonHeroIllustration className="mt-6 hidden w-full max-w-md shrink-0 rounded-2xl opacity-95 ring-1 ring-white/25 lg:mt-0 lg:block lg:max-w-sm xl:max-w-md" />
         </div>
       </header>
 

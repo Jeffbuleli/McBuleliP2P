@@ -73,7 +73,6 @@ export function buildIlokweGroupFicheEmail(
     "Lieu : Silikin Village, Kinshasa",
     "Dates prévues :",
     "- 28 Août 2026 - Vendredi Bootcamp & Build (08h00-17h00)",
-    "- 29 Août 2026 - Samedi Build & Demo Day (08h00-17h00)",
     "Statut lieu : en attente d'approbation finale de Silikin Village",
     `Page : ${hackathonUrl}`,
     "",

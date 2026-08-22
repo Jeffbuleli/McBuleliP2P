@@ -1,9 +1,10 @@
 /**
  * Silikin Village - demande de reservation de salle pour McBuleli Hackathon.
  * Contact reception : reception_skv@texaf-rdc.com
- * Dates confirmées : 28–29 Août 2026, 08h00–17h00
+ * Dates confirmées : 28 Août 2026, 08h00–17h00
  */
 import { EMAIL_BRAND, logoUrl, partnershipPublicBaseUrl } from "@/lib/email/config";
+import { hackathonScheduleHtmlRowsFr } from "@/lib/hackathon/event-content";
 import {
   SUPPORT_EMAIL,
   SUPPORT_PHONES_DISPLAY,
@@ -38,9 +39,9 @@ export function buildSilikinVenueReservationEmail(): SilikinVenueEmailCopy {
   const year = new Date().getFullYear();
 
   const subject =
-    "Reservation salle - McBuleli Hackathon - 28–29 Août 2026 (08h00–17h00)";
+    "Reservation salle - McBuleli Hackathon - 28 Août 2026 (08h00–17h00)";
   const preheader =
-    "Demande de reservation Silikin Village : 2 journees completes (28–29 Août 2026, 08h00–17h00), ~30 personnes.";
+    "Demande de reservation Silikin Village : 1 journée complète (28 Août 2026, 08h00–17h00), ~30 personnes.";
 
   const text = [
     "Bonjour l'equipe Silikin Village,",
@@ -49,7 +50,6 @@ export function buildSilikinVenueReservationEmail(): SilikinVenueEmailCopy {
     "",
     "Dates proposees",
     "28 Août 2026 - Vendredi Bootcamp & Build (08h00-17h00)",
-    "29 Août 2026 - Samedi Build & Demo Day (08h00-17h00)",
     "",
     "Besoin",
     "~30 personnes · internet stable · projection/son si disponible · pauses cafe selon vos offres.",
@@ -108,9 +108,7 @@ export function buildSilikinVenueReservationEmail(): SilikinVenueEmailCopy {
                 Dates proposees
               </p>
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 18px;">
-                <tr><td style="padding:8px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>28 Août 2026</strong> - Vendredi Bootcamp &amp; Build (08h00–17h00)</td></tr>
-                <tr><td style="height:8px;font-size:0;line-height:0;">&nbsp;</td></tr>
-                <tr><td style="padding:8px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>29 Août 2026</strong> - Samedi Build &amp; Demo Day (08h00–17h00)</td></tr>
+                ${hackathonScheduleHtmlRowsFr(EMAIL_BRAND.mint, EMAIL_BRAND.text)}
               </table>
 
               <p style="margin:0 0 10px;font-size:15px;line-height:1.55;color:${EMAIL_BRAND.text};font-weight:700;">

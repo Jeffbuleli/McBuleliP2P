@@ -142,7 +142,7 @@ export const INSTITUTIONAL_COOP_PROFILES: InstitutionalCoopProfile[] = [
     domainLabel: "Formation digitale · Orange",
     roleTitle: "Partenaire Formation digitale & talents IA",
     whyThem:
-      "L'Orange Digital Center forme et accompagne les talents numériques en RDC. Le McBuleli Hackathon prolonge cette mission sur 2 jours intensifs : Vibe Coding, build produit et Demo Day - pour que l'IA soit maîtrisée, pas seulement découverte.",
+      "L'Orange Digital Center forme et accompagne les talents numériques en RDC. Le McBuleli Hackathon prolonge cette mission sur 1 journée intensifs : Vibe Coding, build produit et Demo Day - pour que l'IA soit maîtrisée, pas seulement découverte.",
     withYouImpact:
       "Ensemble, ODC et McBuleli peuvent montrer qu'une communauté qui sait utiliser l'IA construit plus vite, forme plus de builders opérationnels, et accélère l'innovation locale autour des défis concrets de la RDC.",
     expectedFromPartner: [
@@ -311,7 +311,7 @@ export function buildInstitutionalCoopEmail(
     "",
     "OÙ NOUS EN SOMMES",
     "- Programme public : " + hackathonUrl,
-    "- Dates confirmées : vendredi 28 et samedi 29 août 2026, 08h00–17h00",
+    "- Dates confirmées : vendredi 28 août 2026, 08h00–17h00",
     "- Lieu : Silikin Village, 63 Ave Colonel Mondjiba, Kinshasa",
     "- Format : formation pratique IA (Vibe Coding) + compétition + mentorat + Demo Day",
     "- 8 défis : IA, FinTech, GovTech, Santé, Agriculture, Éducation, Médias, Cybersécurité",
@@ -401,7 +401,7 @@ export function buildInstitutionalCoopEmail(
                 Où nous en sommes
               </p>
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 10px;">
-                <tr><td style="padding:8px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>Dates</strong> - ven. 28 &amp; sam. 29 août 2026, 08h00–17h00</td></tr>
+                <tr><td style="padding:8px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>Dates</strong> - ven. 28 août 2026, 08h00–17h00</td></tr>
                 <tr><td style="height:8px;font-size:0;line-height:0;">&nbsp;</td></tr>
                 <tr><td style="padding:8px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>Lieu</strong> - Silikin Village, 63 Ave Colonel Mondjiba, Kinshasa</td></tr>
                 <tr><td style="height:8px;font-size:0;line-height:0;">&nbsp;</td></tr>

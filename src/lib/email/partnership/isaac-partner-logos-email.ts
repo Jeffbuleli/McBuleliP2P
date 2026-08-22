@@ -91,7 +91,7 @@ export function buildIsaacPartnerLogosEmail(): {
           <tr>
             <td style="padding:20px 28px;font-size:15px;line-height:1.55;color:${EMAIL_BRAND.text};">
               <p style="margin:0 0 12px;">Bonjour Isaac Picture,</p>
-              <p style="margin:0 0 12px;">Voici les logos partenaires à placer sur les affiches du <strong>McBuleli AI Hackathon</strong> (Silikin Village, Kinshasa — 28-29 août 2026).</p>
+              <p style="margin:0 0 12px;">Voici les logos partenaires à placer sur les affiches du <strong>McBuleli AI Hackathon</strong> (Silikin Village, Kinshasa — 28 août 2026).</p>
               <p style="margin:0 0 8px;font-weight:700;">À utiliser maintenant (joints) :</p>
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:separate;border-spacing:0 6px;">${rows}</table>
               <p style="margin:16px 0 8px;font-weight:700;">À ne pas utiliser pour le moment :</p>

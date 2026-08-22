@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { adminCls } from "@/components/admin/admin-ui";
 import { HackathonLeadsTab } from "@/components/admin/hackathon-leads-tab";
+import { HackathonCampaignsTab } from "@/components/admin/hackathon-campaigns-tab";
 import { HackathonPitchQueuePanel } from "@/components/admin/hackathon-pitch-queue-panel";
 
 type Edition = {

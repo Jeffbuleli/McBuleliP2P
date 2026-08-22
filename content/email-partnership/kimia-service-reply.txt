@@ -13,7 +13,6 @@ https://mcbuleli.org/hackathon
 En résumé :
 - Formation pratique IA (Vibe Coding : Cursor, Claude, Codex) + compétition + mentorat + Demo Day
 - Lieu : Silikin Village, 63 Ave Colonel Mondjiba, Kinshasa
-- Dates confirmées : vendredi 28 et samedi 29 août 2026, 08h00-17h00
 - Public : builders, étudiants, jeunes talents tech & FinTech en RDC
 - 8 défis : IA, FinTech, GovTech, Santé, Agriculture, Éducation, Médias, Cybersécurité
 

@@ -120,6 +120,16 @@ export const HACKATHON_SURFACES: HackathonSurface[] = [
     audience: "participant",
   },
   {
+    id: "runbook",
+    href: "/hackathon/ops/runbook",
+    labelFr: "Runbook ops",
+    labelEn: "Ops runbook",
+    jobFr: "Checklist imprimable Jour 1 (PDF)",
+    jobEn: "Printable Day 1 checklist (PDF)",
+    audience: "ops",
+    day1Primary: true,
+  },
+  {
     id: "budget",
     href: "/hackathon/budget",
     labelFr: "Budget",

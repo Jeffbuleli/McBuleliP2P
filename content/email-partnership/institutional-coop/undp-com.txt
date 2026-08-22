@@ -6,7 +6,6 @@ POURQUOI L'IA MAINTENANT
 - Le McBuleli Hackathon transforme cette promesse en pratique : formation Vibe Coding (Cursor, Claude, Codex) + compétition + mentorat + Demo Day.
 OÙ NOUS EN SOMMES
 - Programme public : https://mcbuleli.org/hackathon
-- Dates confirmées : vendredi 28 et samedi 29 août 2026, 08h00–17h00
 - Lieu : Silikin Village, 63 Ave Colonel Mondjiba, Kinshasa
 - Format : formation pratique IA (Vibe Coding) + compétition + mentorat + Demo Day
 - 8 défis : IA, FinTech, GovTech, Santé, Agriculture, Éducation, Médias, Cybersécurité

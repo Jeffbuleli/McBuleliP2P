@@ -11,7 +11,7 @@ Accès exclusif titulaire (compte = email du badge).
 2 places : vous + 1 collègue (onglet Préparation).
 Badge : disponible dans l'onglet Préparation (https://mcbuleli.org/hackathon/chat) après connexion
 CE QUI VOUS REVIENT
-- Accueil de l'événement au Silikin Village (28-29 août 2026)
+- Accueil de l'événement au Silikin Village (28 août 2026)
 - Coordination logistique sur site
 - Accès à l'espace d'échange partenaires pour le suivi opérationnel
 
@@ -26,7 +26,7 @@ COMMENT Y ACCÉDER
 
 Sécurité : badge/ticket visibles uniquement par le titulaire. 2e place + to-do = onglet Préparation.
 
-28-29 août 2026 · Silikin Village, Kinshasa · 08h00-17h00
+28 août 2026 · Silikin Village, Kinshasa · 08h00-17h00
 https://mcbuleli.org/hackathon
 
 Ambassadeurs (hors partenaires org): https://mcbuleli.org/hackathon/ambassadeur

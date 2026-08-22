@@ -18,7 +18,7 @@ export const MCBULELI_RCCM = "CD/KNG/RCCM/26-A-00382";
 
 export const HACKATHON_EVENT_FACTS = {
   title: "HACKATHON AI KINSHASA",
-  dates: "28-29 août 2026",
+  dates: "28 août 2026",
   hours: "08h00-17h00",
   venue: "Silikin Village - Kinshasa",
 } as const;

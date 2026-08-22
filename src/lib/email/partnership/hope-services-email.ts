@@ -5,6 +5,12 @@
  */
 import { EMAIL_BRAND, logoUrl, partnershipPublicBaseUrl } from "@/lib/email/config";
 import {
+  HACKATHON_VENUE_SHORT,
+  hackathonDatesVenueHoursFr,
+  hackathonScheduleHtmlRowsFr,
+  hackathonScheduleLinesFr,
+} from "@/lib/hackathon/event-content";
+import {
   SUPPORT_EMAIL,
   SUPPORT_PHONES_DISPLAY,
   SUPPORT_WA_PATH,
@@ -43,7 +49,7 @@ export function buildHopeServicesPartnershipEmail(): HopeServicesEmailCopy {
   const subject =
     "Partenariat Hope Services × McBuleli Hackathon - formalisation PME & docs légaux";
   const preheader =
-    "Dates confirmées 28–29 Août 2026 · Silikin Village (08h00–17h00) - rôle partenaire formalisation pour les projets du hackathon.";
+    `${hackathonDatesVenueHoursFr()} - rôle partenaire formalisation pour les projets du hackathon.`;
 
   const text = [
     "Bonjour l'équipe Hope Services,",
@@ -54,9 +60,8 @@ export function buildHopeServicesPartnershipEmail(): HopeServicesEmailCopy {
     `Votre site : ${hopeUrl}`,
     "",
     "DATES PRÉVUES",
-    "- 28 Août 2026 - Vendredi Bootcamp & Build (08h00-17h00)",
-    "- 29 Août 2026 - Samedi Build & Demo Day (08h00-17h00)",
-    "Lieu : Silikin Village, Kinshasa",
+    ...hackathonScheduleLinesFr(),
+    `Lieu : ${HACKATHON_VENUE_SHORT}, Kinshasa`,
     "Statut lieu : en attente d'approbation finale de Silikin Village",
     "",
     "COMMENT PARTICIPER",
@@ -82,7 +87,7 @@ export function buildHopeServicesPartnershipEmail(): HopeServicesEmailCopy {
     "Merci de nous confirmer votre intérêt et de nous renvoyer :",
     "1) Contact référent (nom, email, téléphone / WhatsApp)",
     "2) Logo officiel (PNG ou SVG)",
-    "3) Préférence : atelier Jour 1 / Jour 2 / flexible",
+    "3) Préférence : créneau atelier ou flexible",
     "",
     "Cordialement,",
     "McBuleli Team",
@@ -136,12 +141,10 @@ export function buildHopeServicesPartnershipEmail(): HopeServicesEmailCopy {
                 Dates prévues
               </p>
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 10px;">
-                <tr><td style="padding:8px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>28 Août 2026</strong> - Vendredi Bootcamp &amp; Build (08h00–17h00)</td></tr>
-                <tr><td style="height:8px;font-size:0;line-height:0;">&nbsp;</td></tr>
-                <tr><td style="padding:8px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>29 Août 2026</strong> - Samedi Build &amp; Demo Day (08h00–17h00)</td></tr>
+                ${hackathonScheduleHtmlRowsFr(EMAIL_BRAND.mint, EMAIL_BRAND.text)}
               </table>
               <p style="margin:0 0 18px;font-size:13px;line-height:1.45;color:${EMAIL_BRAND.muted};">
-                Lieu : Silikin Village, Kinshasa ·
+                Lieu : ${HACKATHON_VENUE_SHORT}, Kinshasa ·
                 <strong style="color:${EMAIL_BRAND.text};">Statut :</strong>
                 en attente d'approbation finale de Silikin Village.
               </p>
@@ -180,7 +183,7 @@ export function buildHopeServicesPartnershipEmail(): HopeServicesEmailCopy {
                 <tr><td style="height:8px;font-size:0;line-height:0;">&nbsp;</td></tr>
                 <tr><td style="padding:10px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>2.</strong> Logo officiel - PNG ou SVG</td></tr>
                 <tr><td style="height:8px;font-size:0;line-height:0;">&nbsp;</td></tr>
-                <tr><td style="padding:10px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>3.</strong> Préférence atelier - Jour 1, Jour 2, ou flexible</td></tr>
+                <tr><td style="padding:10px 12px;background:${EMAIL_BRAND.mint};border-radius:10px;font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};"><strong>3.</strong> Préférence atelier - créneau matin ou flexible</td></tr>
               </table>
 
               <p style="margin:0 0 22px;text-align:center;">
