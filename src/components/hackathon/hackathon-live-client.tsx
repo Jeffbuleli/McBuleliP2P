@@ -15,7 +15,6 @@ import { HackathonAtmosphere } from "@/components/hackathon/hackathon-atmosphere
 import { HackathonSlideFrame } from "@/components/hackathon/hackathon-slide-frame";
 import { McStageDisplay } from "@/components/hackathon/mc-stage-display";
 import { BRAND_LOGO_MARK_256 } from "@/lib/brand-logo";
-import { hackathonFeaturedPartners } from "@/lib/hackathon/event-content";
 import type { HackathonSlide } from "@/lib/hackathon/slides/types";
 import type {
   McSessionPublic,
@@ -104,27 +103,6 @@ function formatCountdown(deadlineIso: string | null, now: number) {
   const m = Math.floor((ms % 3600000) / 60000);
   const s = Math.floor((ms % 60000) / 1000);
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-}
-
-function LiveLogoRibbon() {
-  const logos = hackathonFeaturedPartners().slice(0, 8);
-  return (
-    <div className="flex flex-wrap items-center justify-center gap-2">
-      {logos.map((p) => (
-        <div
-          key={p.id}
-          className="flex h-10 w-[4.25rem] items-center justify-center rounded-xl border border-[#E5E5E0] bg-white px-1.5 sm:h-11 sm:w-20"
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={p.logoUrl}
-            alt={p.name}
-            className="max-h-7 max-w-full object-contain"
-          />
-        </div>
-      ))}
-    </div>
-  );
 }
 
 function LiveProjector({
@@ -222,9 +200,6 @@ function LiveAwardsPodium({
         <h1 className="mt-3 text-4xl font-black tracking-tight text-[#0c0a09] sm:text-5xl">
           Podium
         </h1>
-        <div className="mt-6">
-          <LiveLogoRibbon />
-        </div>
 
         {awards.entries.length === 0 ? (
           <p className="mt-10 text-sm text-[#78716c]">
@@ -303,12 +278,9 @@ function SlidesWaiting({ isFr }: { isFr: boolean }) {
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-[#78716c]">
           {isFr
-            ? "Sur le PC speaker : /hackathon/slides → Présenter → Passer On Air."
-            : "On the speaker PC: /hackathon/slides → Present → Go On Air."}
+            ? "Le deck On Air démarre dans un instant."
+            : "The On Air deck starts in a moment."}
         </p>
-        <div className="mt-6">
-          <LiveLogoRibbon />
-        </div>
       </div>
     </div>
   );
@@ -396,8 +368,8 @@ export function HackathonLiveClient({ initial }: { initial: LivePayload }) {
         }
         lede={
           isFr
-            ? "Projecteur salle · mode Mur. Console MC pour basculer MC / Slides / Prix."
-            : "Room projector · Wall mode. MC console switches MC / Slides / Awards."
+            ? "Projecteur salle · programme et équipes en direct."
+            : "Room projector · live program and teams."
         }
         actions={
           <div className="flex flex-wrap items-end gap-3">
@@ -418,10 +390,6 @@ export function HackathonLiveClient({ initial }: { initial: LivePayload }) {
           </div>
         }
       >
-        <div className="mb-5">
-          <LiveLogoRibbon />
-        </div>
-
         {data.pitchQueue?.active && data.pitchQueue.current ? (
           <motion.div
             layout

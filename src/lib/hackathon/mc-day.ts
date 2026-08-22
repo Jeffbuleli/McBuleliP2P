@@ -46,14 +46,18 @@ export type McCue = {
   kind: McCueKind;
   /** Short label on operator console */
   labelFr: string;
-  /** Large text on stage / AI voice line */
+  /** Large text on stage / AI voice line (public) */
   stageLineFr: string;
-  /** Optional human cue card */
+  /** Optional human cue card (operator console only - never on Live) */
   humanScriptFr?: string;
-  /** Shown under stage line */
+  /** Public subtitle under stage line (audience-safe only) */
   detailFr?: string;
   partnerSlug?: string;
   partnerName?: string;
+  /** Logo on the partner announcement card */
+  partnerLogoUrl?: string;
+  /** Presenter name or title shown on card */
+  partnerPresenterFr?: string;
   domainFr?: string;
   windowFr?: string;
   /** Suggest timer when this cue is active */
@@ -64,43 +68,53 @@ export type McCue = {
 
 const STAGE_PARTNERS: Array<{
   slug: string;
+  /** Short name on badges / card */
   name: string;
-  speakerHint: string;
+  /** Who presents (person or title) - spoken once with the welcome */
+  presenter: string;
+  logoUrl: string;
 }> = [
   {
     slug: "rdpi",
     name: "RDPI Think Tank",
-    speakerHint: "Mr Aristote Mugisho",
+    presenter: "Mr Aristote Mugisho",
+    logoUrl: "/partners/rdpi-thinktank-logo.png?v=20260728b",
   },
   {
     slug: "ia-academie-chk",
-    name: "IA Académie / CHK",
-    speakerHint: "l'équipe IA Académie",
+    name: "IA Académie",
+    presenter: "l'équipe IA Académie",
+    logoUrl: "/partners/ia-academie-logo.png?v=20260729",
   },
   {
     slug: "kimia",
     name: "KIMIA Service",
-    speakerHint: "Mr Mike",
+    presenter: "Mr Mike",
+    logoUrl: "/partners/kimia-service-logo.png?v=20260728",
   },
   {
     slug: "montana-pay",
     name: "MontanaPay",
-    speakerHint: "la Direction MontanaPay",
+    presenter: "la Direction",
+    logoUrl: "/partners/montana-pay-logo.jpg?v=20260729b",
   },
   {
     slug: "tyts",
-    name: "TYTS · The Young Technology Service",
-    speakerHint: "l'équipe The Young Technology Service",
+    name: "TYTS",
+    presenter: "Aaron Nsomone",
+    logoUrl: "/partners/tyts-yts-logo.jpg",
   },
   {
     slug: "kilelo",
     name: "Kilelo",
-    speakerHint: "l'équipe Kilelo",
+    presenter: "Jeancy Kabangu",
+    logoUrl: "/partners/kilelo-logo.png?v=20260728c",
   },
   {
     slug: "ilokwe",
     name: "ILOKWE GROUP",
-    speakerHint: "l'équipe ILOKWE, Sponsor Or",
+    presenter: "l'équipe ILOKWE, Sponsor Or",
+    logoUrl: "/partners/ilokwe-group-logo.png?v=20260724c",
   },
 ];
 
@@ -119,14 +133,16 @@ function buildPartnerCues(): McCue[] {
       id: `partner-${p.slug}-call`,
       kind: "partner_call",
       labelFr: `Appel · ${p.name}`,
-      stageLineFr: `Nous accueillons ${p.name}. ${PARTNER_TALK_MINUTES} minutes - ${domainFr}.`,
-      detailFr: `Bienvenue à ${p.speakerHint}. Chrono visible à l'écran.`,
+      stageLineFr: `Nous accueillons ${p.name}. Bienvenue à ${p.presenter}. ${PARTNER_TALK_MINUTES} minutes - ${domainFr}.`,
+      detailFr: domainFr ? `${domainFr} · ${PARTNER_TALK_MINUTES} min` : undefined,
       partnerSlug: p.slug,
       partnerName: p.name,
+      partnerLogoUrl: p.logoUrl,
+      partnerPresenterFr: p.presenter,
       domainFr,
       windowFr,
       timerSeconds: PARTNER_TALK_MINUTES * 60,
-      humanScriptFr: `Partenaire prêt côté scène. Opérateur : lancer le chrono ${PARTNER_TALK_MINUTES}'.`,
+      humanScriptFr: `Partenaire prêt côté scène. Opérateur : lancer le chrono ${PARTNER_TALK_MINUTES}'. Chrono visible à l'écran.`,
     });
     out.push({
       id: `partner-${p.slug}-thanks`,
@@ -136,8 +152,11 @@ function buildPartnerCues(): McCue[] {
       detailFr: "Prochain partenaire dans un instant.",
       partnerSlug: p.slug,
       partnerName: p.name,
+      partnerLogoUrl: p.logoUrl,
+      partnerPresenterFr: p.presenter,
       domainFr,
       windowFr,
+      humanScriptFr: "Enchaîner le cue suivant dès que le partenaire quitte la scène.",
     });
   }
   return out;
@@ -167,12 +186,21 @@ export const MC_CUES: McCue[] = [
   {
     id: "ai-intro",
     kind: "ai_intro",
-    labelFr: "McBuleli AI · Intro",
+    labelFr: "McBuleli AI · Qui sommes-nous",
     stageLineFr:
-      "Bonjour. Je suis McBuleli AI. Je présente McBuleli et je modère le tempo de la journée avec l'équipe.",
-    detailFr:
-      "McBuleli = plateforme. Aujourd'hui : partenaires, bootcamp avec Jeff Buleli, puis build. Les mentors partenaires circulent pour l'aide terrain.",
-    humanScriptFr: "Écran + son. Pas de micro humain pendant ce bloc.",
+      "Bonjour. Je suis McBuleli AI. McBuleli est une entreprise de technologie congolaise, basée à Kinshasa. Notre vision : une Afrique où l'innovation numérique sert vraiment les gens. Notre mission : bâtir des plateformes sûres et accessibles pour la finance, la connectivité et la confiance digitale.",
+    detailFr: "Entreprise tech · Kinshasa · vision & mission",
+    humanScriptFr:
+      "Cue 1/2 intro. Écran + son. Pas de micro humain. Enchaîner « Technologies » puis « Règles ».",
+  },
+  {
+    id: "ai-stack",
+    kind: "ai_intro",
+    labelFr: "McBuleli AI · Technologies",
+    stageLineFr:
+      "Ce que nous avons déjà réalisé : McBuleli P2P, l'échange crypto et mobile money sécurisé ; McBuleli ISP, l'accès internet ; Cyber Alert DRC avec SafeFind, la vigilance face aux menaces en ligne ; et Africa Insight, pour mieux lire le terrain. Ce hackathon prolonge cette ambition : builder avec vous.",
+    detailFr: "P2P · ISP · Cyber Alert DRC / SafeFind · Africa Insight",
+    humanScriptFr: "Cue 2/2 intro. Puis lancer « Règles ».",
   },
   {
     id: "ai-rules",
@@ -246,11 +274,12 @@ export const MC_CUES: McCue[] = [
     kind: "pitch_prep",
     labelFr: "Prep pitch",
     stageLineFr:
-      "Préparation pitch et démo. Équipes : vérifiez vos liens dans Mon espace.",
+      "Préparation pitch et démo. Équipes : finalisez vos slides et démos.",
     detailFr: "15h45 - 16h00",
     windowFr: "15h45 - 16h00",
     projectorMode: "wall",
-    humanScriptFr: "Staff : ordre de passage prêt. Jury sur /hackathon/jury.",
+    humanScriptFr:
+      "Staff : ordre de passage prêt. Jury sur /hackathon/jury. Équipes : liens dans Mon espace.",
   },
   {
     id: "mini-demo",
@@ -271,17 +300,17 @@ export const MC_CUES: McCue[] = [
     labelFr: "Délibération jury",
     stageLineFr:
       "Le jury délibère. Merci aux équipes pour vos prototypes.",
-    detailFr: "16h40 - 16h50 · notation sur /hackathon/jury",
+    detailFr: "16h40 - 16h50",
     windowFr: "16h40 - 16h50",
     projectorMode: "wall",
-    humanScriptFr: "Jury : verrouillez vos scores. Ops : préparer mode Prix.",
+    humanScriptFr: "Jury : verrouillez vos scores sur /hackathon/jury. Ops : préparer mode Prix.",
   },
   {
     id: "awards",
     kind: "awards",
     labelFr: "Podium · Prix",
     stageLineFr: "Remise des prix McBuleli Hackathon 2026.",
-    detailFr: "16h50 - 17h00 · projecteur mode Prix",
+    detailFr: "16h50 - 17h00",
     windowFr: "16h50 - 17h00",
     projectorMode: "awards",
     humanScriptFr:
@@ -351,6 +380,7 @@ export const MC_ROLE_CARDS: McRoleCard[] = [
     titleFr: "McBuleli AI - Tempo & modération",
     bodyFr: [
       "Parle seulement quand l'opérateur lance un cue.",
+      "Intro en deux temps : qui sommes-nous, puis technologies, puis règles.",
       "Appelle partenaires, Jeff, Patty.",
       "Chrono visible = contrat de confiance.",
     ],

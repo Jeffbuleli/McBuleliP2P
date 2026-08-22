@@ -66,4 +66,35 @@ describe("hackathon event consistency (single day)", () => {
     assert.match(joined, /RDPI Think Tank/);
     assert.doesNotMatch(joined, /R D P I/);
   });
+
+  it("partner call cues: public fields stay audience-safe; TYTS spoken once", async () => {
+    const { MC_CUES } = await import("@/lib/hackathon/mc-day");
+    const { splitMcSpeechChunks } = await import("@/lib/hackathon/mc-voice");
+    const tyts = MC_CUES.find((c) => c.id === "partner-tyts-call");
+    assert.ok(tyts);
+    assert.equal(tyts.partnerName, "TYTS");
+    assert.ok(tyts.partnerLogoUrl?.includes("tyts"));
+    assert.ok(tyts.partnerPresenterFr);
+    assert.doesNotMatch(tyts.detailFr ?? "", /Chrono|Opérateur|console/i);
+    assert.doesNotMatch(tyts.stageLineFr, /Chrono visible/i);
+    assert.match(tyts.humanScriptFr ?? "", /Chrono/);
+    const spoken = splitMcSpeechChunks(tyts.stageLineFr).join(" ");
+    const hits = spoken.match(/The Young Technology Service/gi) ?? [];
+    assert.equal(hits.length, 1);
+  });
+
+  it("MC intro is two public cues before rules", async () => {
+    const { MC_CUES } = await import("@/lib/hackathon/mc-day");
+    const ids = MC_CUES.map((c) => c.id);
+    const intro = ids.indexOf("ai-intro");
+    const stack = ids.indexOf("ai-stack");
+    const rules = ids.indexOf("ai-rules");
+    assert.ok(intro >= 0 && stack === intro + 1 && rules === stack + 1);
+    const who = MC_CUES[intro];
+    const tech = MC_CUES[stack];
+    assert.match(who.stageLineFr, /vision|mission/i);
+    assert.match(tech.stageLineFr, /P2P/);
+    assert.match(tech.stageLineFr, /SafeFind/);
+    assert.match(tech.stageLineFr, /Africa Insight/);
+  });
 });

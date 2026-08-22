@@ -711,7 +711,7 @@ export function hackathonProgramDays(): ProgramDay[] {
       slots: [
         { time: "08h00 - 08h30", activityFr: "Mise en place partenaires (visibilité)", activityEn: "Partner setup (visibility)", icon: "welcome" },
         { time: "08h30 - 08h50", activityFr: "Accueil, badges et networking", activityEn: "Welcome, badges & networking", icon: "welcome" },
-        { time: "08h50 - 09h10", activityFr: "Ouverture Mme Patty B. puis McBuleli AI (présentation & règles)", activityEn: "Opening by Mrs Patty B. then McBuleli AI (intro & rules)", icon: "mic" },
+        { time: "08h50 - 09h10", activityFr: "Ouverture Mme Patty B. puis McBuleli AI (qui sommes-nous, technologies, règles)", activityEn: "Opening by Mrs Patty B. then McBuleli AI (who we are, stack, rules)", icon: "mic" },
         { time: "09h10 - 10h20", activityFr: "Vitrine partenaires modérée par McBuleli AI (10 min / org)", activityEn: "Partner showcase moderated by McBuleli AI (10 min / org)", icon: "partners" },
         { time: "10h20 - 10h30", activityFr: "Pause / photo partenaires", activityEn: "Break / partner photo", icon: "coffee" },
         { time: "10h30 - 11h30", activityFr: "Bootcamp Vibe Coding - Jeff Buleli (1 h)", activityEn: "Vibe Coding bootcamp - Jeff Buleli (1 h)", icon: "code" },

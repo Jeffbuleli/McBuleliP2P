@@ -167,7 +167,7 @@ const SEED_ORGS: SeedOrg[] = [
     slug: "tyts",
     orgName: "THE YOUNG TECHNOLOGY SERVICE",
     shortName: "TYTS",
-    logoUrl: null,
+    logoUrl: "/partners/tyts-yts-logo.jpg",
     contactEmail: "nsomoneaaron2@gmail.com",
     website: null,
     status: "confirmed",

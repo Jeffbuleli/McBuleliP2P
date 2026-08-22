@@ -6,6 +6,9 @@
 
 /** Spoken forms so FR TTS does not mangle brand / partner names. */
 const PRONUNCIATION: Array<[RegExp, string]> = [
+  // Produits avant le remplacement générique « McBuleli »
+  [/\bMcBuleli P2P\b/gi, "Mac Bouléli Pé deux Pé"],
+  [/\bMcBuleli ISP\b/gi, "Mac Bouléli I S P"],
   [/\bMcBuleli\b/gi, "Mac Bouléli"],
   [/\bSilikin\b/gi, "Silikine"],
   // Abréviations isolées → nom complet (lisibilité scène)
@@ -39,6 +42,11 @@ const PRONUNCIATION: Array<[RegExp, string]> = [
   [/\bMme Patty B\./gi, "Madame Patty Bé"],
   [/\bJeff Buleli\b/gi, "Jeff Bouléli"],
   [/\bAristote Mugisho\b/gi, "Aristote Moughicho"],
+  [/\bAaron Nsomone\b/gi, "Aaron Nsomoné"],
+  [/\bJeancy Kabangu\b/gi, "Djéancy Kabangou"],
+  [/\bCyber Alert DRC\b/gi, "Cyber Alert D R C"],
+  [/\bSafeFind\b/gi, "Safe Find"],
+  [/\bAfrica Insight\b/gi, "Africa Insight"],
   [/·/g, ","],
   [/–|—/g, ","],
 ];

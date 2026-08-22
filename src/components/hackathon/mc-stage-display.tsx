@@ -5,7 +5,6 @@ import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { HackathonAtmosphere } from "@/components/hackathon/hackathon-atmosphere";
 import { BRAND_LOGO_MARK_256 } from "@/lib/brand-logo";
-import { hackathonFeaturedPartners } from "@/lib/hackathon/event-content";
 import type { McSessionPublic } from "@/lib/hackathon/mc-state";
 import {
   ensureMcVoicesLoaded,
@@ -19,41 +18,6 @@ function formatRemain(ms: number) {
   const m = Math.floor(s / 60);
   const r = s % 60;
   return `${m}:${String(r).padStart(2, "0")}`;
-}
-
-function LivePartnerStrip({
-  highlightName,
-}: {
-  highlightName?: string | null;
-}) {
-  const logos = hackathonFeaturedPartners().slice(0, 8);
-  return (
-    <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
-      {logos.map((p) => {
-        const active =
-          highlightName &&
-          (p.name.toLowerCase().includes(highlightName.toLowerCase()) ||
-            highlightName.toLowerCase().includes(p.name.toLowerCase().slice(0, 6)));
-        return (
-          <div
-            key={p.id}
-            className={`flex h-11 w-[4.5rem] items-center justify-center rounded-xl border bg-white px-2 transition sm:h-12 sm:w-24 ${
-              active
-                ? "border-[#1F6B43] shadow-[0_0_0_3px_rgba(31,107,67,0.18)]"
-                : "border-[#E5E5E0]/90 opacity-80"
-            }`}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={p.logoUrl}
-              alt={p.name}
-              className="max-h-8 max-w-full object-contain sm:max-h-9"
-            />
-          </div>
-        );
-      })}
-    </div>
-  );
 }
 
 function MicPulse({ active }: { active: boolean }) {
@@ -256,10 +220,6 @@ export function McStageDisplay({
         </div>
       </header>
 
-      <div className="relative z-10 px-6 pt-6 sm:px-10">
-        <LivePartnerStrip highlightName={session.cue.partnerName} />
-      </div>
-
       <main className="relative z-10 flex flex-1 flex-col justify-center px-6 py-8 sm:px-12">
         <AnimatePresence mode="wait">
           <motion.div
@@ -285,6 +245,19 @@ export function McStageDisplay({
               </div>
             ) : (
               <div className="rounded-[2rem] border border-[#E5E5E0]/95 bg-white/90 px-7 py-9 shadow-[0_20px_60px_-28px_rgba(31,107,67,0.35)] backdrop-blur-sm sm:px-12 sm:py-12">
+                {session.cue.partnerLogoUrl ? (
+                  <div className="mb-6 flex justify-center sm:justify-start">
+                    <div className="flex h-20 w-40 items-center justify-center rounded-2xl border border-[#E5E5E0] bg-white px-4 sm:h-24 sm:w-48">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={session.cue.partnerLogoUrl}
+                        alt={session.cue.partnerName ?? "Partenaire"}
+                        className="max-h-16 max-w-full object-contain sm:max-h-20"
+                      />
+                    </div>
+                  </div>
+                ) : null}
+
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-[#1F6B43]/20 bg-[#EAF6EE] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#1F6B43]">
                     <svg
@@ -308,6 +281,12 @@ export function McStageDisplay({
                     </span>
                   ) : null}
                 </div>
+
+                {session.cue.partnerPresenterFr ? (
+                  <p className="mt-4 text-base font-semibold text-[#1F6B43] sm:text-lg">
+                    {session.cue.partnerPresenterFr}
+                  </p>
+                ) : null}
 
                 <h1 className="mt-5 text-3xl font-black leading-[1.12] tracking-tight text-[#0c0a09] sm:text-5xl lg:text-[3.25rem]">
                   {session.cue.stageLineFr}
