@@ -52,4 +52,18 @@ describe("hackathon event consistency (single day)", () => {
     assert.equal(typeof ensureMcSessionHydrated, "function");
     assert.equal(typeof getMcSession, "function");
   });
+
+  it("MC voice expands isolated partner abbreviations", async () => {
+    const { splitMcSpeechChunks } = await import("@/lib/hackathon/mc-voice");
+    const chunks = splitMcSpeechChunks(
+      "Nous accueillons TYTS. Merci RDPI Think Tank.",
+    );
+    const joined = chunks.join(" ");
+    assert.ok(chunks.length >= 2);
+    assert.match(joined, /The Young Technology Service/i);
+    assert.doesNotMatch(joined, /\bT Y T S\b/);
+    // RDPI reste avec Think Tank (pas épelé lettre à lettre)
+    assert.match(joined, /RDPI Think Tank/);
+    assert.doesNotMatch(joined, /R D P I/);
+  });
 });

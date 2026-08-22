@@ -1,6 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
+import { AnimatePresence, motion } from "framer-motion";
+import { HackathonAtmosphere } from "@/components/hackathon/hackathon-atmosphere";
+import { BRAND_LOGO_MARK_256 } from "@/lib/brand-logo";
+import { hackathonFeaturedPartners } from "@/lib/hackathon/event-content";
 import type { McSessionPublic } from "@/lib/hackathon/mc-state";
 import {
   ensureMcVoicesLoaded,
@@ -14,6 +19,56 @@ function formatRemain(ms: number) {
   const m = Math.floor(s / 60);
   const r = s % 60;
   return `${m}:${String(r).padStart(2, "0")}`;
+}
+
+function LivePartnerStrip({
+  highlightName,
+}: {
+  highlightName?: string | null;
+}) {
+  const logos = hackathonFeaturedPartners().slice(0, 8);
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+      {logos.map((p) => {
+        const active =
+          highlightName &&
+          (p.name.toLowerCase().includes(highlightName.toLowerCase()) ||
+            highlightName.toLowerCase().includes(p.name.toLowerCase().slice(0, 6)));
+        return (
+          <div
+            key={p.id}
+            className={`flex h-11 w-[4.5rem] items-center justify-center rounded-xl border bg-white px-2 transition sm:h-12 sm:w-24 ${
+              active
+                ? "border-[#1F6B43] shadow-[0_0_0_3px_rgba(31,107,67,0.18)]"
+                : "border-[#E5E5E0]/90 opacity-80"
+            }`}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={p.logoUrl}
+              alt={p.name}
+              className="max-h-8 max-w-full object-contain sm:max-h-9"
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function MicPulse({ active }: { active: boolean }) {
+  return (
+    <span className="relative inline-flex h-3 w-3 items-center justify-center">
+      {active ? (
+        <>
+          <span className="absolute inset-0 animate-ping rounded-full bg-[#1F6B43]/40" />
+          <span className="relative h-2 w-2 rounded-full bg-[#1F6B43]" />
+        </>
+      ) : (
+        <span className="h-2 w-2 rounded-full bg-stone-300" />
+      )}
+    </span>
+  );
 }
 
 export function McStageDisplay({
@@ -30,6 +85,9 @@ export function McStageDisplay({
   const session = controlled ?? localSession;
   const [now, setNow] = useState(() => Date.now());
   const [voiceUnlocked, setVoiceUnlocked] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
+  const [chunkIndex, setChunkIndex] = useState(0);
+  const [chunkTotal, setChunkTotal] = useState(0);
   const lastSpokenKey = useRef<string>("");
 
   useEffect(() => {
@@ -59,10 +117,12 @@ export function McStageDisplay({
     if (!voiceUnlocked) return;
     if (!session.voiceEnabled) {
       stopMcVoice();
+      setSpeaking(false);
       return;
     }
     if (session.humanOverride) {
       stopMcVoice();
+      setSpeaking(false);
       return;
     }
 
@@ -74,7 +134,19 @@ export function McStageDisplay({
     void (async () => {
       await ensureMcVoicesLoaded();
       if (cancelled) return;
-      speakMcLine(session.cue.stageLineFr);
+      setSpeaking(true);
+      setChunkIndex(0);
+      speakMcLine(session.cue.stageLineFr, {
+        onChunk: (i, total) => {
+          if (!cancelled) {
+            setChunkIndex(i);
+            setChunkTotal(total);
+          }
+        },
+        onDone: () => {
+          if (!cancelled) setSpeaking(false);
+        },
+      });
     })();
 
     return () => {
@@ -106,123 +178,210 @@ export function McStageDisplay({
     void ensureMcVoicesLoaded().then(() => {
       if (session.voiceEnabled && !session.humanOverride) {
         lastSpokenKey.current = `${session.cueId}:${session.voiceReplayToken}`;
-        speakMcLine(session.cue.stageLineFr);
+        setSpeaking(true);
+        speakMcLine(session.cue.stageLineFr, {
+          onChunk: (i, total) => {
+            setChunkIndex(i);
+            setChunkTotal(total);
+          },
+          onDone: () => setSpeaking(false),
+        });
       }
     });
   };
 
   return (
-    <div className="relative flex min-h-dvh flex-col overflow-hidden bg-[#06140f] text-white">
+    <div className="relative flex min-h-dvh flex-col overflow-hidden bg-[#FAFAF8] text-[#111111]">
+      <HackathonAtmosphere variant="page" className="opacity-90" />
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_20%_0%,rgba(52,211,153,0.22),transparent_50%),radial-gradient(ellipse_at_90%_10%,rgba(16,185,129,0.12),transparent_40%),linear-gradient(180deg,#06140f_0%,#0a1f18_55%,#04110c_100%)]"
+        className="pointer-events-none absolute -right-24 top-0 h-72 w-72 rounded-full bg-[#EAF6EE]/80 blur-3xl"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -left-16 bottom-20 h-64 w-64 rounded-full bg-[#EEF2FF]/70 blur-3xl"
       />
 
       {!voiceUnlocked ? (
         <button
           type="button"
           onClick={unlockVoice}
-          className="absolute inset-x-4 top-4 z-20 rounded-2xl border border-emerald-300/40 bg-emerald-500/20 px-4 py-3 text-left backdrop-blur-sm sm:inset-x-auto sm:right-6 sm:top-6 sm:max-w-sm"
+          className="absolute inset-x-4 top-4 z-20 rounded-2xl border border-[#1F6B43]/25 bg-white/95 px-4 py-3 text-left shadow-lg shadow-[#1F6B43]/10 backdrop-blur-sm sm:inset-x-auto sm:right-6 sm:top-6 sm:max-w-sm"
         >
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-200">
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#1F6B43]">
             Voix McBuleli AI
           </p>
-          <p className="mt-1 text-sm font-semibold text-white">
+          <p className="mt-1 text-sm font-semibold text-[#111]">
             Cliquer une fois pour activer le son sur ce projecteur
           </p>
         </button>
       ) : (
-        <div className="absolute right-4 top-4 z-20 rounded-full border border-white/15 bg-black/40 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-white/70 sm:right-6 sm:top-6">
+        <div className="absolute right-4 top-4 z-20 flex items-center gap-2 rounded-full border border-[#E5E5E0] bg-white/90 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[#57534e] shadow-sm sm:right-6 sm:top-6">
+          <MicPulse active={speaking && session.voiceEnabled} />
           {session.voiceEnabled ? "Voix ON" : "Voix OFF"}
+          {speaking && chunkTotal > 0 ? (
+            <span className="font-mono normal-case tracking-normal text-[#1F6B43]">
+              {chunkIndex + 1}/{chunkTotal}
+            </span>
+          ) : null}
         </div>
       )}
 
       <header className="relative z-10 flex items-start justify-between gap-4 px-6 pt-6 sm:px-10 sm:pt-8">
-        <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-emerald-300/90">
-            McBuleli AI
-          </p>
-          <p className="mt-1 text-sm text-white/50">
-            Modération - piloté avec l&apos;équipe McBuleli
-          </p>
+        <div className="flex items-center gap-3">
+          <Image
+            src={BRAND_LOGO_MARK_256}
+            alt="McBuleli"
+            width={48}
+            height={48}
+            unoptimized
+            className="h-11 w-11 object-contain"
+          />
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#1F6B43]">
+              McBuleli AI
+            </p>
+            <p className="mt-0.5 text-sm text-[#78716c]">
+              Modération · Silikin Village
+            </p>
+          </div>
         </div>
-        <div className="text-right">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-white/40">
+        <div className="rounded-2xl border border-[#E5E5E0] bg-white/80 px-4 py-2.5 text-right shadow-sm backdrop-blur-sm">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[#a8a29e]">
             Maintenant
           </p>
-          <p className="text-sm font-semibold text-white/80">
+          <p className="text-sm font-bold text-[#1c1917]">
             {session.cue.windowFr || session.cue.labelFr}
           </p>
         </div>
       </header>
 
-      <main className="relative z-10 flex flex-1 flex-col justify-center px-6 py-10 sm:px-12">
-        {session.humanOverride ? (
-          <div className="mx-auto max-w-4xl text-center">
-            <p className="text-sm font-bold uppercase tracking-[0.2em] text-amber-300">
-              Équipe McBuleli
-            </p>
-            <h1 className="mt-4 text-3xl font-black leading-tight tracking-tight sm:text-5xl">
-              {session.overrideMessageFr}
-            </h1>
-          </div>
-        ) : (
-          <div className="mx-auto max-w-5xl">
-            {session.cue.partnerName ? (
-              <p className="text-sm font-bold uppercase tracking-[0.18em] text-emerald-300/90">
-                {session.cue.partnerName}
-                {session.cue.domainFr ? ` · ${session.cue.domainFr}` : ""}
-              </p>
+      <div className="relative z-10 px-6 pt-6 sm:px-10">
+        <LivePartnerStrip highlightName={session.cue.partnerName} />
+      </div>
+
+      <main className="relative z-10 flex flex-1 flex-col justify-center px-6 py-8 sm:px-12">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={
+              session.humanOverride
+                ? `override-${session.updatedAt}`
+                : session.cueId
+            }
+            initial={{ opacity: 0, y: 18, filter: "blur(6px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            exit={{ opacity: 0, y: -12, filter: "blur(4px)" }}
+            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+            className="mx-auto w-full max-w-5xl"
+          >
+            {session.humanOverride ? (
+              <div className="rounded-3xl border border-amber-300/60 bg-amber-50/90 px-8 py-10 text-center shadow-sm">
+                <p className="text-sm font-bold uppercase tracking-[0.2em] text-amber-700">
+                  Équipe McBuleli
+                </p>
+                <h1 className="mt-4 text-3xl font-black leading-tight tracking-tight text-[#1c1917] sm:text-5xl">
+                  {session.overrideMessageFr}
+                </h1>
+              </div>
             ) : (
-              <p className="text-sm font-bold uppercase tracking-[0.18em] text-emerald-300/80">
-                {session.cue.labelFr}
-              </p>
+              <div className="rounded-[2rem] border border-[#E5E5E0]/95 bg-white/90 px-7 py-9 shadow-[0_20px_60px_-28px_rgba(31,107,67,0.35)] backdrop-blur-sm sm:px-12 sm:py-12">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-[#1F6B43]/20 bg-[#EAF6EE] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#1F6B43]">
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="h-3.5 w-3.5"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      aria-hidden
+                    >
+                      <path d="M12 2a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3Z" />
+                      <path d="M19 10v1a7 7 0 0 1-14 0v-1M12 18v4M8 22h8" />
+                    </svg>
+                    {session.cue.partnerName
+                      ? session.cue.partnerName
+                      : session.cue.labelFr}
+                  </span>
+                  {session.cue.domainFr ? (
+                    <span className="rounded-full border border-[#E5E5E0] bg-[#FAFAF8] px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[#78716c]">
+                      {session.cue.domainFr}
+                    </span>
+                  ) : null}
+                </div>
+
+                <h1 className="mt-5 text-3xl font-black leading-[1.12] tracking-tight text-[#0c0a09] sm:text-5xl lg:text-[3.25rem]">
+                  {session.cue.stageLineFr}
+                </h1>
+
+                {session.cue.detailFr ? (
+                  <p className="mt-5 max-w-3xl text-lg leading-relaxed text-[#57534e] sm:text-xl">
+                    {session.cue.detailFr}
+                  </p>
+                ) : null}
+
+                {speaking ? (
+                  <div className="mt-6 flex items-center gap-2 text-xs font-semibold text-[#1F6B43]">
+                    <MicPulse active />
+                    Lecture en cours
+                    {chunkTotal > 1
+                      ? ` · phrase ${chunkIndex + 1} / ${chunkTotal}`
+                      : ""}
+                  </div>
+                ) : null}
+              </div>
             )}
-            <h1 className="mt-4 text-3xl font-black leading-[1.15] tracking-tight sm:text-5xl lg:text-6xl">
-              {session.cue.stageLineFr}
-            </h1>
-            {session.cue.detailFr ? (
-              <p className="mt-5 max-w-3xl text-lg text-white/60 sm:text-xl">
-                {session.cue.detailFr}
-              </p>
-            ) : null}
-          </div>
-        )}
+          </motion.div>
+        </AnimatePresence>
 
         {remainMs != null && !session.humanOverride ? (
-          <div className="mx-auto mt-12 w-full max-w-5xl">
-            <p
-              className={`font-mono text-6xl font-black tabular-nums sm:text-8xl ${
+          <motion.div
+            layout
+            className="mx-auto mt-10 w-full max-w-5xl"
+          >
+            <div
+              className={`inline-flex flex-col rounded-3xl border px-6 py-4 shadow-sm ${
                 overtime
-                  ? "text-rose-400"
+                  ? "border-rose-300 bg-rose-50"
                   : urgent
-                    ? "text-amber-300"
-                    : "text-white"
+                    ? "border-amber-300 bg-amber-50"
+                    : "border-[#E5E5E0] bg-white/90"
               }`}
             >
-              {overtime ? "0:00" : formatRemain(remainMs)}
-            </p>
-            <p className="mt-2 text-sm font-semibold uppercase tracking-wider text-white/40">
-              {overtime
-                ? "Temps écoulé"
-                : urgent
-                  ? "Dernière minute"
-                  : "Chrono"}
-            </p>
-          </div>
+              <p
+                className={`font-mono text-5xl font-black tabular-nums sm:text-7xl ${
+                  overtime
+                    ? "text-rose-600"
+                    : urgent
+                      ? "text-amber-700"
+                      : "text-[#1F6B43]"
+                }`}
+              >
+                {overtime ? "0:00" : formatRemain(remainMs)}
+              </p>
+              <p className="mt-1 text-xs font-bold uppercase tracking-wider text-[#78716c]">
+                {overtime
+                  ? "Temps écoulé"
+                  : urgent
+                    ? "Dernière minute"
+                    : "Chrono"}
+              </p>
+            </div>
+          </motion.div>
         ) : null}
       </main>
 
-      <footer className="relative z-10 flex items-end justify-between gap-4 border-t border-white/10 px-6 py-5 sm:px-10">
+      <footer className="relative z-10 flex items-end justify-between gap-4 border-t border-[#E5E5E0]/90 bg-white/70 px-6 py-5 backdrop-blur-sm sm:px-10">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-white/35">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[#a8a29e]">
             Ensuite
           </p>
-          <p className="text-sm font-semibold text-white/70">
-            {session.nextCue?.labelFr ?? "-"}
+          <p className="text-sm font-bold text-[#292524]">
+            {session.nextCue?.labelFr ?? "—"}
           </p>
         </div>
-        <p className="text-xs text-white/35">mcbuleli.org · Silikin Village</p>
+        <p className="text-xs font-semibold text-[#1F6B43]">
+          mcbuleli.org · 28 Août 2026
+        </p>
       </footer>
     </div>
   );

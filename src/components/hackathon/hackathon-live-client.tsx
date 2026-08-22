@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -10,8 +11,11 @@ import {
   HkStatusPill,
   useHkLocale,
 } from "@/components/hackathon/hk-ui";
+import { HackathonAtmosphere } from "@/components/hackathon/hackathon-atmosphere";
 import { HackathonSlideFrame } from "@/components/hackathon/hackathon-slide-frame";
 import { McStageDisplay } from "@/components/hackathon/mc-stage-display";
+import { BRAND_LOGO_MARK_256 } from "@/lib/brand-logo";
+import { hackathonFeaturedPartners } from "@/lib/hackathon/event-content";
 import type { HackathonSlide } from "@/lib/hackathon/slides/types";
 import type {
   McSessionPublic,
@@ -102,6 +106,27 @@ function formatCountdown(deadlineIso: string | null, now: number) {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
+function LiveLogoRibbon() {
+  const logos = hackathonFeaturedPartners().slice(0, 8);
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-2">
+      {logos.map((p) => (
+        <div
+          key={p.id}
+          className="flex h-10 w-[4.25rem] items-center justify-center rounded-xl border border-[#E5E5E0] bg-white px-1.5 sm:h-11 sm:w-20"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={p.logoUrl}
+            alt={p.name}
+            className="max-h-7 max-w-full object-contain"
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function LiveProjector({
   presentation,
   isFr,
@@ -110,39 +135,50 @@ function LiveProjector({
   isFr: boolean;
 }) {
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-[color:var(--hk-page,#fafaf8)]">
-      <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[color:var(--hk-border)] bg-[color:var(--hk-surface)]/90 px-4 py-3 backdrop-blur-sm sm:px-6">
-        <div className="min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[color:var(--hk-accent)]">
-            McBuleli Live · On Air
-          </p>
-          <p className="truncate text-sm font-bold text-[color:var(--hk-text)]">
-            {isFr ? presentation.deckTitleFr : presentation.deckTitleEn}
-            {presentation.speakerLabel
-              ? ` · ${presentation.speakerLabel}`
-              : ""}
-          </p>
+    <div className="fixed inset-0 z-40 flex flex-col bg-[#FAFAF8]">
+      <HackathonAtmosphere variant="page" />
+      <div className="relative z-10 flex shrink-0 items-center justify-between gap-3 border-b border-[#E5E5E0] bg-white/90 px-4 py-3 backdrop-blur-sm sm:px-6">
+        <div className="flex min-w-0 items-center gap-3">
+          <Image
+            src={BRAND_LOGO_MARK_256}
+            alt=""
+            width={36}
+            height={36}
+            unoptimized
+            className="h-9 w-9 object-contain"
+          />
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#1F6B43]">
+              McBuleli Live · On Air
+            </p>
+            <p className="truncate text-sm font-bold text-[#1c1917]">
+              {isFr ? presentation.deckTitleFr : presentation.deckTitleEn}
+              {presentation.speakerLabel
+                ? ` · ${presentation.speakerLabel}`
+                : ""}
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-3">
-          <span className="font-mono text-sm tabular-nums text-[color:var(--hk-muted)]">
+          <span className="rounded-full border border-[#E5E5E0] bg-[#EAF6EE] px-3 py-1 font-mono text-sm tabular-nums text-[#1F6B43]">
             {presentation.slideIndex + 1} / {presentation.totalSlides}
           </span>
           <Link
             href="/hackathon/slides"
-            className="text-xs font-semibold text-[color:var(--hk-accent)] hover:underline"
+            className="text-xs font-semibold text-[#1F6B43] hover:underline"
           >
             Slides
           </Link>
         </div>
       </div>
-      <div className="min-h-0 flex-1 px-3 pb-4 sm:px-6">
+      <div className="relative z-10 min-h-0 flex-1 px-3 pb-4 sm:px-6">
         <AnimatePresence mode="wait">
           <motion.div
             key={presentation.slide.id}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.3 }}
+            initial={{ opacity: 0, y: 14, scale: 0.985 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.99 }}
+            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             className="mx-auto h-full max-w-6xl"
           >
             <HackathonSlideFrame
@@ -165,84 +201,115 @@ function LiveAwardsPodium({
   awards: AwardsPayload;
   isFr: boolean;
 }) {
-  const medals = ["🥇", "🥈", "🥉"] as const;
+  const medals = ["1", "2", "3"] as const;
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center bg-[#06140f] px-6 py-10 text-center text-white">
-      <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-amber-300/90">
-        {isFr ? "McBuleli Hackathon 2026 · Prix" : "McBuleli Hackathon 2026 · Awards"}
-      </p>
-      <h1 className="mt-4 max-w-3xl text-4xl font-black tracking-tight sm:text-5xl">
-        {isFr ? "Podium" : "Podium"}
-      </h1>
-      {awards.entries.length === 0 ? (
-        <p className="mt-8 max-w-lg text-sm text-white/60">
+    <div className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-[#FAFAF8] px-6 py-10 text-center">
+      <HackathonAtmosphere variant="page" />
+      <div className="relative z-10 w-full max-w-2xl">
+        <Image
+          src={BRAND_LOGO_MARK_256}
+          alt=""
+          width={56}
+          height={56}
+          unoptimized
+          className="mx-auto h-14 w-14 object-contain"
+        />
+        <p className="mt-4 text-[11px] font-bold uppercase tracking-[0.22em] text-[#1F6B43]">
           {isFr
-            ? "En attente des scores jury verrouillés sur /hackathon/jury."
-            : "Waiting for locked jury scores on /hackathon/jury."}
+            ? "McBuleli Hackathon 2026 · Prix"
+            : "McBuleli Hackathon 2026 · Awards"}
         </p>
-      ) : (
-        <ol className="mt-10 w-full max-w-2xl space-y-4 text-left">
-          {awards.entries.map((entry) => (
-            <li
-              key={entry.teamId}
-              className={`flex items-center gap-4 rounded-2xl border px-5 py-4 ${
-                entry.rank === 1
-                  ? "border-amber-400/50 bg-amber-400/10"
-                  : "border-white/10 bg-white/[0.04]"
-              }`}
-            >
-              <span className="text-3xl">{medals[entry.rank - 1] ?? `#${entry.rank}`}</span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-xl font-black">{entry.teamName}</p>
-                <p className="text-xs text-white/50">
-                  {entry.jurorCount}{" "}
-                  {isFr ? "juré(s)" : "juror(s)"}
+        <h1 className="mt-3 text-4xl font-black tracking-tight text-[#0c0a09] sm:text-5xl">
+          Podium
+        </h1>
+        <div className="mt-6">
+          <LiveLogoRibbon />
+        </div>
+
+        {awards.entries.length === 0 ? (
+          <p className="mt-10 text-sm text-[#78716c]">
+            {isFr
+              ? "En attente des scores jury verrouillés."
+              : "Waiting for locked jury scores."}
+          </p>
+        ) : (
+          <ol className="mt-10 space-y-3 text-left">
+            {awards.entries.map((entry, i) => (
+              <motion.li
+                key={entry.teamId}
+                initial={{ opacity: 0, x: -16 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.12, duration: 0.4 }}
+                className={`flex items-center gap-4 rounded-2xl border px-5 py-4 shadow-sm ${
+                  entry.rank === 1
+                    ? "border-amber-400/70 bg-gradient-to-r from-amber-50 to-white"
+                    : "border-[#E5E5E0] bg-white/95"
+                }`}
+              >
+                <span
+                  className={`flex h-12 w-12 items-center justify-center rounded-full text-lg font-black ${
+                    entry.rank === 1
+                      ? "bg-amber-400 text-[#1c1917]"
+                      : entry.rank === 2
+                        ? "bg-stone-200 text-[#1c1917]"
+                        : "bg-[#EAF6EE] text-[#1F6B43]"
+                  }`}
+                >
+                  {medals[entry.rank - 1] ?? entry.rank}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-xl font-black text-[#0c0a09]">
+                    {entry.teamName}
+                  </p>
+                  <p className="text-xs text-[#78716c]">
+                    {entry.jurorCount} {isFr ? "juré(s)" : "juror(s)"}
+                  </p>
+                </div>
+                <p className="font-mono text-3xl font-black tabular-nums text-[#1F6B43]">
+                  {entry.score}
                 </p>
-              </div>
-              <p className="font-mono text-3xl font-black tabular-nums text-emerald-300">
-                {entry.score}
-              </p>
-            </li>
-          ))}
-        </ol>
-      )}
-      <p className="mt-8 text-xs text-white/40">
-        {isFr
-          ? `${awards.scoredTeamCount} équipe(s) notée(s)`
-          : `${awards.scoredTeamCount} team(s) scored`}
-      </p>
-      <Link
-        href="/hackathon/mc"
-        className="mt-6 text-sm font-semibold text-emerald-300 hover:underline"
-      >
-        {isFr ? "Console MC" : "MC console"}
-      </Link>
+              </motion.li>
+            ))}
+          </ol>
+        )}
+        <p className="mt-8 text-xs text-[#a8a29e]">
+          {isFr
+            ? `${awards.scoredTeamCount} équipe(s) notée(s)`
+            : `${awards.scoredTeamCount} team(s) scored`}
+        </p>
+      </div>
     </div>
   );
 }
 
 function SlidesWaiting({ isFr }: { isFr: boolean }) {
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center bg-[#06140f] px-6 text-center text-white">
-      <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-emerald-300/90">
-        Mode Slides
-      </p>
-      <h1 className="mt-4 max-w-2xl text-3xl font-black tracking-tight sm:text-4xl">
-        {isFr
-          ? "En attente du deck On Air"
-          : "Waiting for On Air deck"}
-      </h1>
-      <p className="mt-3 max-w-lg text-sm text-white/60">
-        {isFr
-          ? "Sur le PC speaker : /hackathon/slides → Présenter → Passer On Air. Le projecteur reste ici."
-          : "On the speaker PC: /hackathon/slides → Present → Go On Air. Projector stays here."}
-      </p>
-      <Link
-        href="/hackathon/mc"
-        className="mt-8 text-sm font-semibold text-emerald-300 hover:underline"
-      >
-        {isFr ? "Console MC (changer de mode)" : "MC console (switch mode)"}
-      </Link>
+    <div className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-[#FAFAF8] px-6 text-center">
+      <HackathonAtmosphere variant="page" />
+      <div className="relative z-10 max-w-xl rounded-[2rem] border border-[#E5E5E0] bg-white/90 px-8 py-10 shadow-sm">
+        <Image
+          src={BRAND_LOGO_MARK_256}
+          alt=""
+          width={48}
+          height={48}
+          unoptimized
+          className="mx-auto h-12 w-12 object-contain"
+        />
+        <p className="mt-4 text-[11px] font-bold uppercase tracking-[0.22em] text-[#1F6B43]">
+          Mode Slides
+        </p>
+        <h1 className="mt-3 text-3xl font-black tracking-tight text-[#0c0a09] sm:text-4xl">
+          {isFr ? "En attente du deck On Air" : "Waiting for On Air deck"}
+        </h1>
+        <p className="mt-3 text-sm leading-relaxed text-[#78716c]">
+          {isFr
+            ? "Sur le PC speaker : /hackathon/slides → Présenter → Passer On Air."
+            : "On the speaker PC: /hackathon/slides → Present → Go On Air."}
+        </p>
+        <div className="mt-6">
+          <LiveLogoRibbon />
+        </div>
+      </div>
     </div>
   );
 }
@@ -322,99 +389,95 @@ export function HackathonLiveClient({ initial }: { initial: LivePayload }) {
     <HkShell authReturnPath="/hackathon/live">
       <HkPage
         eyebrow="McBuleli Live"
-        title={isFr ? data.edition.nameFr : data.edition.nameEn ?? data.edition.nameFr}
+        title={
+          isFr
+            ? data.edition.nameFr
+            : (data.edition.nameEn ?? data.edition.nameFr)
+        }
         lede={
           isFr
-            ? "Projecteur unique - mode Mur. Console MC pour passer en MC ou Slides."
-            : "Single projector - Wall mode. MC console switches to MC or Slides."
+            ? "Projecteur salle · mode Mur. Console MC pour basculer MC / Slides / Prix."
+            : "Room projector · Wall mode. MC console switches MC / Slides / Awards."
         }
         actions={
           <div className="flex flex-wrap items-end gap-3">
             <Link
               href="/hackathon/mc"
-              className="rounded-2xl bg-[color:var(--hk-surface,var(--fd-card))] px-4 py-3 text-sm font-bold text-[color:var(--hk-accent)] shadow-sm ring-1 ring-[color:var(--hk-border,var(--fd-border))]"
+              className="rounded-2xl bg-white px-4 py-3 text-sm font-bold text-[#1F6B43] shadow-sm ring-1 ring-[#E5E5E0]"
             >
               Console MC
             </Link>
-            <Link
-              href="/hackathon/ops"
-              className="rounded-2xl bg-[color:var(--hk-surface,var(--fd-card))] px-4 py-3 text-sm font-bold text-[color:var(--hk-accent)] shadow-sm ring-1 ring-[color:var(--hk-border,var(--fd-border))]"
-            >
-              Ops
-            </Link>
-            <Link
-              href="/hackathon/slides"
-              className="rounded-2xl bg-[color:var(--hk-surface,var(--fd-card))] px-4 py-3 text-sm font-bold text-[color:var(--hk-accent)] shadow-sm ring-1 ring-[color:var(--hk-border,var(--fd-border))]"
-            >
-              Slides
-            </Link>
-            <div className="rounded-2xl bg-[color:var(--hk-surface,var(--fd-card))] px-5 py-3 text-right shadow-sm ring-1 ring-[color:var(--hk-border,var(--fd-border))]">
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[color:var(--hk-muted,var(--fd-muted))]">
+            <div className="rounded-2xl bg-white px-5 py-3 text-right shadow-sm ring-1 ring-[#E5E5E0]">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#a8a29e]">
                 {isFr ? "Clôture livrables" : "Submission deadline"}
               </p>
-              <p className="mt-1 font-mono text-3xl font-black tabular-nums text-[color:var(--hk-accent,var(--fd-primary))] sm:text-4xl">
+              <p className="mt-1 font-mono text-3xl font-black tabular-nums text-[#1F6B43] sm:text-4xl">
                 {countdown}
               </p>
             </div>
           </div>
         }
       >
-        <div className="mb-4 rounded-2xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-[color:var(--hk-text)]">
-          {isFr
-            ? "Mode projecteur : Mur. Matin - Console MC (mode MC). Bootcamp - Passer On Air (mode Slides auto)."
-            : "Projector mode: Wall. Morning - MC console (MC mode). Bootcamp - Go On Air (Slides mode auto)."}
+        <div className="mb-5">
+          <LiveLogoRibbon />
         </div>
 
         {data.pitchQueue?.active && data.pitchQueue.current ? (
-          <div className="mb-4 rounded-2xl border border-amber-400/40 bg-amber-400/10 px-5 py-4">
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-700">
-              {isFr ? "Mini Demo - en scène" : "Mini Demo - on stage"}
+          <motion.div
+            layout
+            className="mb-4 overflow-hidden rounded-[1.75rem] border border-amber-300/70 bg-gradient-to-br from-amber-50 to-white px-5 py-5 shadow-sm"
+          >
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-800">
+              {isFr ? "Mini Demo · en scène" : "Mini Demo · on stage"}
             </p>
-            <p className="mt-1 text-3xl font-black text-[color:var(--hk-text)]">
+            <p className="mt-1 text-3xl font-black text-[#0c0a09]">
               {data.pitchQueue.current.teamName}
             </p>
-            <p className="mt-1 text-sm text-[color:var(--hk-muted)]">
-              {isFr ? "Passage" : "Slot"} {data.pitchQueue.position}/{data.pitchQueue.total}
+            <p className="mt-1 text-sm text-[#78716c]">
+              {isFr ? "Passage" : "Slot"} {data.pitchQueue.position}/
+              {data.pitchQueue.total}
               {data.pitchQueue.next
                 ? ` · ${isFr ? "Suivante" : "Next"}: ${data.pitchQueue.next.teamName}`
                 : ""}
             </p>
-          </div>
+          </motion.div>
         ) : null}
+
         <div className="grid gap-4 sm:grid-cols-3">
-          <div className="rounded-2xl bg-[color:var(--hk-surface,var(--fd-card))] p-5 shadow-sm ring-1 ring-[color:var(--hk-border,var(--fd-border))] sm:col-span-1">
-            <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--hk-muted,var(--fd-muted))]">
+          <div className="rounded-[1.5rem] border border-[#E5E5E0] bg-white p-5 shadow-sm sm:col-span-1">
+            <p className="text-[11px] font-bold uppercase tracking-wide text-[#a8a29e]">
               {isFr ? "Présents" : "Inside"}
             </p>
-            <p className="mt-1 text-5xl font-black text-[color:var(--hk-text,var(--fd-text))]">
+            <p className="mt-1 text-5xl font-black text-[#1F6B43]">
               {data.presence.inside}
             </p>
-            <p className="mt-3 text-xs text-[color:var(--hk-muted,var(--fd-muted))]">
+            <p className="mt-3 text-xs text-[#78716c]">
               {isFr ? "Dehors" : "Outside"} {data.presence.outside} ·{" "}
               {isFr ? "Absents" : "Absent"} {data.presence.absent} · Paid{" "}
               {data.presence.paid}
             </p>
           </div>
-          <div className="rounded-2xl bg-[color:var(--hk-surface,var(--fd-card))] p-5 shadow-sm ring-1 ring-[color:var(--hk-border,var(--fd-border))] sm:col-span-2">
-            <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--hk-muted,var(--fd-muted))]">
+          <div className="rounded-[1.5rem] border border-[#E5E5E0] bg-white p-5 shadow-sm sm:col-span-2">
+            <p className="text-[11px] font-bold uppercase tracking-wide text-[#a8a29e]">
               {isFr ? "Créneau actuel" : "Current slot"}
             </p>
             {data.program?.slot ? (
               <>
-                <p className="mt-2 text-2xl font-black text-[color:var(--hk-text,var(--fd-text))]">
+                <p className="mt-2 text-2xl font-black text-[#0c0a09]">
                   {isFr
                     ? data.program.slot.activityFr
-                    : data.program.slot.activityEn ?? data.program.slot.activityFr}
+                    : (data.program.slot.activityEn ??
+                      data.program.slot.activityFr)}
                 </p>
-                <p className="mt-1 text-sm text-[color:var(--hk-muted,var(--fd-muted))]">
+                <p className="mt-1 text-sm text-[#78716c]">
                   {isFr
                     ? data.program.labelFr
-                    : data.program.labelEn ?? data.program.labelFr}{" "}
+                    : (data.program.labelEn ?? data.program.labelFr)}{" "}
                   · {data.program.slot.time}
                 </p>
               </>
             ) : (
-              <p className="mt-2 text-lg text-[color:var(--hk-muted,var(--fd-muted))]">
+              <p className="mt-2 text-lg text-[#78716c]">
                 {isFr ? "Hors programme" : "Off schedule"}
               </p>
             )}
@@ -429,16 +492,16 @@ export function HackathonLiveClient({ initial }: { initial: LivePayload }) {
                   {data.announcement.pinned ? (
                     <HkStatusPill tone="accent">Pin</HkStatusPill>
                   ) : null}
-                  <p className="text-xl font-black text-[color:var(--hk-text,var(--fd-text))]">
+                  <p className="text-xl font-black text-[#0c0a09]">
                     {data.announcement.title}
                   </p>
                 </div>
-                <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-[color:var(--hk-muted,var(--fd-muted))]">
+                <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-[#57534e]">
                   {data.announcement.body}
                 </p>
               </div>
             ) : (
-              <p className="text-sm text-[color:var(--hk-muted,var(--fd-muted))]">
+              <p className="text-sm text-[#78716c]">
                 {isFr ? "Aucune annonce." : "No announcement."}
               </p>
             )}
@@ -446,7 +509,7 @@ export function HackathonLiveClient({ initial }: { initial: LivePayload }) {
 
           <HkSection title={isFr ? "Équipes en mentorat" : "Teams in mentoring"}>
             {data.mentoring.length === 0 ? (
-              <p className="text-sm text-[color:var(--hk-muted,var(--fd-muted))]">
+              <p className="text-sm text-[#78716c]">
                 {isFr ? "Aucune session active." : "No active session."}
               </p>
             ) : (
@@ -454,15 +517,10 @@ export function HackathonLiveClient({ initial }: { initial: LivePayload }) {
                 {data.mentoring.map((m) => (
                   <li
                     key={m.id}
-                    className="rounded-xl bg-[color:var(--hk-page,var(--fd-bg))] px-3 py-2.5 text-sm"
+                    className="rounded-xl border border-[#E5E5E0] bg-[#FAFAF8] px-3 py-2.5 text-sm"
                   >
-                    <span className="font-bold text-[color:var(--hk-text,var(--fd-text))]">
-                      {m.teamName}
-                    </span>
-                    <span className="text-[color:var(--hk-muted,var(--fd-muted))]">
-                      {" "}
-                      - {m.topic}
-                    </span>
+                    <span className="font-bold text-[#0c0a09]">{m.teamName}</span>
+                    <span className="text-[#78716c]"> - {m.topic}</span>
                   </li>
                 ))}
               </ul>
@@ -483,7 +541,7 @@ export function HackathonLiveClient({ initial }: { initial: LivePayload }) {
           }
         >
           {data.teams.length === 0 ? (
-            <p className="text-sm text-[color:var(--hk-muted,var(--fd-muted))]">
+            <p className="text-sm text-[#78716c]">
               {isFr ? "Aucune équipe." : "No teams yet."}
             </p>
           ) : (
@@ -491,13 +549,11 @@ export function HackathonLiveClient({ initial }: { initial: LivePayload }) {
               {data.teams.map((t) => (
                 <div
                   key={t.id}
-                  className="rounded-xl bg-[color:var(--hk-page,var(--fd-bg))] px-3.5 py-3 ring-1 ring-[color:var(--hk-border,var(--fd-border))]"
+                  className="rounded-xl border border-[#E5E5E0] bg-white px-3.5 py-3"
                 >
-                  <p className="font-bold text-[color:var(--hk-text,var(--fd-text))]">
-                    {t.name}
-                  </p>
-                  <p className="mt-1 text-xs text-[color:var(--hk-muted,var(--fd-muted))]">
-                    {isFr ? t.labelFr : t.labelEn ?? t.labelFr}
+                  <p className="font-bold text-[#0c0a09]">{t.name}</p>
+                  <p className="mt-1 text-xs text-[#78716c]">
+                    {isFr ? t.labelFr : (t.labelEn ?? t.labelFr)}
                   </p>
                 </div>
               ))}

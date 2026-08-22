@@ -89,8 +89,8 @@ const STAGE_PARTNERS: Array<{
   },
   {
     slug: "tyts",
-    name: "TYTS",
-    speakerHint: "l'équipe TYTS",
+    name: "TYTS · The Young Technology Service",
+    speakerHint: "l'équipe The Young Technology Service",
   },
   {
     slug: "kilelo",
