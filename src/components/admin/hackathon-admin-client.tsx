@@ -882,6 +882,50 @@ export function HackathonAdminClient({ mode = "admin" }: Props) {
       ) : null}
 
       {tab === "teams" ? (
+        <div className="space-y-3">
+          {isAdmin && editionId ? (
+            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] p-3">
+              <button
+                type="button"
+                disabled={busy}
+                className={adminCls.btnPrimary}
+                onClick={async () => {
+                  setBusy(true);
+                  setErr(null);
+                  try {
+                    const res = await fetch(
+                      "/api/admin/hackathon/certificates",
+                      {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ editionId }),
+                      },
+                    );
+                    const json = (await res.json()) as {
+                      error?: string;
+                      participationCreated?: number;
+                      distinctionCreated?: number;
+                      skipped?: number;
+                    };
+                    if (!res.ok) {
+                      setErr(json.error ?? "certificates_failed");
+                      return;
+                    }
+                    setErr(
+                      `Certificats : ${json.participationCreated ?? 0} participation, ${json.distinctionCreated ?? 0} distinction (${json.skipped ?? 0} ignorés).`,
+                    );
+                  } finally {
+                    setBusy(false);
+                  }
+                }}
+              >
+                Émettre certificats (participation + podium)
+              </button>
+              <p className="text-xs text-[color:var(--fd-muted)]">
+                Visible dans Mon espace · URL /hackathon/certificat/[code]
+              </p>
+            </div>
+          ) : null}
         <ul className="space-y-2">
           {rows.map((r) => (
             <li key={String(r.id)} className={adminCls.card}>
@@ -951,6 +995,7 @@ export function HackathonAdminClient({ mode = "admin" }: Props) {
           ))}
           {!rows.length ? <p className={adminCls.empty}>Aucune équipe.</p> : null}
         </ul>
+        </div>
       ) : null}
 
       {tab === "announcements" ? (

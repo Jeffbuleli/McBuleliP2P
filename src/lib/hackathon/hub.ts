@@ -9,9 +9,20 @@ import {
 } from "@/db";
 import { passPublicUrl } from "@/lib/hackathon/access";
 import { buildAwardsLeaderboard } from "@/lib/hackathon/awards";
+import { listCertificatesForRegistration } from "@/lib/hackathon/certificates";
 import { listPublishedChallenges } from "@/lib/hackathon/challenges";
 import { hackathonProgramDays } from "@/lib/hackathon/event-content";
 import type { HubPayloadOk } from "@/lib/hackathon/hub-types";
+import {
+  INCUBATION_CONTACT_EMAIL,
+  INCUBATION_INTRO_EN,
+  INCUBATION_INTRO_FR,
+  INCUBATION_STEPS,
+  INCUBATION_WHATSAPP_PATH,
+  INCUBATION_WINDOW_EN,
+  INCUBATION_WINDOW_FR,
+  incubationEligible,
+} from "@/lib/hackathon/incubation";
 import { payLaterPublicUrl } from "@/lib/hackathon/service";
 import {
   getFormationMeta,
@@ -87,6 +98,10 @@ export async function buildHubPayload(userId: string): Promise<
 
   const formationMeta = await getFormationMeta(edition.id);
   const awards = await buildAwardsLeaderboard(edition.id);
+  const certificates = reg
+    ? await listCertificatesForRegistration(reg.id)
+    : [];
+  const teamStatus = teamBundle?.team.status ?? null;
 
   return {
     edition: {
@@ -201,6 +216,33 @@ export async function buildHubPayload(userId: string): Promise<
     })),
     program: hackathonProgramDays(),
     awards,
+    certificates: certificates.map((c) => ({
+      id: c.id,
+      kind: c.kind,
+      rank: c.rank,
+      titleFr: c.titleFr,
+      titleEn: c.titleEn,
+      verifyCode: c.verifyCode,
+      verifyUrl: c.verifyUrl,
+      printUrl: c.printUrl,
+      issuedAt: c.issuedAt,
+    })),
+    incubation: {
+      eligible: incubationEligible(teamStatus),
+      windowFr: INCUBATION_WINDOW_FR,
+      windowEn: INCUBATION_WINDOW_EN,
+      introFr: INCUBATION_INTRO_FR,
+      introEn: INCUBATION_INTRO_EN,
+      contactEmail: INCUBATION_CONTACT_EMAIL,
+      whatsappPath: INCUBATION_WHATSAPP_PATH,
+      steps: INCUBATION_STEPS.map((s) => ({
+        id: s.id,
+        titleFr: s.titleFr,
+        titleEn: s.titleEn,
+        bodyFr: s.bodyFr,
+        bodyEn: s.bodyEn,
+      })),
+    },
   };
 }
 

@@ -172,6 +172,7 @@ export const HACKATHON_PHASES: HackathonPhase[] = [
     bodyFr: "Accompagnement post-événement des projets sélectionnés.",
     bodyEn: "Post-event support for selected projects.",
     actors: ["teams", "partners", "organizers", "sponsors"],
+    hubAnchor: "phase-incubation",
   },
 ];
 
@@ -210,7 +211,7 @@ export function deriveCurrentPhaseId(input: {
   }
   if (status === "submitted") return "pitch";
   if (status === "presented") return "deliberation";
-  if (status === "judged") return "awards";
+  if (status === "judged") return "incubation";
   return "development";
 }
 

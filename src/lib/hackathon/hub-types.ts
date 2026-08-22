@@ -130,4 +130,31 @@ export type HubPayloadOk = {
     scoredTeamCount: number;
     updatedAt: string;
   };
+  certificates: Array<{
+    id: string;
+    kind: "participation" | "distinction";
+    rank: number | null;
+    titleFr: string;
+    titleEn: string;
+    verifyCode: string;
+    verifyUrl: string;
+    printUrl: string;
+    issuedAt: string;
+  }>;
+  incubation: {
+    eligible: boolean;
+    windowFr: string;
+    windowEn: string;
+    introFr: string;
+    introEn: string;
+    contactEmail: string;
+    whatsappPath: string;
+    steps: Array<{
+      id: string;
+      titleFr: string;
+      titleEn: string;
+      bodyFr: string;
+      bodyEn: string;
+    }>;
+  };
 };

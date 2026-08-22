@@ -130,6 +130,15 @@ export const HACKATHON_SURFACES: HackathonSurface[] = [
     day1Primary: true,
   },
   {
+    id: "certificat",
+    href: "/hackathon/espace#phase-certificates",
+    labelFr: "Certificats",
+    labelEn: "Certificates",
+    jobFr: "Émission + impression PDF (Mon espace)",
+    jobEn: "Issue + PDF print (My hub)",
+    audience: "ops",
+  },
+  {
     id: "budget",
     href: "/hackathon/budget",
     labelFr: "Budget",

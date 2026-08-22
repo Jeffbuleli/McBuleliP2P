@@ -32,7 +32,7 @@ describe("hackathon event consistency (single day)", () => {
 
   it("ops surfaces include runbook and live essentials", () => {
     const ids = new Set(HACKATHON_SURFACES.map((s) => s.id));
-    for (const id of ["runbook", "live", "mc", "jury", "espace", "infos"]) {
+    for (const id of ["runbook", "live", "mc", "jury", "espace", "infos", "certificat"]) {
       assert.ok(ids.has(id), `missing surface: ${id}`);
     }
   });
@@ -40,5 +40,16 @@ describe("hackathon event consistency (single day)", () => {
   it("team messages API is wired to teams module", () => {
     assert.equal(typeof listTeamMessages, "function");
     assert.equal(typeof postTeamMessage, "function");
+  });
+
+  it("P3 incubation + MC hydrate helpers exist", async () => {
+    const { incubationEligible } = await import("@/lib/hackathon/incubation");
+    const { ensureMcSessionHydrated, getMcSession } = await import(
+      "@/lib/hackathon/mc-state"
+    );
+    assert.equal(incubationEligible("judged"), true);
+    assert.equal(incubationEligible("building"), false);
+    assert.equal(typeof ensureMcSessionHydrated, "function");
+    assert.equal(typeof getMcSession, "function");
   });
 });

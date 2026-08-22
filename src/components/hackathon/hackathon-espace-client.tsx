@@ -1106,6 +1106,116 @@ export function HackathonEspaceClient({
             </p>
           </HkSection>
         </div>
+
+        <div id="phase-certificates" className="mt-5">
+          <HkSection
+            title={isFr ? "Certificats" : "Certificates"}
+            hint={
+              isFr
+                ? "Documents officiels McBuleli - imprimables en PDF."
+                : "Official McBuleli documents - printable as PDF."
+            }
+          >
+            {(data.certificates ?? []).length > 0 ? (
+              <ul className="space-y-2">
+                {(data.certificates ?? []).map((c) => (
+                  <li
+                    key={c.id}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-[color:var(--hk-page)] px-3.5 py-3 ring-1 ring-[color:var(--hk-border)]"
+                  >
+                    <div>
+                      <p className="font-bold text-[color:var(--hk-text)]">
+                        {isFr ? c.titleFr : c.titleEn}
+                      </p>
+                      <p className="text-xs text-[color:var(--hk-muted)]">
+                        {c.verifyCode}
+                        {c.rank ? ` · #${c.rank}` : ""}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Link
+                        href={c.verifyUrl}
+                        className="rounded-lg bg-[color:var(--hk-accent)] px-3 py-1.5 text-xs font-bold text-white"
+                      >
+                        {isFr ? "Voir" : "View"}
+                      </Link>
+                      <a
+                        href={c.printUrl}
+                        className="rounded-lg px-3 py-1.5 text-xs font-bold ring-1 ring-[color:var(--hk-border)]"
+                      >
+                        PDF
+                      </a>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-[color:var(--hk-muted)]">
+                {isFr
+                  ? "Vos certificats apparaîtront ici après la remise des prix (émission par l'organisation)."
+                  : "Your certificates will appear here after awards (issued by organizers)."}
+              </p>
+            )}
+          </HkSection>
+        </div>
+
+        <div id="phase-incubation" className="mt-5">
+          <HkSection
+            title={isFr ? "Incubation" : "Incubation"}
+            hint={
+              isFr
+                ? data.incubation?.windowFr
+                : data.incubation?.windowEn
+            }
+          >
+            {data.incubation?.eligible ? (
+              <>
+                <p className="text-sm text-[color:var(--hk-muted)]">
+                  {isFr
+                    ? data.incubation.introFr
+                    : data.incubation.introEn}
+                </p>
+                <ol className="mt-3 space-y-2">
+                  {(data.incubation.steps ?? []).map((step, i) => (
+                    <li
+                      key={step.id}
+                      className="rounded-xl bg-[color:var(--hk-page)] px-3.5 py-3 ring-1 ring-[color:var(--hk-border)]"
+                    >
+                      <p className="font-bold text-[color:var(--hk-text)]">
+                        {i + 1}. {isFr ? step.titleFr : step.titleEn}
+                      </p>
+                      <p className="mt-1 text-sm text-[color:var(--hk-muted)]">
+                        {isFr ? step.bodyFr : step.bodyEn}
+                      </p>
+                    </li>
+                  ))}
+                </ol>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <a
+                    href={`mailto:${data.incubation.contactEmail}?subject=Incubation%20McBuleli%20Hackathon`}
+                    className="rounded-lg bg-[color:var(--hk-accent)] px-3 py-2 text-xs font-bold text-white"
+                  >
+                    {isFr ? "Contacter McBuleli" : "Contact McBuleli"}
+                  </a>
+                  <a
+                    href={data.incubation.whatsappPath}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="rounded-lg px-3 py-2 text-xs font-bold ring-1 ring-[color:var(--hk-border)]"
+                  >
+                    WhatsApp
+                  </a>
+                </div>
+              </>
+            ) : (
+              <p className="text-sm text-[color:var(--hk-muted)]">
+                {isFr
+                  ? "Le parcours incubation s'ouvre après le pitch / la délibération."
+                  : "The incubation track opens after pitch / deliberation."}
+              </p>
+            )}
+          </HkSection>
+        </div>
         </div>
       </HkPage>
     </HkShell>

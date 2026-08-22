@@ -3,6 +3,7 @@ import { z } from "zod";
 import { MC_CUES } from "@/lib/hackathon/mc-day";
 import {
   clearMcTimer,
+  ensureMcSessionHydrated,
   getMcSession,
   mcControlKeyOk,
   requestMcVoiceReplay,
@@ -32,6 +33,7 @@ function keyFrom(req: Request, bodyKey?: string) {
 
 export async function GET(req: Request) {
   try {
+    await ensureMcSessionHydrated();
     const url = new URL(req.url);
     const includeCues = url.searchParams.get("cues") === "1";
     const publicState = toMcPublic(getMcSession());
@@ -81,6 +83,7 @@ const postSchema = actionSchema.and(z.object({ key: z.string().optional() }));
 
 export async function POST(req: Request) {
   try {
+    await ensureMcSessionHydrated();
     const json = await req.json().catch(() => null);
     const parsed = postSchema.safeParse(json);
     if (!parsed.success) {
@@ -111,8 +114,7 @@ export async function POST(req: Request) {
       }
       case "timer": {
         const cur = toMcPublic(getMcSession());
-        const seconds =
-          a.seconds ?? cur.cue.timerSeconds ?? 10 * 60;
+        const seconds = a.seconds ?? cur.cue.timerSeconds ?? 10 * 60;
         session = startMcTimer(seconds);
         break;
       }

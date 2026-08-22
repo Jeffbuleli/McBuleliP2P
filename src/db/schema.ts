@@ -5239,4 +5239,61 @@ export const rdpiSurveyResponses = pgTable(
   ],
 );
 
+/**
+ * MC operator session persistence (survives web process restart on VPS).
+ * Singleton row id = "default" (single-room event).
+ */
+export const hackathonMcSessions = pgTable("hackathon_mc_sessions", {
+  id: varchar("id", { length: 32 }).primaryKey().default("default"),
+  state: jsonb("state").$type<Record<string, unknown>>().notNull().default({}),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+/**
+ * Participant certificates (participation / podium distinction).
+ * Public verify + printable view via verify_code.
+ */
+export const hackathonCertificates = pgTable(
+  "hackathon_certificates",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    editionId: uuid("edition_id")
+      .notNull()
+      .references(() => hackathonEditions.id, { onDelete: "cascade" }),
+    registrationId: uuid("registration_id")
+      .notNull()
+      .references(() => hackathonRegistrations.id, { onDelete: "cascade" }),
+    teamId: uuid("team_id").references(() => hackathonTeams.id, {
+      onDelete: "set null",
+    }),
+    /** participation | distinction */
+    kind: varchar("kind", { length: 24 }).notNull(),
+    /** 1 | 2 | 3 for distinction; null for participation */
+    rank: integer("rank"),
+    holderName: varchar("holder_name", { length: 160 }).notNull(),
+    teamName: varchar("team_name", { length: 160 }),
+    titleFr: varchar("title_fr", { length: 200 }).notNull(),
+    titleEn: varchar("title_en", { length: 200 }).notNull(),
+    verifyCode: varchar("verify_code", { length: 32 }).notNull().unique(),
+    issuedAt: timestamp("issued_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    meta: jsonb("meta").$type<Record<string, unknown> | null>(),
+  },
+  (t) => [
+    index("hackathon_certificates_edition_idx").on(t.editionId, t.issuedAt),
+    index("hackathon_certificates_registration_idx").on(
+      t.registrationId,
+      t.kind,
+    ),
+    uniqueIndex("hackathon_certificates_reg_kind_uidx").on(
+      t.registrationId,
+      t.kind,
+    ),
+  ],
+);
+
 export * from "./game-schema";
