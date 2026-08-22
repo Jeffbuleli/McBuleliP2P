@@ -89,13 +89,13 @@ export type EventHeroStats = {
 /** Edition year shown on the landing. */
 export const HACKATHON_EVENT_YEAR = 2026;
 
-export const HACKATHON_EVENT_DAYS = 2;
+export const HACKATHON_EVENT_DAYS = 1;
 
 /** Confirmed schedule at Silikin Village. */
 export const HACKATHON_DATES_CONFIRMED = true;
 
-export const HACKATHON_DATES_LABEL_FR = "28-29 Août 2026";
-export const HACKATHON_DATES_LABEL_EN = "August 28-29, 2026";
+export const HACKATHON_DATES_LABEL_FR = "28 Août 2026";
+export const HACKATHON_DATES_LABEL_EN = "August 28, 2026";
 
 export const HACKATHON_HOURS_LABEL_FR = "08h00 - 17h00";
 export const HACKATHON_HOURS_LABEL_EN = "8:00 AM - 5:00 PM";
@@ -117,18 +117,8 @@ export const HACKATHON_SCHEDULE_SUMMARY = [
     dateEn: "August 28, 2026",
     hoursFr: "08h00 - 17h00",
     hoursEn: "8:00 AM - 5:00 PM",
-    focusFr: "Bootcamp & Build",
-    focusEn: "Bootcamp & Build",
-  },
-  {
-    weekdayFr: "Samedi",
-    weekdayEn: "Saturday",
-    dateFr: "29 Août 2026",
-    dateEn: "August 29, 2026",
-    hoursFr: "08h00 - 17h00",
-    hoursEn: "8:00 AM - 5:00 PM",
-    focusFr: "Build & Demo Day",
-    focusEn: "Build & Demo Day",
+    focusFr: "Bootcamp, Build & Mini Demo Day",
+    focusEn: "Bootcamp, Build & Mini Demo Day",
   },
 ] as const;
 
@@ -683,6 +673,7 @@ export function hackathonFeaturedMentors(): HackathonFeaturedMentor[] {
 export const HACKATHON_NAV: EventNavItem[] = [
   { id: "register", labelFr: "Participer", labelEn: "Join" },
   { id: "espace", labelFr: "Mon espace", labelEn: "My hub", href: "/hackathon/espace" },
+  { id: "infos", labelFr: "Infos pratiques", labelEn: "Practical info", href: "/hackathon/infos" },
   { id: "defis", labelFr: "Défis", labelEn: "Challenges" },
   { id: "prix", labelFr: "Prix", labelEn: "Prizes" },
   { id: "programme", labelFr: "Programme", labelEn: "Program" },
@@ -731,27 +722,6 @@ export function hackathonProgramDays(): ProgramDay[] {
         { time: "15h45 - 16h00", activityFr: "Préparation pitch & démo", activityEn: "Pitch & demo prep", icon: "presentation" },
         { time: "16h00 - 16h40", activityFr: "Mini Demo Day (pitches courts)", activityEn: "Mini Demo Day (short pitches)", icon: "jury" },
         { time: "16h40 - 17h00", activityFr: "Synthèse McBuleli AI puis clôture Mme Patty B.", activityEn: "McBuleli AI wrap then close by Mrs Patty B.", icon: "clock" },
-      ],
-    },
-    {
-      day: 2,
-      labelFr: "Samedi 29 Août - Build & Demo Day",
-      labelEn: "Saturday, August 29 - Build & Demo Day",
-      subtitleFr: "08h00 - 17h00 · Silikin Village",
-      subtitleEn: "8:00 AM - 5:00 PM · Silikin Village",
-      slots: [
-        { time: "08h00 - 08h20", activityFr: "Accueil et rappel des objectifs", activityEn: "Welcome & goals recap", icon: "welcome" },
-        { time: "08h20 - 10h30", activityFr: "Développement intensif des prototypes", activityEn: "Intensive prototype development", icon: "build" },
-        { time: "10h30 - 10h45", activityFr: "Pause café", activityEn: "Coffee break", icon: "coffee" },
-        { time: "10h45 - 12h15", activityFr: "Mentorat tech & business (pendant le build)", activityEn: "Tech & business mentoring (during build)", icon: "help" },
-        { time: "12h15 - 12h45", activityFr: "Préparation pitch & démo", activityEn: "Pitch & demo prep", icon: "presentation" },
-        { time: "12h45 - 13h45", activityFr: "Pause déjeuner & networking", activityEn: "Lunch break & networking", icon: "network" },
-        { time: "13h45 - 14h00", activityFr: "Ouverture Demo Day", activityEn: "Demo Day opening", icon: "mic" },
-        { time: "14h00 - 15h40", activityFr: "Pitch + demo + questions jury", activityEn: "Pitch + demo + jury Q&A", icon: "jury" },
-        { time: "15h40 - 15h55", activityFr: "Pause courte", activityEn: "Short break", icon: "coffee" },
-        { time: "15h55 - 16h20", activityFr: "Délibération du jury", activityEn: "Jury deliberation", icon: "partners" },
-        { time: "16h20 - 16h45", activityFr: "Remise des prix et annonce des gagnants", activityEn: "Awards ceremony & winners", icon: "award" },
-        { time: "16h45 - 17h00", activityFr: "Certificats, photos et clôture officielle", activityEn: "Certificates, photos & official close", icon: "media" },
       ],
     },
   ];
@@ -852,15 +822,15 @@ export function hackathonFaqNav(isFr: boolean): { q: string; a: string }[] {
     return [
       {
         q: "Qui peut participer ?",
-        a: "Étudiants, développeurs, designers, entrepreneurs et profils pluridisciplinaires. Les débutants sont les bienvenus grâce au bootcamp Jour 1.",
+        a: "Étudiants, développeurs, designers, entrepreneurs et profils pluridisciplinaires. Les débutants sont les bienvenus grâce au bootcamp du matin.",
       },
       {
         q: "Faut-il une équipe ?",
-        a: "Non. Inscrivez-vous seul ou en équipe - la formation des équipes a lieu le Jour 1.",
+        a: "Non. Inscrivez-vous seul ou en équipe - la formation des équipes a lieu le matin.",
       },
       {
         q: "Le hackathon est-il gratuit ?",
-        a: "Non. Tarif unique : 100 USD pour le programme complet (2 Journées, 08h00-17h00). Des bourses partenaires peuvent être annoncées.",
+        a: "Non. Tarif unique : 100 USD pour la journée complète (08h00-17h00). Des bourses partenaires peuvent être annoncées.",
       },
       {
         q: "Quels sont les critères ?",
@@ -887,15 +857,15 @@ export function hackathonFaqNav(isFr: boolean): { q: string; a: string }[] {
   return [
     {
       q: "Who can participate?",
-      a: "Students, developers, designers, founders and multidisciplinary profiles. Beginners welcome thanks to Day 1 bootcamp.",
+      a: "Students, developers, designers, founders and multidisciplinary profiles. Beginners welcome thanks to the morning bootcamp.",
     },
     {
       q: "Do I need a team?",
-      a: "No. Register solo or as a team - team formation happens on Day 1.",
+      a: "No. Register solo or as a team - team formation happens in the morning.",
     },
     {
       q: "Is the hackathon free?",
-      a: "No. Single price: 100 USD for the full 2-day program (8:00 AM-5:00 PM). Partner scholarships may be announced.",
+      a: "No. Single price: 100 USD for the full day (8:00 AM-5:00 PM). Partner scholarships may be announced.",
     },
     {
       q: "What are the criteria?",
@@ -923,13 +893,13 @@ export function hackathonFaqNav(isFr: boolean): { q: string; a: string }[] {
 export function aboutBlurb(isFr: boolean): { title: string; body: string } {
   if (isFr) {
     return {
-      title: "2 Journées pour apprendre, builder et pitcher",
-      body: `Bootcamp Vibe Coding avec Cursor, Claude et Codex, hackathon intensif et Demo Day au ${HACKATHON_VENUE_SHORT} (${HACKATHON_DATES_LABEL_FR}, ${HACKATHON_HOURS_LABEL_FR}). Format professionnel pensé pour la RDC - visibilité partenaires et expérience fluide pour les équipes.`,
+      title: "1 Journée pour apprendre, builder et pitcher",
+      body: `Bootcamp Vibe Coding avec Cursor, Claude et Codex, build intensif et Mini Demo Day au ${HACKATHON_VENUE_SHORT} (${HACKATHON_DATES_LABEL_FR}, ${HACKATHON_HOURS_LABEL_FR}). Format professionnel pensé pour la RDC - visibilité partenaires et expérience fluide pour les équipes.`,
     };
   }
   return {
-    title: "2 days to learn, build and pitch",
-    body: `Vibe Coding bootcamp with Cursor, Claude and Codex, intensive hackathon and Demo Day at ${HACKATHON_VENUE_SHORT} (${HACKATHON_DATES_LABEL_EN}, ${HACKATHON_HOURS_LABEL_EN}). A professional format built for DRC - partner visibility and a smooth experience for teams.`,
+    title: "1 day to learn, build and pitch",
+    body: `Vibe Coding bootcamp with Cursor, Claude and Codex, intensive build and Mini Demo Day at ${HACKATHON_VENUE_SHORT} (${HACKATHON_DATES_LABEL_EN}, ${HACKATHON_HOURS_LABEL_EN}). A professional format built for DRC - partner visibility and a smooth experience for teams.`,
   };
 }
 
@@ -943,7 +913,7 @@ export function eventDateLabel(
 
 /** Pack / access label for tickets, pay UI, emails. */
 export function hackathonPackLabel(isFr: boolean, withPrice?: number): string {
-  const base = isFr ? "Programme 2 Jours" : "2-day program";
+  const base = isFr ? "Programme 1 Jour" : "1-day program";
   if (withPrice == null) return base;
   return isFr ? `${base} · ${withPrice} USD` : `${base} · ${withPrice} USD`;
 }

@@ -449,8 +449,8 @@ export function HackathonBudgetClient({
           </h1>
           <p className="mt-4 max-w-lg text-base leading-relaxed text-[color:var(--hk-muted)]">
             {isFr
-              ? "Hackathon Kinshasa · 28-29 août 2026 · Silikin Village. Vous gagnez scène, formation et réseau - nous partageons le coût réel de l'événement."
-              : "Hackathon Kinshasa · 28-29 Aug 2026 · Silikin Village. You gain stage, training and network - we share the real cost of the event."}{" "}
+              ? "Hackathon Kinshasa · 28 août 2026 · Silikin Village. Vous gagnez scène, formation et réseau - nous partageons le coût réel de l'événement."
+              : "Hackathon Kinshasa · 28 Aug 2026 · Silikin Village. You gain stage, training and network - we share the real cost of the event."}{" "}
             <a
               href={SILIKIN_BOOKING_URL}
               target="_blank"
@@ -625,8 +625,8 @@ export function HackathonBudgetClient({
             </p>
             <p className="mt-2 text-sm leading-relaxed text-[color:var(--hk-muted)]">
               {isFr
-                ? "Postes fréquents pour un hackathon de 2 jours - pas encore chiffrés dans le total ci-dessus."
-                : "Common line items for a 2-day hackathon - not yet priced in the total above."}
+                ? "Postes fréquents pour un hackathon d'une journée - pas encore chiffrés dans le total ci-dessus."
+                : "Common line items for a 1-day hackathon - not yet priced in the total above."}
             </p>
             <ul className="mt-4 space-y-2">
               {BUDGET_SUGGESTIONS.map((s) => (

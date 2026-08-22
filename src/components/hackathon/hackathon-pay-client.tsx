@@ -22,6 +22,7 @@ import {
   isValidCodMsisdn,
   normalizeCodPhoneNumber,
 } from "@/lib/freshpay/normalize-phone";
+import { hackathonPackLabel } from "@/lib/hackathon/event-content";
 
 type Props = {
   token: string;
@@ -150,7 +151,7 @@ export function HackathonPayClient({
     }
   }
 
-  const packLabel = isFr ? "Programme 2 Jours" : "2-day program";
+  const packLabel = hackathonPackLabel(isFr);
 
   const expiresLabel = holdExpiresAt
     ? new Date(holdExpiresAt).toLocaleString(isFr ? "fr-FR" : "en-US", {

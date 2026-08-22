@@ -8,6 +8,7 @@ import {
   hackathonSubmissions,
 } from "@/db";
 import { passPublicUrl } from "@/lib/hackathon/access";
+import { buildAwardsLeaderboard } from "@/lib/hackathon/awards";
 import { listPublishedChallenges } from "@/lib/hackathon/challenges";
 import { hackathonProgramDays } from "@/lib/hackathon/event-content";
 import type { HubPayloadOk } from "@/lib/hackathon/hub-types";
@@ -85,6 +86,7 @@ export async function buildHubPayload(userId: string): Promise<
       : null;
 
   const formationMeta = await getFormationMeta(edition.id);
+  const awards = await buildAwardsLeaderboard(edition.id);
 
   return {
     edition: {
@@ -198,6 +200,7 @@ export async function buildHubPayload(userId: string): Promise<
       createdAt: m.createdAt.toISOString(),
     })),
     program: hackathonProgramDays(),
+    awards,
   };
 }
 

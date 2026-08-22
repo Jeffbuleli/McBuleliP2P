@@ -1,9 +1,9 @@
 /**
- * Prévision budgétaire Hackathon Kinshasa - 28-29 août 2026.
+ * Prévision budgétaire Hackathon Kinshasa - 28 août 2026.
  * Base partenaires : 2 places / org, hors SanJa, Binance, Silikin, pawaPay.
  */
 
-export const HACKATHON_BUDGET_DAYS = 2;
+export const HACKATHON_BUDGET_DAYS = 1;
 
 /** Calendrier réservation Silikin (OfficeRnD). */
 export const SILIKIN_BOOKING_URL =

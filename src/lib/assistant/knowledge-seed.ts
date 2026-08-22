@@ -148,7 +148,7 @@ export const ASSISTANT_KNOWLEDGE_SEED: KnowledgeSeed[] = [
     locale: "all",
     title: "McBuleli Hackathon Kinshasa",
     content:
-      "McBuleli Hackathon is McBuleli's AI / Vibe Coding hackathon in Kinshasa. Confirmed dates: Friday 28 – Saturday 29 August 2026, 08:00–17:00 (Kinshasa time). Venue: Silikin Village, 63 Ave Colonel Mondjiba. Format: one full 2-day program (not separate day packs) - Day 1 Bootcamp & Build (Cursor, Claude, Codex), Day 2 Build & Demo Day with jury. Price: 100 USD. Public page: https://mcbuleli.org/hackathon. Four competition tracks (~3 teams each): FinTech & inclusion, AgroTech & real economy (ILOKWE), Health & education, GovTech / media / cybersecurity. Featured ecosystem partners include pawaPay (Mobile Money), Binance (demo APIs), ILOKWE GROUP (Prix ILOKWE / Gold), and Silikin Village (venue). Register on the page; partners/sponsors use the Partner and Sponsor forms. Ambassadors create a promo code at https://mcbuleli.org/hackathon/ambassadeur.",
+      "McBuleli Hackathon is McBuleli's AI / Vibe Coding hackathon in Kinshasa. Confirmed date: Friday 28 August 2026, 08:00–17:00 (Kinshasa time). Venue: Silikin Village, 63 Ave Colonel Mondjiba. Format: one full day - Bootcamp & Build, Mini Demo Day with jury and awards. Price: 100 USD. Public page: https://mcbuleli.org/hackathon. Four competition tracks (~3 teams each): FinTech & inclusion, AgroTech & real economy (ILOKWE), Health & education, GovTech / media / cybersecurity. Featured ecosystem partners include pawaPay (Mobile Money), Binance (demo APIs), ILOKWE GROUP (Prix ILOKWE / Gold), and Silikin Village (venue). Register on the page; partners/sponsors use the Partner and Sponsor forms. Ambassadors create a promo code at https://mcbuleli.org/hackathon/ambassadeur.",
     tags: [
       "hackathon",
       "kinshasa",
@@ -158,9 +158,7 @@ export const ASSISTANT_KNOWLEDGE_SEED: KnowledgeSeed[] = [
       "claude",
       "codex",
       "28 août",
-      "29 août",
       "august 28",
-      "august 29",
     ],
     priority: 98,
   },
@@ -170,7 +168,7 @@ export const ASSISTANT_KNOWLEDGE_SEED: KnowledgeSeed[] = [
     locale: "all",
     title: "Hackathon registration, payment and ticket",
     content:
-      "On https://mcbuleli.org/hackathon: confirm your email first, then either reserve a seat (Pré-inscrire) or Register & pay. Seat holds do NOT auto-expire; McBuleli sends payment reminders every 24 hours with a magic pay link. Payment: Orange Money, M-Pesa or Airtel Money via pawaPay - phone must start with 243 (same format as Wallet MoMo). USDT for hackathon is coming soon. Single pack price: 100 USD for the full 2-day program. After payment you receive a QR ticket/badge by email; open it at /hackathon/pass/[code] (legacy /hackathon/ticket/[code] redirects there). You can switch FR/EN on ticket and badge pages with the language flags. A McBuleli account is created with the registration email.",
+      "On https://mcbuleli.org/hackathon: confirm your email first, then either reserve a seat (Pré-inscrire) or Register & pay. Seat holds do NOT auto-expire; McBuleli sends payment reminders every 24 hours with a magic pay link. Payment: Orange Money, M-Pesa or Airtel Money via pawaPay - phone must start with 243 (same format as Wallet MoMo). USDT for hackathon is coming soon. Single pack price: 100 USD for the full day. After payment you receive a QR ticket/badge by email; open it at /hackathon/pass/[code] (legacy /hackathon/ticket/[code] redirects there). You can switch FR/EN on ticket and badge pages with the language flags. A McBuleli account is created with the registration email.",
     tags: [
       "hackathon",
       "payment",

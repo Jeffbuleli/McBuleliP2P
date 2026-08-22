@@ -142,12 +142,13 @@ export function McOperatorConsole({
         <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-200/80">
           Projecteur salle (mode actuel : {session.projectorMode})
         </p>
-        <div className="mt-3 grid grid-cols-3 gap-2">
+        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
           {(
             [
               ["mc", "MC"],
               ["slides", "Slides"],
               ["wall", "Mur"],
+              ["awards", "Prix"],
             ] as const
           ).map(([mode, label]) => (
             <button
@@ -166,8 +167,8 @@ export function McOperatorConsole({
           ))}
         </div>
         <p className="mt-2 text-xs text-white/55">
-          Matin = MC. Bootcamp = Slides (On Air auto). Build = Mur. Le laptop
-          projecteur reste sur /hackathon/live.
+          Matin = MC. Bootcamp = Slides (On Air auto). Build = Mur. Mini Demo =
+          MC. Podium = Prix. Le laptop projecteur reste sur /hackathon/live.
         </p>
       </section>
 

@@ -14,12 +14,13 @@ import {
   isValidCodMsisdn,
   normalizeCodPhoneNumber,
 } from "@/lib/freshpay/normalize-phone";
+import { hackathonPackLabel } from "@/lib/hackathon/event-content";
 
 type Props = {
   editionId: string;
   /** @deprecated Prefer live useI18n(); kept for call-site compatibility. */
   locale?: "fr" | "en";
-  /** Unique 2-day program price (USD) */
+  /** Unique 1-day program price (USD) */
   priceUsd: string;
   registrationOpen: boolean;
 };
@@ -505,8 +506,8 @@ function HackathonParticipantFormInner({
         </p>
         <p className="mt-1 text-lg font-semibold text-[color:var(--fd-text)]">
           {isFr
-            ? `Programme 2 Jours - ${effectivePriceUsd} USD`
-            : `2-day program - ${effectivePriceUsd} USD`}
+            ? `${hackathonPackLabel(true)} - ${effectivePriceUsd} USD`
+            : `${hackathonPackLabel(false)} - ${effectivePriceUsd} USD`}
           {lockedPromo && lockedPromo.priceUsd !== priceUsd ? (
             <span className="ml-2 text-sm font-medium text-[color:var(--fd-muted)] line-through">
               {priceUsd} USD

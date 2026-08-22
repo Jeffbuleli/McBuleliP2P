@@ -88,8 +88,8 @@ export function HackathonOpsHub() {
           </h1>
           <p className="max-w-2xl text-sm leading-relaxed text-white/65">
             {isFr
-            ? "Un seul point d'entrée. Projecteur = /hackathon/live (modes MC / Slides / Mur). Mon espace = builders. Chat = partenaires."
-            : "Single entry point. Projector = /hackathon/live (MC / Slides / Wall modes). My hub = builders. Chat = partners."}
+              ? "Point d'entrée unique. Projecteur = /hackathon/live. Builders = Mon espace. Partenaires = Chat. Infos = /hackathon/infos."
+              : "Single entry point. Projector = /hackathon/live. Builders = My hub. Partners = Chat. Info = /hackathon/infos."}
           </p>
         </header>
 

@@ -18,6 +18,20 @@ import type {
   ProjectorMode,
 } from "@/lib/hackathon/mc-state";
 
+type AwardsEntry = {
+  rank: number;
+  teamId: string;
+  teamName: string;
+  score: number;
+  jurorCount: number;
+};
+
+type AwardsPayload = {
+  entries: AwardsEntry[];
+  scoredTeamCount: number;
+  updatedAt: string;
+};
+
 type LivePresentation = {
   status: "live";
   deckSlug: string;
@@ -65,6 +79,16 @@ type LivePayload = {
   presentation?: LivePresentation | null;
   projectorMode?: ProjectorMode;
   mc?: McSessionPublic;
+  awards?: AwardsPayload;
+  pitchQueue?: {
+    entries: Array<{ teamId: string; teamName: string }>;
+    currentIndex: number;
+    active: boolean;
+    current: { teamId: string; teamName: string } | null;
+    next: { teamId: string; teamName: string } | null;
+    total: number;
+    position: number;
+  };
   serverTime: string;
 };
 
@@ -134,6 +158,69 @@ function LiveProjector({
   );
 }
 
+function LiveAwardsPodium({
+  awards,
+  isFr,
+}: {
+  awards: AwardsPayload;
+  isFr: boolean;
+}) {
+  const medals = ["🥇", "🥈", "🥉"] as const;
+  return (
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-[#06140f] px-6 py-10 text-center text-white">
+      <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-amber-300/90">
+        {isFr ? "McBuleli Hackathon 2026 · Prix" : "McBuleli Hackathon 2026 · Awards"}
+      </p>
+      <h1 className="mt-4 max-w-3xl text-4xl font-black tracking-tight sm:text-5xl">
+        {isFr ? "Podium" : "Podium"}
+      </h1>
+      {awards.entries.length === 0 ? (
+        <p className="mt-8 max-w-lg text-sm text-white/60">
+          {isFr
+            ? "En attente des scores jury verrouillés sur /hackathon/jury."
+            : "Waiting for locked jury scores on /hackathon/jury."}
+        </p>
+      ) : (
+        <ol className="mt-10 w-full max-w-2xl space-y-4 text-left">
+          {awards.entries.map((entry) => (
+            <li
+              key={entry.teamId}
+              className={`flex items-center gap-4 rounded-2xl border px-5 py-4 ${
+                entry.rank === 1
+                  ? "border-amber-400/50 bg-amber-400/10"
+                  : "border-white/10 bg-white/[0.04]"
+              }`}
+            >
+              <span className="text-3xl">{medals[entry.rank - 1] ?? `#${entry.rank}`}</span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-xl font-black">{entry.teamName}</p>
+                <p className="text-xs text-white/50">
+                  {entry.jurorCount}{" "}
+                  {isFr ? "juré(s)" : "juror(s)"}
+                </p>
+              </div>
+              <p className="font-mono text-3xl font-black tabular-nums text-emerald-300">
+                {entry.score}
+              </p>
+            </li>
+          ))}
+        </ol>
+      )}
+      <p className="mt-8 text-xs text-white/40">
+        {isFr
+          ? `${awards.scoredTeamCount} équipe(s) notée(s)`
+          : `${awards.scoredTeamCount} team(s) scored`}
+      </p>
+      <Link
+        href="/hackathon/mc"
+        className="mt-6 text-sm font-semibold text-emerald-300 hover:underline"
+      >
+        {isFr ? "Console MC" : "MC console"}
+      </Link>
+    </div>
+  );
+}
+
 function SlidesWaiting({ isFr }: { isFr: boolean }) {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center bg-[#06140f] px-6 text-center text-white">
@@ -169,6 +256,7 @@ export function HackathonLiveClient({ initial }: { initial: LivePayload }) {
   const onAir = data.presentation?.status === "live";
   const showMc = mode === "mc" && Boolean(data.mc);
   const showSlides = mode === "slides";
+  const showAwards = mode === "awards";
 
   useEffect(() => {
     setNow(Date.now());
@@ -177,7 +265,8 @@ export function HackathonLiveClient({ initial }: { initial: LivePayload }) {
   }, []);
 
   useEffect(() => {
-    const intervalMs = showMc || showSlides ? 1500 : 15000;
+    const intervalMs =
+      showMc || showSlides || showAwards ? 1500 : 15000;
     const poll = setInterval(async () => {
       try {
         const res = await fetch("/api/hackathon/live", { cache: "no-store" });
@@ -189,7 +278,7 @@ export function HackathonLiveClient({ initial }: { initial: LivePayload }) {
       }
     }, intervalMs);
     return () => clearInterval(poll);
-  }, [showMc, showSlides]);
+  }, [showMc, showSlides, showAwards]);
 
   const countdown = useMemo(
     () => formatCountdown(data.edition.submissionDeadlineAt, now),
@@ -203,6 +292,10 @@ export function HackathonLiveClient({ initial }: { initial: LivePayload }) {
     }
     return [...map.entries()];
   }, [data.teams]);
+
+  if (showAwards && data.awards) {
+    return <LiveAwardsPodium awards={data.awards} isFr={isFr} />;
+  }
 
   if (showMc && data.mc) {
     return (
@@ -268,9 +361,26 @@ export function HackathonLiveClient({ initial }: { initial: LivePayload }) {
       >
         <div className="mb-4 rounded-2xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-[color:var(--hk-text)]">
           {isFr
-            ? "Mode projecteur : Mur. Matin → Console MC (mode MC). Bootcamp → Passer On Air (mode Slides auto)."
-            : "Projector mode: Wall. Morning → MC console (MC mode). Bootcamp → Go On Air (Slides mode auto)."}
+            ? "Mode projecteur : Mur. Matin - Console MC (mode MC). Bootcamp - Passer On Air (mode Slides auto)."
+            : "Projector mode: Wall. Morning - MC console (MC mode). Bootcamp - Go On Air (Slides mode auto)."}
         </div>
+
+        {data.pitchQueue?.active && data.pitchQueue.current ? (
+          <div className="mb-4 rounded-2xl border border-amber-400/40 bg-amber-400/10 px-5 py-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-700">
+              {isFr ? "Mini Demo - en scène" : "Mini Demo - on stage"}
+            </p>
+            <p className="mt-1 text-3xl font-black text-[color:var(--hk-text)]">
+              {data.pitchQueue.current.teamName}
+            </p>
+            <p className="mt-1 text-sm text-[color:var(--hk-muted)]">
+              {isFr ? "Passage" : "Slot"} {data.pitchQueue.position}/{data.pitchQueue.total}
+              {data.pitchQueue.next
+                ? ` · ${isFr ? "Suivante" : "Next"}: ${data.pitchQueue.next.teamName}`
+                : ""}
+            </p>
+          </div>
+        ) : null}
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="rounded-2xl bg-[color:var(--hk-surface,var(--fd-card))] p-5 shadow-sm ring-1 ring-[color:var(--hk-border,var(--fd-border))] sm:col-span-1">
             <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--hk-muted,var(--fd-muted))]">

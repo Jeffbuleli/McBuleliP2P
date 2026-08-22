@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { adminCls } from "@/components/admin/admin-ui";
 import { HackathonLeadsTab } from "@/components/admin/hackathon-leads-tab";
-import { HackathonCampaignsTab } from "@/components/admin/hackathon-campaigns-tab";
+import { HackathonPitchQueuePanel } from "@/components/admin/hackathon-pitch-queue-panel";
 
 type Edition = {
   id: string;
@@ -68,7 +68,8 @@ type Tab =
   | "chat_orgs"
   | "teams"
   | "announcements"
-  | "mentors";
+  | "mentors"
+  | "pitch";
 
 type Props = {
   /** admin = full ops; stats = read-only lists for agents */
@@ -99,7 +100,7 @@ export function HackathonAdminClient({ mode = "admin" }: Props) {
       return;
     }
     if (!editionId) return;
-    if (tab === "leads" || tab === "campaigns") return;
+    if (tab === "pitch" || tab === "leads" || tab === "campaigns") return;
     if (tab === "promo") {
       const res = await fetch(
         `/api/admin/hackathon?tab=promo&editionId=${encodeURIComponent(editionId)}`,
@@ -381,6 +382,7 @@ export function HackathonAdminClient({ mode = "admin" }: Props) {
         { id: "leads", label: "Leads" },
         { id: "campaigns", label: "Campagnes" },
         { id: "teams", label: "Équipes" },
+        { id: "pitch", label: "File pitch" },
         { id: "announcements", label: "Annonces" },
         { id: "mentors", label: "Mentorat" },
         { id: "partners", label: "Partenaires" },
@@ -392,6 +394,7 @@ export function HackathonAdminClient({ mode = "admin" }: Props) {
     : [
         { id: "registrations", label: "Participants" },
         { id: "teams", label: "Équipes" },
+        { id: "pitch", label: "File pitch" },
         { id: "announcements", label: "Annonces" },
         { id: "mentors", label: "Mentorat" },
         { id: "partners", label: "Partenaires" },
@@ -1007,6 +1010,8 @@ export function HackathonAdminClient({ mode = "admin" }: Props) {
           </ul>
         </div>
       ) : null}
+
+      {tab === "pitch" ? <HackathonPitchQueuePanel /> : null}
 
       {tab === "mentors" ? (
         <ul className="space-y-2">

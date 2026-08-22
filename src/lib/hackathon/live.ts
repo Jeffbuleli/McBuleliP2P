@@ -6,10 +6,9 @@ import {
   hackathonRegistrations,
   hackathonTeams,
 } from "@/db";
-import {
-  HACKATHON_START_AT,
-  hackathonProgramDays,
-} from "@/lib/hackathon/event-content";
+import { hackathonProgramDays } from "@/lib/hackathon/event-content";
+import { buildAwardsLeaderboard } from "@/lib/hackathon/awards";
+import { getPitchQueue, toPitchQueuePublic } from "@/lib/hackathon/pitch-queue";
 import { getFeaturedEditionRow } from "@/lib/hackathon/hub";
 import { getLivePresentationPayload } from "@/lib/hackathon/slides/session";
 import {
@@ -21,10 +20,7 @@ import { getMcSession, toMcPublic } from "@/lib/hackathon/mc-state";
 
 function currentProgramSlot(now = new Date()) {
   const days = hackathonProgramDays();
-  const start = new Date(HACKATHON_START_AT);
-  const dayIndex =
-    now.getTime() < start.getTime() + 24 * 60 * 60 * 1000 ? 1 : 2;
-  const day = days.find((d) => d.day === dayIndex) ?? days[0];
+  const day = days[0];
   if (!day) return null;
 
   const hhmm = `${String(now.getHours()).padStart(2, "0")}h${String(
@@ -36,7 +32,7 @@ function currentProgramSlot(now = new Date()) {
     if (startTime <= hhmm) current = slot;
   }
   return {
-    dayIndex,
+    dayIndex: 1,
     labelFr: day.labelFr,
     labelEn: day.labelEn,
     slot: current,
@@ -125,6 +121,8 @@ export async function buildLivePayload() {
   }
 
   const mc = toMcPublic(getMcSession());
+  const awards = await buildAwardsLeaderboard(edition.id);
+  const pitchQueue = toPitchQueuePublic(getPitchQueue());
 
   return {
     edition: {
@@ -156,6 +154,8 @@ export async function buildLivePayload() {
     presentation,
     projectorMode: mc.projectorMode,
     mc,
+    awards,
+    pitchQueue,
     serverTime: new Date().toISOString(),
   };
 }

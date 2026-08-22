@@ -217,7 +217,7 @@ export function HackathonPassBadge({
       : isFr
         ? `Badge ${meta.labelFr}`
         : `${meta.labelEn} badge`;
-  const accessLabel = isFr ? "Accès 2 Jours" : "2-day access";
+  const accessLabel = isFr ? "Accès 1 Jour" : "1-day access";
   const statusLabel = roleLabel?.trim()
     ? roleLabel.trim()
     : kind === "partner"

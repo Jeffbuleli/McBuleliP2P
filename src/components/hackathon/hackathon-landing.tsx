@@ -767,8 +767,8 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
         eyebrow={isFr ? "Programme" : "Program"}
         title={
           isFr
-            ? `2 Journées · ${HACKATHON_HOURS_LABEL_FR}`
-            : `2 days · ${HACKATHON_HOURS_LABEL_EN}`
+            ? `${HACKATHON_EVENT_DAYS} ${HACKATHON_EVENT_DAYS > 1 ? "Journées" : "Journée"} · ${HACKATHON_HOURS_LABEL_FR}`
+            : `${HACKATHON_EVENT_DAYS} ${HACKATHON_EVENT_DAYS > 1 ? "days" : "day"} · ${HACKATHON_HOURS_LABEL_EN}`
         }
         subtitle={
           isFr

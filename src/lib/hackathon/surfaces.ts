@@ -40,6 +40,7 @@ export const HACKATHON_SURFACES: HackathonSurface[] = [
     jobFr: "Parcours builder : équipe, défis, livrables",
     jobEn: "Builder journey: team, challenges, deliverables",
     audience: "participant",
+    day1Primary: true,
   },
   {
     id: "chat",
@@ -107,6 +108,16 @@ export const HACKATHON_SURFACES: HackathonSurface[] = [
     jobFr: "Notation / délibération",
     jobEn: "Scoring / deliberation",
     audience: "partner",
+    day1Primary: true,
+  },
+  {
+    id: "infos",
+    href: "/hackathon/infos",
+    labelFr: "Infos pratiques",
+    labelEn: "Practical info",
+    jobFr: "Lieu, WiFi, matériel, déroulé",
+    jobEn: "Venue, WiFi, gear, schedule",
+    audience: "participant",
   },
   {
     id: "budget",
@@ -161,7 +172,8 @@ export const HACKATHON_DAY1_CHECKLIST_FR = [
   "Sur Live mode MC : cliquer une fois pour activer la voix McBuleli AI.",
   "Matin : console MC → mode MC (Patty, talks, transitions).",
   "Bootcamp : Jeff Present + Passer On Air → mode Slides auto.",
-  "Build : mode Mur. Clôture : mode MC puis Patty.",
+  "Build : mode Mur. Mini Demo : cue MC → mode MC.",
+  "Prix : cue Podium → mode Prix (top 3 jury). Clôture : Patty.",
 ] as const;
 
 export const HACKATHON_DAY1_CHECKLIST_EN = [
@@ -169,7 +181,8 @@ export const HACKATHON_DAY1_CHECKLIST_EN = [
   "On Live MC mode: click once to unlock McBuleli AI voice.",
   "Morning: MC console → MC mode (Patty, talks, transitions).",
   "Bootcamp: Jeff Present + Go On Air → Slides mode auto.",
-  "Build: Wall mode. Close: MC mode then Patty.",
+  "Build: Wall mode. Mini Demo: MC cue → MC mode.",
+  "Awards: Podium cue → Awards mode (jury top 3). Close: Patty.",
 ] as const;
 
 export function surfacesByAudience(

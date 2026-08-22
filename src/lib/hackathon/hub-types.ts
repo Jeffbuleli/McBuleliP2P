@@ -119,4 +119,15 @@ export type HubPayloadOk = {
       icon: string;
     }>;
   }>;
+  awards: {
+    entries: Array<{
+      rank: number;
+      teamId: string;
+      teamName: string;
+      score: number;
+      jurorCount: number;
+    }>;
+    scoredTeamCount: number;
+    updatedAt: string;
+  };
 };

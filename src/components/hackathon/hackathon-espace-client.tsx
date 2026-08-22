@@ -1004,29 +1004,66 @@ export function HackathonEspaceClient({
                   ? "Votre parcours de jury est terminé."
                   : "Your jury journey is complete."
                 : isFr
-                  ? "Les gagnants seront annoncés après la délibération."
-                  : "Winners will be announced after deliberation."
+                  ? "Podium mis à jour dès que le jury verrouille ses scores."
+                  : "Podium updates as soon as jury scores are locked."
             }
           >
-            <p className="text-sm text-[color:var(--hk-muted,var(--fd-muted))]">
-              {isJudged
-                ? isFr
-                  ? "Restez attentif aux annonces pour la remise des prix et les prochaines opportunités."
-                  : "Watch announcements for awards and next opportunities."
-                : isFr
-                  ? "Les annonces et le live wall partageront les résultats."
-                  : "Announcements and the live wall will share the results."}
+            {data.awards.entries.length > 0 ? (
+              <ol className="space-y-2">
+                {data.awards.entries.map((entry) => (
+                  <li
+                    key={entry.teamId}
+                    className={`flex items-center justify-between rounded-xl px-3.5 py-3 ring-1 ${
+                      data.team?.id === entry.teamId
+                        ? "bg-[color:var(--hk-soft)] ring-[color:var(--hk-accent)]"
+                        : "bg-[color:var(--hk-page)] ring-[color:var(--hk-border)]"
+                    }`}
+                  >
+                    <div>
+                      <p className="font-bold text-[color:var(--hk-text)]">
+                        #{entry.rank} {entry.teamName}
+                        {data.team?.id === entry.teamId
+                          ? isFr
+                            ? " (votre équipe)"
+                            : " (your team)"
+                          : ""}
+                      </p>
+                      <p className="text-xs text-[color:var(--hk-muted)]">
+                        {entry.jurorCount}{" "}
+                        {isFr ? "juré(s)" : "juror(s)"}
+                      </p>
+                    </div>
+                    <p className="font-mono text-xl font-black tabular-nums text-[color:var(--hk-accent)]">
+                      {entry.score}
+                    </p>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p className="text-sm text-[color:var(--hk-muted,var(--fd-muted))]">
+                {isFr
+                  ? "Les résultats apparaîtront ici après la délibération. Suivez aussi le projecteur salle."
+                  : "Results will appear here after deliberation. Also watch the room projector."}
+              </p>
+            )}
+            <p className="mt-3 text-sm text-[color:var(--hk-muted,var(--fd-muted))]">
               {unlocks.showJuryLink ? (
                 <>
-                  {" "}
                   <Link
                     href="/hackathon/jury"
                     className="font-semibold text-[color:var(--hk-accent,var(--fd-primary))] hover:underline"
                   >
                     {isFr ? "Espace jury" : "Jury space"}
                   </Link>
+                  {" · "}
                 </>
               ) : null}
+              <Link
+                href="/hackathon/live"
+                className="font-semibold text-[color:var(--hk-accent,var(--fd-primary))] hover:underline"
+              >
+                {isFr ? "Live salle" : "Room live"}
+              </Link>
             </p>
           </HkSection>
         </div>

@@ -31,8 +31,15 @@ export type McCueKind =
   | "jeff_bootcamp"
   | "teams"
   | "build_mentors"
+  | "pitch_prep"
+  | "mini_demo"
+  | "deliberation"
+  | "awards"
   | "ai_wrap"
   | "patty_close";
+
+/** Suggested projector mode when operator activates this cue (optional). */
+export type McProjectorMode = "wall" | "mc" | "slides" | "awards";
 
 export type McCue = {
   id: string;
@@ -51,6 +58,8 @@ export type McCue = {
   windowFr?: string;
   /** Suggest timer when this cue is active */
   timerSeconds?: number;
+  /** Auto-switch room projector when this cue is activated */
+  projectorMode?: McProjectorMode;
 };
 
 const STAGE_PARTNERS: Array<{
@@ -218,8 +227,65 @@ export const MC_CUES: McCue[] = [
     labelFr: "Build + mentors",
     stageLineFr:
       "Build intensif. Les partenaires mentors circulent. Levez la main : l'équipe salle vous oriente.",
-    detailFr: "Aide physique et mentorat = partenaires. Tempo = McBuleli AI.",
+    detailFr: "12h45 - 15h30 · aide terrain partenaires",
+    windowFr: "12h45 - 15h30",
+    projectorMode: "wall",
     humanScriptFr: "Rappel mentors toutes les ~30 min si besoin (bouton Rappel).",
+  },
+  {
+    id: "break-coffee-pm",
+    kind: "break",
+    labelFr: "Pause café",
+    stageLineFr: "Pause café. Reprenez souffle avant les pitches.",
+    detailFr: "15h30 - 15h45",
+    windowFr: "15h30 - 15h45",
+    humanScriptFr: "Distribution boissons. Équipes : finalisez vos démos.",
+  },
+  {
+    id: "pitch-prep",
+    kind: "pitch_prep",
+    labelFr: "Prep pitch",
+    stageLineFr:
+      "Préparation pitch et démo. Équipes : vérifiez vos liens dans Mon espace.",
+    detailFr: "15h45 - 16h00",
+    windowFr: "15h45 - 16h00",
+    projectorMode: "wall",
+    humanScriptFr: "Staff : ordre de passage prêt. Jury sur /hackathon/jury.",
+  },
+  {
+    id: "mini-demo",
+    kind: "mini_demo",
+    labelFr: "Mini Demo Day",
+    stageLineFr:
+      "Mini Demo Day : pitches courts et démonstrations. Chrono respecté.",
+    detailFr: "16h00 - 16h40 · ~5 min / équipe",
+    windowFr: "16h00 - 16h40",
+    timerSeconds: 40 * 60,
+    projectorMode: "mc",
+    humanScriptFr:
+      "Opérateur : chrono 40'. Marquer « présenté » dans admin après chaque pitch.",
+  },
+  {
+    id: "deliberation",
+    kind: "deliberation",
+    labelFr: "Délibération jury",
+    stageLineFr:
+      "Le jury délibère. Merci aux équipes pour vos prototypes.",
+    detailFr: "16h40 - 16h50 · notation sur /hackathon/jury",
+    windowFr: "16h40 - 16h50",
+    projectorMode: "wall",
+    humanScriptFr: "Jury : verrouillez vos scores. Ops : préparer mode Prix.",
+  },
+  {
+    id: "awards",
+    kind: "awards",
+    labelFr: "Podium · Prix",
+    stageLineFr: "Remise des prix McBuleli Hackathon 2026.",
+    detailFr: "16h50 - 17h00 · projecteur mode Prix",
+    windowFr: "16h50 - 17h00",
+    projectorMode: "awards",
+    humanScriptFr:
+      "Opérateur : basculer projecteur → Prix. Annoncer top 3 depuis l'écran.",
   },
   {
     id: "ai-wrap",
@@ -228,6 +294,7 @@ export const MC_CUES: McCue[] = [
     stageLineFr:
       "Merci à toutes et tous. McBuleli AI a tenu le tempo avec l'équipe. Je passe la parole à Mme Patty B. pour la clôture.",
     detailFr: MC_MAGIC_PHRASES.aiToPatty,
+    projectorMode: "mc",
     humanScriptFr: "Patty prête pour clôturer.",
   },
   {
@@ -235,9 +302,10 @@ export const MC_CUES: McCue[] = [
     kind: "patty_close",
     labelFr: "Patty · Clôture",
     stageLineFr: "Clôture · Mme Patty B.",
+    projectorMode: "mc",
     humanScriptFr: [
       "Merci aux partenaires, aux builders, à Jeff pour le bootcamp, et à McBuleli AI pour la modération.",
-      "Rappel suite éventuelle Jour 2, photos, et contacts.",
+      "Photos, contacts et suite incubation McBuleli.",
       "Bonne continuation avec McBuleli.",
     ].join(" "),
   },

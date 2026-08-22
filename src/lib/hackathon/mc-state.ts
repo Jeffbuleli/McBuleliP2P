@@ -10,7 +10,7 @@ import {
 } from "@/lib/hackathon/mc-day";
 
 /** What the single room projector (/hackathon/live) shows. */
-export type ProjectorMode = "wall" | "mc" | "slides";
+export type ProjectorMode = "wall" | "mc" | "slides" | "awards";
 
 export type McSessionState = {
   cueId: string;
@@ -104,12 +104,16 @@ function touch(partial: Partial<McSessionState>): McSessionPublic {
 
 export function setMcCueIndex(index: number): McSessionPublic {
   const cue = getMcCueAt(index);
-  return touch({
+  const partial: Partial<McSessionState> = {
     cueIndex: index,
     cueId: cue.id,
     timerEndsAt: null,
     humanOverride: false,
-  });
+  };
+  if (cue.projectorMode) {
+    partial.projectorMode = cue.projectorMode;
+  }
+  return touch(partial);
 }
 
 export function setMcCueById(id: string): McSessionPublic {

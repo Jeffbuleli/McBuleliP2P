@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { PartnerMentorQueuePanel } from "@/components/hackathon/partner-mentor-queue-panel";
 import {
   PARTNER_TALK_MINUTES,
   type PartnerDayBrief,
@@ -402,6 +403,8 @@ export function PartnerPreparationPanel({
           </button>
         </div>
       </div>
+
+      <PartnerMentorQueuePanel isFr={isFr} />
     </section>
   );
 }

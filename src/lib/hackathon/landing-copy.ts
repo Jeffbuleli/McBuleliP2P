@@ -160,7 +160,7 @@ export function expandedFaq(isFr: boolean): { q: string; a: string }[] {
       },
       {
         q: "Est-ce gratuit ?",
-        a: "Non. Tarif unique : 100 USD pour le programme complet (2 Jours). Des places partenaires / bourses peuvent être annoncées séparément.",
+        a: "Non. Tarif unique : 100 USD pour la journée complète. Des places partenaires / bourses peuvent être annoncées séparément.",
       },
       {
         q: "Quels sont les critères d’évaluation ?",
@@ -195,7 +195,7 @@ export function expandedFaq(isFr: boolean): { q: string; a: string }[] {
     },
     {
       q: "Is it free?",
-      a: "No. Single price: 100 USD for the full 2-day program. Partner seats / scholarships may be announced separately.",
+      a: "No. Single price: 100 USD for the full day. Partner seats / scholarships may be announced separately.",
     },
     {
       q: "What are the judging criteria?",

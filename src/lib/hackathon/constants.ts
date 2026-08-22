@@ -43,7 +43,7 @@ export const HACKATHON_REMINDER_HOURS = 24;
 /** @deprecated kept for older callers - holds no longer expire */
 export const HACKATHON_HOLD_HOURS = HACKATHON_REMINDER_HOURS;
 
-/** Unique ticket price (USD) for the full 2-day program */
+/** Unique ticket price (USD) for the full 1-day program */
 export const HACKATHON_PRICE_USD = "100";
 /** Default pack - single full program (no day-1-only option) */
 export const HACKATHON_DEFAULT_PACK = "full" as const;
@@ -56,36 +56,19 @@ export function defaultProgram(): HackathonProgramDay[] {
   return [
     {
       day: 1,
-      titleFr: "Jour 1 - Bootcamp, équipes & build",
-      titleEn: "Day 1 - Bootcamp, teams & build",
+      titleFr: "28 Août - Bootcamp, build & Mini Demo Day",
+      titleEn: "Aug 28 - Bootcamp, build & Mini Demo Day",
       itemsFr: [
         "Bootcamp Vibe Coding (Design Thinking, Cursor, Claude, Codex)",
         "Formation des équipes et choix des défis",
-        "Développement intensif",
-        "Mentorat pendant le build",
+        "Développement intensif et mentorat partenaires",
+        "Mini Demo Day, délibération jury et remise des prix",
       ],
       itemsEn: [
         "Vibe Coding bootcamp (Design Thinking, Cursor, Claude, Codex)",
         "Team formation and challenge selection",
-        "Intensive development",
-        "Mentoring during the build",
-      ],
-    },
-    {
-      day: 2,
-      titleFr: "Jour 2 - Build, pitch, jury & prix",
-      titleEn: "Day 2 - Build, pitch, jury & awards",
-      itemsFr: [
-        "Développement et mentorat",
-        "Pitch & démonstration (Demo Day)",
-        "Délibération du jury",
-        "Remise des prix et clôture",
-      ],
-      itemsEn: [
-        "Development and mentoring",
-        "Pitch & demo (Demo Day)",
-        "Jury deliberation",
-        "Awards and closing",
+        "Intensive development and partner mentoring",
+        "Mini Demo Day, jury deliberation and awards",
       ],
     },
   ];

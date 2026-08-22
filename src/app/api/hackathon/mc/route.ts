@@ -67,7 +67,7 @@ const actionSchema = z.discriminatedUnion("action", [
   }),
   z.object({
     action: z.literal("projector"),
-    mode: z.enum(["wall", "mc", "slides"]),
+    mode: z.enum(["wall", "mc", "slides", "awards"]),
   }),
   z.object({
     action: z.literal("voice"),

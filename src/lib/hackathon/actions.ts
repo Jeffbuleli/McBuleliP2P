@@ -235,7 +235,7 @@ export async function registerParticipant(raw: unknown) {
     return { ok: false as const, error: "no_edition", status: 404 };
   }
 
-  // Single 2-day program - ignore day1 pack from clients
+  // Single 1-day program - ignore day1 pack from clients
   const ticketPack = "full" as const;
 
   const promo = data.promoCode
