@@ -1,6 +1,6 @@
 /**
  * Browser TTS for McBuleli IA MC lines (FR).
- * Relaxed stage rhythm: slower rate, soft pitch, longer pauses; lexicon for local names.
+ * Defined rhythm: sentence chunks + short pauses; lexicon for local names.
  * Used on the room projector (/hackathon/live in MC mode).
  */
 
@@ -65,12 +65,10 @@ const PRONUNCIATION: Array<[RegExp, string]> = [
   [/–|—/g, ","],
 ];
 
-/** Slower stage presence — browsers drop syllables when rate is too high. */
-const DEFAULT_RATE = 0.72;
-/** Slightly softer than neutral. */
-const DEFAULT_PITCH = 0.96;
+const DEFAULT_RATE = 0.9;
+const DEFAULT_PITCH = 1.02;
 /** Pause between sentence chunks (ms). */
-const CHUNK_GAP_MS = 780;
+const CHUNK_GAP_MS = 420;
 
 let speakGeneration = 0;
 
