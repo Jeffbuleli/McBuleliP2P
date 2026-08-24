@@ -68,7 +68,7 @@ export async function resolveHackathonLiveMeetJoinUrl(
   url = appendJitsiUserToUrl(url, PROJECTOR_DISPLAY_NAME);
   url = appendMcbLiveReturnUrl(
     url,
-    getAppAbsoluteUrl("/hackathon/live"),
+    getAppAbsoluteUrl("/hackathon/live?endMeet=1"),
   );
 
   return { ok: true, url };

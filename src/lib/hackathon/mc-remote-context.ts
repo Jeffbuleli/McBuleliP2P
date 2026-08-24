@@ -28,6 +28,8 @@ export type McRemoteUiContext = {
   showHumanOverride: boolean;
   showProjectorModes: ProjectorMode[];
   showOnAirSlides: boolean;
+  /** Hide cue nav / jumps when Visio plein écran */
+  showCueNav: boolean;
   smartActions: McSmartAction[];
   jumpCues: McCue[];
 };
@@ -67,57 +69,67 @@ export function buildMcRemoteUiContext(
     Boolean(session.cue.timerSeconds || session.timerEndsAt);
   const showHumanOverride = mode === "mc";
 
-  const showProjectorModes: ProjectorMode[] = ["mc"];
-  if (phase.id === "partners" || session.meetSlug) {
-    showProjectorModes.push("meet");
-  }
-  if (phase.id === "bootcamp" || mode === "slides") {
-    showProjectorModes.push("slides");
-  }
-  if (phase.id === "build" || phase.id === "demo" || mode === "wall") {
-    showProjectorModes.push("wall");
-  }
-  if (phase.id === "close" || mode === "awards") {
-    showProjectorModes.push("awards");
-  }
-  if (!showProjectorModes.includes(mode)) {
-    showProjectorModes.push(mode);
-  }
-
-  const showOnAirSlides =
-    phase.id === "bootcamp" &&
-    mode === "slides" &&
-    !slidesLive;
-
   const smartActions = MC_SMART_ACTIONS.filter((a) => {
     if (a.id === "bootcamp_slides") return false;
-    if (
-      a.id === "kilelo_visio" ||
-      a.id === "kilelo_projector" ||
-      a.id === "kilelo_prepare"
-    ) {
+    // Mode Visio : un seul bouton utile — couper
+    if (mode === "meet") {
+      return a.id === "visio_off";
+    }
+    if (a.id === "kilelo_prepare" || a.id === "kilelo_visio") {
+      return false;
+    }
+    if (a.id === "kilelo_projector") {
       return phase.id === "partners" || Boolean(session.meetSlug);
     }
-    if (a.id === "visio_off") return Boolean(session.meetSlug) || mode === "meet";
+    if (a.id === "visio_off") return Boolean(session.meetSlug);
     if (a.id === "build_wall") return phase.id === "build";
     if (a.id === "podium") return phase.id === "close";
     return a.phaseId === phase.id;
   });
 
-  const phaseCueIds = phase.cueIds;
-  const curIdx = phaseCueIds.indexOf(session.cueId);
+  const showProjectorModes: ProjectorMode[] =
+    mode === "meet"
+      ? (["mc", "meet"] as ProjectorMode[])
+      : (() => {
+          const modes: ProjectorMode[] = ["mc"];
+          if (phase.id === "partners" || session.meetSlug) {
+            modes.push("meet");
+          }
+          if (phase.id === "bootcamp" || mode === "slides") {
+            modes.push("slides");
+          }
+          if (phase.id === "build" || phase.id === "demo" || mode === "wall") {
+            modes.push("wall");
+          }
+          if (phase.id === "close" || mode === "awards") {
+            modes.push("awards");
+          }
+          if (!modes.includes(mode)) modes.push(mode);
+          return modes;
+        })();
+
   const jumpCues: McCue[] = [];
-  if (phaseCueIds.length <= 5) {
-    for (const id of phaseCueIds) {
-      const c = mcCueById(id);
-      if (c) jumpCues.push(c);
-    }
-  } else if (curIdx >= 0) {
-    for (const id of phaseCueIds.slice(curIdx, curIdx + 3)) {
-      const c = mcCueById(id);
-      if (c) jumpCues.push(c);
+  if (mode !== "meet") {
+    const phaseCueIds = phase.cueIds;
+    const curIdx = phaseCueIds.indexOf(session.cueId);
+    if (phaseCueIds.length <= 5) {
+      for (const id of phaseCueIds) {
+        const c = mcCueById(id);
+        if (c) jumpCues.push(c);
+      }
+    } else if (curIdx >= 0) {
+      for (const id of phaseCueIds.slice(curIdx, curIdx + 3)) {
+        const c = mcCueById(id);
+        if (c) jumpCues.push(c);
+      }
     }
   }
+
+  const showOnAirSlides =
+    mode !== "meet" &&
+    phase.id === "bootcamp" &&
+    mode === "slides" &&
+    !slidesLive;
 
   return {
     phaseId: phase.id,
@@ -131,6 +143,7 @@ export function buildMcRemoteUiContext(
     showHumanOverride,
     showProjectorModes,
     showOnAirSlides,
+    showCueNav: mode !== "meet",
     smartActions,
     jumpCues,
   };

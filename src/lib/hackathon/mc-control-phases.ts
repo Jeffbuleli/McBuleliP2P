@@ -79,7 +79,7 @@ export const MC_SMART_ACTIONS: McSmartAction[] = [
   {
     id: "kilelo_projector",
     labelFr: "Kilelo · Visio sur Live",
-    hintFr: "1 tap · /live = visio · hôte McBuleli pas obligatoire si Kilelo est déjà en salle",
+    hintFr: "1 tap · /live = visio · Visio OFF pour couper",
     phaseId: "partners",
     variant: "sky",
   },

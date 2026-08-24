@@ -210,7 +210,7 @@ export function McOperatorConsole({
             Slides · Passer On Air
           </SwitchBtn>
         ) : null}
-        {session.meetSlug ? (
+        {session.meetSlug && session.projectorMode !== "meet" ? (
           <Link
             href={`/meet/${session.meetSlug}/host`}
             target="_blank"
@@ -222,6 +222,7 @@ export function McOperatorConsole({
         ) : null}
       </section>
 
+      {ui.showCueNav ? (
       <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
         <div className="grid grid-cols-2 gap-1.5">
           <SwitchBtn disabled={busy} onClick={() => post({ action: "step", delta: -1 })}>
@@ -301,10 +302,16 @@ export function McOperatorConsole({
               session.humanOverride ? "bg-rose-500 text-white" : ""
             }`}
           >
-            {session.humanOverride ? "Reprendre AI" : "Urgence humaine"}
+            {session.humanOverride ? "Reprendre IA" : "Urgence humaine"}
           </SwitchBtn>
         ) : null}
       </section>
+      ) : (
+        <p className="rounded-xl border border-sky-400/25 bg-sky-400/10 px-3 py-2.5 text-center text-xs text-sky-100">
+          Visio Live active · utilisez <span className="font-black">Visio OFF</span>{" "}
+          pour couper Meet et revenir au MC.
+        </p>
+      )}
 
       {ui.smartActions.length > 0 ? (
         <section className="space-y-1.5">

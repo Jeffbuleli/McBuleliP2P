@@ -1,28 +1,18 @@
 /**
- * Browser TTS for McBuleli IA MC lines (FR).
- * Defined rhythm: sentence chunks + short pauses; lexicon for local names.
- * Used on the room projector (/hackathon/live in MC mode).
+ * Browser playback for McBuleli IA MC lines (FR).
+ * Prefers OpenAI TTS (server) ; falls back to Web Speech API if unavailable.
  */
 
-/** Spoken forms so FR TTS does not mangle brand / partner names. */
+/** Spoken forms so FR TTS does not mangle brand / partner names (browser fallback). */
 const PRONUNCIATION: Array<[RegExp, string]> = [
-  // Identité IA avant le remplacement générique « McBuleli »
   [/\bMcBuleli IA\b/gi, "Mac Bouléli I A"],
   [/\bMcBuleli P2P\b/gi, "Mac Bouléli Pé deux Pé"],
   [/\bMcBuleli ISP\b/gi, "Mac Bouléli I S P"],
   [/\bMcBuleli Meet\b/gi, "Mac Bouléli Meet"],
   [/\bMcBuleli\b/gi, "Mac Bouléli"],
   [/\bSilikin\b/gi, "Silikine"],
-  // Abréviations isolées → nom complet (lisibilité scène)
-  [
-    /\bTYTS\b/g,
-    "The Young Technology Service",
-  ],
-  [
-    /\bTHE YOUNG TECHNOLOGY SERVICE\b/gi,
-    "The Young Technology Service",
-  ],
-  // RDPI : laisser tel quel quand suivi de Think Tank (déjà clair à l'oreille)
+  [/\bTYTS\b/g, "The Young Technology Service"],
+  [/\bTHE YOUNG TECHNOLOGY SERVICE\b/gi, "The Young Technology Service"],
   [/\bIA Académie\s*\/\s*CHK\b/gi, "I A Académie"],
   [/\bIA Académie\b/gi, "I A Académie"],
   [/\bCHK\b/g, "C H K"],
@@ -44,11 +34,7 @@ const PRONUNCIATION: Array<[RegExp, string]> = [
   [/\bPatty B\b/gi, "Patty Bé"],
   [/\bMme Patty B\./gi, "Madame Patty Bé"],
   [/\bMadame Patty Bé\b/gi, "Madame Patty Bé"],
-  // Ir = Ingénieur (Congo) — avant Jeff Buleli générique
-  [
-    /\bIr Jeff Buleli\b/gi,
-    "Ingénieur Jeff Bouléli",
-  ],
+  [/\bIr Jeff Buleli\b/gi, "Ingénieur Jeff Bouléli"],
   [/\bJeff Buleli\b/gi, "Jeff Bouléli"],
   [/\bAristote Mugisho\b/gi, "Aristote Moughicho"],
   [/\bRodrigue Kashara David\b/gi, "Rodrigue Kachara David"],
@@ -67,15 +53,26 @@ const PRONUNCIATION: Array<[RegExp, string]> = [
 
 const DEFAULT_RATE = 0.9;
 const DEFAULT_PITCH = 1.02;
-/** Pause between sentence chunks (ms). */
 const CHUNK_GAP_MS = 420;
 
 let speakGeneration = 0;
+let currentAudio: HTMLAudioElement | null = null;
+let currentObjectUrl: string | null = null;
 
 export function stopMcVoice() {
   speakGeneration += 1;
-  if (typeof window === "undefined" || !window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
+  if (typeof window !== "undefined" && window.speechSynthesis) {
+    window.speechSynthesis.cancel();
+  }
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.src = "";
+    currentAudio = null;
+  }
+  if (currentObjectUrl) {
+    URL.revokeObjectURL(currentObjectUrl);
+    currentObjectUrl = null;
+  }
 }
 
 function applyPronunciation(text: string): string {
@@ -86,7 +83,7 @@ function applyPronunciation(text: string): string {
   return out.replace(/\s+/g, " ").trim();
 }
 
-/** Split into speakable chunks for a measured stage rhythm. */
+/** Split into speakable chunks for browser TTS fallback. */
 export function splitMcSpeechChunks(text: string): string[] {
   const normalized = applyPronunciation(text);
   if (!normalized) return [];
@@ -94,7 +91,7 @@ export function splitMcSpeechChunks(text: string): string[] {
     .split(/(?<=[.!?…])\s+|(?<=:)\s+|(?<=;)\s+/)
     .map((p) => p.trim())
     .filter(Boolean);
-  if (parts.length <= 1 && normalized.length > 90) {
+  if (parts.length <= 1 && normalized.length > 140) {
     return normalized
       .split(/(?<=,)\s+/)
       .map((p) => p.trim())
@@ -106,16 +103,14 @@ export function splitMcSpeechChunks(text: string): string[] {
 function pickFrVoice(): SpeechSynthesisVoice | null {
   if (typeof window === "undefined" || !window.speechSynthesis) return null;
   const voices = window.speechSynthesis.getVoices();
-  /** Prefer warm / soft FR voices before more formal male defaults. */
   const prefer = [
-    /amélie|amelie/i,
-    /audrey/i,
-    /marie/i,
-    /denise/i,
-    /hortense/i,
-    /google.*fr.*female/i,
     /google.*fr/i,
     /thomas/i,
+    /amélie|amelie/i,
+    /denise/i,
+    /audrey/i,
+    /hortense/i,
+    /marie/i,
   ];
   for (const re of prefer) {
     const hit = voices.find((v) => /^fr[-_]/i.test(v.lang) && re.test(v.name));
@@ -153,9 +148,82 @@ function wait(ms: number, gen: number): Promise<void> {
   });
 }
 
+async function playOpenAiAudio(
+  text: string,
+  gen: number,
+  opts?: {
+    onChunk?: (i: number, total: number) => void;
+    onDone?: () => void;
+  },
+): Promise<boolean> {
+  const res = await fetch("/api/hackathon/live/tts", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ text }),
+  });
+  if (!res.ok) return false;
+  if (gen !== speakGeneration) return true;
+
+  const blob = await res.blob();
+  if (gen !== speakGeneration) return true;
+
+  const url = URL.createObjectURL(blob);
+  currentObjectUrl = url;
+  const audio = new Audio(url);
+  currentAudio = audio;
+  opts?.onChunk?.(0, 1);
+
+  await new Promise<void>((resolve) => {
+    audio.onended = () => resolve();
+    audio.onerror = () => resolve();
+    void audio.play().catch(() => resolve());
+  });
+
+  if (currentObjectUrl === url) {
+    URL.revokeObjectURL(url);
+    currentObjectUrl = null;
+  }
+  if (currentAudio === audio) currentAudio = null;
+  if (gen === speakGeneration) opts?.onDone?.();
+  return true;
+}
+
+async function playBrowserFallback(
+  text: string,
+  gen: number,
+  opts?: {
+    rate?: number;
+    pitch?: number;
+    onChunk?: (i: number, total: number) => void;
+    onDone?: () => void;
+  },
+): Promise<void> {
+  const chunks = splitMcSpeechChunks(text);
+  if (!chunks.length) {
+    opts?.onDone?.();
+    return;
+  }
+  if (typeof window === "undefined" || !window.speechSynthesis) {
+    opts?.onDone?.();
+    return;
+  }
+  window.speechSynthesis.cancel();
+  const voice = pickFrVoice();
+  const rate = opts?.rate ?? DEFAULT_RATE;
+  const pitch = opts?.pitch ?? DEFAULT_PITCH;
+
+  for (let i = 0; i < chunks.length; i++) {
+    if (gen !== speakGeneration) return;
+    opts?.onChunk?.(i, chunks.length);
+    await speakChunk(chunks[i]!, { rate, pitch, voice });
+    if (gen !== speakGeneration) return;
+    if (i < chunks.length - 1) await wait(CHUNK_GAP_MS, gen);
+  }
+  if (gen === speakGeneration) opts?.onDone?.();
+}
+
 /**
- * Speak a stage line with pronunciation fixes and paced chunk gaps.
- * Returns false if TTS unavailable / empty.
+ * Speak a stage line via OpenAI TTS when available, else browser FR voice.
  */
 export function speakMcLine(
   text: string,
@@ -166,34 +234,31 @@ export function speakMcLine(
     onDone?: () => void;
   },
 ): boolean {
-  if (typeof window === "undefined" || !window.speechSynthesis) return false;
-  const chunks = splitMcSpeechChunks(text);
-  if (!chunks.length) return false;
+  if (typeof window === "undefined") return false;
+  const trimmed = text.trim();
+  if (!trimmed) return false;
 
   const gen = ++speakGeneration;
-  window.speechSynthesis.cancel();
-
-  const voice = pickFrVoice();
-  const rate = opts?.rate ?? DEFAULT_RATE;
-  const pitch = opts?.pitch ?? DEFAULT_PITCH;
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio = null;
+  }
 
   void (async () => {
-    for (let i = 0; i < chunks.length; i++) {
-      if (gen !== speakGeneration) return;
-      opts?.onChunk?.(i, chunks.length);
-      await speakChunk(chunks[i]!, { rate, pitch, voice });
-      if (gen !== speakGeneration) return;
-      if (i < chunks.length - 1) {
-        await wait(CHUNK_GAP_MS, gen);
-      }
+    try {
+      const ok = await playOpenAiAudio(trimmed, gen, opts);
+      if (ok) return;
+    } catch {
+      /* fall through */
     }
-    if (gen === speakGeneration) opts?.onDone?.();
+    if (gen !== speakGeneration) return;
+    await playBrowserFallback(trimmed, gen, opts);
   })();
 
   return true;
 }
 
-/** Some browsers load voices async. */
 export function ensureMcVoicesLoaded(): Promise<void> {
   if (typeof window === "undefined" || !window.speechSynthesis) {
     return Promise.resolve();

@@ -291,13 +291,43 @@ export function HackathonLiveClient({ initial }: { initial: LivePayload }) {
   const isFr = useHkLocale();
   const [data, setData] = useState(initial);
   const [now, setNow] = useState(0);
+  const [endingMeet, setEndingMeet] = useState(false);
 
   const mode: ProjectorMode = data.projectorMode ?? "wall";
   const onAir = data.presentation?.status === "live";
   const showMc = mode === "mc" && Boolean(data.mc);
-  const showMeet = mode === "meet" && Boolean(data.mc?.meetSlug);
+  const showMeet =
+    !endingMeet && mode === "meet" && Boolean(data.mc?.meetSlug);
   const showSlides = mode === "slides";
   const showAwards = mode === "awards";
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const sp = new URLSearchParams(window.location.search);
+    if (sp.get("endMeet") !== "1") return;
+    setEndingMeet(true);
+    void (async () => {
+      try {
+        await fetch("/api/hackathon/live/meet-end", { method: "POST" });
+        sp.delete("endMeet");
+        const q = sp.toString();
+        window.history.replaceState(
+          {},
+          "",
+          `/hackathon/live${q ? `?${q}` : ""}`,
+        );
+        const res = await fetch("/api/hackathon/live", { cache: "no-store" });
+        if (res.ok) {
+          const json = await res.json();
+          if (!json.error) setData(json);
+        }
+      } catch {
+        /* ignore */
+      } finally {
+        setEndingMeet(false);
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     setNow(Date.now());
@@ -336,6 +366,17 @@ export function HackathonLiveClient({ initial }: { initial: LivePayload }) {
 
   if (showAwards && data.awards) {
     return <LiveAwardsPodium awards={data.awards} isFr={isFr} />;
+  }
+
+  if (endingMeet) {
+    return (
+      <div className="flex min-h-dvh flex-col items-center justify-center bg-[#050a08] px-4 text-white">
+        <span className="h-10 w-10 animate-spin rounded-full border-2 border-white/20 border-t-emerald-400" />
+        <p className="mt-4 text-sm text-white/70">
+          {isFr ? "Fermeture de la visio…" : "Closing video…"}
+        </p>
+      </div>
+    );
   }
 
   if (showMeet && data.mc?.meetSlug) {
