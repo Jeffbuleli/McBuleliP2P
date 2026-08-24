@@ -188,7 +188,7 @@ export const HACKATHON_SURFACES: HackathonSurface[] = [
 
 export const HACKATHON_DAY1_CHECKLIST_FR = [
   "Projecteur unique = /hackathon/live (ne change plus d'URL).",
-  "Sur Live mode MC : cliquer une fois pour activer la voix McBuleli AI.",
+  "Sur Live mode MC : cliquer une fois pour activer la voix McBuleli IA.",
   "Matin : console MC → mode MC (Patty, talks, transitions).",
   "Kilelo visio : Jeancy sur /meet/kilelo-hackathon-live · ops /host → son salle · Live reste MC.",
   "Bootcamp : Jeff Present + Passer On Air → mode Slides auto.",
@@ -198,7 +198,7 @@ export const HACKATHON_DAY1_CHECKLIST_FR = [
 
 export const HACKATHON_DAY1_CHECKLIST_EN = [
   "Single projector = /hackathon/live (do not change the URL).",
-  "On Live MC mode: click once to unlock McBuleli AI voice.",
+  "On Live MC mode: click once to unlock McBuleli IA voice.",
   "Morning: MC console → MC mode (Patty, talks, transitions).",
   "Kilelo remote: Jeancy on /meet/kilelo-hackathon-live · ops /host → room audio · Live stays MC.",
   "Bootcamp: Jeff Present + Go On Air → Slides mode auto.",

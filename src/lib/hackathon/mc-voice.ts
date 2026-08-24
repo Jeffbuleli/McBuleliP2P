@@ -1,14 +1,16 @@
 /**
- * Browser TTS for McBuleli AI MC lines (FR).
- * Defined rhythm: sentence chunks + short pauses; lexicon for local names.
+ * Browser TTS for McBuleli IA MC lines (FR).
+ * Relaxed stage rhythm: slower rate, soft pitch, longer pauses; lexicon for local names.
  * Used on the room projector (/hackathon/live in MC mode).
  */
 
 /** Spoken forms so FR TTS does not mangle brand / partner names. */
 const PRONUNCIATION: Array<[RegExp, string]> = [
-  // Produits avant le remplacement générique « McBuleli »
+  // Identité IA avant le remplacement générique « McBuleli »
+  [/\bMcBuleli IA\b/gi, "Mac Bouléli I A"],
   [/\bMcBuleli P2P\b/gi, "Mac Bouléli Pé deux Pé"],
   [/\bMcBuleli ISP\b/gi, "Mac Bouléli I S P"],
+  [/\bMcBuleli Meet\b/gi, "Mac Bouléli Meet"],
   [/\bMcBuleli\b/gi, "Mac Bouléli"],
   [/\bSilikin\b/gi, "Silikine"],
   // Abréviations isolées → nom complet (lisibilité scène)
@@ -29,6 +31,7 @@ const PRONUNCIATION: Array<[RegExp, string]> = [
   [/\bMontanaPay\b/gi, "Montana Pay"],
   [/\bKIMIA Service\b/gi, "Kimia Service"],
   [/\bKIMIA\b/g, "Kimia"],
+  [/\bILOKWE GROUP\b/gi, "Ilokoué Group"],
   [/\bILOKWE\b/gi, "Ilokoué"],
   [/\bpawaPay\b/gi, "Pawa Pay"],
   [/\bBinance\b/gi, "Binance"],
@@ -40,10 +43,21 @@ const PRONUNCIATION: Array<[RegExp, string]> = [
   [/\bCodex\b/gi, "Codex"],
   [/\bPatty B\b/gi, "Patty Bé"],
   [/\bMme Patty B\./gi, "Madame Patty Bé"],
+  [/\bMadame Patty Bé\b/gi, "Madame Patty Bé"],
+  // Ir = Ingénieur (Congo) — avant Jeff Buleli générique
+  [
+    /\bIr Jeff Buleli\b/gi,
+    "Ingénieur Jeff Bouléli",
+  ],
   [/\bJeff Buleli\b/gi, "Jeff Bouléli"],
   [/\bAristote Mugisho\b/gi, "Aristote Moughicho"],
+  [/\bRodrigue Kashara David\b/gi, "Rodrigue Kachara David"],
+  [/\bMike Mulopo\b/gi, "Mike Mulopo"],
+  [/\bDelly Montana\b/gi, "Delly Montana"],
+  [/\bChristian Ikwele\b/gi, "Christian Ikwélé"],
   [/\bAaron Nsomone\b/gi, "Aaron Nsomoné"],
   [/\bJeancy Kabangu\b/gi, "Djéancy Kabangou"],
+  [/\bMr\b/g, "Monsieur"],
   [/\bCyber Alert DRC\b/gi, "Cyber Alert D R C"],
   [/\bSafeFind\b/gi, "Safe Find"],
   [/\bAfrica Insight\b/gi, "Africa Insight"],
@@ -51,10 +65,12 @@ const PRONUNCIATION: Array<[RegExp, string]> = [
   [/–|—/g, ","],
 ];
 
-const DEFAULT_RATE = 0.9;
-const DEFAULT_PITCH = 1.02;
+/** Slower than default — relaxed, unhurried stage presence. */
+const DEFAULT_RATE = 0.84;
+/** Slightly softer than neutral. */
+const DEFAULT_PITCH = 0.96;
 /** Pause between sentence chunks (ms). */
-const CHUNK_GAP_MS = 420;
+const CHUNK_GAP_MS = 620;
 
 let speakGeneration = 0;
 
@@ -80,7 +96,7 @@ export function splitMcSpeechChunks(text: string): string[] {
     .split(/(?<=[.!?…])\s+|(?<=:)\s+|(?<=;)\s+/)
     .map((p) => p.trim())
     .filter(Boolean);
-  if (parts.length <= 1 && normalized.length > 140) {
+  if (parts.length <= 1 && normalized.length > 120) {
     return normalized
       .split(/(?<=,)\s+/)
       .map((p) => p.trim())
@@ -92,14 +108,16 @@ export function splitMcSpeechChunks(text: string): string[] {
 function pickFrVoice(): SpeechSynthesisVoice | null {
   if (typeof window === "undefined" || !window.speechSynthesis) return null;
   const voices = window.speechSynthesis.getVoices();
+  /** Prefer warm / soft FR voices before more formal male defaults. */
   const prefer = [
+    /amélie|amelie/i,
+    /audrey/i,
+    /marie/i,
+    /denise/i,
+    /hortense/i,
+    /google.*fr.*female/i,
     /google.*fr/i,
     /thomas/i,
-    /amélie|amelie/i,
-    /denise/i,
-    /audrey/i,
-    /hortense/i,
-    /marie/i,
   ];
   for (const re of prefer) {
     const hit = voices.find((v) => /^fr[-_]/i.test(v.lang) && re.test(v.name));

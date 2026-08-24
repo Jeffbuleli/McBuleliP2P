@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Scène · McBuleli AI MC",
+  title: "Scène · McBuleli IA MC",
   robots: { index: false, follow: false },
 };
 

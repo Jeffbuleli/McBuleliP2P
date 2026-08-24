@@ -92,9 +92,28 @@ describe("hackathon event consistency (single day)", () => {
     assert.ok(intro >= 0 && stack === intro + 1 && rules === stack + 1);
     const who = MC_CUES[intro];
     const tech = MC_CUES[stack];
+    assert.match(who.stageLineFr, /McBuleli IA/);
     assert.match(who.stageLineFr, /vision|mission/i);
     assert.match(tech.stageLineFr, /P2P/);
     assert.match(tech.stageLineFr, /SafeFind/);
     assert.match(tech.stageLineFr, /Africa Insight/);
+  });
+
+  it("partner presenters and Jeff handoff are set for stage", async () => {
+    const { MC_CUES, MC_MAGIC_PHRASES } = await import(
+      "@/lib/hackathon/mc-day"
+    );
+    const bySlug = (slug: string) =>
+      MC_CUES.find((c) => c.id === `partner-${slug}-call`);
+    assert.match(bySlug("montana-pay")!.partnerPresenterFr ?? "", /Delly Montana/);
+    assert.match(
+      bySlug("ia-academie-chk")!.partnerPresenterFr ?? "",
+      /Rodrigue Kashara David/,
+    );
+    assert.match(bySlug("kimia")!.partnerPresenterFr ?? "", /Mike Mulopo/);
+    assert.match(bySlug("ilokwe")!.partnerPresenterFr ?? "", /Christian Ikwele/);
+    assert.match(MC_MAGIC_PHRASES.aiToJeff, /Ir Jeff Buleli/);
+    assert.match(MC_MAGIC_PHRASES.aiToJeff, /fondateur et développeur principal/);
+    assert.match(MC_MAGIC_PHRASES.humanToAi, /McBuleli IA/);
   });
 });

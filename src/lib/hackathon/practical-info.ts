@@ -75,7 +75,7 @@ export const HACKATHON_PRACTICAL_SECTIONS: PracticalSection[] = [
     titleEn: "Day flow",
     itemsFr: [
       "08h30 - Accueil et badges",
-      "09h-10h20 - Talks partenaires modérés par McBuleli AI",
+      "09h-10h20 - Talks partenaires modérés par McBuleli IA",
       "10h30 - Bootcamp Vibe Coding (Jeff Buleli)",
       "11h30 - Formation équipes et choix des défis (Mon espace)",
       "12h45-15h30 - Build intensif + mentorat partenaires",
@@ -84,7 +84,7 @@ export const HACKATHON_PRACTICAL_SECTIONS: PracticalSection[] = [
     ],
     itemsEn: [
       "8:30 AM - Welcome and badges",
-      "9:00-10:20 AM - Partner talks moderated by McBuleli AI",
+      "9:00-10:20 AM - Partner talks moderated by McBuleli IA",
       "10:30 AM - Vibe Coding bootcamp (Jeff Buleli)",
       "11:30 AM - Team formation and challenges (My hub)",
       "12:45-3:30 PM - Intensive build + partner mentoring",

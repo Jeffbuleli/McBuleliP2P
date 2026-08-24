@@ -173,7 +173,7 @@ export function McStageDisplay({
           className="absolute inset-x-4 top-4 z-20 rounded-2xl border border-[#1F6B43]/25 bg-white/95 px-4 py-3 text-left shadow-lg shadow-[#1F6B43]/10 backdrop-blur-sm sm:inset-x-auto sm:right-6 sm:top-6 sm:max-w-sm"
         >
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#1F6B43]">
-            Voix McBuleli AI
+            Voix McBuleli IA
           </p>
           <p className="mt-1 text-sm font-semibold text-[#111]">
             Cliquer une fois pour activer le son sur ce projecteur
@@ -203,7 +203,7 @@ export function McStageDisplay({
           />
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#1F6B43]">
-              McBuleli AI
+              McBuleli IA
             </p>
             <p className="mt-0.5 text-sm text-[#78716c]">
               Modération · Silikin Village

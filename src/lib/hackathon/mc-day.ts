@@ -1,5 +1,5 @@
 /**
- * McBuleli AI MC / moderator cues for Day 1 (28 Aug 2026).
+ * McBuleli IA — MC / moderator cues for Day 1 (28 Aug 2026).
  * Operator console drives the stage display; humans (Patty, Jeff, salle) hand off with fixed phrases.
  */
 import {
@@ -14,10 +14,11 @@ export const MC_VENUE_FR = "Silikin Village";
 /** Magic handoff phrases - whole team learns these. */
 export const MC_MAGIC_PHRASES = {
   pattyToAi:
-    "Bienvenue au McBuleli Hackathon. Nous accueillons McBuleli AI pour présenter McBuleli et modérer le déroulé.",
-  humanToAi: "Merci McBuleli AI.",
-  aiToPatty: "Je passe la parole à Mme Patty B.",
-  aiToJeff: "Je passe la parole à Jeff Buleli pour le bootcamp.",
+    "Bienvenue au McBuleli Hackathon. Nous accueillons McBuleli IA pour présenter McBuleli et accompagner le déroulé.",
+  humanToAi: "Merci McBuleli IA.",
+  aiToPatty: "Je passe maintenant la parole à Mme Patty B. pour la clôture.",
+  aiToJeff:
+    "Je passe maintenant la parole à Ir Jeff Buleli, fondateur et développeur principal de McBuleli, pour le bootcamp.",
 } as const;
 
 export type McCueKind =
@@ -88,19 +89,19 @@ const STAGE_PARTNERS: Array<{
   {
     slug: "ia-academie-chk",
     name: "IA Académie",
-    presenter: "l'équipe IA Académie",
+    presenter: "Mr Rodrigue Kashara David",
     logoUrl: "/partners/ia-academie-logo.png?v=20260729",
   },
   {
     slug: "kimia",
     name: "KIMIA Service",
-    presenter: "Mr Mike",
+    presenter: "Mr Mike Mulopo",
     logoUrl: "/partners/kimia-service-logo.png?v=20260728",
   },
   {
     slug: "montana-pay",
     name: "MontanaPay",
-    presenter: "la Direction",
+    presenter: "Mr Delly Montana",
     logoUrl: "/partners/montana-pay-logo.jpg?v=20260729b",
   },
   {
@@ -119,7 +120,7 @@ const STAGE_PARTNERS: Array<{
   {
     slug: "ilokwe",
     name: "ILOKWE GROUP",
-    presenter: "l'équipe ILOKWE, Sponsor Or",
+    presenter: "Mr Christian Ikwele",
     logoUrl: "/partners/ilokwe-group-logo.png?v=20260724c",
   },
 ];
@@ -136,9 +137,10 @@ function buildPartnerCues(): McCue[] {
   for (const p of STAGE_PARTNERS) {
     const { windowFr, domainFr } = partnerWindow(p.slug);
     const remote = Boolean(p.remoteMeetSlug);
+    const domainBit = domainFr ? ` - ${domainFr}` : "";
     const welcomeLine = remote
-      ? `Nous accueillons ${p.name}. Bienvenue à ${p.presenter}, en visio McBuleli Meet. ${PARTNER_TALK_MINUTES} minutes - ${domainFr}.`
-      : `Nous accueillons ${p.name}. Bienvenue à ${p.presenter}. ${PARTNER_TALK_MINUTES} minutes - ${domainFr}.`;
+      ? `Avec plaisir, nous accueillons ${p.name}. Bienvenue à ${p.presenter}, qui nous rejoint en visio McBuleli Meet. Vous avez ${PARTNER_TALK_MINUTES} minutes${domainBit}.`
+      : `Avec plaisir, nous accueillons ${p.name}. Bienvenue à ${p.presenter}. Vous avez ${PARTNER_TALK_MINUTES} minutes${domainBit}.`;
     const opsRemote = remote
       ? ` Jeancy peut rejoindre /meet/${p.remoteMeetSlug} avant l'heure. Sur /mc : « Visio sur Live » (1 tap, sans hôte McBuleli). Hôte salle = lien optionnel « Hôte Meet ».`
       : "";
@@ -164,7 +166,7 @@ function buildPartnerCues(): McCue[] {
       id: `partner-${p.slug}-thanks`,
       kind: "partner_thanks",
       labelFr: `Merci · ${p.name}`,
-      stageLineFr: `Merci ${p.name}. Applaudissements.`,
+      stageLineFr: `Un grand merci à ${p.name}. Applaudissements.`,
       detailFr: "Prochain partenaire dans un instant.",
       partnerSlug: p.slug,
       partnerName: p.name,
@@ -201,34 +203,34 @@ export const MC_CUES: McCue[] = [
     humanScriptFr: [
       "Bonjour et bienvenue au McBuleli Hackathon, ici à Silikin Village.",
       MC_MAGIC_PHRASES.pattyToAi,
-      "(Puis silence - l'opérateur lance INTRO AI.)",
+      "(Puis silence - l'opérateur lance INTRO IA.)",
     ].join(" "),
   },
   {
     id: "ai-intro",
     kind: "ai_intro",
-    labelFr: "McBuleli AI · Qui sommes-nous",
+    labelFr: "McBuleli IA · Qui sommes-nous",
     stageLineFr:
-      "Bonjour. Je suis McBuleli AI. McBuleli est une entreprise de technologie congolaise, basée à Kinshasa. Notre vision : une Afrique où l'innovation numérique sert vraiment les gens. Notre mission : bâtir des plateformes sûres et accessibles pour la finance, la connectivité et la confiance digitale.",
+      "Bonjour à toutes et à tous. Je suis McBuleli IA. McBuleli est une entreprise de technologie congolaise, basée ici à Kinshasa. Notre vision : une Afrique où l'innovation numérique sert vraiment les gens. Notre mission : bâtir des plateformes sûres et accessibles pour la finance, la connectivité, et la confiance digitale.",
     detailFr: "Entreprise tech · Kinshasa · vision & mission",
     humanScriptFr:
-      "Cue 1/2 intro. Écran + son. Pas de micro humain. Enchaîner « Technologies » puis « Règles ».",
+      "Cue 1/3 intro. Écran + son. Pas de micro humain. Enchaîner « Technologies » puis « Règles ».",
   },
   {
     id: "ai-stack",
     kind: "ai_intro",
-    labelFr: "McBuleli AI · Technologies",
+    labelFr: "McBuleli IA · Technologies",
     stageLineFr:
-      "Ce que nous avons déjà réalisé : McBuleli P2P, l'échange crypto et mobile money sécurisé ; McBuleli ISP, l'accès internet ; Cyber Alert DRC avec SafeFind, la vigilance face aux menaces en ligne ; et Africa Insight, pour mieux lire le terrain. Ce hackathon prolonge cette ambition : builder avec vous.",
+      "Ce que nous avons déjà réalisé, avec calme et constance : McBuleli P2P, pour l'échange crypto et mobile money sécurisé ; McBuleli ISP, pour l'accès internet ; Cyber Alert DRC avec SafeFind, pour la vigilance face aux menaces en ligne ; et Africa Insight, pour mieux lire le terrain. Ce hackathon prolonge cette ambition : builder avec vous, aujourd'hui.",
     detailFr: "P2P · ISP · Cyber Alert DRC / SafeFind · Africa Insight",
-    humanScriptFr: "Cue 2/2 intro. Puis lancer « Règles ».",
+    humanScriptFr: "Cue 2/3 intro. Puis lancer « Règles ».",
   },
   {
     id: "ai-rules",
     kind: "ai_intro",
-    labelFr: "McBuleli AI · Règles",
+    labelFr: "McBuleli IA · Règles",
     stageLineFr:
-      "Règles simples : respect du chrono, badges visibles, questions après chaque talk si le temps le permet. L'équipe salle guide les places.",
+      "Quelques règles simples, pour une belle journée : respectons le chrono ; gardons les badges visibles ; et si le temps le permet, les questions viennent après chaque talk. L'équipe salle vous guide pour les places. Merci.",
     detailFr: "Vitrine partenaires : 10 minutes par organisation.",
   },
   ...buildPartnerCues(),
@@ -236,7 +238,7 @@ export const MC_CUES: McCue[] = [
     id: "break-photo",
     kind: "break",
     labelFr: "Pause / photo",
-    stageLineFr: "Pause courte et photo partenaires.",
+    stageLineFr: "Petite pause, et photo avec nos partenaires.",
     detailFr: "10:20 - 10:30 · reprise pour le bootcamp",
     windowFr: "10:20 - 10:30",
     humanScriptFr: "Garçons : ordre photo. Patty / Jeff : prêt bootcamp.",
@@ -254,19 +256,20 @@ export const MC_CUES: McCue[] = [
     id: "jeff-bootcamp",
     kind: "jeff_bootcamp",
     labelFr: "Jeff · Bootcamp",
-    stageLineFr: "Bootcamp · Jeff Buleli",
+    stageLineFr:
+      "Bootcamp · Ir Jeff Buleli, fondateur et développeur principal de McBuleli",
     detailFr: "1 heure · outils IA (Cursor recommandé) · pratique",
     windowFr: `${DAY1_BOOTCAMP.start} - ${DAY1_BOOTCAMP.end}`,
     timerSeconds: 60 * 60,
     humanScriptFr:
-      "Jeff enseigne. IA en pause sauf rappel chrono si demandé. Fin : Jeff dit « Merci McBuleli AI ».",
+      "Jeff enseigne. McBuleli IA en pause sauf rappel chrono si demandé. Fin : Jeff dit « Merci McBuleli IA ».",
   },
   {
     id: "teams",
     kind: "teams",
     labelFr: "Équipes & défis",
     stageLineFr:
-      "Formation des équipes et choix des défis. L'équipe salle vous oriente.",
+      "Place à la formation des équipes et au choix des défis. L'équipe salle vous oriente, tranquillement.",
     detailFr: "11:30 - 12:00",
     windowFr: "11:30 - 12:00",
   },
@@ -295,7 +298,7 @@ export const MC_CUES: McCue[] = [
     kind: "pitch_prep",
     labelFr: "Prep pitch",
     stageLineFr:
-      "Préparation pitch et démo. Équipes : finalisez vos slides et démos.",
+      "Préparation pitch et démo. Équipes : finalisez vos slides et vos démonstrations, sans précipitation.",
     detailFr: "15h45 - 16h00",
     windowFr: "15h45 - 16h00",
     projectorMode: "wall",
@@ -307,7 +310,7 @@ export const MC_CUES: McCue[] = [
     kind: "mini_demo",
     labelFr: "Mini Demo Day",
     stageLineFr:
-      "Mini Demo Day : pitches courts et démonstrations. Chrono respecté.",
+      "Mini Demo Day : pitches courts et démonstrations. On respecte le chrono, et on écoute avec bienveillance.",
     detailFr: "16h00 - 16h40 · ~5 min / équipe",
     windowFr: "16h00 - 16h40",
     timerSeconds: 40 * 60,
@@ -340,9 +343,9 @@ export const MC_CUES: McCue[] = [
   {
     id: "ai-wrap",
     kind: "ai_wrap",
-    labelFr: "McBuleli AI · Synthèse",
+    labelFr: "McBuleli IA · Synthèse",
     stageLineFr:
-      "Merci à toutes et tous. McBuleli AI a tenu le tempo avec l'équipe. Je passe la parole à Mme Patty B. pour la clôture.",
+      "Merci à toutes et à tous. Ce fut un plaisir d'accompagner le tempo avec l'équipe. Je passe maintenant la parole à Mme Patty B. pour la clôture.",
     detailFr: MC_MAGIC_PHRASES.aiToPatty,
     projectorMode: "mc",
     humanScriptFr: "Patty prête pour clôturer.",
@@ -354,7 +357,7 @@ export const MC_CUES: McCue[] = [
     stageLineFr: "Clôture · Mme Patty B.",
     projectorMode: "mc",
     humanScriptFr: [
-      "Merci aux partenaires, aux builders, à Jeff pour le bootcamp, et à McBuleli AI pour la modération.",
+      "Merci aux partenaires, aux builders, à Ir Jeff Buleli pour le bootcamp, et à McBuleli IA pour la modération.",
       "Photos, contacts et suite incubation McBuleli.",
       "Bonne continuation avec McBuleli.",
     ].join(" "),
@@ -391,27 +394,27 @@ export const MC_ROLE_CARDS: McRoleCard[] = [
     id: "patty",
     titleFr: "Mme Patty B. - Ouverture & clôture",
     bodyFr: [
-      "Ouvre avec la phrase magique vers McBuleli AI.",
+      "Ouvre avec la phrase magique vers McBuleli IA.",
       "Ne reste pas MC au milieu de la journée.",
-      "Clôture après la synthèse AI.",
+      "Clôture après la synthèse IA.",
     ],
   },
   {
     id: "ai",
-    titleFr: "McBuleli AI - Tempo & modération",
+    titleFr: "McBuleli IA - Tempo & modération",
     bodyFr: [
       "Parle seulement quand l'opérateur lance un cue.",
-      "Intro en deux temps : qui sommes-nous, puis technologies, puis règles.",
-      "Appelle partenaires, Jeff, Patty.",
+      "Voix détendue : intro en trois temps — qui sommes-nous, technologies, règles.",
+      "Appelle partenaires, Ir Jeff Buleli, Patty.",
       "Chrono visible = contrat de confiance.",
     ],
   },
   {
     id: "jeff",
-    titleFr: "Jeff Buleli - Bootcamp seulement",
+    titleFr: "Ir Jeff Buleli - Bootcamp seulement",
     bodyFr: [
-      "Entre après : « Je passe la parole à Jeff Buleli… »",
-      "Enseigne 1 h. Fin : « Merci McBuleli AI. »",
+      "Entre après : « Je passe maintenant la parole à Ir Jeff Buleli… »",
+      "Enseigne 1 h. Fin : « Merci McBuleli IA. »",
       "Pas de MC hors bootcamp.",
     ],
   },
@@ -419,7 +422,7 @@ export const MC_ROLE_CARDS: McRoleCard[] = [
     id: "partners",
     titleFr: "Partenaires - Talk + mentorat terrain",
     bodyFr: [
-      "10 min scène au signal AI.",
+      "10 min scène au signal de McBuleli IA.",
       "Mentorat / aide physique en circulant pendant le build.",
       "Pas d'annonce micro hors créneau.",
     ],
