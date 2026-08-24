@@ -12,20 +12,10 @@ import {
   setPitchQueueEntries,
   toPitchQueuePublic,
 } from "@/lib/hackathon/pitch-queue";
-import { mcControlKeyOk } from "@/lib/hackathon/mc-state";
+import { mcControlAuthorized } from "@/lib/hackathon/mc-auth";
 import { markTeamPresented } from "@/lib/hackathon/teams";
 
 export const dynamic = "force-dynamic";
-
-function keyFrom(req: Request, bodyKey?: string) {
-  const url = new URL(req.url);
-  return (
-    bodyKey ??
-    req.headers.get("x-mc-key") ??
-    url.searchParams.get("key") ??
-    ""
-  );
-}
 
 export async function GET() {
   try {
@@ -53,21 +43,18 @@ const actionSchema = z.discriminatedUnion("action", [
   }),
 ]);
 
-const postSchema = actionSchema.and(
-  z.object({ key: z.string().optional() }),
-);
+const postSchema = actionSchema;
 
 export async function POST(req: Request) {
   try {
+    if (!(await mcControlAuthorized())) {
+      return NextResponse.json({ error: "forbidden" }, { status: 403 });
+    }
+
     const json = await req.json().catch(() => null);
     const parsed = postSchema.safeParse(json);
     if (!parsed.success) {
       return NextResponse.json({ error: "invalid_body" }, { status: 400 });
-    }
-
-    const key = keyFrom(req, parsed.data.key);
-    if (!mcControlKeyOk(key)) {
-      return NextResponse.json({ error: "forbidden" }, { status: 403 });
     }
 
     const edition = await getFeaturedEditionRow();

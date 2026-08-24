@@ -14,6 +14,7 @@ import {
 import { HackathonAtmosphere } from "@/components/hackathon/hackathon-atmosphere";
 import { HackathonSlideFrame } from "@/components/hackathon/hackathon-slide-frame";
 import { McStageDisplay } from "@/components/hackathon/mc-stage-display";
+import { LiveRemoteMeet } from "@/components/hackathon/live-remote-meet";
 import { BRAND_LOGO_MARK_256 } from "@/lib/brand-logo";
 import type { HackathonSlide } from "@/lib/hackathon/slides/types";
 import type {
@@ -294,6 +295,7 @@ export function HackathonLiveClient({ initial }: { initial: LivePayload }) {
   const mode: ProjectorMode = data.projectorMode ?? "wall";
   const onAir = data.presentation?.status === "live";
   const showMc = mode === "mc" && Boolean(data.mc);
+  const showMeet = mode === "meet" && Boolean(data.mc?.meetSlug);
   const showSlides = mode === "slides";
   const showAwards = mode === "awards";
 
@@ -305,7 +307,7 @@ export function HackathonLiveClient({ initial }: { initial: LivePayload }) {
 
   useEffect(() => {
     const intervalMs =
-      showMc || showSlides || showAwards ? 1500 : 15000;
+      showMc || showMeet || showSlides || showAwards ? 1500 : 15000;
     const poll = setInterval(async () => {
       try {
         const res = await fetch("/api/hackathon/live", { cache: "no-store" });
@@ -317,7 +319,7 @@ export function HackathonLiveClient({ initial }: { initial: LivePayload }) {
       }
     }, intervalMs);
     return () => clearInterval(poll);
-  }, [showMc, showSlides, showAwards]);
+  }, [showMc, showMeet, showSlides, showAwards]);
 
   const countdown = useMemo(
     () => formatCountdown(data.edition.submissionDeadlineAt, now),
@@ -334,6 +336,15 @@ export function HackathonLiveClient({ initial }: { initial: LivePayload }) {
 
   if (showAwards && data.awards) {
     return <LiveAwardsPodium awards={data.awards} isFr={isFr} />;
+  }
+
+  if (showMeet && data.mc?.meetSlug) {
+    return (
+      <LiveRemoteMeet
+        meetSlug={data.mc.meetSlug}
+        partnerName={data.mc.cue.partnerName}
+      />
+    );
   }
 
   if (showMc && data.mc) {
@@ -377,7 +388,7 @@ export function HackathonLiveClient({ initial }: { initial: LivePayload }) {
               href="/hackathon/mc"
               className="rounded-2xl bg-white px-4 py-3 text-sm font-bold text-[#1F6B43] shadow-sm ring-1 ring-[#E5E5E0]"
             >
-              Console MC
+              Télécommande
             </Link>
             <div className="rounded-2xl bg-white px-5 py-3 text-right shadow-sm ring-1 ring-[#E5E5E0]">
               <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#a8a29e]">

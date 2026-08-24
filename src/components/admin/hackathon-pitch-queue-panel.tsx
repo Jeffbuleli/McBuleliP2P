@@ -14,13 +14,8 @@ type PitchQueue = {
   position: number;
 };
 
-export function HackathonPitchQueuePanel({
-  mcKey,
-}: {
-  mcKey?: string;
-}) {
+export function HackathonPitchQueuePanel() {
   const [queue, setQueue] = useState<PitchQueue | null>(null);
-  const [key, setKey] = useState(mcKey ?? "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,15 +43,12 @@ export function HackathonPitchQueuePanel({
     try {
       const res = await fetch("/api/hackathon/pitch-queue", {
         method: "POST",
-        headers: {
-          "content-type": "application/json",
-          "x-mc-key": key,
-        },
-        body: JSON.stringify({ ...body, key }),
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body),
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(json.error === "forbidden" ? "Clé MC invalide" : json.error ?? "error");
+        setError(json.error === "forbidden" ? "Accès admin requis" : json.error ?? "error");
         return;
       }
       if (json.queue) setQueue(json.queue);
@@ -77,17 +69,6 @@ export function HackathonPitchQueuePanel({
           {" "}quand active.
         </p>
       </div>
-
-      <label className="block text-sm">
-        <span className="font-semibold">Clé MC (HACKATHON_MC_KEY)</span>
-        <input
-          type="password"
-          value={key}
-          onChange={(e) => setKey(e.target.value)}
-          className={`${adminCls.input} mt-1`}
-          placeholder="Clé opérateur"
-        />
-      </label>
 
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
 

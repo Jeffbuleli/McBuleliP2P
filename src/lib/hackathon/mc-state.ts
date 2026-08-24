@@ -12,7 +12,7 @@ import { getDb, hackathonMcSessions } from "@/db";
 import { eq } from "drizzle-orm";
 
 /** What the single room projector (/hackathon/live) shows. */
-export type ProjectorMode = "wall" | "mc" | "slides" | "awards";
+export type ProjectorMode = "wall" | "mc" | "slides" | "awards" | "meet";
 
 export type McSessionState = {
   cueId: string;
@@ -24,6 +24,8 @@ export type McSessionState = {
   overrideMessageFr: string;
   /** Single projector mode for /hackathon/live */
   projectorMode: ProjectorMode;
+  /** Active McBuleli Meet room slug (visio partenaire) */
+  meetSlug: string | null;
   /** Projector may speak stage lines (browser TTS) */
   voiceEnabled: boolean;
   /** Bump to force projector to re-speak current cue */
@@ -60,6 +62,7 @@ function defaultState(): McSessionState {
     humanOverride: false,
     overrideMessageFr: DEFAULT_OVERRIDE,
     projectorMode: "mc",
+    meetSlug: null,
     voiceEnabled: true,
     voiceReplayToken: 0,
     updatedAt: new Date().toISOString(),
@@ -90,9 +93,14 @@ function normalizeState(raw: Partial<McSessionState> | null | undefined): McSess
       raw.projectorMode === "wall" ||
       raw.projectorMode === "mc" ||
       raw.projectorMode === "slides" ||
-      raw.projectorMode === "awards"
+      raw.projectorMode === "awards" ||
+      raw.projectorMode === "meet"
         ? raw.projectorMode
         : "mc",
+    meetSlug:
+      typeof raw.meetSlug === "string" && raw.meetSlug.trim()
+        ? raw.meetSlug.trim()
+        : null,
     voiceEnabled:
       typeof raw.voiceEnabled === "boolean" ? raw.voiceEnabled : true,
     voiceReplayToken:
@@ -166,6 +174,9 @@ export function getMcSession(): McSessionState {
   }
   if (typeof g.__mcbuleliMcSession.voiceReplayToken !== "number") {
     g.__mcbuleliMcSession.voiceReplayToken = 0;
+  }
+  if (g.__mcbuleliMcSession.meetSlug === undefined) {
+    g.__mcbuleliMcSession.meetSlug = null;
   }
   return g.__mcbuleliMcSession;
 }
@@ -242,6 +253,15 @@ export function setMcHumanOverride(
 
 export function setProjectorMode(mode: ProjectorMode): McSessionPublic {
   return touch({ projectorMode: mode });
+}
+
+export function setMcMeetSlug(slug: string | null): McSessionPublic {
+  const trimmed = slug?.trim() || null;
+  return touch({ meetSlug: trimmed });
+}
+
+export function clearMcMeet(): McSessionPublic {
+  return touch({ meetSlug: null, projectorMode: "mc" });
 }
 
 export function setMcVoiceEnabled(on: boolean): McSessionPublic {

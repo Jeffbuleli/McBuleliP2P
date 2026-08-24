@@ -64,7 +64,11 @@ export type McCue = {
   timerSeconds?: number;
   /** Auto-switch room projector when this cue is activated */
   projectorMode?: McProjectorMode;
+  /** Remote talk via McBuleli Meet (ops console only) */
+  remoteMeetSlug?: string;
 };
+
+const KILELO_REMOTE_MEET_SLUG = "kilelo-hackathon-live";
 
 const STAGE_PARTNERS: Array<{
   slug: string;
@@ -73,6 +77,7 @@ const STAGE_PARTNERS: Array<{
   /** Who presents (person or title) - spoken once with the welcome */
   presenter: string;
   logoUrl: string;
+  remoteMeetSlug?: string;
 }> = [
   {
     slug: "rdpi",
@@ -109,6 +114,7 @@ const STAGE_PARTNERS: Array<{
     name: "Kilelo",
     presenter: "Jeancy Kabangu",
     logoUrl: "/partners/kilelo-logo.png?v=20260728c",
+    remoteMeetSlug: KILELO_REMOTE_MEET_SLUG,
   },
   {
     slug: "ilokwe",
@@ -129,20 +135,30 @@ function buildPartnerCues(): McCue[] {
   const out: McCue[] = [];
   for (const p of STAGE_PARTNERS) {
     const { windowFr, domainFr } = partnerWindow(p.slug);
+    const remote = Boolean(p.remoteMeetSlug);
+    const welcomeLine = remote
+      ? `Nous accueillons ${p.name}. Bienvenue à ${p.presenter}, en visio McBuleli Meet. ${PARTNER_TALK_MINUTES} minutes - ${domainFr}.`
+      : `Nous accueillons ${p.name}. Bienvenue à ${p.presenter}. ${PARTNER_TALK_MINUTES} minutes - ${domainFr}.`;
+    const opsRemote = remote
+      ? ` Jeancy à distance : ouvrir /meet/${p.remoteMeetSlug}/host (son + vidéo vers la salle). Projecteur public reste sur /hackathon/live. Tester caméra/micro avant 09h55.`
+      : "";
     out.push({
       id: `partner-${p.slug}-call`,
       kind: "partner_call",
-      labelFr: `Appel · ${p.name}`,
-      stageLineFr: `Nous accueillons ${p.name}. Bienvenue à ${p.presenter}. ${PARTNER_TALK_MINUTES} minutes - ${domainFr}.`,
-      detailFr: domainFr ? `${domainFr} · ${PARTNER_TALK_MINUTES} min` : undefined,
+      labelFr: `Appel · ${p.name}${remote ? " · Visio" : ""}`,
+      stageLineFr: welcomeLine,
+      detailFr: domainFr
+        ? `${domainFr} · ${PARTNER_TALK_MINUTES} min${remote ? " · visio" : ""}`
+        : undefined,
       partnerSlug: p.slug,
       partnerName: p.name,
       partnerLogoUrl: p.logoUrl,
       partnerPresenterFr: p.presenter,
+      remoteMeetSlug: p.remoteMeetSlug,
       domainFr,
       windowFr,
       timerSeconds: PARTNER_TALK_MINUTES * 60,
-      humanScriptFr: `Partenaire prêt côté scène. Opérateur : lancer le chrono ${PARTNER_TALK_MINUTES}'. Chrono visible à l'écran.`,
+      humanScriptFr: `Partenaire prêt${remote ? " (visio)" : " côté scène"}. Opérateur : lancer le chrono ${PARTNER_TALK_MINUTES}'. Chrono visible à l'écran.${opsRemote}`,
     });
     out.push({
       id: `partner-${p.slug}-thanks`,
@@ -154,13 +170,18 @@ function buildPartnerCues(): McCue[] {
       partnerName: p.name,
       partnerLogoUrl: p.logoUrl,
       partnerPresenterFr: p.presenter,
+      remoteMeetSlug: p.remoteMeetSlug,
       domainFr,
       windowFr,
-      humanScriptFr: "Enchaîner le cue suivant dès que le partenaire quitte la scène.",
+      humanScriptFr: remote
+        ? "Couper le partage visio Meet. Enchaîner le cue suivant."
+        : "Enchaîner le cue suivant dès que le partenaire quitte la scène.",
     });
   }
   return out;
 }
+
+export { KILELO_REMOTE_MEET_SLUG };
 
 export const MC_CUES: McCue[] = [
   {

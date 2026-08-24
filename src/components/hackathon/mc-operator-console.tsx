@@ -1,14 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { McCue } from "@/lib/hackathon/mc-day";
-import { MC_MAGIC_PHRASES, MC_ROLE_CARDS } from "@/lib/hackathon/mc-day";
-import type { McSessionPublic } from "@/lib/hackathon/mc-state";
+import Link from "next/link";
+import { KILELO_REMOTE_MEET_SLUG } from "@/lib/hackathon/mc-day";
+import type { McSmartAction } from "@/lib/hackathon/mc-control-phases";
 import {
-  ensureMcVoicesLoaded,
-  speakMcLine,
-  stopMcVoice,
-} from "@/lib/hackathon/mc-voice";
+  buildMcRemoteUiContext,
+  projectorModeLabel,
+  type McSlideRemote,
+} from "@/lib/hackathon/mc-remote-context";
+import type { McSessionPublic } from "@/lib/hackathon/mc-state";
 
 function formatRemain(ms: number) {
   if (ms <= 0) return "0:00";
@@ -18,19 +19,49 @@ function formatRemain(ms: number) {
   return `${m}:${String(r).padStart(2, "0")}`;
 }
 
+function SwitchBtn({
+  active,
+  disabled,
+  onClick,
+  children,
+  className = "",
+}: {
+  active?: boolean;
+  disabled?: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className={`rounded-xl px-3 py-3 text-sm font-black transition disabled:opacity-40 ${className} ${
+        active
+          ? "bg-white text-black shadow-sm"
+          : "bg-white/10 text-white/85 hover:bg-white/15"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+type McPoll = {
+  session: McSessionPublic;
+  slides: McSlideRemote | null;
+};
+
 export function McOperatorConsole({
   initialSession,
-  cues,
-  initialKey,
-  controlConfigured,
+  initialSlides,
 }: {
   initialSession: McSessionPublic;
-  cues: McCue[];
-  initialKey: string;
-  controlConfigured: boolean;
+  initialSlides: McSlideRemote | null;
 }) {
-  const [key, setKey] = useState(initialKey);
   const [session, setSession] = useState(initialSession);
+  const [slides, setSlides] = useState(initialSlides);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
@@ -40,23 +71,33 @@ export function McOperatorConsole({
     return () => clearInterval(t);
   }, []);
 
+  const applyPoll = useCallback((data: McPoll) => {
+    if (data.session) setSession(data.session);
+    if (data.slides !== undefined) setSlides(data.slides);
+  }, []);
+
   useEffect(() => {
     const t = setInterval(async () => {
       try {
         const res = await fetch("/api/hackathon/mc", { cache: "no-store" });
         const data = await res.json();
-        if (data?.session) setSession(data.session);
+        if (data?.session) applyPoll(data);
       } catch {
-        /* ignore poll errors */
+        /* ignore */
       }
-    }, 2000);
+    }, 1500);
     return () => clearInterval(t);
-  }, []);
+  }, [applyPoll]);
 
   const remainMs = useMemo(() => {
     if (!session.timerEndsAt) return null;
     return new Date(session.timerEndsAt).getTime() - now;
   }, [session.timerEndsAt, now]);
+
+  const ui = useMemo(
+    () => buildMcRemoteUiContext(session, slides),
+    [session, slides],
+  );
 
   const post = useCallback(
     async (body: Record<string, unknown>) => {
@@ -65,276 +106,183 @@ export function McOperatorConsole({
       try {
         const res = await fetch("/api/hackathon/mc", {
           method: "POST",
-          headers: {
-            "content-type": "application/json",
-            "x-mc-key": key,
-          },
-          body: JSON.stringify({ ...body, key }),
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(body),
         });
         const data = await res.json();
         if (!res.ok) {
           setErr(
             data?.error === "forbidden"
-              ? "Clé MC invalide (HACKATHON_MC_KEY)."
+              ? "Session expirée · reconnectez-vous admin."
               : data?.error || "Erreur",
           );
           return;
         }
-        if (data?.session) setSession(data.session);
+        if (data?.session) applyPoll(data);
       } catch {
         setErr("Réseau indisponible");
       } finally {
         setBusy(false);
       }
     },
-    [key],
+    [applyPoll],
   );
 
-  const stageHref = "/hackathon/live";
+  const runSmart = async (action: McSmartAction) => {
+    await post({ action: "smart", id: action.id });
+    if (
+      action.id === "kilelo_visio" ||
+      action.id === "kilelo_projector"
+    ) {
+      window.open(`/meet/${KILELO_REMOTE_MEET_SLUG}/host`, "_blank", "noopener");
+    }
+  };
+
+  const modeCols = Math.min(Math.max(ui.showProjectorModes.length, 2), 5);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-3 py-6 sm:px-4">
-      <header className="space-y-2">
-        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-400/90">
-          Console opérateur · 28 août
-        </p>
-        <h1 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
-          McBuleli AI · MC
-        </h1>
-        <p className="max-w-2xl text-sm text-white/65">
-          Un seul projecteur : /hackathon/live. Tu changes le mode ici (MC /
-          Slides / Mur). Patty ouvre/clôture, Jeff = bootcamp, partenaires =
-          talks + mentorat, salle = ordre.
-        </p>
-        <div className="flex flex-wrap gap-2 pt-1">
-          <a
-            href="/hackathon/ops"
-            className="rounded-lg border border-white/20 px-3 py-2 text-sm font-semibold text-white/80"
-          >
-            Ops jour
-          </a>
-          <a
-            href={stageHref}
-            target="_blank"
-            rel="noreferrer"
-            className="rounded-lg bg-white px-3 py-2 text-sm font-bold text-black"
-          >
-            Ouvrir projecteur Live
-          </a>
-          <a
-            href="/hackathon/slides"
-            className="rounded-lg border border-emerald-400/40 px-3 py-2 text-sm font-semibold text-emerald-200"
-          >
-            Bootcamp deck - Slides
-          </a>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => post({ action: "reset" })}
-            className="rounded-lg border border-white/20 px-3 py-2 text-sm font-semibold text-white/80"
-          >
-            Reset standby
-          </button>
+    <div className="mx-auto max-w-lg space-y-3 px-3 py-4 pb-8 sm:max-w-xl sm:px-4">
+      <header className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-400/90">
+            Télécommande Live
+          </p>
+          <p className="text-xs text-white/50">{ui.phaseLabel}</p>
         </div>
+        <Link
+          href="/hackathon/live"
+          target="_blank"
+          rel="noreferrer"
+          className="rounded-xl bg-white px-3 py-2 text-xs font-black text-black"
+        >
+          Live
+        </Link>
       </header>
 
-      <section className="rounded-2xl border border-emerald-400/30 bg-emerald-400/10 p-4">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-200/80">
-          Projecteur salle (mode actuel : {session.projectorMode})
-        </p>
-        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {(
-            [
-              ["mc", "MC"],
-              ["slides", "Slides"],
-              ["wall", "Mur"],
-              ["awards", "Prix"],
-            ] as const
-          ).map(([mode, label]) => (
-            <button
+      <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-white/45">
+              {projectorModeLabel(session.projectorMode)}
+              {session.meetSlug ? " · Meet" : ""}
+              {ui.stepKind === "slide" ? " · On Air" : ""}
+            </p>
+            <p className="truncate text-sm font-bold text-white">
+              {ui.statusLine}
+            </p>
+          </div>
+          {ui.showChrono ? (
+            <div className="shrink-0 text-right">
+              <p className="font-mono text-2xl font-black tabular-nums text-white">
+                {remainMs == null ? "—" : formatRemain(remainMs)}
+              </p>
+            </div>
+          ) : null}
+        </div>
+        {err ? (
+          <p className="mt-2 rounded-lg bg-rose-500/20 px-2 py-1.5 text-xs font-semibold text-rose-200">
+            {err}
+          </p>
+        ) : null}
+      </div>
+
+      <section className="rounded-2xl border border-emerald-400/25 bg-emerald-400/10 p-3">
+        <div
+          className="grid gap-1.5"
+          style={{
+            gridTemplateColumns: `repeat(${modeCols}, minmax(0, 1fr))`,
+          }}
+        >
+          {ui.showProjectorModes.map((mode) => (
+            <SwitchBtn
               key={mode}
-              type="button"
+              active={session.projectorMode === mode}
               disabled={busy}
               onClick={() => post({ action: "projector", mode })}
-              className={`rounded-xl py-3 text-sm font-black ${
-                session.projectorMode === mode
-                  ? "bg-white text-black"
-                  : "bg-black/30 text-white/80"
-              }`}
             >
-              {label}
-            </button>
+              {projectorModeLabel(mode)}
+            </SwitchBtn>
           ))}
         </div>
-        <p className="mt-2 text-xs text-white/55">
-          Matin = MC. Bootcamp = Slides (On Air auto). Build = Mur. Mini Demo =
-          MC. Podium = Prix. Le laptop projecteur reste sur /hackathon/live.
-        </p>
-      </section>
-
-      <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-white/50">
-          Voix McBuleli AI
-        </p>
-        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-          <button
-            type="button"
+        {ui.showOnAirSlides ? (
+          <SwitchBtn
             disabled={busy}
-            onClick={() =>
-              post({ action: "voice", on: !session.voiceEnabled })
-            }
-            className={`rounded-xl py-3 text-sm font-black ${
-              session.voiceEnabled
-                ? "bg-emerald-400 text-black"
-                : "bg-white/10 text-white/80"
-            }`}
+            onClick={() => post({ action: "go_live_slides" })}
+            className="mt-2 w-full bg-emerald-400 text-black"
           >
-            {session.voiceEnabled ? "Voix ON" : "Voix OFF"}
-          </button>
-          <button
-            type="button"
-            disabled={busy || !session.voiceEnabled}
-            onClick={() => post({ action: "voice_replay" })}
-            className="rounded-xl bg-white py-3 text-sm font-black text-black disabled:opacity-40"
-          >
-            Rejouer projecteur
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              void ensureMcVoicesLoaded().then(() => {
-                speakMcLine(
-                  session.humanOverride
-                    ? session.overrideMessageFr
-                    : session.cue.stageLineFr,
-                );
-              });
-            }}
-            className="col-span-2 rounded-xl border border-emerald-300/50 bg-emerald-500/20 py-3 text-sm font-black text-emerald-100 sm:col-span-1"
-          >
-            Écouter ici
-          </button>
-        </div>
-        <p className="mt-2 text-xs text-white/55">
-          « Écouter ici » = son sur ce téléphone/PC. Projecteur = Live mode MC +
-          1 clic activer le son, puis cues / Rejouer projecteur.
-        </p>
-        <button
-          type="button"
-          onClick={() => stopMcVoice()}
-          className="mt-2 text-xs font-semibold text-white/45 underline-offset-2 hover:underline"
-        >
-          Stop son local
-        </button>
-      </section>
-
-      <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-        <label className="block text-xs font-semibold text-white/50">
-          Clé opérateur {controlConfigured ? "" : "(dev : clé optionnelle)"}
-        </label>
-        <input
-          value={key}
-          onChange={(e) => setKey(e.target.value)}
-          className="mt-1.5 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2.5 text-sm text-white outline-none focus:border-emerald-400/50"
-          placeholder="HACKATHON_MC_KEY"
-          autoComplete="off"
-        />
-        {err ? (
-          <p className="mt-2 text-sm font-semibold text-rose-300">{err}</p>
+            Slides · Passer On Air
+          </SwitchBtn>
         ) : null}
       </section>
 
-      <section className="rounded-2xl border border-emerald-400/30 bg-emerald-400/10 p-4 sm:p-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-200/80">
-              Cue actuel · {session.cueIndex + 1}/{cues.length}
-            </p>
-            <h2 className="mt-1 text-xl font-black text-white">
-              {session.cue.labelFr}
-            </h2>
-            <p className="mt-2 text-base leading-relaxed text-white/90">
-              {session.cue.stageLineFr}
-            </p>
-            {session.cue.detailFr ? (
-              <p className="mt-2 text-sm text-white/60">{session.cue.detailFr}</p>
+      <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
+        <div className="grid grid-cols-2 gap-1.5">
+          <SwitchBtn disabled={busy} onClick={() => post({ action: "step", delta: -1 })}>
+            {ui.stepPrevLabel}
+          </SwitchBtn>
+          <SwitchBtn
+            disabled={busy}
+            onClick={() => post({ action: "step", delta: 1 })}
+            className="bg-emerald-400 text-black hover:bg-emerald-300"
+          >
+            {ui.stepNextLabel}
+          </SwitchBtn>
+        </div>
+
+        {(ui.showVoice || ui.showChrono) && (
+          <div
+            className={`mt-2 grid gap-1.5 ${ui.showVoice && ui.showChrono ? "grid-cols-2" : "grid-cols-1"}`}
+          >
+            {ui.showVoice ? (
+              <div className="grid grid-cols-2 gap-1.5">
+                <SwitchBtn
+                  active={session.voiceEnabled}
+                  disabled={busy}
+                  onClick={() =>
+                    post({ action: "voice", on: !session.voiceEnabled })
+                  }
+                >
+                  Voix {session.voiceEnabled ? "ON" : "OFF"}
+                </SwitchBtn>
+                <SwitchBtn
+                  disabled={busy || !session.voiceEnabled}
+                  onClick={() => post({ action: "voice_replay" })}
+                >
+                  Rejouer
+                </SwitchBtn>
+              </div>
             ) : null}
-            {session.cue.humanScriptFr ? (
-              <div className="mt-3 rounded-xl border border-white/10 bg-black/30 p-3">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-amber-200/80">
-                  Carte humaine
-                </p>
-                <p className="mt-1 text-sm leading-relaxed text-amber-50/95">
-                  {session.cue.humanScriptFr}
-                </p>
+            {ui.showChrono ? (
+              <div className="grid grid-cols-3 gap-1.5">
+                <SwitchBtn
+                  disabled={busy}
+                  onClick={() =>
+                    post({
+                      action: "timer",
+                      seconds: session.cue.timerSeconds ?? 600,
+                    })
+                  }
+                >
+                  {session.cue.timerSeconds
+                    ? `${Math.round(session.cue.timerSeconds / 60)}'`
+                    : "10'"}
+                </SwitchBtn>
+                <SwitchBtn
+                  disabled={busy}
+                  onClick={() => post({ action: "timer", seconds: 60 })}
+                >
+                  1&apos;
+                </SwitchBtn>
+                <SwitchBtn disabled={busy} onClick={() => post({ action: "clear_timer" })}>
+                  Stop
+                </SwitchBtn>
               </div>
             ) : null}
           </div>
-          <div className="min-w-[7.5rem] rounded-xl border border-white/15 bg-black/40 px-3 py-3 text-center">
-            <p className="text-[10px] font-bold uppercase text-white/45">Chrono</p>
-            <p
-              className={`mt-1 font-mono text-3xl font-black tabular-nums ${
-                remainMs != null && remainMs <= 60_000
-                  ? "text-rose-300"
-                  : "text-white"
-              }`}
-            >
-              {remainMs == null ? "-" : formatRemain(remainMs)}
-            </p>
-          </div>
-        </div>
+        )}
 
-        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => post({ action: "prev" })}
-            className="rounded-xl bg-white/10 py-3 text-sm font-bold text-white"
-          >
-            ← Précédent
-          </button>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => post({ action: "next" })}
-            className="rounded-xl bg-white py-3 text-sm font-black text-black"
-          >
-            Suivant →
-          </button>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() =>
-              post({
-                action: "timer",
-                seconds: session.cue.timerSeconds ?? 10 * 60,
-              })
-            }
-            className="rounded-xl bg-emerald-400 py-3 text-sm font-black text-black"
-          >
-            Chrono{" "}
-            {session.cue.timerSeconds
-              ? `${Math.round(session.cue.timerSeconds / 60)}'`
-              : "10'"}
-          </button>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => post({ action: "timer", seconds: 60 })}
-            className="rounded-xl bg-amber-400 py-3 text-sm font-black text-black"
-          >
-            1 min
-          </button>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => post({ action: "clear_timer" })}
-            className="rounded-xl border border-white/20 py-3 text-sm font-semibold text-white/80"
-          >
-            Stop chrono
-          </button>
-          <button
-            type="button"
+        {ui.showHumanOverride ? (
+          <SwitchBtn
             disabled={busy}
             onClick={() =>
               post({
@@ -342,80 +290,73 @@ export function McOperatorConsole({
                 on: !session.humanOverride,
               })
             }
-            className={`rounded-xl py-3 text-sm font-black col-span-2 sm:col-span-1 ${
-              session.humanOverride
-                ? "bg-rose-500 text-white"
-                : "bg-rose-500/20 text-rose-100"
+            className={`mt-2 w-full ${
+              session.humanOverride ? "bg-rose-500 text-white" : ""
             }`}
           >
             {session.humanOverride ? "Reprendre AI" : "Urgence humaine"}
-          </button>
-        </div>
-
-        {session.nextCue ? (
-          <p className="mt-3 text-sm text-white/50">
-            Ensuite : <span className="text-white/80">{session.nextCue.labelFr}</span>
-          </p>
+          </SwitchBtn>
         ) : null}
       </section>
 
-      <section className="space-y-2">
-        <h3 className="text-sm font-bold text-white/70">Phrases magiques</h3>
-        <ul className="space-y-2 text-sm text-white/80">
-          <li className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
-            Patty → AI : « {MC_MAGIC_PHRASES.pattyToAi} »
-          </li>
-          <li className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
-            Humain → AI : « {MC_MAGIC_PHRASES.humanToAi} »
-          </li>
-          <li className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
-            AI → Jeff : « {MC_MAGIC_PHRASES.aiToJeff} »
-          </li>
-        </ul>
-      </section>
+      {ui.smartActions.length > 0 ? (
+        <section className="space-y-1.5">
+          {ui.smartActions.map((action) => (
+            <button
+              key={action.id}
+              type="button"
+              disabled={busy}
+              onClick={() => void runSmart(action)}
+              className={`flex w-full flex-col rounded-xl px-3 py-2.5 text-left ${
+                action.variant === "sky"
+                  ? "bg-sky-400 text-black"
+                  : action.variant === "amber"
+                    ? "bg-amber-400 text-black"
+                    : "bg-[#1F6B43] text-white"
+              }`}
+            >
+              <span className="text-sm font-black">{action.labelFr}</span>
+              <span className="text-[11px] opacity-80">{action.hintFr}</span>
+            </button>
+          ))}
+        </section>
+      ) : null}
 
-      <section className="grid gap-3 sm:grid-cols-2">
-        {MC_ROLE_CARDS.map((c) => (
-          <article
-            key={c.id}
-            className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
-          >
-            <h3 className="text-sm font-black text-white">{c.titleFr}</h3>
-            <ul className="mt-2 space-y-1.5 text-sm text-white/65">
-              {c.bodyFr.map((line) => (
-                <li key={line}>· {line}</li>
-              ))}
-            </ul>
-          </article>
-        ))}
-      </section>
+      {ui.jumpCues.length > 0 ? (
+        <section className="grid gap-1">
+          {ui.jumpCues.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              disabled={busy}
+              onClick={() => post({ action: "goto", cueId: c.id })}
+              className={`rounded-lg px-3 py-2 text-left text-xs ${
+                c.id === session.cueId
+                  ? "bg-emerald-400 font-black text-black"
+                  : "bg-black/30 font-semibold text-white/75"
+              }`}
+            >
+              {c.labelFr}
+            </button>
+          ))}
+        </section>
+      ) : null}
 
-      <section>
-        <h3 className="mb-2 text-sm font-bold text-white/70">Tous les cues</h3>
-        <div className="max-h-[28rem] space-y-1 overflow-y-auto rounded-2xl border border-white/10 p-2">
-          {cues.map((c, i) => {
-            const active = i === session.cueIndex;
-            return (
-              <button
-                key={c.id}
-                type="button"
-                disabled={busy}
-                onClick={() => post({ action: "goto", cueId: c.id })}
-                className={`flex w-full items-start gap-2 rounded-xl px-3 py-2.5 text-left text-sm ${
-                  active
-                    ? "bg-emerald-400 text-black"
-                    : "bg-transparent text-white/75 hover:bg-white/5"
-                }`}
-              >
-                <span className="w-7 shrink-0 font-mono text-xs opacity-70">
-                  {i + 1}
-                </span>
-                <span className="font-semibold">{c.labelFr}</span>
-              </button>
-            );
-          })}
-        </div>
-      </section>
+      <footer className="flex gap-2 pt-1">
+        <SwitchBtn
+          disabled={busy}
+          onClick={() => post({ action: "reset" })}
+          className="flex-1 text-xs font-semibold"
+        >
+          Standby
+        </SwitchBtn>
+        <Link
+          href="/hackathon/ops"
+          className="flex flex-1 items-center justify-center rounded-xl border border-white/15 py-3 text-xs font-semibold text-white/70"
+        >
+          Ops
+        </Link>
+      </footer>
     </div>
   );
 }

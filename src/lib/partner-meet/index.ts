@@ -105,6 +105,29 @@ export const PARTNER_MEET_CATALOG: Record<string, CreatePartnerMeetInput> = {
     notes:
       "RDV confirmé lundi 27 juillet 2026 15h00 Kinshasa - visio McBuleli Meet avec CEO McBuleli.",
   },
+  "kilelo-hackathon-live": {
+    slug: "kilelo-hackathon-live",
+    title: "McBuleli Hackathon × Kilelo - Talk visio",
+    partnerName: "Kilelo",
+    partnerEmail: "support@kileloapp.com",
+    hostEmail: "ceo@mcbuleli.org",
+    durationMinutes: 15,
+    status: "confirmed",
+    scheduledAt: new Date("2026-08-28T10:00:00+01:00"),
+    timezone: "Africa/Kinshasa",
+    allowlistEmails: [
+      "support@kileloapp.com",
+      "ceo@mcbuleli.org",
+      "hi@mcbuleli.org",
+    ],
+    agenda: [
+      "Talk Kilelo : marketplace, matching, confiance et avis",
+      "10 minutes · vitrine partenaires Hackathon",
+      "Questions rapides si le temps le permet",
+    ],
+    notes:
+      "Jeancy Kabangu à distance · créneau 10h00-10h10 Kinshasa · salle dédiée hackathon (≠ kilelo-partenariat).",
+  },
   "cesar-group-partenariat": {
     slug: "cesar-group-partenariat",
     title: "McBuleli × César Group - RDV partenariat",
@@ -259,6 +282,7 @@ export const PARTNER_MEET_CATALOG: Record<string, CreatePartnerMeetInput> = {
 
 const CATALOG_IDS: Record<string, string> = {
   "kilelo-partenariat": "a1b2c3d4-e5f6-4a70-8b9c-0d1e2f3a4b5c",
+  "kilelo-hackathon-live": "b8c9d0e1-f2a3-4b56-8c9d-0e1f2a3b4c5d",
   "cesar-group-partenariat": "b2c3d4e5-f6a7-4b81-9c0d-1e2f3a4b5c6d",
   "e-com-sas-partenariat": "c3d4e5f6-a7b8-4c92-9d0e-1f2a3b4c5d6e",
   "rdpi-thinktank-partenariat": "d4e5f6a7-b8c9-4d03-0e1f-2a3b4c5d6e7f",

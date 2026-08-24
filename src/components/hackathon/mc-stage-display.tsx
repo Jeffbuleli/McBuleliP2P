@@ -280,6 +280,11 @@ export function McStageDisplay({
                       {session.cue.domainFr}
                     </span>
                   ) : null}
+                  {session.meetSlug ? (
+                    <span className="rounded-full border border-sky-300 bg-sky-50 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-sky-700">
+                      Visio active
+                    </span>
+                  ) : null}
                 </div>
 
                 {session.cue.partnerPresenterFr ? (

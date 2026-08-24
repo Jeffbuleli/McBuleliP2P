@@ -17,18 +17,26 @@ Partenaire Marketplace Services Locaux (matching / confiance / avis).
 
 ## RDV McBuleli Meet
 
-- Landing : https://mcbuleli.org/meet/kilelo-partenariat
+- Landing partenariat : https://mcbuleli.org/meet/kilelo-partenariat
+- **Hackathon talk visio (28 août 10h00)** : https://mcbuleli.org/meet/kilelo-hackathon-live
 - Hôte : ceo@mcbuleli.org
-- Seed : `npx tsx scripts/seed-kilelo-partner-meet.ts`
+- Seed partenariat : `npx tsx scripts/seed-kilelo-partner-meet.ts`
+- Seed hackathon visio : `npm run seed:kilelo-hackathon-meet`
 - Doc flux : [partner-meet.md](./partner-meet.md)
 
-**Ne jamais envoyer** `live.mcbuleli.org/…` nu - uniquement `/meet/kilelo-partenariat`.
+**Ne jamais envoyer** `live.mcbuleli.org/…` nu - uniquement `/meet/{slug}`.
 
-## Dates hackathon (lieu en attente Silikin)
+### Talk à distance · Live
 
-- 12 août 2026 - Jour 1 Bootcamp (08h00-13h30)
-- 13 août 2026 - Jour 2 Build Day (08h00-13h30)
-- 14 août 2026 - Jour 3 Demo Day (08h00-13h30)
+- **Jeancy** rejoint : `/meet/kilelo-hackathon-live` (compte `support@kileloapp.com`)
+- **Ops salle** : `/meet/kilelo-hackathon-live/host` sur laptop → enceintes (+ HDMI projecteur si besoin)
+- **Public** : `/hackathon/live` reste en mode MC (carte Kilelo + voix McBuleli AI + chrono)
+- Email programme : `npm run email:kilelo-hackathon-remote -- --to hi@mcbuleli.org --send`
+
+## Dates hackathon
+
+- **28 août 2026** - Jour unique · Silikin Village · 08h00-17h00
+- Talk Kilelo : **10h00 - 10h10** (visio)
 
 ## Emails
 
@@ -36,10 +44,12 @@ Fiche partenaire : `content/email-partnership/kilelo-fiche-partenariat.html`
 
 Réponse RDV Meet : `content/email-partnership/kilelo-meet-reply.html`
 
-```bash
-# Preview réponse (avant envoi Jeancy)
-npm run email:kilelo-meet-reply -- --to hi@mcbuleli.org --send
+Programme + visio hackathon : `content/email-partnership/kilelo-hackathon-remote.html`
 
-# Prod (après validation)
-npm run email:kilelo-meet-reply -- --to support@kileloapp.com --send
+```bash
+# Test programme visio
+npm run email:kilelo-hackathon-remote -- --to hi@mcbuleli.org --send
+
+# Prod Jeancy
+npm run email:kilelo-hackathon-remote -- --to support@kileloapp.com --send
 ```

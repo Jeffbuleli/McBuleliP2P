@@ -137,6 +137,46 @@ export async function setSlideSessionIndex(input: {
   });
 }
 
+export async function stepSlideSession(input: {
+  editionId: string;
+  delta: number;
+  userId: string;
+}): Promise<SlideSessionPublic> {
+  const current = await getSlideSessionForEdition(input.editionId);
+  if (!current?.deckSlug || current.status !== "live") {
+    throw new Error("not_live");
+  }
+  const deck = getHackathonDeck(current.deckSlug);
+  if (!deck) throw new Error("deck_not_found");
+  const max = deck.slides.length - 1;
+  const index = Math.max(
+    0,
+    Math.min(current.slideIndex + input.delta, max),
+  );
+  return setSlideSessionIndex({
+    editionId: input.editionId,
+    slideIndex: index,
+    userId: input.userId,
+  });
+}
+
+export async function getMcSlideRemoteSummary(): Promise<{
+  status: "idle" | "live";
+  deckSlug: string | null;
+  slideIndex: number;
+  totalSlides: number;
+} | null> {
+  const session = await getFeaturedSlideSession();
+  if (!session) return null;
+  const deck = session.deckSlug ? getHackathonDeck(session.deckSlug) : null;
+  return {
+    status: session.status,
+    deckSlug: session.deckSlug,
+    slideIndex: session.slideIndex,
+    totalSlides: deck?.slides.length ?? 0,
+  };
+}
+
 export async function endSlideSession(input: {
   editionId: string;
   userId: string;
