@@ -65,12 +65,12 @@ const PRONUNCIATION: Array<[RegExp, string]> = [
   [/–|—/g, ","],
 ];
 
-/** Slower than default — relaxed, unhurried stage presence. */
-const DEFAULT_RATE = 0.84;
+/** Slower stage presence — browsers drop syllables when rate is too high. */
+const DEFAULT_RATE = 0.72;
 /** Slightly softer than neutral. */
 const DEFAULT_PITCH = 0.96;
 /** Pause between sentence chunks (ms). */
-const CHUNK_GAP_MS = 620;
+const CHUNK_GAP_MS = 780;
 
 let speakGeneration = 0;
 
@@ -96,7 +96,7 @@ export function splitMcSpeechChunks(text: string): string[] {
     .split(/(?<=[.!?…])\s+|(?<=:)\s+|(?<=;)\s+/)
     .map((p) => p.trim())
     .filter(Boolean);
-  if (parts.length <= 1 && normalized.length > 120) {
+  if (parts.length <= 1 && normalized.length > 90) {
     return normalized
       .split(/(?<=,)\s+/)
       .map((p) => p.trim())
