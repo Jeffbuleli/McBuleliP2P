@@ -8,6 +8,7 @@ import {
 } from "@/lib/hackathon/mc-auth";
 import { KILELO_REMOTE_MEET_SLUG } from "@/lib/hackathon/mc-day";
 import { getFeaturedEditionRow } from "@/lib/hackathon/hub";
+import { armPartnerMeetLiveWindow } from "@/lib/partner-meet";
 import { getSessionUser } from "@/lib/session-user";
 import {
   clearMcMeet,
@@ -91,6 +92,7 @@ const actionSchema = z.discriminatedUnion("action", [
     id: z.enum([
       "kilelo_visio",
       "kilelo_projector",
+      "kilelo_prepare",
       "visio_off",
       "bootcamp_slides",
       "build_wall",
@@ -110,22 +112,27 @@ function applySmart(
   id:
     | "kilelo_visio"
     | "kilelo_projector"
+    | "kilelo_prepare"
     | "visio_off"
     | "bootcamp_slides"
     | "build_wall"
     | "podium",
 ): ReturnType<typeof toMcPublic> {
   switch (id) {
+    case "kilelo_projector": {
+      let s = setMcCueById("partner-kilelo-call");
+      s = setMcMeetSlug(KILELO_REMOTE_MEET_SLUG);
+      s = setProjectorMode("meet");
+      s = startMcTimer(10 * 60);
+      return s;
+    }
+    case "kilelo_prepare":
+      return setMcMeetSlug(KILELO_REMOTE_MEET_SLUG);
     case "kilelo_visio": {
       let s = setMcCueById("partner-kilelo-call");
       s = setProjectorMode("mc");
       s = setMcMeetSlug(KILELO_REMOTE_MEET_SLUG);
       s = startMcTimer(10 * 60);
-      return s;
-    }
-    case "kilelo_projector": {
-      let s = setMcMeetSlug(KILELO_REMOTE_MEET_SLUG);
-      s = setProjectorMode("meet");
       return s;
     }
     case "visio_off":
@@ -217,6 +224,13 @@ export async function POST(req: Request) {
         session = setMcMeetSlug(a.slug);
         break;
       case "smart":
+        if (
+          a.id === "kilelo_prepare" ||
+          a.id === "kilelo_projector" ||
+          a.id === "kilelo_visio"
+        ) {
+          await armPartnerMeetLiveWindow(KILELO_REMOTE_MEET_SLUG);
+        }
         session = applySmart(a.id);
         break;
       case "go_live_slides": {

@@ -91,7 +91,11 @@ export function buildMcRemoteUiContext(
 
   const smartActions = MC_SMART_ACTIONS.filter((a) => {
     if (a.id === "bootcamp_slides") return false;
-    if (a.id === "kilelo_visio" || a.id === "kilelo_projector") {
+    if (
+      a.id === "kilelo_visio" ||
+      a.id === "kilelo_projector" ||
+      a.id === "kilelo_prepare"
+    ) {
       return phase.id === "partners" || Boolean(session.meetSlug);
     }
     if (a.id === "visio_off") return Boolean(session.meetSlug) || mode === "meet";

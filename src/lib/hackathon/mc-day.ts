@@ -140,7 +140,7 @@ function buildPartnerCues(): McCue[] {
       ? `Nous accueillons ${p.name}. Bienvenue à ${p.presenter}, en visio McBuleli Meet. ${PARTNER_TALK_MINUTES} minutes - ${domainFr}.`
       : `Nous accueillons ${p.name}. Bienvenue à ${p.presenter}. ${PARTNER_TALK_MINUTES} minutes - ${domainFr}.`;
     const opsRemote = remote
-      ? ` Jeancy à distance : ouvrir /meet/${p.remoteMeetSlug}/host (son + vidéo vers la salle). Projecteur public reste sur /hackathon/live. Tester caméra/micro avant 09h55.`
+      ? ` Jeancy peut rejoindre /meet/${p.remoteMeetSlug} avant l'heure. Sur /mc : « Visio sur Live » (1 tap, sans hôte McBuleli). Hôte salle = lien optionnel « Hôte Meet ».`
       : "";
     out.push({
       id: `partner-${p.slug}-call`,

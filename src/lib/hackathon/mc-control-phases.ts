@@ -77,16 +77,23 @@ export const MC_CONTROL_PHASES: McControlPhase[] = [
 
 export const MC_SMART_ACTIONS: McSmartAction[] = [
   {
-    id: "kilelo_visio",
-    labelFr: "Kilelo · Visio ON",
-    hintFr: "Cue Kilelo + MC + chrono 10' + Meet hôte",
+    id: "kilelo_projector",
+    labelFr: "Kilelo · Visio sur Live",
+    hintFr: "1 tap · /live = visio · hôte McBuleli pas obligatoire si Kilelo est déjà en salle",
     phaseId: "partners",
     variant: "sky",
   },
   {
-    id: "kilelo_projector",
-    labelFr: "Kilelo · Plein écran Meet",
-    hintFr: "Projecteur = visio (PC connecté staff)",
+    id: "kilelo_prepare",
+    labelFr: "Kilelo · Préparer visio",
+    hintFr: "Armer la salle · Kilelo peut rejoindre 30 min avant · Live au moment voulu",
+    phaseId: "partners",
+    variant: "sky",
+  },
+  {
+    id: "kilelo_visio",
+    labelFr: "Kilelo · MC + hôte",
+    hintFr: "Carte partenaire sur Live + ouvre l'onglet hôte (son salle)",
     phaseId: "partners",
     variant: "sky",
   },

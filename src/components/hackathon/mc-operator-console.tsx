@@ -130,10 +130,7 @@ export function McOperatorConsole({
 
   const runSmart = async (action: McSmartAction) => {
     await post({ action: "smart", id: action.id });
-    if (
-      action.id === "kilelo_visio" ||
-      action.id === "kilelo_projector"
-    ) {
+    if (action.id === "kilelo_visio") {
       window.open(`/meet/${KILELO_REMOTE_MEET_SLUG}/host`, "_blank", "noopener");
     }
   };
@@ -212,6 +209,16 @@ export function McOperatorConsole({
           >
             Slides · Passer On Air
           </SwitchBtn>
+        ) : null}
+        {session.meetSlug ? (
+          <Link
+            href={`/meet/${session.meetSlug}/host`}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-2 flex w-full items-center justify-center rounded-xl border border-sky-400/35 bg-sky-400/10 py-3 text-xs font-bold text-sky-200"
+          >
+            Hôte Meet ↗ (optionnel · son salle)
+          </Link>
         ) : null}
       </section>
 

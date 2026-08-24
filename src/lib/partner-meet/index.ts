@@ -75,6 +75,32 @@ export function partnerMeetPublicUrl(slug: string): string {
   return getAppAbsoluteUrl(partnerMeetLandingPath(slug));
 }
 
+/** Hackathon day visio (Kilelo remote, etc.) — guest window follows ops arming. */
+export function isHackathonEventMeetSlug(slug: string): boolean {
+  return liveRoomNameFromSessionSlug(slug).includes("hackathon-live");
+}
+
+/** Reset scheduledAt to now so partner guest join window opens (no host required). */
+export async function armPartnerMeetLiveWindow(slug: string): Promise<void> {
+  if (!isHackathonEventMeetSlug(slug)) return;
+  const meet = await ensurePartnerMeet(slug);
+  if (!meet) return;
+  try {
+    const db = getDb();
+    const now = new Date();
+    await db
+      .update(partnerMeets)
+      .set({
+        scheduledAt: now,
+        status: "confirmed",
+        updatedAt: now,
+      })
+      .where(eq(partnerMeets.id, meet.id));
+  } catch {
+    /* catalog fallback — join still works before nominal schedule */
+  }
+}
+
 function normEmail(email: string): string {
   return email.trim().toLowerCase();
 }
