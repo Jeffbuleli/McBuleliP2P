@@ -7,6 +7,7 @@ import type { HackathonSlide } from "@/lib/hackathon/slides/types";
 import { slidePaletteStyle } from "@/lib/hackathon/slides/palette";
 import { SlideIllustration } from "@/components/hackathon/slide-illustrations";
 import { HackathonAtmosphere } from "@/components/hackathon/hackathon-atmosphere";
+import { McStagePortraitFrame } from "@/components/hackathon/mc-stage-portrait-frame";
 
 function BulletList({ items }: { items: Array<{ text: string }> }) {
   return (
@@ -17,15 +18,16 @@ function BulletList({ items }: { items: Array<{ text: string }> }) {
           initial={{ opacity: 0, x: -8 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.05 * i, duration: 0.28 }}
-          className="flex gap-2.5 text-[clamp(0.95rem,1.55vw,1.22rem)] leading-snug text-[color:var(--hk-text)]"
+          className="flex gap-3 text-[clamp(0.95rem,1.55vw,1.22rem)] leading-snug text-[color:var(--hk-text)]"
         >
           <span
-            className="shrink-0 font-black text-[color:var(--slide-accent)]"
+            className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[11px] font-black tabular-nums text-white"
+            style={{ background: "var(--slide-accent)" }}
             aria-hidden
           >
-            -
+            {String(i + 1).padStart(2, "0")}
           </span>
-          <span>{b.text}</span>
+          <span className="pt-0.5">{b.text}</span>
         </motion.li>
       ))}
     </ul>
@@ -85,7 +87,9 @@ export function HackathonSlideFrame({
       ? "text-[clamp(1.85rem,4.6vw,3.5rem)]"
       : "text-[clamp(1.55rem,3.8vw,2.9rem)]";
 
+  const showPortrait = Boolean(slide.portrait);
   const showSideArt =
+    !showPortrait &&
     Boolean(slide.illustration) &&
     slide.layout !== "agenda" &&
     slide.layout !== "tools";
@@ -142,7 +146,9 @@ export function HackathonSlideFrame({
 
         <div
           className={`mt-7 grid gap-6 ${
-            showSideArt ? "lg:grid-cols-[1.15fr_0.85fr] lg:items-center" : ""
+            showSideArt || showPortrait
+              ? "lg:grid-cols-[1.15fr_0.85fr] lg:items-center"
+              : ""
           }`}
         >
           <div className="min-w-0 space-y-4">
@@ -152,7 +158,7 @@ export function HackathonSlideFrame({
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.06 + i * 0.04 }}
-                className="text-[clamp(0.95rem,1.45vw,1.15rem)] leading-relaxed text-[color:var(--hk-text)]"
+                className="rounded-2xl border border-[color:var(--hk-border)] bg-[color:var(--hk-surface)]/90 px-4 py-3.5 text-[clamp(0.95rem,1.45vw,1.15rem)] leading-relaxed text-[color:var(--hk-text)] shadow-[0_10px_24px_-18px_var(--hk-shadow)]"
               >
                 {p}
               </motion.p>
@@ -336,7 +342,7 @@ export function HackathonSlideFrame({
               </div>
             ) : null}
 
-            {slide.layout === "closing" && slide.ctas?.length ? (
+            {slide.layout === "closing" && slide.ctas?.length && !hideQuizHint ? (
               <div className="flex flex-wrap gap-3 pt-2">
                 {slide.ctas.map((c) => (
                   <Link
@@ -351,6 +357,27 @@ export function HackathonSlideFrame({
             ) : null}
           </div>
 
+          {showPortrait && slide.portrait ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+              className="mx-auto flex w-full max-w-sm flex-col items-center lg:mx-0 lg:justify-self-end"
+            >
+              <McStagePortraitFrame
+                src={slide.portrait.src}
+                alt={slide.portrait.alt}
+                tone="ivory"
+                size="slide"
+              />
+              {slide.portrait.caption ? (
+                <p className="mt-3 text-center text-xs font-bold uppercase tracking-[0.16em] text-[color:var(--slide-accent)]">
+                  {slide.portrait.caption}
+                </p>
+              ) : null}
+            </motion.div>
+          ) : null}
+
           {showSideArt && slide.illustration ? (
             <motion.div
               initial={{ opacity: 0, scale: 0.94, y: 12 }}
@@ -362,7 +389,7 @@ export function HackathonSlideFrame({
                   : "mx-auto w-full max-w-md lg:mx-0 lg:justify-self-end"
               }
             >
-              <div className="hk-slide-illu overflow-hidden rounded-[22px] border border-[color:var(--hk-border)] bg-[color:var(--hk-surface)] p-1.5 shadow-[0_10px_28px_-18px_var(--hk-shadow)]">
+              <div className="hk-slide-illu overflow-hidden rounded-[22px] border-2 border-[color:var(--slide-accent)]/25 bg-[color:var(--hk-surface)] p-1.5 shadow-[0_14px_36px_-16px_var(--slide-glow)] ring-1 ring-[color:var(--hk-border)]">
                 <SlideIllustration id={slide.illustration} />
               </div>
             </motion.div>
@@ -374,7 +401,7 @@ export function HackathonSlideFrame({
               animate={{ opacity: 1, y: 0 }}
               className="mx-auto w-full max-w-lg pt-1"
             >
-              <div className="hk-slide-illu overflow-hidden rounded-[22px] border border-[color:var(--hk-border)] bg-[color:var(--hk-surface)] p-1.5 shadow-[0_10px_28px_-18px_var(--hk-shadow)]">
+              <div className="hk-slide-illu overflow-hidden rounded-[22px] border-2 border-[color:var(--slide-accent)]/25 bg-[color:var(--hk-surface)] p-1.5 shadow-[0_14px_36px_-16px_var(--slide-glow)] ring-1 ring-[color:var(--hk-border)]">
                 <SlideIllustration id={slide.illustration} />
               </div>
             </motion.div>

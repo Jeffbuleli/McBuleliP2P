@@ -189,7 +189,11 @@ export function McStageDisplay({
         <McStageHumanCard
           title="Ouverture"
           hostName="Mme Patty Basoga"
-          subtitle="Accueil institutionnel · puis McBuleli IA"
+          role="Hôte institutionnelle"
+          subtitle="Accueil de la salle · puis passage à McBuleli IA"
+          photoSrc="/hackathon/patty-basoga.png"
+          photoAlt="Portrait de Mme Patty Basoga"
+          tone="gold"
         />
       );
     }
@@ -198,7 +202,11 @@ export function McStageDisplay({
         <McStageHumanCard
           title="Clôture"
           hostName="Mme Patty Basoga"
+          role="Hôte institutionnelle"
           subtitle={cue.detailFr}
+          photoSrc="/hackathon/patty-basoga.png"
+          photoAlt="Portrait de Mme Patty Basoga"
+          tone="gold"
         />
       );
     }
@@ -207,7 +215,11 @@ export function McStageDisplay({
         <McStageHumanCard
           title="Bootcamp"
           hostName="Ir Jeff Buleli"
-          subtitle={cue.detailFr ?? "Fondateur · McBuleli"}
+          role="Fondateur · développeur principal de McBuleli"
+          subtitle={cue.detailFr ?? "1 heure · outils IA · pratique"}
+          photoSrc="/hackathon/jeff-buleli.png"
+          photoAlt="Portrait de Ir Jeff Buleli"
+          tone="ivory"
         />
       );
     }

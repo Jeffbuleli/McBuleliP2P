@@ -2,6 +2,10 @@
 
 import { AssistantAvatar } from "@/components/assistant/assistant-avatar";
 import { McStageFuturisticAura } from "@/components/hackathon/mc-stage-futuristic-aura";
+import {
+  McStagePortraitFrame,
+  type StagePortraitTone,
+} from "@/components/hackathon/mc-stage-portrait-frame";
 import { McStageVoiceWaves } from "@/components/hackathon/mc-stage-voice-waves";
 import type { McCue } from "@/lib/hackathon/mc-day";
 
@@ -25,26 +29,61 @@ export function McStageHumanCard({
   title,
   subtitle,
   hostName,
+  role,
+  photoSrc,
+  photoAlt,
+  tone = "gold",
 }: {
   title: string;
   subtitle?: string;
   hostName: string;
+  role?: string;
+  photoSrc: string;
+  photoAlt: string;
+  tone?: StagePortraitTone;
 }) {
   return (
-    <div className="relative overflow-hidden rounded-[2rem] border border-[#E5E5E0]/95 bg-gradient-to-b from-white to-[#FAFAF8] px-8 py-12 text-center shadow-[0_20px_60px_-28px_rgba(31,107,67,0.35)] sm:px-12 sm:py-14">
+    <div className="relative overflow-hidden rounded-[2rem] border border-[#E5E5E0]/95 bg-gradient-to-br from-white via-[#FAFAF8] to-[#F4F1EA] px-6 py-8 shadow-[0_24px_70px_-32px_rgba(31,107,67,0.4)] sm:px-10 sm:py-10">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-[#EAF6EE]/80 to-transparent"
+        className="pointer-events-none absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-[#EAF6EE]/90 via-[#F8E7B0]/25 to-transparent"
       />
-      <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-[#1F6B43]">
-        {title}
-      </p>
-      <h2 className="mt-4 text-3xl font-black tracking-tight text-[#0c0a09] sm:text-5xl">
-        {hostName}
-      </h2>
-      {subtitle ? (
-        <p className="mt-3 text-sm text-[#78716c] sm:text-base">{subtitle}</p>
-      ) : null}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-16 top-8 h-48 w-48 rounded-full bg-[#C9A227]/15 blur-3xl"
+      />
+
+      <div className="relative z-10 grid items-center gap-8 lg:grid-cols-[minmax(0,0.92fr)_1.08fr] lg:gap-12">
+        <McStagePortraitFrame
+          src={photoSrc}
+          alt={photoAlt}
+          tone={tone}
+          size="stage"
+        />
+
+        <div className="text-center lg:text-left">
+          <p className="inline-flex items-center gap-2 rounded-full border border-[#C9A227]/40 bg-white/90 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.22em] text-[#1F6B43] shadow-sm">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#C9A227]" aria-hidden />
+            {title}
+          </p>
+          <h2 className="mt-4 text-3xl font-black tracking-tight text-[#0c0a09] sm:text-5xl">
+            {hostName}
+          </h2>
+          {role ? (
+            <p className="mt-2 text-sm font-semibold text-[#1F6B43] sm:text-base">
+              {role}
+            </p>
+          ) : null}
+          {subtitle ? (
+            <p className="mt-3 max-w-xl text-sm leading-relaxed text-[#57534e] sm:text-base lg:mx-0 mx-auto">
+              {subtitle}
+            </p>
+          ) : null}
+          <p className="mt-5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#a8a29e]">
+            Scène · Silikin Village
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

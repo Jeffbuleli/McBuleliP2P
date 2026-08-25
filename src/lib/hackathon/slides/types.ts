@@ -98,6 +98,12 @@ export type HackathonSlide = {
     tasks: string[];
   };
   notes?: string;
+  /** Studio portrait (speaker / host) — replaces side illustration when set. */
+  portrait?: {
+    src: string;
+    alt: string;
+    caption?: string;
+  };
   /** Footer CTA labels (closing layout). */
   ctas?: Array<{ label: string; href: string }>;
 };
