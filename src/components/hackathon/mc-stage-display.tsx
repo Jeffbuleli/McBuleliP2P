@@ -290,14 +290,14 @@ export function McStageDisplay({
 
       <main className="relative z-10 flex min-h-0 flex-1 flex-col justify-center overflow-hidden px-6 py-8 sm:px-12">
         {/* Skyline only in content band — starts above footer, not behind it */}
-        <HackathonAtmosphere variant="page" className="opacity-95" />
+        <HackathonAtmosphere variant="page" className="opacity-100" />
         <div
           aria-hidden
-          className="pointer-events-none absolute -right-24 top-0 h-72 w-72 rounded-full bg-[#EAF6EE]/80 blur-3xl"
+          className="pointer-events-none absolute -right-24 top-0 h-56 w-56 rounded-full bg-[#EAF6EE]/45 blur-3xl"
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute -left-16 bottom-8 h-64 w-64 rounded-full bg-[#EEF2FF]/70 blur-3xl"
+          className="pointer-events-none absolute -left-16 bottom-8 h-48 w-48 rounded-full bg-[#EEF2FF]/35 blur-3xl"
         />
         <AnimatePresence mode="wait">
           <motion.div
@@ -310,7 +310,7 @@ export function McStageDisplay({
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             exit={{ opacity: 0, y: -12, filter: "blur(4px)" }}
             transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-            className="relative z-10 mx-auto w-full max-w-5xl"
+            className="relative z-10 mx-auto w-full max-w-xl sm:max-w-2xl"
           >
             {session.humanOverride ? (
               <div className="rounded-3xl border border-amber-300/60 bg-amber-50/90 px-8 py-10 text-center shadow-sm">
@@ -338,7 +338,7 @@ export function McStageDisplay({
         {remainMs != null && !session.humanOverride ? (
           <motion.div
             layout
-            className="relative z-10 mx-auto mt-10 w-full max-w-5xl"
+            className="relative z-10 mx-auto mt-8 w-full max-w-xl sm:max-w-2xl"
           >
             <div
               className={`inline-flex flex-col rounded-3xl border px-6 py-4 shadow-sm ${

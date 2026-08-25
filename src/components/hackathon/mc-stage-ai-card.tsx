@@ -107,80 +107,80 @@ export function McStageAiCard({
   const showPartnerLogo = Boolean(cue.partnerLogoUrl && (isPartnerCall || isPartnerThanks));
 
   return (
-    <div className="relative min-h-[min(72vh,520px)] overflow-hidden rounded-[2rem] border border-[#1F6B43]/15 bg-gradient-to-b from-[#FAFFFC] via-white to-[#F4FBF7] shadow-[0_24px_70px_-32px_rgba(31,107,67,0.45)]">
+    <div className="relative min-h-[min(52vh,380px)] overflow-hidden rounded-[1.75rem] border border-[#1F6B43]/15 bg-gradient-to-b from-[#FAFFFC]/95 via-white/92 to-[#F4FBF7]/90 shadow-[0_20px_50px_-28px_rgba(31,107,67,0.4)] backdrop-blur-[2px]">
       <McStageFuturisticAura active intense={speaking} />
 
-      <div className="relative z-10 flex h-full min-h-[min(72vh,520px)] flex-col items-center px-6 py-8 sm:px-10 sm:py-10">
+      <div className="relative z-10 flex h-full min-h-[min(52vh,380px)] flex-col items-center px-5 py-6 sm:px-7 sm:py-7">
         {/* Partner logo — top center, square or wide */}
         {showPartnerLogo ? (
-          <div className="mb-5 flex w-full max-w-md justify-center">
-            <div className="flex min-h-[5.5rem] w-full max-w-[18rem] items-center justify-center rounded-2xl border-2 border-[#E5E5E0] bg-white px-5 py-4 shadow-sm sm:min-h-[6.5rem] sm:max-w-[22rem]">
+          <div className="mb-4 flex w-full max-w-sm justify-center">
+            <div className="flex min-h-[4.25rem] w-full max-w-[14rem] items-center justify-center rounded-xl border-2 border-[#E5E5E0] bg-white px-4 py-3 shadow-sm sm:min-h-[5rem] sm:max-w-[16rem]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={cue.partnerLogoUrl!}
                 alt={cue.partnerName ?? "Partenaire"}
-                className="max-h-20 max-w-full object-contain sm:max-h-24"
+                className="max-h-14 max-w-full object-contain sm:max-h-16"
               />
             </div>
           </div>
         ) : null}
 
         {/* Public metadata */}
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-[#1F6B43]/20 bg-[#EAF6EE] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#1F6B43]">
+        <div className="flex flex-wrap items-center justify-center gap-1.5">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-[#1F6B43]/20 bg-[#EAF6EE] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-[#1F6B43]">
             {cue.partnerName && !isPartnerCall ? cue.partnerName : cue.labelFr}
           </span>
           {cue.domainFr ? (
-            <span className="rounded-full border border-[#E5E5E0] bg-white/90 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[#78716c]">
+            <span className="rounded-full border border-[#E5E5E0] bg-white/90 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#78716c]">
               {cue.domainFr}
             </span>
           ) : null}
           {cue.windowFr ? (
-            <span className="rounded-full border border-[#E5E5E0] bg-white/90 px-3 py-1 font-mono text-[10px] font-bold text-[#57534e]">
+            <span className="rounded-full border border-[#E5E5E0] bg-white/90 px-2.5 py-0.5 font-mono text-[10px] font-bold text-[#57534e]">
               {cue.windowFr}
             </span>
           ) : null}
           {meetActive ? (
-            <span className="rounded-full border border-sky-300 bg-sky-50 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-sky-700">
+            <span className="rounded-full border border-sky-300 bg-sky-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-sky-700">
               Visio active
             </span>
           ) : null}
         </div>
 
         {cue.partnerName && isPartnerCall ? (
-          <h2 className="mt-4 text-center text-2xl font-black tracking-tight text-[#0c0a09] sm:text-4xl">
+          <h2 className="mt-3 text-center text-xl font-black tracking-tight text-[#0c0a09] sm:text-3xl">
             {cue.partnerName}
           </h2>
         ) : null}
 
         {cue.partnerPresenterFr ? (
-          <p className="mt-2 text-center text-base font-semibold text-[#1F6B43] sm:text-lg">
+          <p className="mt-1.5 text-center text-sm font-semibold text-[#1F6B43] sm:text-base">
             {cue.partnerPresenterFr}
           </p>
         ) : null}
 
         {cue.detailFr && !isPartnerThanks ? (
-          <p className="mt-3 max-w-lg text-center text-sm text-[#78716c] sm:text-base">
+          <p className="mt-2 max-w-md text-center text-xs text-[#78716c] sm:text-sm">
             {cue.detailFr}
           </p>
         ) : null}
 
         {/* McBuleli IA avatar — center stage + voice waves */}
-        <div className="relative mt-auto flex flex-col items-center pb-2 pt-6">
-          <div className="relative flex h-48 w-48 items-center justify-center sm:h-56 sm:w-56">
+        <div className="relative mt-auto flex flex-col items-center pb-1 pt-4">
+          <div className="relative flex h-36 w-36 items-center justify-center sm:h-44 sm:w-44">
             <McStageVoiceWaves
               speaking={speaking}
-              size={isPartnerCall ? 200 : 230}
+              size={isPartnerCall ? 150 : 175}
             />
             <div className="relative z-10">
-              <AssistantAvatar size={isPartnerCall ? 96 : 120} pulse={speaking} />
+              <AssistantAvatar size={isPartnerCall ? 72 : 88} pulse={speaking} />
             </div>
           </div>
-          <p className="mt-4 text-[11px] font-bold uppercase tracking-[0.28em] text-[#1F6B43]">
+          <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.28em] text-[#1F6B43]">
             McBuleli IA
           </p>
           {speaking ? (
-            <div className="mt-3 flex items-center gap-2 text-xs font-semibold text-[#1F6B43]">
+            <div className="mt-2 flex items-center gap-2 text-xs font-semibold text-[#1F6B43]">
               <MicPulse active />
               En direct
               {chunkTotal > 1 ? (
@@ -190,7 +190,7 @@ export function McStageAiCard({
               ) : null}
             </div>
           ) : (
-            <p className="mt-2 text-xs text-[#a8a29e]">Modération · scène</p>
+            <p className="mt-1.5 text-[11px] text-[#a8a29e]">Modération · scène</p>
           )}
         </div>
 

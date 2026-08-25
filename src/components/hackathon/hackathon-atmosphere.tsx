@@ -231,7 +231,7 @@ export function HackathonAtmosphere({
           preserveAspectRatio="xMidYMax meet"
           xmlns="http://www.w3.org/2000/svg"
         >
-          <KinshasaPixelSkylineOnce opacity={0.16} />
+          <KinshasaPixelSkylineOnce opacity={0.22} />
         </svg>
         {/* Soft top mist — leave skyline readable in lower half */}
         <div
