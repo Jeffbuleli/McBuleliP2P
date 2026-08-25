@@ -16,7 +16,7 @@ export const MC_MAGIC_PHRASES = {
   pattyToAi:
     "Bienvenue au McBuleli Hackathon. Nous accueillons McBuleli IA pour présenter McBuleli et accompagner le déroulé.",
   humanToAi: "Merci McBuleli IA.",
-  aiToPatty: "Je passe maintenant la parole à Mme Patty B. pour la clôture.",
+  aiToPatty: "Je passe maintenant la parole à Mme Patty Basoga pour la clôture.",
   aiToJeff:
     "Je passe maintenant la parole à Ir Jeff Buleli, fondateur et développeur principal de McBuleli, pour le bootcamp.",
 } as const;
@@ -133,8 +133,17 @@ function partnerWindow(slug: string): { windowFr: string; domainFr: string } {
 }
 
 function buildPartnerCues(): McCue[] {
+  const thanksVariants = [
+    (name: string) => `Merci à ${name}.`,
+    (name: string) => `Applaudissements pour ${name}.`,
+    (name: string) => `Remercions ${name}.`,
+    (name: string) => `Merci ${name}.`,
+    (name: string) => `Un merci à ${name}.`,
+    (name: string) => `Bravo à ${name}.`,
+    (name: string) => `Merci à ${name} pour ce partage.`,
+  ];
   const out: McCue[] = [];
-  for (const p of STAGE_PARTNERS) {
+  STAGE_PARTNERS.forEach((p, i) => {
     const { windowFr, domainFr } = partnerWindow(p.slug);
     const remote = Boolean(p.remoteMeetSlug);
     const domainBit = domainFr ? ` - ${domainFr}` : "";
@@ -166,8 +175,8 @@ function buildPartnerCues(): McCue[] {
       id: `partner-${p.slug}-thanks`,
       kind: "partner_thanks",
       labelFr: `Merci · ${p.name}`,
-      stageLineFr: `Un grand merci à ${p.name}. Applaudissements.`,
-      detailFr: "Prochain partenaire dans un instant.",
+      stageLineFr: thanksVariants[i % thanksVariants.length]!(p.name),
+      detailFr: "Suite du programme.",
       partnerSlug: p.slug,
       partnerName: p.name,
       partnerLogoUrl: p.logoUrl,
@@ -179,7 +188,7 @@ function buildPartnerCues(): McCue[] {
         ? "Couper le partage visio Meet. Enchaîner le cue suivant."
         : "Enchaîner le cue suivant dès que le partenaire quitte la scène.",
     });
-  }
+  });
   return out;
 }
 
@@ -198,7 +207,7 @@ export const MC_CUES: McCue[] = [
     id: "patty-open",
     kind: "patty_open",
     labelFr: "Patty · Ouverture",
-    stageLineFr: "Ouverture · Mme Patty B.",
+    stageLineFr: "Ouverture · Mme Patty Basoga",
     detailFr: "Accueil institutionnel McBuleli",
     humanScriptFr: [
       "Bonjour et bienvenue au McBuleli Hackathon, ici à Silikin Village.",
@@ -221,8 +230,8 @@ export const MC_CUES: McCue[] = [
     kind: "ai_intro",
     labelFr: "McBuleli IA · Technologies",
     stageLineFr:
-      "Ce que nous avons déjà réalisé, avec calme et constance : McBuleli P2P, pour l'échange crypto et mobile money sécurisé ; McBuleli ISP, pour l'accès internet ; Cyber Alert DRC avec SafeFind, pour la vigilance face aux menaces en ligne ; et Africa Insight, pour mieux lire le terrain. Ce hackathon prolonge cette ambition : builder avec vous, aujourd'hui.",
-    detailFr: "P2P · ISP · Cyber Alert DRC / SafeFind · Africa Insight",
+      "Ce que nous avons déjà réalisé : McBuleli P2P, marketplace crypto et mobile money avec escrow ; McBuleli ISP, pour l'accès internet ; McBuleli Meet, pour la visio ; Cyber Alert DRC avec SafeFind, pour la vigilance face aux menaces en ligne ; et Africa Insight, pour mieux lire le terrain. Ce hackathon prolonge cette ambition : builder avec vous, aujourd'hui.",
+    detailFr: "P2P · ISP · Meet · Cyber Alert DRC / SafeFind · Africa Insight",
     humanScriptFr: "Cue 2/3 intro. Puis lancer « Règles ».",
   },
   {
@@ -345,7 +354,7 @@ export const MC_CUES: McCue[] = [
     kind: "ai_wrap",
     labelFr: "McBuleli IA · Synthèse",
     stageLineFr:
-      "Merci à toutes et à tous. Ce fut un plaisir d'accompagner le tempo avec l'équipe. Je passe maintenant la parole à Mme Patty B. pour la clôture.",
+      "Merci à toutes et à tous. Ce fut un plaisir d'accompagner le tempo avec l'équipe. Je passe maintenant la parole à Mme Patty Basoga pour la clôture.",
     detailFr: MC_MAGIC_PHRASES.aiToPatty,
     projectorMode: "mc",
     humanScriptFr: "Patty prête pour clôturer.",
@@ -354,7 +363,7 @@ export const MC_CUES: McCue[] = [
     id: "patty-close",
     kind: "patty_close",
     labelFr: "Patty · Clôture",
-    stageLineFr: "Clôture · Mme Patty B.",
+    stageLineFr: "Clôture · Mme Patty Basoga",
     projectorMode: "mc",
     humanScriptFr: [
       "Merci aux partenaires, aux builders, à Ir Jeff Buleli pour le bootcamp, et à McBuleli IA pour la modération.",
@@ -392,7 +401,7 @@ export type McRoleCard = {
 export const MC_ROLE_CARDS: McRoleCard[] = [
   {
     id: "patty",
-    titleFr: "Mme Patty B. - Ouverture & clôture",
+    titleFr: "Mme Patty Basoga - Ouverture & clôture",
     bodyFr: [
       "Ouvre avec la phrase magique vers McBuleli IA.",
       "Ne reste pas MC au milieu de la journée.",

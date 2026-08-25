@@ -6,13 +6,40 @@
 import { createHash } from "crypto";
 import OpenAI from "openai";
 import { assistantOpenAiEnabled } from "@/lib/assistant/openai-client";
+import { applyMcPronunciation } from "@/lib/hackathon/mc-pronunciation";
 
-const POLISH_SYSTEM = `Tu prépares une ligne pour lecture à voix haute (MC scène, français de Kinshasa).
-Règles:
-- Garde le sens exact et tous les noms propres (McBuleli, partenaires, personnes).
-- Français fluide, calme, phrases naturelles à l'oral.
+const POLISH_SYSTEM = `Tu es le rédacteur oral de McBuleli IA, MC du McBuleli Hackathon (Kinshasa, Silikin Village).
+Tu reformules une ligne pour lecture TTS en français fluide, calme, naturel.
+
+## Connaissance McBuleli (utilise si la ligne présente l'entreprise ou ses produits)
+McBuleli (mcbuleli.org) est une entreprise tech congolaise à Kinshasa.
+Services / réalisations à garder exacts si mentionnés :
+- McBuleli P2P : marketplace crypto ↔ mobile money avec escrow (sécurité des échanges).
+- McBuleli ISP : accès internet / connectivité.
+- McBuleli Meet : visio (ex. partenaires à distance).
+- Cyber Alert DRC + SafeFind : vigilance cyber / alertes.
+- Africa Insight : lecture du terrain / insights.
+- Academy & Community : formation et communauté.
+- Wallet (USDT, Pi), staking, AVEC / tontines, bots trading (si cités).
+Vision : innovation numérique au service des gens. Mission : plateformes sûres et accessibles (finance, connectivité, confiance digitale).
+Hackathon : builders à Silikin Village ; Ir Jeff Buleli = fondateur et développeur principal.
+
+## Prononciation / noms (écris la forme orale dans le texte final)
+- McBuleli → « Mac Bouléli » ; McBuleli IA → « Mac Bouléli I A » ; McBuleli P2P → « Mac Bouléli Pé deux Pé » ; McBuleli ISP → « Mac Bouléli I S P » ; McBuleli Meet → « Mac Bouléli Meet ».
+- TYTS → toujours « The Young Technology Service » (ne pas épeler T-Y-T-S). Domaine : tech / cyber & réseaux ; présentateur Aaron Nsomone.
+- Mme Patty Basoga / Patty B. → « Madame Patty Basoga » (hôtesse ouverture & clôture McBuleli).
+- Autres : Silikin → Silikine ; IA Académie → I A Académie ; Kilelo → Kilélo ; ILOKWE → Ilokoué ; Ir Jeff Buleli → Ingénieur Jeff Bouléli.
+
+## Remerciements partenaires (anti-monotonie)
+Si la ligne est un remerciement après intervention partenaire :
+- Une seule phrase courte (max ~12 mots). Pas d'amplification (« Un grand merci… », « ce fut un honneur… », « pour cette riche contribution… »).
+- Ne pas ajouter d'applaudissements ni de transition « on enchaîne » si absents du texte source.
+- Ne pas reformuler en discours de clôture.
+
+## Règles générales
+- Garde le sens exact ; ne invente pas de faits hors du texte + connaissance ci-dessus.
 - Pas de markdown, pas de guillemets décoratifs, une seule variante.
-- Maximum 120 mots.`;
+- Maximum 110 mots (sauf remerciement : beaucoup plus court).`;
 
 type CacheEntry = { audio: Buffer; at: number };
 
@@ -32,7 +59,7 @@ function getClient(): OpenAI {
 }
 
 function cacheKey(text: string): string {
-  return createHash("sha256").update(text.trim()).digest("hex");
+  return createHash("sha256").update(`v2:${text.trim()}`).digest("hex");
 }
 
 function remember(key: string, audio: Buffer) {
@@ -57,7 +84,7 @@ async function polishForSpeech(text: string): Promise<string> {
       { role: "system", content: POLISH_SYSTEM },
       { role: "user", content: text.slice(0, 1200) },
     ],
-    temperature: 0.35,
+    temperature: 0.3,
     max_tokens: 320,
   });
   const out = res.choices[0]?.message?.content?.trim();
@@ -78,7 +105,8 @@ export async function synthesizeMcStageAudio(
   }
 
   const openai = getClient();
-  const spoken = await polishForSpeech(text);
+  const polished = await polishForSpeech(text);
+  const spoken = applyMcPronunciation(polished);
   const voice =
     (process.env.OPENAI_MC_TTS_VOICE?.trim() as
       | "alloy"

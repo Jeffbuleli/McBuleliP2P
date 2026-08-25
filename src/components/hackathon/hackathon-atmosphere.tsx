@@ -226,19 +226,19 @@ export function HackathonAtmosphere({
         />
         {/* Single skyline — bottom → mid, not a mosaic */}
         <svg
-          className="absolute inset-x-0 bottom-0 h-[52%] w-full min-h-[220px]"
+          className="absolute inset-x-0 bottom-0 h-[58%] w-full min-h-[240px]"
           viewBox="0 0 960 300"
           preserveAspectRatio="xMidYMax meet"
           xmlns="http://www.w3.org/2000/svg"
         >
-          <KinshasaPixelSkylineOnce opacity={0.12} />
+          <KinshasaPixelSkylineOnce opacity={0.16} />
         </svg>
-        {/* Top mist so content stays crisp */}
+        {/* Soft top mist — leave skyline readable in lower half */}
         <div
-          className="absolute inset-x-0 top-0 h-[42%]"
+          className="absolute inset-x-0 top-0 h-[28%]"
           style={{
             background:
-              "linear-gradient(180deg, #FAFAF8 0%, rgba(250,250,248,0.75) 45%, transparent 100%)",
+              "linear-gradient(180deg, #FAFAF8 0%, rgba(250,250,248,0.55) 55%, transparent 100%)",
           }}
         />
       </div>

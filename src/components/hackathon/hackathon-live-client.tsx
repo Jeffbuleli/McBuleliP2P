@@ -115,8 +115,7 @@ function LiveProjector({
 }) {
   return (
     <div className="fixed inset-0 z-40 flex flex-col bg-[#FAFAF8]">
-      <HackathonAtmosphere variant="page" />
-      <header className="relative z-10 flex shrink-0 items-center justify-between gap-3 border-b border-[#1F6B43]/12 bg-white/80 px-4 py-3.5 backdrop-blur-md sm:px-6">
+      <header className="relative z-20 flex shrink-0 items-center justify-between gap-3 border-b border-[#1F6B43]/12 bg-white/85 px-4 py-3.5 backdrop-blur-md sm:px-6">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#1F6B43]/35 to-transparent"
@@ -154,7 +153,8 @@ function LiveProjector({
           </Link>
         </div>
       </header>
-      <div className="relative z-10 min-h-0 flex-1 px-3 pb-3 sm:px-6">
+      <div className="relative z-10 min-h-0 flex-1 overflow-hidden px-3 pb-3 sm:px-6">
+        <HackathonAtmosphere variant="page" />
         <AnimatePresence mode="wait">
           <motion.div
             key={presentation.slide.id}
@@ -162,7 +162,7 @@ function LiveProjector({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.99 }}
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-            className="mx-auto h-full max-w-6xl"
+            className="relative z-10 mx-auto h-full max-w-6xl"
           >
             <HackathonSlideFrame
               slide={presentation.slide}
@@ -173,7 +173,7 @@ function LiveProjector({
           </motion.div>
         </AnimatePresence>
       </div>
-      <footer className="relative z-10 shrink-0 border-t border-[#1F6B43]/12 bg-white/75 px-4 py-2.5 backdrop-blur-md sm:px-6">
+      <footer className="relative z-20 shrink-0 border-t border-[#1F6B43]/12 bg-white/90 px-4 py-2.5 backdrop-blur-md sm:px-6">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#1F6B43]/35 to-transparent"
