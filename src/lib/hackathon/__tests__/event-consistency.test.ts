@@ -83,20 +83,32 @@ describe("hackathon event consistency (single day)", () => {
     assert.equal(hits.length, 1);
   });
 
-  it("MC intro is two public cues before rules", async () => {
+  it("MC intro presents McBuleli, challenges and prizes before rules", async () => {
     const { MC_CUES } = await import("@/lib/hackathon/mc-day");
     const ids = MC_CUES.map((c) => c.id);
     const intro = ids.indexOf("ai-intro");
     const stack = ids.indexOf("ai-stack");
+    const challenges = ids.indexOf("ai-challenges");
+    const prizes = ids.indexOf("ai-prizes");
     const rules = ids.indexOf("ai-rules");
-    assert.ok(intro >= 0 && stack === intro + 1 && rules === stack + 1);
-    const who = MC_CUES[intro];
-    const tech = MC_CUES[stack];
+    assert.ok(intro >= 0);
+    assert.equal(stack, intro + 1);
+    assert.equal(challenges, stack + 1);
+    assert.equal(prizes, challenges + 1);
+    assert.equal(rules, prizes + 1);
+    const who = MC_CUES[intro]!;
+    const tech = MC_CUES[stack]!;
+    const defs = MC_CUES[challenges]!;
+    const prix = MC_CUES[prizes]!;
     assert.match(who.stageLineFr, /McBuleli IA/);
     assert.match(who.stageLineFr, /vision|mission/i);
     assert.match(tech.stageLineFr, /P2P/);
     assert.match(tech.stageLineFr, /SafeFind/);
     assert.match(tech.stageLineFr, /Africa Insight/);
+    assert.match(defs.stageLineFr, /FinTech/);
+    assert.match(defs.stageLineFr, /AgroTech|ILOKWE/);
+    assert.match(prix.stageLineFr, /Prix ILOKWE|ILOKWE/);
+    assert.match(prix.stageLineFr, /Innovation|Impact/);
   });
 
   it("partner presenters and Jeff handoff are set for stage", async () => {

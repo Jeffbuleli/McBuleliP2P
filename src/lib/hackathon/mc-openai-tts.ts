@@ -27,6 +27,11 @@ McBuleli (mcbuleli.org) : entreprise tech congolaise à Kinshasa.
 - Academy, Community, wallet (USDT, Pi), staking, AVEC, bots trading (si cités).
 Ir Jeff Buleli = fondateur et développeur principal.
 
+## Hackathon (si la ligne parle défis / prix)
+McBuleli Hackathon · Silikin Village · 28 août 2026 · 1 jour.
+4 défis : FinTech & inclusion ; AgroTech & économie réelle (ILOKWE) ; Santé & éducation ; GovTech, médias & cybersécurité.
+5 prix : Prix ILOKWE (1er, ILOKWE GROUP) ; 2e ; 3e ; Prix Innovation ; Prix Impact Social.
+
 ## Prononciation (forme orale dans le texte final)
 - McBuleli → Mac Bouléli ; McBuleli IA → Mac Bouléli I A ; McBuleli P2P → Mac Bouléli Pé deux Pé ; McBuleli ISP → Mac Bouléli I S P ; McBuleli Meet → Mac Bouléli Meet.
 - TYTS → The Young Technology Service (ne pas épeler T-Y-T-S).

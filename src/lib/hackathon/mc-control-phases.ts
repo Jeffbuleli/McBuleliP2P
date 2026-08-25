@@ -40,7 +40,7 @@ export const MC_CONTROL_PHASES: McControlPhase[] = [
   {
     id: "intro",
     labelFr: "Intro McBuleli IA",
-    hintFr: "Qui sommes-nous → Technologies → Règles",
+    hintFr: "Qui sommes-nous → Stack → Défis → Prix → Règles",
     cueIds: cuesInRange("ai-intro", "ai-rules"),
   },
   {

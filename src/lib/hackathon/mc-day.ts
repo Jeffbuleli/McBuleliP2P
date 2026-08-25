@@ -230,7 +230,7 @@ export const MC_CUES: McCue[] = [
       "Bonjour à toutes et à tous. Je suis McBuleli IA. McBuleli est une entreprise de technologie congolaise, basée ici à Kinshasa. Notre vision : une Afrique où l'innovation numérique sert vraiment les gens. Notre mission : bâtir des plateformes sûres et accessibles pour la finance, la connectivité, et la confiance digitale.",
     detailFr: "Entreprise tech · Kinshasa · vision & mission",
     humanScriptFr:
-      "Cue 1/3 intro. Écran + son. Pas de micro humain. Enchaîner « Technologies » puis « Règles ».",
+      "Cue 1/5 intro. Puis Technologies → Défis → Prix → Règles.",
   },
   {
     id: "ai-stack",
@@ -239,7 +239,27 @@ export const MC_CUES: McCue[] = [
     stageLineFr:
       "Ce que nous avons déjà réalisé : McBuleli P2P, marketplace crypto et mobile money avec escrow ; McBuleli ISP, pour l'accès internet ; McBuleli Meet, pour la visio ; Cyber Alert DRC avec SafeFind, pour la vigilance face aux menaces en ligne ; et Africa Insight, pour mieux lire le terrain. Ce hackathon prolonge cette ambition : builder avec vous, aujourd'hui.",
     detailFr: "P2P · ISP · Meet · Cyber Alert DRC / SafeFind · Africa Insight",
-    humanScriptFr: "Cue 2/3 intro. Puis lancer « Règles ».",
+    humanScriptFr: "Cue 2/5. Puis Défis → Prix → Règles.",
+  },
+  {
+    id: "ai-challenges",
+    kind: "ai_intro",
+    labelFr: "McBuleli IA · Défis",
+    stageLineFr:
+      "Maintenant que vous connaissez McBuleli et les technologies que vous allez utiliser, voici le cœur de cette journée : choisir un défi d'impact et construire une solution testable. Quatre directions sont ouvertes : FinTech et inclusion, pour rapprocher les services financiers des besoins réels ; AgroTech et économie réelle, avec la référence ILOKWE ; santé et éducation, pour améliorer l'accès aux services essentiels ; enfin GovTech, médias et cybersécurité, pour renforcer la confiance numérique. Choisissez un terrain clair, un utilisateur précis, et livrez une preuve de valeur avant la démo.",
+    detailFr:
+      "4 défis · FinTech · AgroTech / ILOKWE · Santé & éducation · GovTech / médias / cyber",
+    humanScriptFr: "Cue 3/5. Puis Prix, puis Règles.",
+  },
+  {
+    id: "ai-prizes",
+    kind: "ai_intro",
+    labelFr: "McBuleli IA · Prix",
+    stageLineFr:
+      "Après les défis, parlons des récompenses. Cinq prix seront remis à la fin du Mini Demo Day. D'abord, le Prix ILOKWE, premier prix porté avec ILOKWE GROUP, pour la solution la plus solide et la plus prometteuse. Ensuite, le deuxième prix, puis le troisième prix, pour valoriser l'exécution et la qualité de la démonstration. Le Prix Innovation distinguera une approche vraiment nouvelle. Le Prix Impact Social récompensera l'utilité concrète pour les communautés en RDC. Au-delà des distinctions, l'objectif est de reconnaître des équipes capables d'apprendre vite et de créer juste.",
+    detailFr:
+      "5 prix · ILOKWE · 2e · 3e · Innovation · Impact Social",
+    humanScriptFr: "Cue 4/5. Puis Règles, puis vitrine partenaires.",
   },
   {
     id: "ai-rules",
@@ -248,6 +268,7 @@ export const MC_CUES: McCue[] = [
     stageLineFr:
       "Quelques règles simples, pour une belle journée : respectons le chrono ; gardons les badges visibles ; et si le temps le permet, les questions viennent après chaque talk. L'équipe salle vous guide pour les places. Merci.",
     detailFr: "Vitrine partenaires : 10 minutes par organisation.",
+    humanScriptFr: "Cue 5/5 intro. Enchaîner les partenaires.",
   },
   ...buildPartnerCues(),
   {
