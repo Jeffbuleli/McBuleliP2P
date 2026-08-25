@@ -30,6 +30,8 @@ export type McRemoteUiContext = {
   showOnAirSlides: boolean;
   /** Hide cue nav / jumps when Visio plein écran */
   showCueNav: boolean;
+  /** Pilotage Mur : annonces + file pitch + aperçu salle */
+  showWallControls: boolean;
   smartActions: McSmartAction[];
   jumpCues: McCue[];
 };
@@ -61,6 +63,12 @@ export function buildMcRemoteUiContext(
   let statusLine = session.cue.labelFr;
   if (stepKind === "slide" && slides) {
     statusLine = `Slide ${slides.slideIndex + 1}/${slides.totalSlides}`;
+  } else if (mode === "wall") {
+    statusLine = `Mur · ${session.cue.labelFr}`;
+  } else if (mode === "meet") {
+    statusLine = session.cue.partnerName
+      ? `Visio · ${session.cue.partnerName}`
+      : "Visio Live";
   }
 
   const showVoice = mode === "mc" && !session.humanOverride;
@@ -68,6 +76,7 @@ export function buildMcRemoteUiContext(
     mode === "mc" &&
     Boolean(session.cue.timerSeconds || session.timerEndsAt);
   const showHumanOverride = mode === "mc";
+  const showWallControls = mode === "wall";
 
   const smartActions = MC_SMART_ACTIONS.filter((a) => {
     if (a.id === "bootcamp_slides") return false;
@@ -82,7 +91,8 @@ export function buildMcRemoteUiContext(
       return phase.id === "partners" || Boolean(session.meetSlug);
     }
     if (a.id === "visio_off") return Boolean(session.meetSlug);
-    if (a.id === "build_wall") return phase.id === "build";
+    // Déjà sur Mur : pas besoin du smart « Build · Mur »
+    if (a.id === "build_wall") return phase.id === "build" && mode !== "wall";
     if (a.id === "podium") return phase.id === "close";
     return a.phaseId === phase.id;
   });
@@ -144,6 +154,7 @@ export function buildMcRemoteUiContext(
     showProjectorModes,
     showOnAirSlides,
     showCueNav: mode !== "meet",
+    showWallControls,
     smartActions,
     jumpCues,
   };

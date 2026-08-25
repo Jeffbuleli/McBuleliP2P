@@ -10,6 +10,7 @@ import {
   type McSlideRemote,
 } from "@/lib/hackathon/mc-remote-context";
 import type { McSessionPublic } from "@/lib/hackathon/mc-state";
+import { McWallPilotPanel } from "@/components/hackathon/mc-wall-pilot-panel";
 
 function formatRemain(ms: number) {
   if (ms <= 0) return "0:00";
@@ -222,6 +223,10 @@ export function McOperatorConsole({
         ) : null}
       </section>
 
+      {ui.showWallControls ? (
+        <McWallPilotPanel busy={busy} setBusy={setBusy} setErr={setErr} />
+      ) : null}
+
       {ui.showCueNav ? (
       <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
         <div className="grid grid-cols-2 gap-1.5">
@@ -306,12 +311,12 @@ export function McOperatorConsole({
           </SwitchBtn>
         ) : null}
       </section>
-      ) : (
+      ) : session.projectorMode === "meet" ? (
         <p className="rounded-xl border border-sky-400/25 bg-sky-400/10 px-3 py-2.5 text-center text-xs text-sky-100">
           Visio Live active · utilisez <span className="font-black">Visio OFF</span>{" "}
           pour couper Meet et revenir au MC.
         </p>
-      )}
+      ) : null}
 
       {ui.smartActions.length > 0 ? (
         <section className="space-y-1.5">
