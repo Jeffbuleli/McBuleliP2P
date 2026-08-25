@@ -2,6 +2,7 @@
 
 import { AssistantAvatar } from "@/components/assistant/assistant-avatar";
 import { McStageFuturisticAura } from "@/components/hackathon/mc-stage-futuristic-aura";
+import { McStageVoiceWaves } from "@/components/hackathon/mc-stage-voice-waves";
 import type { McCue } from "@/lib/hackathon/mc-day";
 
 function MicPulse({ active }: { active: boolean }) {
@@ -125,10 +126,16 @@ export function McStageAiCard({
           </p>
         ) : null}
 
-        {/* McBuleli IA avatar — center stage */}
+        {/* McBuleli IA avatar — center stage + voice waves */}
         <div className="relative mt-auto flex flex-col items-center pb-2 pt-6">
-          <div className="relative flex items-center justify-center">
-            <AssistantAvatar size={isPartnerCall ? 96 : 120} pulse={speaking} />
+          <div className="relative flex h-48 w-48 items-center justify-center sm:h-56 sm:w-56">
+            <McStageVoiceWaves
+              speaking={speaking}
+              size={isPartnerCall ? 200 : 230}
+            />
+            <div className="relative z-10">
+              <AssistantAvatar size={isPartnerCall ? 96 : 120} pulse={speaking} />
+            </div>
           </div>
           <p className="mt-4 text-[11px] font-bold uppercase tracking-[0.28em] text-[#1F6B43]">
             McBuleli IA
