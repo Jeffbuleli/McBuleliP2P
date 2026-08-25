@@ -116,7 +116,11 @@ function LiveProjector({
   return (
     <div className="fixed inset-0 z-40 flex flex-col bg-[#FAFAF8]">
       <HackathonAtmosphere variant="page" />
-      <div className="relative z-10 flex shrink-0 items-center justify-between gap-3 border-b border-[#E5E5E0] bg-white/90 px-4 py-3 backdrop-blur-sm sm:px-6">
+      <header className="relative z-10 flex shrink-0 items-center justify-between gap-3 border-b border-[#1F6B43]/12 bg-white/80 px-4 py-3.5 backdrop-blur-md sm:px-6">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#1F6B43]/35 to-transparent"
+        />
         <div className="flex min-w-0 items-center gap-3">
           <Image
             src={BRAND_LOGO_MARK_256}
@@ -128,7 +132,7 @@ function LiveProjector({
           />
           <div className="min-w-0">
             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#1F6B43]">
-              McBuleli Live · On Air
+              McBuleli Live · On Air · Kinshasa
             </p>
             <p className="truncate text-sm font-bold text-[#1c1917]">
               {isFr ? presentation.deckTitleFr : presentation.deckTitleEn}
@@ -149,8 +153,8 @@ function LiveProjector({
             Slides
           </Link>
         </div>
-      </div>
-      <div className="relative z-10 min-h-0 flex-1 px-3 pb-4 sm:px-6">
+      </header>
+      <div className="relative z-10 min-h-0 flex-1 px-3 pb-3 sm:px-6">
         <AnimatePresence mode="wait">
           <motion.div
             key={presentation.slide.id}
@@ -169,6 +173,16 @@ function LiveProjector({
           </motion.div>
         </AnimatePresence>
       </div>
+      <footer className="relative z-10 shrink-0 border-t border-[#1F6B43]/12 bg-white/75 px-4 py-2.5 backdrop-blur-md sm:px-6">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#1F6B43]/35 to-transparent"
+        />
+        <div className="flex items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-[0.14em] text-[#a8a29e]">
+          <span>Silikin Village</span>
+          <span className="text-[#1F6B43]">mcbuleli.org · 28 Août 2026</span>
+        </div>
+      </footer>
     </div>
   );
 }

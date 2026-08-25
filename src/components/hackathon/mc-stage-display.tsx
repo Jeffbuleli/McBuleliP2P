@@ -191,33 +191,39 @@ export function McStageDisplay({
         </div>
       )}
 
-      <header className="relative z-10 flex items-start justify-between gap-4 px-6 pt-6 sm:px-10 sm:pt-8">
-        <div className="flex items-center gap-3">
-          <Image
-            src={BRAND_LOGO_MARK_256}
-            alt="McBuleli"
-            width={48}
-            height={48}
-            unoptimized
-            className="h-11 w-11 object-contain"
-          />
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#1F6B43]">
-              McBuleli IA
+      <header className="relative z-10 border-b border-[#1F6B43]/12 bg-white/75 px-6 py-4 backdrop-blur-md sm:px-10">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Image
+              src={BRAND_LOGO_MARK_256}
+              alt="McBuleli"
+              width={48}
+              height={48}
+              unoptimized
+              className="h-11 w-11 object-contain"
+            />
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#1F6B43]">
+                McBuleli IA
+              </p>
+              <p className="mt-0.5 text-sm text-[#78716c]">
+                Kinshasa · Silikin Village · 28 Août 2026
+              </p>
+            </div>
+          </div>
+          <div className="rounded-2xl border border-[#E5E5E0] bg-white/90 px-4 py-2.5 text-right shadow-sm">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#a8a29e]">
+              Maintenant
             </p>
-            <p className="mt-0.5 text-sm text-[#78716c]">
-              Modération · Silikin Village
+            <p className="text-sm font-bold text-[#1c1917]">
+              {session.cue.windowFr || session.cue.labelFr}
             </p>
           </div>
         </div>
-        <div className="rounded-2xl border border-[#E5E5E0] bg-white/80 px-4 py-2.5 text-right shadow-sm backdrop-blur-sm">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-[#a8a29e]">
-            Maintenant
-          </p>
-          <p className="text-sm font-bold text-[#1c1917]">
-            {session.cue.windowFr || session.cue.labelFr}
-          </p>
-        </div>
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#1F6B43]/35 to-transparent"
+        />
       </header>
 
       <main className="relative z-10 flex flex-1 flex-col justify-center px-6 py-8 sm:px-12">
@@ -354,18 +360,29 @@ export function McStageDisplay({
         ) : null}
       </main>
 
-      <footer className="relative z-10 flex items-end justify-between gap-4 border-t border-[#E5E5E0]/90 bg-white/70 px-6 py-5 backdrop-blur-sm sm:px-10">
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-[#a8a29e]">
-            Ensuite
-          </p>
-          <p className="text-sm font-bold text-[#292524]">
-            {session.nextCue?.labelFr ?? "—"}
-          </p>
+      <footer className="relative z-10 border-t border-[#1F6B43]/12 bg-white/80 px-6 py-4 backdrop-blur-md sm:px-10">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#1F6B43]/35 to-transparent"
+        />
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#a8a29e]">
+              Ensuite
+            </p>
+            <p className="text-sm font-bold text-[#292524]">
+              {session.nextCue?.labelFr ?? "—"}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#a8a29e]">
+              Kinshasa
+            </p>
+            <p className="text-xs font-semibold text-[#1F6B43]">
+              mcbuleli.org · McBuleli Hackathon
+            </p>
+          </div>
         </div>
-        <p className="text-xs font-semibold text-[#1F6B43]">
-          mcbuleli.org · 28 Août 2026
-        </p>
       </footer>
     </div>
   );
