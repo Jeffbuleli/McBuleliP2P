@@ -310,7 +310,9 @@ export function McStageDisplay({
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             exit={{ opacity: 0, y: -12, filter: "blur(4px)" }}
             transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-            className="relative z-10 mx-auto w-full max-w-xl sm:max-w-2xl"
+            className={`relative z-10 mx-auto w-full ${
+              humanHostCard ? "max-w-5xl" : "max-w-xl sm:max-w-2xl"
+            }`}
           >
             {session.humanOverride ? (
               <div className="rounded-3xl border border-amber-300/60 bg-amber-50/90 px-8 py-10 text-center shadow-sm">
