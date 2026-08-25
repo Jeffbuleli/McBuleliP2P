@@ -7,39 +7,49 @@ import { createHash } from "crypto";
 import OpenAI from "openai";
 import { assistantOpenAiEnabled } from "@/lib/assistant/openai-client";
 import { applyMcPronunciation } from "@/lib/hackathon/mc-pronunciation";
+import type { McCueKind } from "@/lib/hackathon/mc-day";
 
-const POLISH_SYSTEM = `Tu es le rédacteur oral de McBuleli IA, MC du McBuleli Hackathon (Kinshasa, Silikin Village).
-Tu reformules une ligne pour lecture TTS en français fluide, calme, naturel.
+const POLISH_BASE = `Tu es le rédacteur oral de McBuleli IA, modératrice du McBuleli Hackathon (Kinshasa, Silikin Village).
+Tu reformules une ligne pour lecture TTS en français fluide, calme et naturel.
 
-## Connaissance McBuleli (utilise si la ligne présente l'entreprise ou ses produits)
-McBuleli (mcbuleli.org) est une entreprise tech congolaise à Kinshasa.
-Services / réalisations à garder exacts si mentionnés :
-- McBuleli P2P : marketplace crypto ↔ mobile money avec escrow (sécurité des échanges).
-- McBuleli ISP : accès internet / connectivité.
-- McBuleli Meet : visio (ex. partenaires à distance).
-- Cyber Alert DRC + SafeFind : vigilance cyber / alertes.
-- Africa Insight : lecture du terrain / insights.
-- Academy & Community : formation et communauté.
-- Wallet (USDT, Pi), staking, AVEC / tontines, bots trading (si cités).
-Vision : innovation numérique au service des gens. Mission : plateformes sûres et accessibles (finance, connectivité, confiance digitale).
-Hackathon : builders à Silikin Village ; Ir Jeff Buleli = fondateur et développeur principal.
+## Rôle
+- McBuleli IA modère ; elle ne se fait JAMAIS passer pour Mme Patty Basoga ni pour un humain à la scène.
+- Mme Patty Basoga accorde la parole à McBuleli IA (ouverture) ; McBuleli IA la lui rend pour la clôture.
+- Garde le sens exact ; ne invente pas de faits hors du texte.
 
-## Prononciation / noms (écris la forme orale dans le texte final)
-- McBuleli → « Mac Bouléli » ; McBuleli IA → « Mac Bouléli I A » ; McBuleli P2P → « Mac Bouléli Pé deux Pé » ; McBuleli ISP → « Mac Bouléli I S P » ; McBuleli Meet → « Mac Bouléli Meet ».
-- TYTS → toujours « The Young Technology Service » (ne pas épeler T-Y-T-S). Domaine : tech / cyber & réseaux ; présentateur Aaron Nsomone.
-- Mme Patty Basoga / Patty B. → « Madame Patty Basoga » (hôtesse ouverture & clôture McBuleli).
-- Autres : Silikin → Silikine ; IA Académie → I A Académie ; Kilelo → Kilélo ; ILOKWE → Ilokoué ; Ir Jeff Buleli → Ingénieur Jeff Bouléli.
+## Connaissance McBuleli (si la ligne présente l'entreprise)
+McBuleli (mcbuleli.org) : entreprise tech congolaise à Kinshasa.
+- McBuleli P2P : marketplace crypto ↔ mobile money avec escrow.
+- McBuleli ISP : accès internet.
+- McBuleli Meet : visio.
+- Cyber Alert DRC + SafeFind : vigilance cyber.
+- Africa Insight : insights terrain.
+- Academy, Community, wallet (USDT, Pi), staking, AVEC, bots trading (si cités).
+Ir Jeff Buleli = fondateur et développeur principal.
 
-## Remerciements partenaires (anti-monotonie)
-Si la ligne est un remerciement après intervention partenaire :
-- Une seule phrase courte (max ~12 mots). Pas d'amplification (« Un grand merci… », « ce fut un honneur… », « pour cette riche contribution… »).
-- Ne pas ajouter d'applaudissements ni de transition « on enchaîne » si absents du texte source.
-- Ne pas reformuler en discours de clôture.
+## Prononciation (forme orale dans le texte final)
+- McBuleli → Mac Bouléli ; McBuleli IA → Mac Bouléli I A ; McBuleli P2P → Mac Bouléli Pé deux Pé ; McBuleli ISP → Mac Bouléli I S P ; McBuleli Meet → Mac Bouléli Meet.
+- TYTS → The Young Technology Service (ne pas épeler T-Y-T-S).
+- Mme Patty Basoga → Madame Patty Basoga (tiers, jamais « je suis » Patty).
+- Silikin → Silikine ; IA Académie → I A Académie ; Kilelo → Kilélo ; ILOKWE → Ilokoué ; Ir Jeff Buleli → Ingénieur Jeff Bouléli.
 
 ## Règles générales
-- Garde le sens exact ; ne invente pas de faits hors du texte + connaissance ci-dessus.
+- Français oral fluide ; tu peux ajuster légèrement rythme et liaisons pour une lecture naturelle.
 - Pas de markdown, pas de guillemets décoratifs, une seule variante.
-- Maximum 110 mots (sauf remerciement : beaucoup plus court).`;
+- Maximum 120 mots sauf indication contraire ci-dessous.`;
+
+const POLISH_PARTNER_THANKS = `
+## Remerciement partenaire (cette ligne uniquement)
+- Une phrase brève ; varie légèrement la tournure pour éviter la monotonie entre partenaires.
+- Pas d'enflure (« ce fut un honneur », « riche contribution ») ; pas de discours de clôture.
+- Garde le nom du partenaire tel quel.`;
+
+function polishSystemFor(kind?: McCueKind): string {
+  if (kind === "partner_thanks") {
+    return POLISH_BASE + POLISH_PARTNER_THANKS;
+  }
+  return POLISH_BASE;
+}
 
 type CacheEntry = { audio: Buffer; at: number };
 
@@ -58,8 +68,10 @@ function getClient(): OpenAI {
   return client;
 }
 
-function cacheKey(text: string): string {
-  return createHash("sha256").update(`v2:${text.trim()}`).digest("hex");
+function cacheKey(text: string, kind?: McCueKind): string {
+  return createHash("sha256")
+    .update(`v3:${kind ?? ""}:${text.trim()}`)
+    .digest("hex");
 }
 
 function remember(key: string, audio: Buffer) {
@@ -74,17 +86,20 @@ export function mcOpenAiTtsEnabled(): boolean {
   return assistantOpenAiEnabled();
 }
 
-async function polishForSpeech(text: string): Promise<string> {
+async function polishForSpeech(
+  text: string,
+  kind?: McCueKind,
+): Promise<string> {
   const openai = getClient();
   const model =
     process.env.OPENAI_MC_POLISH_MODEL?.trim() || "gpt-4o-mini";
   const res = await openai.chat.completions.create({
     model,
     messages: [
-      { role: "system", content: POLISH_SYSTEM },
+      { role: "system", content: polishSystemFor(kind) },
       { role: "user", content: text.slice(0, 1200) },
     ],
-    temperature: 0.3,
+    temperature: kind === "partner_thanks" ? 0.55 : 0.35,
     max_tokens: 320,
   });
   const out = res.choices[0]?.message?.content?.trim();
@@ -93,19 +108,20 @@ async function polishForSpeech(text: string): Promise<string> {
 
 export async function synthesizeMcStageAudio(
   rawText: string,
+  cueKind?: McCueKind,
 ): Promise<{ audio: Buffer; contentType: string }> {
   const text = rawText.replace(/\s+/g, " ").trim();
   if (!text) throw new Error("empty_text");
   if (text.length > 900) throw new Error("text_too_long");
 
-  const key = cacheKey(text);
+  const key = cacheKey(text, cueKind);
   const hit = audioCache.get(key);
   if (hit && Date.now() - hit.at < CACHE_TTL_MS) {
     return { audio: hit.audio, contentType: "audio/mpeg" };
   }
 
   const openai = getClient();
-  const polished = await polishForSpeech(text);
+  const polished = await polishForSpeech(text, cueKind);
   const spoken = applyMcPronunciation(polished);
   const voice =
     (process.env.OPENAI_MC_TTS_VOICE?.trim() as

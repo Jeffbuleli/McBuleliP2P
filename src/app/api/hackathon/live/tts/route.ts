@@ -11,6 +11,26 @@ export const maxDuration = 60;
 
 const bodySchema = z.object({
   text: z.string().trim().min(1).max(900),
+  cueKind: z
+    .enum([
+      "standby",
+      "patty_open",
+      "ai_intro",
+      "partner_call",
+      "partner_thanks",
+      "break",
+      "call_jeff",
+      "jeff_bootcamp",
+      "teams",
+      "build_mentors",
+      "pitch_prep",
+      "mini_demo",
+      "deliberation",
+      "awards",
+      "ai_wrap",
+      "patty_close",
+    ])
+    .optional(),
 });
 
 export async function POST(req: Request) {
@@ -28,7 +48,10 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { audio, contentType } = await synthesizeMcStageAudio(parsed.data.text);
+    const { audio, contentType } = await synthesizeMcStageAudio(
+      parsed.data.text,
+      parsed.data.cueKind,
+    );
     return new NextResponse(new Uint8Array(audio), {
       status: 200,
       headers: {

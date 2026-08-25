@@ -14,7 +14,7 @@ export const MC_VENUE_FR = "Silikin Village";
 /** Magic handoff phrases - whole team learns these. */
 export const MC_MAGIC_PHRASES = {
   pattyToAi:
-    "Bienvenue au McBuleli Hackathon. Nous accueillons McBuleli IA pour présenter McBuleli et accompagner le déroulé.",
+    "Bienvenue au McBuleli Hackathon. Je passe la parole à McBuleli IA pour présenter McBuleli et accompagner le déroulé.",
   humanToAi: "Merci McBuleli IA.",
   aiToPatty: "Je passe maintenant la parole à Mme Patty Basoga pour la clôture.",
   aiToJeff:
@@ -208,7 +208,7 @@ export const MC_CUES: McCue[] = [
     kind: "patty_open",
     labelFr: "Patty · Ouverture",
     stageLineFr: "Ouverture · Mme Patty Basoga",
-    detailFr: "Accueil institutionnel McBuleli",
+    detailFr: "Mme Patty Basoga accueille · puis McBuleli IA",
     humanScriptFr: [
       "Bonjour et bienvenue au McBuleli Hackathon, ici à Silikin Village.",
       MC_MAGIC_PHRASES.pattyToAi,

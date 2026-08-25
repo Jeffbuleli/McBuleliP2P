@@ -7,10 +7,26 @@ import { HackathonAtmosphere } from "@/components/hackathon/hackathon-atmosphere
 import { BRAND_LOGO_MARK_256 } from "@/lib/brand-logo";
 import type { McSessionPublic } from "@/lib/hackathon/mc-state";
 import {
+  McStageAiCard,
+  McStageHumanCard,
+} from "@/components/hackathon/mc-stage-ai-card";
+import type { McCueKind } from "@/lib/hackathon/mc-day";
+import {
   ensureMcVoicesLoaded,
   speakMcLine,
   stopMcVoice,
 } from "@/lib/hackathon/mc-voice";
+
+/** Cues where a human speaks — McBuleli IA stays silent. */
+const HUMAN_SPEAKER_KINDS = new Set<McCueKind>([
+  "patty_open",
+  "patty_close",
+  "jeff_bootcamp",
+]);
+
+function isHumanSpeakerCue(kind: McCueKind): boolean {
+  return HUMAN_SPEAKER_KINDS.has(kind);
+}
 
 function formatRemain(ms: number) {
   if (ms <= 0) return "0:00";
@@ -89,6 +105,11 @@ export function McStageDisplay({
       setSpeaking(false);
       return;
     }
+    if (isHumanSpeakerCue(session.cue.kind)) {
+      stopMcVoice();
+      setSpeaking(false);
+      return;
+    }
 
     const speakKey = `${session.cueId}:${session.voiceReplayToken}`;
     if (lastSpokenKey.current === speakKey) return;
@@ -101,6 +122,7 @@ export function McStageDisplay({
       setSpeaking(true);
       setChunkIndex(0);
       speakMcLine(session.cue.stageLineFr, {
+        cueKind: session.cue.kind,
         onChunk: (i, total) => {
           if (!cancelled) {
             setChunkIndex(i);
@@ -121,6 +143,7 @@ export function McStageDisplay({
     session.voiceEnabled,
     session.humanOverride,
     session.cueId,
+    session.cue.kind,
     session.voiceReplayToken,
     session.cue.stageLineFr,
   ]);
@@ -140,10 +163,15 @@ export function McStageDisplay({
   const unlockVoice = () => {
     setVoiceUnlocked(true);
     void ensureMcVoicesLoaded().then(() => {
-      if (session.voiceEnabled && !session.humanOverride) {
+      if (
+        session.voiceEnabled &&
+        !session.humanOverride &&
+        !isHumanSpeakerCue(session.cue.kind)
+      ) {
         lastSpokenKey.current = `${session.cueId}:${session.voiceReplayToken}`;
         setSpeaking(true);
         speakMcLine(session.cue.stageLineFr, {
+          cueKind: session.cue.kind,
           onChunk: (i, total) => {
             setChunkIndex(i);
             setChunkTotal(total);
@@ -153,6 +181,38 @@ export function McStageDisplay({
       }
     });
   };
+
+  const humanHostCard = (() => {
+    const { cue } = session;
+    if (cue.kind === "patty_open") {
+      return (
+        <McStageHumanCard
+          title="Ouverture"
+          hostName="Mme Patty Basoga"
+          subtitle="Accueil institutionnel · puis McBuleli IA"
+        />
+      );
+    }
+    if (cue.kind === "patty_close") {
+      return (
+        <McStageHumanCard
+          title="Clôture"
+          hostName="Mme Patty Basoga"
+          subtitle={cue.detailFr}
+        />
+      );
+    }
+    if (cue.kind === "jeff_bootcamp") {
+      return (
+        <McStageHumanCard
+          title="Bootcamp"
+          hostName="Ir Jeff Buleli"
+          subtitle={cue.detailFr ?? "Fondateur · McBuleli"}
+        />
+      );
+    }
+    return null;
+  })();
 
   return (
     <div className="relative flex min-h-dvh flex-col overflow-hidden bg-[#FAFAF8] text-[#111111]">
@@ -249,76 +309,16 @@ export function McStageDisplay({
                   {session.overrideMessageFr}
                 </h1>
               </div>
+            ) : humanHostCard ? (
+              humanHostCard
             ) : (
-              <div className="rounded-[2rem] border border-[#E5E5E0]/95 bg-white/90 px-7 py-9 shadow-[0_20px_60px_-28px_rgba(31,107,67,0.35)] backdrop-blur-sm sm:px-12 sm:py-12">
-                {session.cue.partnerLogoUrl ? (
-                  <div className="mb-6 flex justify-center sm:justify-start">
-                    <div className="flex h-20 w-40 items-center justify-center rounded-2xl border border-[#E5E5E0] bg-white px-4 sm:h-24 sm:w-48">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={session.cue.partnerLogoUrl}
-                        alt={session.cue.partnerName ?? "Partenaire"}
-                        className="max-h-16 max-w-full object-contain sm:max-h-20"
-                      />
-                    </div>
-                  </div>
-                ) : null}
-
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-[#1F6B43]/20 bg-[#EAF6EE] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#1F6B43]">
-                    <svg
-                      viewBox="0 0 24 24"
-                      className="h-3.5 w-3.5"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      aria-hidden
-                    >
-                      <path d="M12 2a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3Z" />
-                      <path d="M19 10v1a7 7 0 0 1-14 0v-1M12 18v4M8 22h8" />
-                    </svg>
-                    {session.cue.partnerName
-                      ? session.cue.partnerName
-                      : session.cue.labelFr}
-                  </span>
-                  {session.cue.domainFr ? (
-                    <span className="rounded-full border border-[#E5E5E0] bg-[#FAFAF8] px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[#78716c]">
-                      {session.cue.domainFr}
-                    </span>
-                  ) : null}
-                  {session.meetSlug ? (
-                    <span className="rounded-full border border-sky-300 bg-sky-50 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-sky-700">
-                      Visio active
-                    </span>
-                  ) : null}
-                </div>
-
-                {session.cue.partnerPresenterFr ? (
-                  <p className="mt-4 text-base font-semibold text-[#1F6B43] sm:text-lg">
-                    {session.cue.partnerPresenterFr}
-                  </p>
-                ) : null}
-
-                <h1 className="mt-5 text-3xl font-black leading-[1.12] tracking-tight text-[#0c0a09] sm:text-5xl lg:text-[3.25rem]">
-                  {session.cue.stageLineFr}
-                </h1>
-
-                {session.cue.detailFr ? (
-                  <p className="mt-5 max-w-3xl text-lg leading-relaxed text-[#57534e] sm:text-xl">
-                    {session.cue.detailFr}
-                  </p>
-                ) : null}
-
-                {speaking ? (
-                  <div className="mt-6 flex items-center gap-2 text-xs font-semibold text-[#1F6B43]">
-                    <MicPulse active />
-                    Lecture en cours
-                    {chunkTotal > 1
-                      ? ` · phrase ${chunkIndex + 1} / ${chunkTotal}`
-                      : ""}
-                  </div>
-                ) : null}
-              </div>
+              <McStageAiCard
+                cue={session.cue}
+                speaking={speaking && session.voiceEnabled}
+                chunkIndex={chunkIndex}
+                chunkTotal={chunkTotal}
+                meetActive={Boolean(session.meetSlug)}
+              />
             )}
           </motion.div>
         </AnimatePresence>

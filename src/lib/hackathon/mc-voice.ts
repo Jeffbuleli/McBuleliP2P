@@ -7,6 +7,8 @@ import { applyMcPronunciation } from "@/lib/hackathon/mc-pronunciation";
 
 export { applyMcPronunciation } from "@/lib/hackathon/mc-pronunciation";
 
+import type { McCueKind } from "@/lib/hackathon/mc-day";
+
 const DEFAULT_RATE = 0.9;
 const DEFAULT_PITCH = 1.02;
 const CHUNK_GAP_MS = 420;
@@ -100,6 +102,7 @@ async function playOpenAiAudio(
   text: string,
   gen: number,
   opts?: {
+    cueKind?: McCueKind;
     onChunk?: (i: number, total: number) => void;
     onDone?: () => void;
   },
@@ -107,7 +110,7 @@ async function playOpenAiAudio(
   const res = await fetch("/api/hackathon/live/tts", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ text }),
+    body: JSON.stringify({ text, cueKind: opts?.cueKind }),
   });
   if (!res.ok) return false;
   if (gen !== speakGeneration) return true;
@@ -176,6 +179,7 @@ async function playBrowserFallback(
 export function speakMcLine(
   text: string,
   opts?: {
+    cueKind?: McCueKind;
     rate?: number;
     pitch?: number;
     onChunk?: (i: number, total: number) => void;
