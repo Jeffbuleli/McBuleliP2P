@@ -4,13 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  HkPage,
-  HkSection,
-  HkShell,
-  HkStatusPill,
-  useHkLocale,
-} from "@/components/hackathon/hk-ui";
+import { useHkLocale } from "@/components/hackathon/hk-ui";
 import { HackathonAtmosphere } from "@/components/hackathon/hackathon-atmosphere";
 import { HackathonSlideFrame } from "@/components/hackathon/hackathon-slide-frame";
 import { McStageDisplay } from "@/components/hackathon/mc-stage-display";
@@ -301,6 +295,269 @@ function SlidesWaiting({ isFr }: { isFr: boolean }) {
   );
 }
 
+function LiveWall({
+  data,
+  countdown,
+  byStatus,
+  isFr,
+}: {
+  data: LivePayload;
+  countdown: string;
+  byStatus: Array<[string, number]>;
+  isFr: boolean;
+}) {
+  const title = isFr
+    ? data.edition.nameFr
+    : (data.edition.nameEn ?? data.edition.nameFr);
+  const programLabel = data.program
+    ? isFr
+      ? data.program.labelFr
+      : (data.program.labelEn ?? data.program.labelFr)
+    : null;
+  const slotActivity = data.program?.slot
+    ? isFr
+      ? data.program.slot.activityFr
+      : (data.program.slot.activityEn ?? data.program.slot.activityFr)
+    : null;
+
+  return (
+    <div className="relative flex min-h-dvh flex-col overflow-hidden bg-[#FAFAF8] text-[#111111]">
+      <header className="relative z-20 shrink-0 border-b border-[#1F6B43]/12 bg-white/85 px-5 py-4 backdrop-blur-md sm:px-10">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#1F6B43]/35 to-transparent"
+        />
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <Image
+              src={BRAND_LOGO_MARK_256}
+              alt=""
+              width={44}
+              height={44}
+              unoptimized
+              className="h-11 w-11 object-contain"
+            />
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#1F6B43]">
+                McBuleli Live · Mur · Kinshasa
+              </p>
+              <h1 className="truncate text-lg font-black tracking-tight text-[#0c0a09] sm:text-xl">
+                {title}
+              </h1>
+            </div>
+          </div>
+          <div className="rounded-2xl border border-[#E5E5E0] bg-white/95 px-4 py-2.5 text-right shadow-sm">
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#a8a29e]">
+              {isFr ? "Clôture livrables" : "Deadline"}
+            </p>
+            <p className="mt-0.5 font-mono text-2xl font-black tabular-nums text-[#1F6B43] sm:text-3xl">
+              {countdown}
+            </p>
+          </div>
+        </div>
+      </header>
+
+      <main className="relative z-10 flex min-h-0 flex-1 flex-col overflow-hidden px-4 py-5 sm:px-8 sm:py-7">
+        <HackathonAtmosphere variant="page" className="opacity-95" />
+
+        <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col gap-4">
+          {data.pitchQueue?.active && data.pitchQueue.current ? (
+            <motion.div
+              layout
+              className="overflow-hidden rounded-[1.75rem] border border-amber-300/70 bg-gradient-to-br from-amber-50 to-white px-5 py-4 shadow-sm"
+            >
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-800">
+                {isFr ? "Mini Demo · en scène" : "Mini Demo · on stage"}
+              </p>
+              <p className="mt-1 text-3xl font-black text-[#0c0a09] sm:text-4xl">
+                {data.pitchQueue.current.teamName}
+              </p>
+              <p className="mt-1 text-sm text-[#78716c]">
+                {isFr ? "Passage" : "Slot"} {data.pitchQueue.position}/
+                {data.pitchQueue.total}
+                {data.pitchQueue.next
+                  ? ` · ${isFr ? "Suivante" : "Next"}: ${data.pitchQueue.next.teamName}`
+                  : ""}
+              </p>
+            </motion.div>
+          ) : null}
+
+          {/* Hero: presence + current slot */}
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.4fr)]">
+            <div className="rounded-[1.75rem] border border-[#1F6B43]/15 bg-white/92 p-5 shadow-[0_16px_40px_-28px_rgba(31,107,67,0.4)] backdrop-blur-sm sm:p-6">
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#a8a29e]">
+                {isFr ? "Présents en salle" : "Inside the room"}
+              </p>
+              <p className="mt-2 font-mono text-6xl font-black tabular-nums leading-none text-[#1F6B43] sm:text-7xl">
+                {data.presence.inside}
+              </p>
+              <div className="mt-5 grid grid-cols-3 gap-2 border-t border-[#E5E5E0] pt-4">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#a8a29e]">
+                    {isFr ? "Dehors" : "Outside"}
+                  </p>
+                  <p className="mt-1 font-mono text-xl font-black tabular-nums text-[#292524]">
+                    {data.presence.outside}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#a8a29e]">
+                    {isFr ? "Absents" : "Absent"}
+                  </p>
+                  <p className="mt-1 font-mono text-xl font-black tabular-nums text-[#292524]">
+                    {data.presence.absent}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#a8a29e]">
+                    Paid
+                  </p>
+                  <p className="mt-1 font-mono text-xl font-black tabular-nums text-[#292524]">
+                    {data.presence.paid}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-[1.75rem] border border-[#E5E5E0] bg-white/92 p-5 shadow-sm backdrop-blur-sm sm:p-6">
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#a8a29e]">
+                {isFr ? "Créneau actuel" : "Current slot"}
+              </p>
+              {slotActivity ? (
+                <>
+                  <p className="mt-3 text-2xl font-black leading-tight tracking-tight text-[#0c0a09] sm:text-3xl lg:text-4xl">
+                    {slotActivity}
+                  </p>
+                  <p className="mt-3 text-sm font-semibold text-[#1F6B43] sm:text-base">
+                    {programLabel}
+                    {data.program?.slot?.time
+                      ? ` · ${data.program.slot.time}`
+                      : ""}
+                  </p>
+                </>
+              ) : (
+                <p className="mt-4 text-xl font-semibold text-[#78716c]">
+                  {isFr ? "Hors programme" : "Off schedule"}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Announcement + mentoring */}
+          <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-2">
+            <section className="flex flex-col rounded-[1.75rem] border border-[#E5E5E0] bg-white/90 p-5 shadow-sm backdrop-blur-sm sm:p-6">
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#a8a29e]">
+                  {isFr ? "Annonce" : "Announcement"}
+                </h2>
+                {data.announcement?.pinned ? (
+                  <span className="rounded-full bg-[#EAF6EE] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#1F6B43]">
+                    Pin
+                  </span>
+                ) : null}
+              </div>
+              {data.announcement ? (
+                <div className="mt-3 min-h-0 flex-1">
+                  <p className="text-xl font-black text-[#0c0a09] sm:text-2xl">
+                    {data.announcement.title}
+                  </p>
+                  <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-[#57534e] sm:text-base">
+                    {data.announcement.body}
+                  </p>
+                </div>
+              ) : (
+                <p className="mt-4 text-sm text-[#a8a29e]">
+                  {isFr ? "Aucune annonce." : "No announcement."}
+                </p>
+              )}
+            </section>
+
+            <section className="flex flex-col rounded-[1.75rem] border border-[#E5E5E0] bg-white/90 p-5 shadow-sm backdrop-blur-sm sm:p-6">
+              <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#a8a29e]">
+                {isFr ? "Mentorat en cours" : "Mentoring now"}
+              </h2>
+              {data.mentoring.length === 0 ? (
+                <p className="mt-4 text-sm text-[#a8a29e]">
+                  {isFr ? "Aucune session active." : "No active session."}
+                </p>
+              ) : (
+                <ul className="mt-3 space-y-2">
+                  {data.mentoring.map((m) => (
+                    <li
+                      key={m.id}
+                      className="rounded-xl border border-[#E5E5E0] bg-[#FAFAF8]/90 px-3.5 py-3"
+                    >
+                      <p className="font-bold text-[#0c0a09]">{m.teamName}</p>
+                      <p className="mt-0.5 text-sm text-[#78716c]">{m.topic}</p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          </div>
+
+          {/* Teams strip */}
+          <section className="rounded-[1.75rem] border border-[#E5E5E0] bg-white/90 p-5 shadow-sm backdrop-blur-sm sm:p-6">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#a8a29e]">
+                {isFr ? "Équipes" : "Teams"}
+              </h2>
+              <div className="flex flex-wrap gap-1.5">
+                {byStatus.map(([status, n]) => (
+                  <span
+                    key={status}
+                    className="rounded-full border border-[#E5E5E0] bg-[#FAFAF8] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#78716c]"
+                  >
+                    {status} · {n}
+                  </span>
+                ))}
+              </div>
+            </div>
+            {data.teams.length === 0 ? (
+              <p className="mt-4 text-sm text-[#a8a29e]">
+                {isFr ? "Aucune équipe." : "No teams yet."}
+              </p>
+            ) : (
+              <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {data.teams.map((t) => (
+                  <div
+                    key={t.id}
+                    className="rounded-xl border border-[#E5E5E0] bg-[#FAFAF8]/80 px-3.5 py-3"
+                  >
+                    <p className="truncate font-bold text-[#0c0a09]">{t.name}</p>
+                    <p className="mt-1 truncate text-xs text-[#78716c]">
+                      {isFr ? t.labelFr : (t.labelEn ?? t.labelFr)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
+      </main>
+
+      <footer className="relative z-20 shrink-0 border-t border-[#1F6B43]/12 bg-white/90 px-5 py-3 backdrop-blur-md sm:px-10">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#1F6B43]/35 to-transparent"
+        />
+        <div className="flex items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-[0.14em] text-[#a8a29e]">
+          <span>Silikin Village · 28 Août 2026</span>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/hackathon/mc"
+              className="text-[#1F6B43] hover:underline"
+            >
+              Télécommande
+            </Link>
+            <span className="text-[#1F6B43]">mcbuleli.org</span>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
 export function HackathonLiveClient({ initial }: { initial: LivePayload }) {
   const isFr = useHkLocale();
   const [data, setData] = useState(initial);
@@ -424,177 +681,11 @@ export function HackathonLiveClient({ initial }: { initial: LivePayload }) {
   }
 
   return (
-    <HkShell authReturnPath="/hackathon/live">
-      <HkPage
-        eyebrow="McBuleli Live"
-        title={
-          isFr
-            ? data.edition.nameFr
-            : (data.edition.nameEn ?? data.edition.nameFr)
-        }
-        lede={
-          isFr
-            ? "Projecteur salle · programme et équipes en direct."
-            : "Room projector · live program and teams."
-        }
-        actions={
-          <div className="flex flex-wrap items-end gap-3">
-            <Link
-              href="/hackathon/mc"
-              className="rounded-2xl bg-white px-4 py-3 text-sm font-bold text-[#1F6B43] shadow-sm ring-1 ring-[#E5E5E0]"
-            >
-              Télécommande
-            </Link>
-            <div className="rounded-2xl bg-white px-5 py-3 text-right shadow-sm ring-1 ring-[#E5E5E0]">
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#a8a29e]">
-                {isFr ? "Clôture livrables" : "Submission deadline"}
-              </p>
-              <p className="mt-1 font-mono text-3xl font-black tabular-nums text-[#1F6B43] sm:text-4xl">
-                {countdown}
-              </p>
-            </div>
-          </div>
-        }
-      >
-        {data.pitchQueue?.active && data.pitchQueue.current ? (
-          <motion.div
-            layout
-            className="mb-4 overflow-hidden rounded-[1.75rem] border border-amber-300/70 bg-gradient-to-br from-amber-50 to-white px-5 py-5 shadow-sm"
-          >
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-800">
-              {isFr ? "Mini Demo · en scène" : "Mini Demo · on stage"}
-            </p>
-            <p className="mt-1 text-3xl font-black text-[#0c0a09]">
-              {data.pitchQueue.current.teamName}
-            </p>
-            <p className="mt-1 text-sm text-[#78716c]">
-              {isFr ? "Passage" : "Slot"} {data.pitchQueue.position}/
-              {data.pitchQueue.total}
-              {data.pitchQueue.next
-                ? ` · ${isFr ? "Suivante" : "Next"}: ${data.pitchQueue.next.teamName}`
-                : ""}
-            </p>
-          </motion.div>
-        ) : null}
-
-        <div className="grid gap-4 sm:grid-cols-3">
-          <div className="rounded-[1.5rem] border border-[#E5E5E0] bg-white p-5 shadow-sm sm:col-span-1">
-            <p className="text-[11px] font-bold uppercase tracking-wide text-[#a8a29e]">
-              {isFr ? "Présents" : "Inside"}
-            </p>
-            <p className="mt-1 text-5xl font-black text-[#1F6B43]">
-              {data.presence.inside}
-            </p>
-            <p className="mt-3 text-xs text-[#78716c]">
-              {isFr ? "Dehors" : "Outside"} {data.presence.outside} ·{" "}
-              {isFr ? "Absents" : "Absent"} {data.presence.absent} · Paid{" "}
-              {data.presence.paid}
-            </p>
-          </div>
-          <div className="rounded-[1.5rem] border border-[#E5E5E0] bg-white p-5 shadow-sm sm:col-span-2">
-            <p className="text-[11px] font-bold uppercase tracking-wide text-[#a8a29e]">
-              {isFr ? "Créneau actuel" : "Current slot"}
-            </p>
-            {data.program?.slot ? (
-              <>
-                <p className="mt-2 text-2xl font-black text-[#0c0a09]">
-                  {isFr
-                    ? data.program.slot.activityFr
-                    : (data.program.slot.activityEn ??
-                      data.program.slot.activityFr)}
-                </p>
-                <p className="mt-1 text-sm text-[#78716c]">
-                  {isFr
-                    ? data.program.labelFr
-                    : (data.program.labelEn ?? data.program.labelFr)}{" "}
-                  · {data.program.slot.time}
-                </p>
-              </>
-            ) : (
-              <p className="mt-2 text-lg text-[#78716c]">
-                {isFr ? "Hors programme" : "Off schedule"}
-              </p>
-            )}
-          </div>
-        </div>
-
-        <div className="grid gap-4 lg:grid-cols-2">
-          <HkSection title={isFr ? "Annonce" : "Announcement"}>
-            {data.announcement ? (
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  {data.announcement.pinned ? (
-                    <HkStatusPill tone="accent">Pin</HkStatusPill>
-                  ) : null}
-                  <p className="text-xl font-black text-[#0c0a09]">
-                    {data.announcement.title}
-                  </p>
-                </div>
-                <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-[#57534e]">
-                  {data.announcement.body}
-                </p>
-              </div>
-            ) : (
-              <p className="text-sm text-[#78716c]">
-                {isFr ? "Aucune annonce." : "No announcement."}
-              </p>
-            )}
-          </HkSection>
-
-          <HkSection title={isFr ? "Équipes en mentorat" : "Teams in mentoring"}>
-            {data.mentoring.length === 0 ? (
-              <p className="text-sm text-[#78716c]">
-                {isFr ? "Aucune session active." : "No active session."}
-              </p>
-            ) : (
-              <ul className="space-y-2">
-                {data.mentoring.map((m) => (
-                  <li
-                    key={m.id}
-                    className="rounded-xl border border-[#E5E5E0] bg-[#FAFAF8] px-3 py-2.5 text-sm"
-                  >
-                    <span className="font-bold text-[#0c0a09]">{m.teamName}</span>
-                    <span className="text-[#78716c]"> - {m.topic}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </HkSection>
-        </div>
-
-        <HkSection
-          title={isFr ? "Statuts équipes" : "Team statuses"}
-          action={
-            <div className="flex flex-wrap gap-1.5">
-              {byStatus.map(([status, n]) => (
-                <HkStatusPill key={status} tone="neutral">
-                  {status}: {n}
-                </HkStatusPill>
-              ))}
-            </div>
-          }
-        >
-          {data.teams.length === 0 ? (
-            <p className="text-sm text-[#78716c]">
-              {isFr ? "Aucune équipe." : "No teams yet."}
-            </p>
-          ) : (
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {data.teams.map((t) => (
-                <div
-                  key={t.id}
-                  className="rounded-xl border border-[#E5E5E0] bg-white px-3.5 py-3"
-                >
-                  <p className="font-bold text-[#0c0a09]">{t.name}</p>
-                  <p className="mt-1 text-xs text-[#78716c]">
-                    {isFr ? t.labelFr : (t.labelEn ?? t.labelFr)}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
-        </HkSection>
-      </HkPage>
-    </HkShell>
+    <LiveWall
+      data={data}
+      countdown={countdown}
+      byStatus={byStatus}
+      isFr={isFr}
+    />
   );
 }
