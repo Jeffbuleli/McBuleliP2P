@@ -134,13 +134,20 @@ function partnerWindow(slug: string): { windowFr: string; domainFr: string } {
 
 function buildPartnerCues(): McCue[] {
   const thanksVariants = [
-    (name: string) => `Merci à ${name}.`,
-    (name: string) => `Applaudissements pour ${name}.`,
-    (name: string) => `Remercions ${name}.`,
-    (name: string) => `Merci ${name}.`,
-    (name: string) => `Un merci à ${name}.`,
-    (name: string) => `Bravo à ${name}.`,
-    (name: string) => `Merci à ${name} pour ce partage.`,
+    (name: string) =>
+      `Merci à ${name}. Un grand applaudissement pour eux, s'il vous plaît.`,
+    (name: string) =>
+      `Remercions ${name}. Applaudissements, s'il vous plaît.`,
+    (name: string) =>
+      `Merci ${name}. Un bel applaudissement pour cette intervention.`,
+    (name: string) =>
+      `Un merci à ${name}. Applaudissons-les ensemble.`,
+    (name: string) =>
+      `Bravo à ${name}. Applaudissements, s'il vous plaît.`,
+    (name: string) =>
+      `Merci à ${name} pour ce partage. Un grand applaudissement.`,
+    (name: string) =>
+      `Applaudissements pour ${name}, s'il vous plaît.`,
   ];
   const out: McCue[] = [];
   STAGE_PARTNERS.forEach((p, i) => {

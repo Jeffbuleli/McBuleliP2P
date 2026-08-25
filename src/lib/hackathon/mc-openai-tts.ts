@@ -40,7 +40,9 @@ Ir Jeff Buleli = fondateur et développeur principal.
 
 const POLISH_PARTNER_THANKS = `
 ## Remerciement partenaire (cette ligne uniquement)
-- Une phrase brève ; varie légèrement la tournure pour éviter la monotonie entre partenaires.
+- Une ou deux phrases brèves : remerciement + invitation claire à applaudir.
+- Conserve toujours l'appel aux applaudissements (ex. « Applaudissements, s'il vous plaît »).
+- Varie légèrement la tournure pour éviter la monotonie entre partenaires.
 - Pas d'enflure (« ce fut un honneur », « riche contribution ») ; pas de discours de clôture.
 - Garde le nom du partenaire tel quel.`;
 
@@ -70,7 +72,7 @@ function getClient(): OpenAI {
 
 function cacheKey(text: string, kind?: McCueKind): string {
   return createHash("sha256")
-    .update(`v3:${kind ?? ""}:${text.trim()}`)
+    .update(`v4:${kind ?? ""}:${text.trim()}`)
     .digest("hex");
 }
 
