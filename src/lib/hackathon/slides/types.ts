@@ -44,7 +44,10 @@ export type SlideIllustrationId =
   | "limits";
 
 export type SlideBullet = {
+  /** Grande ligne (titre public). */
   text: string;
+  /** Petite explication ou exemple (1–2 phrases), visible public. */
+  detail?: string;
 };
 
 export type SlideQuizOption = {

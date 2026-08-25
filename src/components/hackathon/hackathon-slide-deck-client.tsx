@@ -212,77 +212,120 @@ export function HackathonSlideDeckClient({
     return () => clearInterval(poll);
   }, [deck.slug, mode]);
 
-  const shellClass =
-    mode === "present"
-      ? "min-h-dvh bg-[color:var(--hk-page,#fafaf8)] px-3 py-3 sm:px-6 sm:py-5"
-      : "mt-6";
+  const isPresent = mode === "present";
+  const shellClass = isPresent
+    ? "relative min-h-dvh bg-[color:var(--hk-page,#fafaf8)]"
+    : "mt-6";
 
   return (
     <div className={shellClass}>
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2">
-          {mode === "present" ? (
-            <Link
-              href={`/hackathon/slides/${deck.slug}`}
-              className="text-xs font-semibold text-[color:var(--hk-accent)] hover:underline"
-            >
-              ← Préparer
-            </Link>
-          ) : (
-            <Link
-              href="/hackathon/slides"
-              className="text-xs font-semibold text-[color:var(--hk-accent)] hover:underline"
-            >
-              ← Decks
-            </Link>
-          )}
-          <HkStatusPill tone={isOnAir ? "accent" : "neutral"}>
-            {isOnAir ? "On Air" : "Hors antenne"}
-          </HkStatusPill>
-          <span className="text-xs tabular-nums text-[color:var(--hk-muted)]">
-            {index + 1} / {total}
-          </span>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {mode === "prepare" ? (
-            <Link href={`/hackathon/slides/${deck.slug}/present`}>
-              <HkBtn variant="ghost">Présenter</HkBtn>
-            </Link>
-          ) : null}
-          <Link href="/hackathon/live" target="_blank">
-            <HkBtn variant="ghost">Projecteur (= Live)</HkBtn>
-          </Link>
-          {isOnAir ? (
-            <HkBtn variant="ghost" disabled={busy} onClick={() => void endLive()}>
-              Fin Live
+      {/* Speaker chrome — prepare always; present = discreet dock */}
+      {isPresent ? (
+        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center p-3 sm:p-4">
+          <div className="pointer-events-auto flex max-w-full flex-wrap items-center justify-center gap-2 rounded-2xl border border-[color:var(--hk-border)] bg-[color:var(--hk-surface)]/95 px-3 py-2 shadow-[0_12px_40px_-16px_rgba(0,0,0,0.35)] backdrop-blur-md">
+            <HkStatusPill tone={isOnAir ? "accent" : "neutral"}>
+              {isOnAir ? "On Air" : "Hors antenne"}
+            </HkStatusPill>
+            <span className="font-mono text-xs tabular-nums text-[color:var(--hk-muted)]">
+              {index + 1}/{total}
+            </span>
+            <HkBtn variant="ghost" disabled={index === 0 || busy} onClick={prev}>
+              ←
             </HkBtn>
-          ) : (
-            <HkBtn disabled={busy} onClick={() => void goLive()}>
-              Passer On Air
+            <HkBtn disabled={index >= total - 1 || busy} onClick={next}>
+              →
             </HkBtn>
-          )}
-          <Link href="/hackathon/mc">
-            <HkBtn variant="ghost">Console MC</HkBtn>
-          </Link>
-          <Link href="/hackathon/ops">
-            <HkBtn variant="ghost">Ops</HkBtn>
-          </Link>
-          <HkBtn variant="ghost" onClick={toggleFullscreen}>
-            Plein écran
-          </HkBtn>
+            {slide.layout === "quiz" ? (
+              <HkBtn variant="ghost" onClick={() => setRevealQuiz((v) => !v)}>
+                {revealQuiz ? "Masquer" : "Réponse"}
+              </HkBtn>
+            ) : null}
+            {isOnAir ? (
+              <HkBtn variant="ghost" disabled={busy} onClick={() => void endLive()}>
+                Fin
+              </HkBtn>
+            ) : (
+              <HkBtn disabled={busy} onClick={() => void goLive()}>
+                On Air
+              </HkBtn>
+            )}
+            <HkBtn variant="ghost" onClick={toggleFullscreen}>
+              Plein écran
+            </HkBtn>
+            <Link href="/hackathon/live" target="_blank">
+              <HkBtn variant="ghost">Live ↗</HkBtn>
+            </Link>
+          </div>
         </div>
-      </div>
+      ) : (
+        <>
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <Link
+                href="/hackathon/slides"
+                className="text-xs font-semibold text-[color:var(--hk-accent)] hover:underline"
+              >
+                ← Decks
+              </Link>
+              <HkStatusPill tone={isOnAir ? "accent" : "neutral"}>
+                {isOnAir ? "On Air" : "Hors antenne"}
+              </HkStatusPill>
+              <span className="text-xs tabular-nums text-[color:var(--hk-muted)]">
+                {index + 1} / {total}
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Link href={`/hackathon/slides/${deck.slug}/present`}>
+                <HkBtn variant="ghost">Présenter</HkBtn>
+              </Link>
+              <Link href="/hackathon/live" target="_blank">
+                <HkBtn variant="ghost">Projecteur Live</HkBtn>
+              </Link>
+              {isOnAir ? (
+                <HkBtn
+                  variant="ghost"
+                  disabled={busy}
+                  onClick={() => void endLive()}
+                >
+                  Fin Live
+                </HkBtn>
+              ) : (
+                <HkBtn disabled={busy} onClick={() => void goLive()}>
+                  Passer On Air
+                </HkBtn>
+              )}
+              <HkBtn variant="ghost" onClick={toggleFullscreen}>
+                Plein écran
+              </HkBtn>
+            </div>
+          </div>
 
-      <p className="mx-auto mt-2 max-w-6xl text-xs text-[color:var(--hk-muted)]">
-        Projecteur unique sur /hackathon/live. On Air bascule auto en mode
-        Slides. Matin / clôture : console MC → mode MC.
-      </p>
+          <p className="mx-auto mt-2 max-w-6xl rounded-xl border border-amber-200/80 bg-amber-50/90 px-3 py-2 text-xs text-amber-900">
+            <span className="font-bold">Mode speaker</span> — notes & raccourcis
+            ici seulement. Le public voit le projecteur{" "}
+            <span className="font-semibold">/hackathon/live</span> (contenu
+            pédagogique, sans guide opérateur).
+          </p>
+        </>
+      )}
 
       {error ? (
-        <p className="mx-auto mt-3 max-w-6xl text-sm text-rose-600">{error}</p>
+        <p
+          className={`mx-auto mt-3 max-w-6xl text-sm text-rose-600 ${
+            isPresent ? "px-4" : ""
+          }`}
+        >
+          {error}
+        </p>
       ) : null}
 
-      <div className="mx-auto mt-4 max-w-6xl">
+      <div
+        className={
+          isPresent
+            ? "mx-auto flex min-h-dvh max-w-6xl items-center px-3 pb-20 pt-4 sm:px-6 sm:pb-24"
+            : "mx-auto mt-4 max-w-6xl"
+        }
+      >
         <AnimatePresence mode="wait">
           <motion.div
             key={slide.id}
@@ -290,41 +333,51 @@ export function HackathonSlideDeckClient({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -16 }}
             transition={{ duration: 0.28 }}
+            className="w-full"
           >
             <HackathonSlideFrame
               slide={slide}
               revealQuiz={revealQuiz}
               compact={mode === "prepare"}
+              hideQuizHint={isPresent}
             />
           </motion.div>
         </AnimatePresence>
       </div>
 
-      <div className="mx-auto mt-4 flex max-w-6xl flex-wrap items-center justify-between gap-3">
-        <div className="flex gap-2">
-          <HkBtn variant="ghost" disabled={index === 0} onClick={prev}>
-            ← Précédent
-          </HkBtn>
-          <HkBtn disabled={index >= total - 1} onClick={next}>
-            Suivant →
-          </HkBtn>
-          {slide.layout === "quiz" ? (
-            <HkBtn variant="ghost" onClick={() => setRevealQuiz((v) => !v)}>
-              {revealQuiz ? "Masquer réponse" : "Révéler réponse"}
+      {!isPresent ? (
+        <div className="mx-auto mt-4 flex max-w-6xl flex-wrap items-center justify-between gap-3">
+          <div className="flex gap-2">
+            <HkBtn variant="ghost" disabled={index === 0} onClick={prev}>
+              ← Précédent
             </HkBtn>
-          ) : null}
+            <HkBtn disabled={index >= total - 1} onClick={next}>
+              Suivant →
+            </HkBtn>
+            {slide.layout === "quiz" ? (
+              <HkBtn variant="ghost" onClick={() => setRevealQuiz((v) => !v)}>
+                {revealQuiz ? "Masquer réponse" : "Révéler réponse"}
+              </HkBtn>
+            ) : null}
+            <HkBtn
+              variant="ghost"
+              onClick={() => setShowNotes((v) => !v)}
+            >
+              {showNotes ? "Masquer notes" : "Notes speaker"}
+            </HkBtn>
+          </div>
+          <p className="text-[11px] text-[color:var(--hk-muted)]">
+            {deck.speakerHintFr}
+          </p>
         </div>
-        <p className="text-[11px] text-[color:var(--hk-muted)]">
-          ← → naviguer · Espace quiz · F plein écran · L On Air
-        </p>
-      </div>
+      ) : null}
 
-      {mode === "prepare" ? (
+      {!isPresent ? (
         <div className="mx-auto mt-6 max-w-6xl space-y-4">
           {showNotes && slide.notes ? (
-            <div className="rounded-2xl bg-[color:var(--hk-surface)] p-4 text-sm ring-1 ring-[color:var(--hk-border)]">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-[color:var(--hk-muted)]">
-                Notes speaker
+            <div className="rounded-2xl border border-amber-200/70 bg-amber-50/80 p-4 text-sm">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-amber-800">
+                Notes speaker (non diffusées sur Live)
               </p>
               <p className="mt-2 text-[color:var(--hk-text)]">{slide.notes}</p>
             </div>

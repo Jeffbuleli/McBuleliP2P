@@ -1,64 +1,8 @@
 import type { HackathonDeck, HackathonSlide } from "@/lib/hackathon/slides/types";
 
-const agendaItems: Array<{
-  num: number;
-  title: string;
-  subtitle: string;
-  highlight?: boolean;
-}> = [
-  {
-    num: 1,
-    title: "Introduction au Vibe Coding",
-    subtitle: "Définition, principes, avantages, limites, rôle de l'IA",
-  },
-  {
-    num: 2,
-    title: "Module 1 - Découvrir les outils",
-    subtitle: "Cursor, Claude, Codex, GitHub et environnement",
-    highlight: true,
-  },
-  {
-    num: 3,
-    title: "Module 2 - Maîtriser les prompts",
-    subtitle: "Instructions, contexte, décomposition de tâches",
-  },
-  {
-    num: 4,
-    title: "Module 3 - De l'idée au cahier des charges",
-    subtitle: "Transformer une idée en projet concret",
-  },
-  {
-    num: 5,
-    title: "Module 4 - Construire une application",
-    subtitle: "Frontend, backend, base de données, API",
-  },
-  {
-    num: 6,
-    title: "Module 5 - Déboguer et améliorer",
-    subtitle: "Erreurs, tests, refactoring, optimisation",
-  },
-  {
-    num: 7,
-    title: "Module 6 - Git, GitHub et gestion",
-    subtitle: "Versions, commits, branches, collaboration",
-  },
-  {
-    num: 8,
-    title: "Module 7 - Sécurité et bonnes pratiques",
-    subtitle: "Données sensibles, clés API, dépendances",
-  },
-  {
-    num: 9,
-    title: "Module 8 - Projet final",
-    subtitle: "Une application de A à Z",
-  },
-  {
-    num: 10,
-    title: "Évaluation + présentation",
-    subtitle: "Démo en visioconférence et évaluation",
-  },
-];
-
+/** Public deck copy — regenerated via OpenAI (bootcamp / international training tone).
+ *  Speaker-only guidance lives in `notes` (prepare mode only).
+ */
 function s(partial: HackathonSlide): HackathonSlide {
   return partial;
 }
@@ -68,16 +12,16 @@ export const vibeCodingMasterclassDeck: HackathonDeck = {
   titleFr: "Masterclass Vibe Coding",
   titleEn: "Vibe Coding Masterclass",
   descriptionFr:
-    "Parcours bootcamp McBuleli - Introduction + Module 1 : découvrir et maîtriser les outils (Cursor, Claude, Codex, GitHub).",
+    "Bootcamp pratique · 55 min : Vibe Coding + Module 1 (Cursor, Claude, Codex, GitHub).",
   descriptionEn:
-    "McBuleli bootcamp track - Intro + Module 1: discover and master the tools (Cursor, Claude, Codex, GitHub).",
-  moduleLabelFr: "Module 1 - Outils",
-  moduleLabelEn: "Module 1 - Tools",
+    "Hands-on bootcamp · 55 min: Vibe Coding + Module 1 (Cursor, Claude, Codex, GitHub).",
+  moduleLabelFr: "Module 1 · Outils",
+  moduleLabelEn: "Module 1 · Tools",
   estimatedMinutes: 55,
   speakerHintFr:
-    "Utilisez ← → pour naviguer, Espace pour révéler le quiz, F pour plein écran, L pour On Air.",
+    "Mode préparer uniquement : ← → · Espace quiz · N notes · F plein écran · L On Air.",
   speakerHintEn:
-    "Use ← → to navigate, Space to reveal quiz, F for fullscreen, L to go On Air.",
+    "Prepare mode only: ← → · Space quiz · N notes · F fullscreen · L On Air.",
   slides: [
     s({
       id: "cover",
@@ -85,11 +29,23 @@ export const vibeCodingMasterclassDeck: HackathonDeck = {
       palette: "mint",
       eyebrow: "McBuleli Hackathon · Silikin Village · 28 août 2026",
       title: "Masterclass Vibe Coding",
-      subtitle:
-        "1 heure avec Ir Jeff Buleli — coder avec l'IA, de l'intention au prototype, sans perdre le contrôle.",
+      subtitle: "55 min · intention → code → review → commit — avec Ir Jeff Buleli.",
+      bullets: [
+        {
+          text: "On code",
+          detail: "Chaque notion se traduit en action dans un vrai projet.",
+        },
+        {
+          text: "On review",
+          detail: "Lire le diff avant d’accepter : l’IA propose, vous décidez.",
+        },
+        {
+          text: "On commit",
+          detail: "Une avancée claire dans GitHub vaut mieux qu’un long chat.",
+        },
+      ],
       illustration: "vibe-loop",
-      notes:
-        "Accueillir. Présenter Jeff. Format : 55 min, quiz live, devoir concret avant le build.",
+      notes: "Rappel : positionner la session comme un atelier pratique et exigeant.",
     }),
     s({
       id: "speaker",
@@ -99,720 +55,1034 @@ export const vibeCodingMasterclassDeck: HackathonDeck = {
       title: "Ir Jeff Buleli",
       subtitle: "Fondateur et développeur principal de McBuleli",
       body: [
-        "On ne parle pas d'IA en théorie : on ouvre Cursor, on lit le code, on review, on commit. Vous repartez avec un geste que vous rejouerez toute la journée de build.",
+        "Une session pour transformer une intention produit en code vérifiable, versionné et prêt à évoluer.",
       ],
       bullets: [
-        { text: "1 h · intro Vibe Coding + Module 1 (outils)" },
-        { text: "Cursor recommandé · Claude & Codex en complément" },
-        { text: "GitHub obligatoire : le jury lit le repo, pas le chat" },
-        { text: "McBuleli IA reste en pause pendant le cours" },
+        {
+          text: "Approche terrain",
+          detail: "Chaque concept doit mener à une action concrète dans le projet.",
+        },
+        {
+          text: "IA utile",
+          detail: "L’IA accélère la réflexion, mais la responsabilité technique reste humaine.",
+        },
+        {
+          text: "Livrable d’abord",
+          detail: "Le bon résultat se voit dans le dépôt, le code et la clarté des commits.",
+        },
       ],
       portrait: {
         src: "/hackathon/jeff-buleli.png",
         alt: "Portrait de Ir Jeff Buleli",
         caption: "Ir Jeff Buleli · McBuleli",
       },
-      notes: "Sourire, contact visuel. Puis enchaîner sur « pourquoi vous êtes ici ».",
+      notes: "Rappel : garder un ton direct, professionnel et orienté livraison.",
     }),
     s({
       id: "why-here",
       layout: "content",
       palette: "forest",
-      eyebrow: "Pourquoi vous êtes ici",
-      title: "Deux jours pour devenir builder IA",
-      body: [
-        "Le McBuleli Hackathon n'est pas un concours de slides. C'est un bootcamp pratique, puis une compétition de prototypes utiles pour Kinshasa et la RDC.",
-      ],
+      title: "Pourquoi ici, pourquoi maintenant",
+      subtitle: "Le hackathon récompense la vitesse maîtrisée.",
       bullets: [
-        { text: "Jour 1 — Bootcamp Vibe Coding, équipes, puis Build" },
-        { text: "Jour 2 — Mentorat, Demo Day, jury partenaires" },
-        { text: "Livrable — une app réelle (repo + démo), pas un PowerPoint" },
-        { text: "Critère — impact local : paiement, inclusion, services, éducation…" },
+        {
+          text: "Passer de l’idée au prototype",
+          detail: "Une bonne idée gagne en valeur quand elle devient testable rapidement.",
+        },
+        {
+          text: "Réduire le temps perdu",
+          detail: "Les outils IA aident à clarifier, générer, corriger et documenter.",
+        },
+        {
+          text: "Garder un standard pro",
+          detail: "Même sous pression, le code doit rester lisible, reviewable et versionné.",
+        },
       ],
       illustration: "project",
-      notes: "Relier au programme Silikin Village 28-29 août.",
+      notes: "Rappel : relier les outils au contexte compétitif du hackathon.",
     }),
     s({
       id: "agenda",
       layout: "agenda",
       palette: "slate",
-      eyebrow: "Parcours pédagogique",
-      title: "La suite logique après l'Introduction",
-      subtitle: "Dix étapes - nous attaquons aujourd'hui le Module 1.",
-      agenda: agendaItems,
+      title: "Agenda · 55 minutes",
+      subtitle: "Comprendre, pratiquer, valider.",
+      agenda: [
+        {
+          num: 1,
+          title: "Pourquoi maintenant",
+          subtitle: "Coder plus vite, mieux cadrer, livrer.",
+        },
+        {
+          num: 2,
+          title: "Objectifs",
+          subtitle: "Ce que vous saurez faire aujourd’hui.",
+        },
+        {
+          num: 3,
+          title: "Définition",
+          subtitle: "Le Vibe Coding en une phrase.",
+        },
+        {
+          num: 4,
+          title: "Principes",
+          subtitle: "Intention, boucle, validation.",
+        },
+        {
+          num: 5,
+          title: "Forces et limites",
+          subtitle: "Accélérer sans perdre le contrôle.",
+        },
+        {
+          num: 6,
+          title: "Rôle de l’IA",
+          subtitle: "Copilote, pas pilote automatique.",
+        },
+        {
+          num: 7,
+          title: "Module 1 · Outils",
+          subtitle: "Cursor, Claude, Codex, GitHub.",
+          highlight: true,
+        },
+        {
+          num: 8,
+          title: "Exemples",
+          subtitle: "Prompts, specs, bugs, commits.",
+        },
+        {
+          num: 9,
+          title: "Quiz",
+          subtitle: "5 questions pour valider.",
+        },
+        {
+          num: 10,
+          title: "Travail personnel",
+          subtitle: "Préparer le prochain module.",
+        },
+      ],
       illustration: "agenda",
-      notes: "Pointer le Module 1 en highlight. Les modules 2-8 viennent ensuite.",
+      notes: "Rappel : maintenir le rythme et annoncer que le Module 1 est le cœur pratique.",
     }),
     s({
       id: "learning-goals",
       layout: "content",
       palette: "mint",
-      eyebrow: "Objectifs de la session",
-      title: "Ce que vous saurez faire à 11h30",
+      title: "Objectifs d’apprentissage",
+      subtitle: "À la fin, vous devez pouvoir agir.",
       bullets: [
-        { text: "Expliquer le Vibe Coding — et ce que ce n'est pas (pilote auto)" },
-        { text: "Choisir l'outil : Cursor (code), Claude (spec), Codex (bout), GitHub (mémoire)" },
-        { text: "Configurer un setup minimal : repo, .env hors Git, premier agent" },
-        { text: "Lancer un prompt utile, lire le diff, committer" },
+        {
+          text: "Définir le Vibe Coding",
+          detail: "Expliquer la méthode sans la confondre avec du copier-coller IA.",
+        },
+        {
+          text: "Choisir le bon outil",
+          detail: "Associer Cursor, Claude, Codex et GitHub à leurs usages forts.",
+        },
+        {
+          text: "Construire une boucle fiable",
+          detail: "Prompt, génération, review, test, commit.",
+        },
+        {
+          text: "Éviter les pièges",
+          detail: "Sécurité, hallucinations, dette technique et dépendance excessive.",
+        },
       ],
-      illustration: "tools-grid",
+      illustration: "eval",
+      notes: "Rappel : mesurer la compréhension par la capacité à produire un commit propre.",
     }),
-
-    // —— Introduction ——
     s({
       id: "intro-section",
       layout: "section",
       palette: "violet",
-      eyebrow: "Étape 1",
-      title: "Introduction au Vibe Coding",
-      subtitle: "Définition · principes · avantages · limites · rôle de l'IA",
+      title: "Introduction · Vibe Coding",
+      subtitle: "Coder avec intention, contexte et validation.",
+      body: [
+        "Le Vibe Coding n’est pas une magie. C’est une discipline de collaboration avec l’IA.",
+      ],
       illustration: "vibe-loop",
+      notes: "Rappel : poser un cadre simple avant de parler des outils.",
     }),
     s({
       id: "intro-definition",
       layout: "split",
       palette: "violet",
-      eyebrow: "Définition",
-      title: "Qu'est-ce que le Vibe Coding ?",
+      title: "Définition simple",
+      subtitle: "Transformer une intention claire en code vérifié.",
       body: [
-        "Le Vibe Coding, c'est développer en dialogue continu avec l'IA : vous portez l'intention produit, l'IA accélère l'exécution — sous votre supervision.",
+        "Le Vibe Coding consiste à guider l’IA avec du contexte, puis à contrôler le résultat comme un développeur responsable.",
       ],
       bullets: [
-        { text: "Vous décrivez le résultat souhaité en français (ou anglais), pas le code" },
-        { text: "L'IA propose des fichiers, des diffs, parfois des tests" },
-        { text: "Vous lisez, corrigez, validez — puis vous itérez" },
-        { text: "Rythme : intention → prompt → code → review → commit" },
+        {
+          text: "Intention",
+          detail: "Ce que l’utilisateur veut accomplir et pourquoi.",
+        },
+        {
+          text: "Contexte",
+          detail: "Le code existant, les contraintes, les données et les règles métier.",
+        },
+        {
+          text: "Validation",
+          detail: "La preuve que le résultat fonctionne et reste maintenable.",
+        },
       ],
-      illustration: "vibe-loop",
-      notes: "Insister : ce n'est pas « laisser l'IA coder toute seule ».",
+      illustration: "idea-to-spec",
+      notes: "Rappel : distinguer clairement vitesse et précipitation.",
     }),
     s({
       id: "intro-principles",
       layout: "steps",
       palette: "violet",
-      eyebrow: "Principes",
-      title: "Quatre règles d'or",
+      title: "Les 5 principes",
+      subtitle: "Une boucle courte, mais contrôlée.",
       steps: [
         {
           num: 1,
-          title: "Intention claire",
-          body: "Savoir ce que vous voulez obtenir avant d'ouvrir le chat.",
+          title: "Cadrer",
+          body: "Décrire le besoin, le résultat attendu et les limites.",
         },
         {
           num: 2,
-          title: "Contexte fourni",
-          body: "Fichiers, stack, contraintes - l'IA ne lit pas dans votre tête.",
+          title: "Demander",
+          body: "Formuler une requête précise, ancrée dans le projet.",
         },
         {
           num: 3,
-          title: "Petites étapes",
-          body: "Une tâche = un prompt. Découper vaut mieux qu'un monolithe.",
+          title: "Générer",
+          body: "Obtenir une proposition de code, de plan ou de correction.",
         },
         {
           num: 4,
-          title: "Review humaine",
-          body: "Lire le diff. Comprendre. Accepter ou rejeter. Vous restez responsable.",
+          title: "Vérifier",
+          body: "Lire, tester, comparer et refuser ce qui est fragile.",
+        },
+        {
+          num: 5,
+          title: "Committer",
+          body: "Sauvegarder une avancée claire dans l’historique Git.",
         },
       ],
-      illustration: "prompt-craft",
+      illustration: "vibe-loop",
+      notes: "Rappel : présenter la boucle comme un réflexe à répéter tout le hackathon.",
     }),
     s({
       id: "intro-advantages",
       layout: "content",
       palette: "forest",
-      eyebrow: "Avantages",
-      title: "Pourquoi ça change la donne",
+      title: "Ce que le Vibe Coding accélère",
+      subtitle: "Moins de friction, plus d’itérations.",
       bullets: [
-        { text: "Vitesse — prototyper en heures ce qui prenait des jours" },
-        { text: "Accessibilité — une équipe junior peut aller plus loin, plus vite" },
-        { text: "Apprentissage — demander « explique ce diff » avant d'accepter" },
-        { text: "Focus métier — plus de temps pour le problème (M-Pesa, kiosque, école…)" },
+        {
+          text: "Démarrage rapide",
+          detail: "Créer une structure, une page, une API ou un test plus vite.",
+        },
+        {
+          text: "Exploration guidée",
+          detail: "Comparer plusieurs approches avant d’écrire trop de code.",
+        },
+        {
+          text: "Debug assisté",
+          detail: "Analyser une erreur, isoler une cause et proposer une correction.",
+        },
+        {
+          text: "Documentation utile",
+          detail: "Produire des README, specs et notes techniques plus cohérents.",
+        },
       ],
       illustration: "build-stack",
+      notes: "Rappel : valoriser les gains visibles dans un sprint court.",
     }),
     s({
       id: "intro-limits",
       layout: "content",
       palette: "coral",
-      eyebrow: "Limites",
-      title: "Ce que l'IA ne fera pas à votre place",
+      title: "Ce que le Vibe Coding ne remplace pas",
+      subtitle: "L’IA peut générer, pas garantir.",
       bullets: [
-        { text: "Elle peut inventer une API, une lib ou un endpoint qui n'existe pas" },
-        { text: "Elle ignore parfois votre arborescence réelle (fichiers déjà là)" },
-        { text: "Elle peut coller une clé, un mot de passe, une faille XSS" },
-        { text: "Sans review, vous empilez de la dette — le jury le verra dans le repo" },
+        {
+          text: "Le jugement technique",
+          detail: "Un code plausible peut rester faux, lent ou dangereux.",
+        },
+        {
+          text: "La compréhension métier",
+          detail: "L’IA ne connaît pas vos utilisateurs sans contexte clair.",
+        },
+        {
+          text: "La sécurité",
+          detail: "Les secrets, permissions et données sensibles exigent une revue stricte.",
+        },
+        {
+          text: "La responsabilité",
+          detail: "Le commit porte votre nom, même si l’IA a proposé le code.",
+        },
       ],
       illustration: "limits",
-      notes: "Montrer un exemple oral d'hallucination si possible.",
+      notes: "Rappel : ancrer la prudence sans décourager l’expérimentation.",
     }),
     s({
       id: "intro-ai-role",
       layout: "split",
       palette: "indigo",
-      eyebrow: "Rôle de l'IA",
-      title: "Copilote, pas pilote automatique",
+      title: "Le bon rôle de l’IA",
+      subtitle: "Copilote de raisonnement et de production.",
       body: [
-        "L'IA est un accélérateur de craft. Vous êtes le product owner, l'architecte et le responsable qualité.",
+        "L’IA aide à penser, écrire et corriger. Le développeur décide, valide et assume.",
       ],
       bullets: [
-        { text: "IA — génère, explique, propose des alternatives" },
-        { text: "Vous — décidez, structurez, validez, livrez" },
-        { text: "Équipe — un seul repo GitHub, des commits lisibles" },
-        { text: "Jury — note le résultat humain (utilité, clarté, démo), pas le volume de tokens" },
+        {
+          text: "Assistant de cadrage",
+          detail: "Transformer une idée vague en tâches techniques.",
+        },
+        {
+          text: "Pair-programmer",
+          detail: "Proposer du code, des alternatives et des tests.",
+        },
+        {
+          text: "Reviewer initial",
+          detail: "Repérer incohérences, oublis et risques évidents.",
+        },
       ],
       illustration: "ai-role",
+      notes: "Rappel : répéter que l’IA augmente l’équipe, elle ne remplace pas la revue.",
     }),
-
-    // —— Module 1 ——
     s({
       id: "m1-section",
       layout: "section",
       palette: "sky",
-      eyebrow: "Étape 2 · Module 1",
-      title: "Découvrir les outils de Vibe Coding",
-      subtitle: "Cursor · Claude · Codex · GitHub · Environnement de travail",
+      title: "Module 1 · Les outils",
+      subtitle: "Cursor, Claude, Codex, GitHub.",
+      body: [
+        "Un bon workflow combine génération, raisonnement, automatisation et versioning.",
+      ],
       illustration: "tools-grid",
-      notes: "Cœur de la session. Prévoir démos live si le réseau le permet.",
+      notes: "Rappel : ouvrir la partie pratique avec une vision d’ensemble.",
     }),
     s({
       id: "m1-map",
       layout: "tools",
       palette: "sky",
-      eyebrow: "Cartographie",
-      title: "Qui fait quoi dans la stack",
+      title: "Carte des outils",
+      subtitle: "Chaque outil a un rôle précis.",
       tools: [
         {
           id: "cursor",
           name: "Cursor",
-          role: "IDE agentique — 80 % du temps : éditer, diffs, multi-fichiers",
+          role: "Coder dans le projet — Idéal pour modifier des fichiers avec le contexte du dépôt.",
           accent: "sky",
         },
         {
           id: "claude",
           name: "Claude",
-          role: "Raisonnement long — specs, architecture, « et si on faisait autrement »",
+          role: "Raisonner et structurer — Utile pour clarifier une spec, analyser un problème ou préparer un plan.",
           accent: "amber",
         },
         {
           id: "codex",
           name: "Codex",
-          role: "Génération ciblée — une fonction, un script, un patch isolé",
+          role: "Générer et expliquer — Pratique pour produire du code, proposer des tests et détailler une solution.",
           accent: "indigo",
         },
         {
           id: "github",
           name: "GitHub",
-          role: "Mémoire d'équipe — branches, README, preuve pour le Demo Day",
+          role: "Versionner et collaborer — Base du travail en équipe, des commits, des branches et des revues.",
           accent: "slate",
         },
       ],
       illustration: "tools-grid",
+      notes: "Rappel : présenter les outils comme complémentaires, pas concurrents.",
     }),
     s({
       id: "m1-cursor",
       layout: "split",
       palette: "sky",
-      eyebrow: "Outil 1",
-      title: "Cursor - votre atelier principal",
+      title: "Cursor",
+      subtitle: "L’éditeur pour coder avec contexte.",
       body: [
-        "Cursor est un éditeur de code avec agent IA intégré. C'est là que vous vivez 80 % du Vibe Coding pendant le hackathon.",
+        "Cursor place l’assistance IA au cœur du projet : fichiers, composants, erreurs et refactors.",
       ],
       bullets: [
-        { text: "Chat + Composer : un changement qui touche plusieurs fichiers" },
-        { text: "L'agent lit le projet — pas seulement l'onglet ouvert" },
-        { text: "Chaque modification : accepter, refuser, ou demander une autre voie" },
-        { text: "Règle d'or : un prompt = une intention claire, pas « fais l'app »" },
+        {
+          text: "Modifier le code existant",
+          detail: "Demander une amélioration ciblée sur une fonction, une page ou un composant.",
+        },
+        {
+          text: "Comprendre une base",
+          detail: "Résumer le rôle d’un dossier ou d’un fichier avant d’intervenir.",
+        },
+        {
+          text: "Refactorer proprement",
+          detail: "Réduire la duplication sans changer le comportement attendu.",
+        },
       ],
       illustration: "cursor",
-      notes: "Démo : ouvrir un fichier, demander une explication, puis un petit fix.",
+      notes: "Rappel : associer Cursor à l’action directe dans le dépôt.",
     }),
     s({
       id: "m1-claude",
       layout: "split",
       palette: "amber",
-      eyebrow: "Outil 2",
-      title: "Claude - le cerveau de raisonnement",
+      title: "Claude",
+      subtitle: "Le partenaire de clarification.",
       body: [
-        "Claude excelle quand le problème est flou : cadrer une idée, écrire un cahier des charges, comparer des architectures.",
+        "Claude est fort pour structurer les idées, challenger les hypothèses et produire des explications lisibles.",
       ],
       bullets: [
-        { text: "Excellent pour expliquer du code complexe" },
-        { text: "Utile pour rédiger des user stories et des specs" },
-        { text: "Bon partenaire pour challenger une approche" },
-        { text: "À utiliser avant de coller 200 lignes dans Cursor" },
+        {
+          text: "Transformer une idée en spec",
+          detail: "Décrire utilisateurs, parcours, contraintes et critères d’acceptation.",
+        },
+        {
+          text: "Comparer des options",
+          detail: "Évaluer deux architectures ou deux approches produit.",
+        },
+        {
+          text: "Préparer une review",
+          detail: "Lister les risques, les cas limites et les questions ouvertes.",
+        },
       ],
       illustration: "claude",
+      notes: "Rappel : associer Claude à la qualité du raisonnement avant le code.",
     }),
     s({
       id: "m1-codex",
       layout: "split",
       palette: "indigo",
-      eyebrow: "Outil 3",
-      title: "Codex - génération de code ciblée",
+      title: "Codex",
+      subtitle: "Générer, corriger, expliquer.",
       body: [
-        "Codex (et agents type OpenAI Codex) brille sur des tâches de génération : une fonction, un script, un test, un patch précis.",
+        "Codex aide à produire du code et à explorer rapidement des solutions techniques.",
       ],
       bullets: [
-        { text: "Bon pour démarrer un module depuis zéro" },
-        { text: "Utile pour transformer une spec courte en squelette" },
-        { text: "Toujours revoir le code généré avant de commit" },
-        { text: "Complète Cursor - ne le remplace pas dans le flux quotidien" },
+        {
+          text: "Créer une première version",
+          detail: "Obtenir un composant, une route API ou une fonction de traitement.",
+        },
+        {
+          text: "Ajouter des tests",
+          detail: "Couvrir les cas normaux, les erreurs et les limites.",
+        },
+        {
+          text: "Expliquer une solution",
+          detail: "Comprendre le comportement avant de l’intégrer.",
+        },
       ],
       illustration: "codex",
+      notes: "Rappel : relier Codex à la production contrôlée, jamais à l’acceptation automatique.",
     }),
     s({
       id: "m1-github",
       layout: "split",
       palette: "slate",
-      eyebrow: "Outil 4",
-      title: "GitHub - mémoire et collaboration",
+      title: "GitHub",
+      subtitle: "La mémoire du projet.",
       body: [
-        "Sans GitHub, votre travail disparaît avec la machine. Avec GitHub, l'équipe partage, rollback et présente le repo au jury.",
+        "GitHub rend le travail visible, traçable et collaboratif.",
       ],
       bullets: [
-        { text: "Commits fréquents - petits, clairs, traçables" },
-        { text: "Branches pour features risquées" },
-        { text: "README lisible = bonus Demo Day" },
-        { text: "Jamais de secrets (.env) dans le dépôt" },
+        {
+          text: "Commits lisibles",
+          detail: "Chaque commit doit raconter une avancée précise.",
+        },
+        {
+          text: "Branches maîtrisées",
+          detail: "Isoler une fonctionnalité pour limiter les conflits.",
+        },
+        {
+          text: "Revues utiles",
+          detail: "Comparer le code, discuter les choix et corriger avant fusion.",
+        },
       ],
       illustration: "github",
+      notes: "Rappel : rappeler que le dépôt est la preuve du travail réalisé.",
     }),
     s({
       id: "m1-workspace",
       layout: "steps",
       palette: "mint",
-      eyebrow: "Environnement",
-      title: "Setup minimal pour le bootcamp",
+      title: "Workflow minimal",
+      subtitle: "Une boucle simple pour le hackathon.",
       steps: [
         {
           num: 1,
-          title: "Compte & outils",
-          body: "Compte GitHub + Cursor installé (Mac ou Windows).",
+          title: "Décrire",
+          body: "Écrire le besoin et le résultat attendu.",
         },
         {
           num: 2,
-          title: "Projet local",
-          body: "Cloner ou créer un repo. Ouvrir le dossier dans Cursor.",
+          title: "Générer",
+          body: "Obtenir une proposition de code ou de plan.",
         },
         {
           num: 3,
-          title: "Secrets hors repo",
-          body: "Fichier .env local + .gitignore - jamais de clés API commitées.",
+          title: "Relire",
+          body: "Vérifier logique, sécurité, style et dépendances.",
         },
         {
           num: 4,
-          title: "Premier agent",
-          body: "Demander à Cursor d'expliquer la structure du projet.",
+          title: "Tester",
+          body: "Confirmer le comportement avec des cas simples.",
+        },
+        {
+          num: 5,
+          title: "Committer",
+          body: "Sauvegarder une étape stable et compréhensible.",
         },
       ],
       illustration: "workspace",
+      notes: "Rappel : présenter cette boucle comme la base de toutes les sessions suivantes.",
     }),
     s({
       id: "m1-compare",
       layout: "content",
       palette: "sky",
-      eyebrow: "Quand utiliser quoi",
-      title: "Choix rapide selon la tâche",
+      title: "Quel outil pour quel moment ?",
+      subtitle: "Choisir selon le besoin immédiat.",
       bullets: [
-        { text: "Besoin de coder dans le repo ouvert → Cursor" },
-        { text: "Besoin de cadrer / spécifier / challenger → Claude" },
-        { text: "Besoin d'un bout isolé (script, regex, test) → Codex" },
-        { text: "Besoin de sauver, collab, montrer au jury → GitHub" },
-        { text: "Combo gagnante : Claude (plan) → Cursor (exec) → GitHub (commit)" },
+        {
+          text: "Besoin flou → Claude",
+          detail: "Clarifier le problème avant d’écrire.",
+        },
+        {
+          text: "Code à modifier → Cursor",
+          detail: "Travailler directement dans le contexte du projet.",
+        },
+        {
+          text: "Solution à générer → Codex",
+          detail: "Produire une première version ou des tests.",
+        },
+        {
+          text: "Travail à partager → GitHub",
+          detail: "Versionner, relire et collaborer.",
+        },
       ],
       illustration: "tools-grid",
-      notes: "Faire voter la salle : « pour un bug UI, quel outil ? »",
+      notes: "Rappel : encourager un choix d’outil basé sur la tâche, pas sur la préférence.",
     }),
-
-    // —— Exemples pratiques ——
     s({
       id: "examples-section",
       layout: "section",
       palette: "amber",
-      eyebrow: "Pratique",
-      title: "Exemples guidés",
-      subtitle: "Trois prompts que vous pouvez rejouer dès ce soir",
+      title: "Exemples pratiques",
+      subtitle: "Des prompts qui mènent à du code utile.",
+      body: [
+        "Un bon prompt donne un contexte, une tâche et un critère de réussite.",
+      ],
       illustration: "prompt-craft",
+      notes: "Rappel : faire sentir la différence entre demande vague et demande exploitable.",
     }),
     s({
       id: "ex-1",
       layout: "content",
       palette: "amber",
-      eyebrow: "Exemple 1 · Comprendre",
-      title: "« Explique ce fichier »",
-      body: [
-        "Dans Cursor, sélectionnez un fichier clé du projet et demandez :",
-      ],
+      title: "Exemple 1 · Idée vers spec",
+      subtitle: "Avant de coder, cadrer.",
       bullets: [
-        { text: "Ouvre [chemin] et explique son rôle en 5 points" },
-        { text: "Liste les dépendances critiques de ce module" },
-        { text: "Signale ce qui serait risqué à modifier sans tests" },
+        {
+          text: "Contexte",
+          detail: "Application de suivi de dépenses pour étudiants à Kinshasa.",
+        },
+        {
+          text: "Demande",
+          detail: "Définir les 3 parcours clés, les données nécessaires et les critères d’acceptation.",
+        },
+        {
+          text: "Résultat attendu",
+          detail: "Une spec courte qui peut devenir des tâches GitHub.",
+        },
       ],
-      illustration: "cursor",
-      notes: "Montrer qu'on commence toujours par comprendre, pas par générer.",
+      illustration: "idea-to-spec",
+      notes: "Rappel : souligner que la spec réduit les mauvaises générations de code.",
     }),
     s({
       id: "ex-2",
       layout: "content",
       palette: "amber",
-      eyebrow: "Exemple 2 · Construire",
-      title: "« Ajoute une page minimale »",
-      body: [
-        "Prompt type pour une feature UI dans un projet Next.js :",
-      ],
+      title: "Exemple 2 · Spec vers composant",
+      subtitle: "Coder une première brique.",
       bullets: [
-        { text: "Crée une page /demo avec titre, lede et un bouton CTA" },
-        { text: "Réutilise les composants et tokens déjà présents" },
-        { text: "N'ajoute aucune dépendance npm sans me le demander" },
-        { text: "Montre le diff avant d'écrire ailleurs" },
+        {
+          text: "Contexte",
+          detail: "Une page doit afficher une liste de transactions filtrable.",
+        },
+        {
+          text: "Demande",
+          detail: "Créer un composant simple avec état, filtre et message quand la liste est vide.",
+        },
+        {
+          text: "Validation",
+          detail: "Le composant reste lisible et couvre les cas principaux.",
+        },
       ],
       illustration: "build-stack",
+      notes: "Rappel : relier le prompt au composant concret produit dans le projet.",
     }),
     s({
       id: "ex-3",
       layout: "content",
       palette: "amber",
-      eyebrow: "Exemple 3 · Multi-fichiers",
-      title: "Workflow agentique propre",
+      title: "Exemple 3 · Bug vers correction",
+      subtitle: "Analyser avant de patcher.",
       bullets: [
-        { text: "Décrire le résultat utilisateur (pas le code)" },
-        { text: "Lister les fichiers touchés attendus" },
-        { text: "Demander un plan court avant l'implémentation" },
-        { text: "Appliquer, tester manuellement, puis commit GitHub" },
+        {
+          text: "Symptôme",
+          detail: "Le total affiché ne change pas après suppression d’une transaction.",
+        },
+        {
+          text: "Demande",
+          detail: "Identifier les causes probables et proposer une correction minimale.",
+        },
+        {
+          text: "Preuve",
+          detail: "Ajouter un test ou un cas manuel qui confirme la correction.",
+        },
       ],
-      illustration: "git-flow",
+      illustration: "debug",
+      notes: "Rappel : rappeler que la correction doit être prouvée, pas seulement plausible.",
     }),
     s({
       id: "ex-anti",
       layout: "content",
       palette: "coral",
-      eyebrow: "Anti-patterns",
-      title: "À éviter dès le Module 1",
+      title: "Anti-exemples",
+      subtitle: "Ce qui produit du mauvais code.",
       bullets: [
-        { text: "« Fais-moi toute l'app » en un seul prompt" },
-        { text: "Accepter un diff sans le lire" },
-        { text: "Coller des clés API dans le chat public" },
-        { text: "Committer node_modules ou .env" },
+        {
+          text: "Prompt vague",
+          detail: "« Fais mon app » donne souvent une réponse générique et inutilisable.",
+        },
+        {
+          text: "Acceptation aveugle",
+          detail: "Coller du code sans lecture crée des bugs difficiles à expliquer.",
+        },
+        {
+          text: "Contexte absent",
+          detail: "Sans structure du projet, l’IA invente noms, fichiers et dépendances.",
+        },
+        {
+          text: "Commit géant",
+          detail: "Une grosse modification non découpée devient presque impossible à reviewer.",
+        },
       ],
-      illustration: "security",
+      illustration: "limits",
+      notes: "Rappel : transformer les erreurs courantes en règles simples à éviter.",
     }),
-
-    // —— Quiz ——
     s({
       id: "quiz-section",
       layout: "section",
       palette: "indigo",
-      eyebrow: "Évaluation formative",
-      title: "Quiz Module 1",
-      subtitle: "5 questions - Espace pour révéler la bonne réponse",
+      title: "Quiz rapide",
+      subtitle: "5 questions, une bonne réponse chacune.",
+      body: [
+        "Objectif : vérifier les réflexes essentiels avant de passer à la suite.",
+      ],
       illustration: "quiz",
+      notes: "Rappel : garder le quiz court et centré sur les décisions pratiques.",
     }),
     s({
       id: "quiz-1",
       layout: "quiz",
       palette: "indigo",
-      eyebrow: "Question 1 / 5",
-      title: "Vibe Coding",
+      title: "Quiz 1",
       quiz: {
-        question:
-          "Quelle affirmation décrit le mieux le Vibe Coding ?",
+        question: "Quelle phrase décrit le mieux le Vibe Coding ?",
         options: [
           {
             id: "a",
-            text: "Laisser l'IA coder seule sans relecture",
+            text: "Laisser l’IA coder sans intervention humaine.",
           },
           {
             id: "b",
-            text: "Dialoguer avec l'IA pour accélérer, sous supervision humaine",
+            text: "Guider l’IA avec contexte, puis vérifier le code.",
             correct: true,
           },
           {
             id: "c",
-            text: "Remplacer GitHub par le chat de l'IA",
+            text: "Remplacer GitHub par un assistant IA.",
           },
           {
             id: "d",
-            text: "Uniquement du no-code sans fichiers",
+            text: "Écrire uniquement des prompts, jamais de tests.",
           },
         ],
-        explanation:
-          "Le Vibe Coding = intention humaine + accélération IA + review obligatoire.",
+        explanation: "Le Vibe Coding combine intention claire, assistance IA et validation humaine.",
       },
       illustration: "quiz",
+      notes: "Rappel : valoriser la notion de contrôle humain.",
+      eyebrow: "Question 1 / 5",
     }),
     s({
       id: "quiz-2",
       layout: "quiz",
       palette: "indigo",
-      eyebrow: "Question 2 / 5",
-      title: "Choix d'outil",
+      title: "Quiz 2",
       quiz: {
-        question:
-          "Vous devez modifier 4 fichiers d'un projet Next.js déjà ouvert. Quel outil est le plus adapté ?",
+        question: "Quel outil est le plus adapté pour modifier du code dans le contexte du projet ?",
         options: [
-          { id: "a", text: "Claude seul, hors IDE", correct: false },
-          { id: "b", text: "Cursor (Composer / agent)", correct: true },
-          { id: "c", text: "GitHub Issues uniquement", correct: false },
-          { id: "d", text: "Un éditeur de texte sans IA", correct: false },
+          {
+            id: "a",
+            text: "Cursor",
+            correct: true,
+          },
+          {
+            id: "b",
+            text: "Claude",
+          },
+          {
+            id: "c",
+            text: "GitHub",
+          },
+          {
+            id: "d",
+            text: "Un tableur",
+          },
         ],
-        explanation:
-          "Cursor opère dans le contexte du repo et applique des diffs multi-fichiers.",
+        explanation: "Cursor est conçu pour travailler directement dans les fichiers du projet.",
       },
-      illustration: "cursor",
+      illustration: "quiz",
+      notes: "Rappel : relier l’outil à la tâche concrète.",
+      eyebrow: "Question 2 / 5",
     }),
     s({
       id: "quiz-3",
       layout: "quiz",
       palette: "indigo",
-      eyebrow: "Question 3 / 5",
-      title: "Claude",
+      title: "Quiz 3",
       quiz: {
-        question: "Claude est surtout utile pour…",
+        question: "Quel est le meilleur réflexe avant d’accepter du code généré ?",
         options: [
           {
             id: "a",
-            text: "Héberger le dépôt de production",
+            text: "Le committer immédiatement.",
           },
           {
             id: "b",
-            text: "Cadrer, spécifier et raisonner avant de coder",
+            text: "Le relire, le tester et vérifier son impact.",
             correct: true,
           },
           {
             id: "c",
-            text: "Remplacer les commits Git",
+            text: "Supprimer l’historique Git.",
           },
           {
             id: "d",
-            text: "Scanner les badges speakers",
+            text: "Changer tout le projet pour l’adapter.",
           },
         ],
-        explanation:
-          "Claude = raisonnement / specs. Cursor = exécution dans le code.",
+        explanation: "La validation évite les bugs plausibles et les changements dangereux.",
       },
-      illustration: "claude",
+      illustration: "quiz",
+      notes: "Rappel : ramener la réponse à la responsabilité du développeur.",
+      eyebrow: "Question 3 / 5",
     }),
     s({
       id: "quiz-4",
       layout: "quiz",
       palette: "indigo",
-      eyebrow: "Question 4 / 5",
-      title: "GitHub",
+      title: "Quiz 4",
       quiz: {
-        question: "Pourquoi GitHub est-il indispensable au hackathon ?",
+        question: "À quoi sert principalement GitHub dans ce workflow ?",
         options: [
           {
             id: "a",
-            text: "Parce que le jury note uniquement le design Figma",
+            text: "Remplacer les tests.",
           },
           {
             id: "b",
-            text: "Pour versionner, sauvegarder et collaborer sur le code",
+            text: "Versionner, collaborer et reviewer.",
             correct: true,
           },
           {
             id: "c",
-            text: "Pour stocker les clés API en clair",
+            text: "Générer automatiquement toute l’application.",
           },
           {
             id: "d",
-            text: "Parce que Cursor ne fonctionne pas sans",
+            text: "Cacher les erreurs.",
           },
         ],
-        explanation:
-          "GitHub = mémoire d'équipe + preuve de travail + continuité.",
+        explanation: "GitHub garde la trace du travail et facilite la collaboration.",
       },
-      illustration: "github",
+      illustration: "quiz",
+      notes: "Rappel : rappeler que l’historique est un actif du projet.",
+      eyebrow: "Question 4 / 5",
     }),
     s({
       id: "quiz-5",
       layout: "quiz",
       palette: "indigo",
-      eyebrow: "Question 5 / 5",
-      title: "Sécurité",
+      title: "Quiz 5",
       quiz: {
-        question: "Quelle pratique est correcte dès le Module 1 ?",
+        question: "Quel prompt est le plus exploitable ?",
         options: [
           {
             id: "a",
-            text: "Committer le fichier .env pour que l'équipe l'ait",
+            text: "« Code une app complète. »",
           },
           {
             id: "b",
-            text: "Coller la clé API dans un prompt public",
+            text: "« Fais quelque chose de moderne. »",
           },
           {
             id: "c",
-            text: "Garder les secrets en local et les ignorer dans Git",
+            text: "« Crée un composant de filtre pour transactions avec état vide et critères de test. »",
             correct: true,
           },
           {
             id: "d",
-            text: "Désactiver la review des diffs pour aller plus vite",
+            text: "« Corrige tout. »",
           },
         ],
-        explanation:
-          "Secrets hors repo. Review humaine. Toujours.",
+        explanation: "Le prompt donne une tâche précise, un contexte fonctionnel et un critère de validation.",
       },
-      illustration: "security",
+      illustration: "quiz",
+      notes: "Rappel : conclure le quiz sur la qualité du cadrage.",
+      eyebrow: "Question 5 / 5",
     }),
-
-    // —— Devoir ——
     s({
       id: "homework",
       layout: "homework",
       palette: "mint",
-      eyebrow: "Devoir Module 1",
-      title: "À rendre avant la prochaine session",
+      title: "Travail à faire",
+      subtitle: "Préparer votre environnement et votre première boucle.",
       homework: {
-        deadlineHint: "Avant le Module 2 - prompts",
+        deadlineHint: "Préparer votre environnement et votre première boucle.",
         tasks: [
-          "Installer Cursor et se connecter avec un compte valide",
-          "Créer un dépôt GitHub vide (ou fork d'un starter) et le cloner en local",
-          "Ouvrir le projet dans Cursor et demander : « Explique la structure du repo en 8 puces »",
-          "Faire un premier commit : README avec ton nom, ton équipe (si connue) et ton défi",
-          "Capture d'écran du chat Cursor + du repo GitHub — sans secrets, à montrer à l'équipe",
+          "Créer votre dépôt GitHub — Ajoutez un README avec le nom du projet, le problème ciblé et l’équipe.",
+          "Écrire votre spec courte — Décrivez 3 fonctionnalités, 3 critères d’acceptation et 3 risques.",
+          "Préparer votre workspace — Ouvrez le projet dans votre éditeur et vérifiez que vous pouvez lancer l’application.",
+          "Faire un premier commit propre — Versionnez une base minimale : README, structure et notes de démarrage.",
         ],
       },
       illustration: "homework",
-      notes: "Rappeler : pas de secrets dans les captures.",
+      notes: "Rappel : le travail personnel doit produire des traces vérifiables.",
     }),
-
-    // —— Stubs modules suivants ——
     s({
       id: "roadmap-next",
       layout: "section",
       palette: "slate",
-      eyebrow: "Suite du parcours",
-      title: "Modules à venir (après aujourd'hui)",
-      subtitle: "Aujourd'hui = intro + Module 1. Le reste se joue pendant le Build.",
-      illustration: "agenda",
+      title: "La suite du parcours",
+      subtitle: "Des outils vers un projet complet.",
+      body: [
+        "Les prochains modules transforment votre idée en produit démontrable.",
+      ],
+      illustration: "project",
+      notes: "Rappel : donner une vision motivante des modules suivants.",
     }),
     s({
       id: "stub-m2",
       layout: "content",
       palette: "amber",
-      eyebrow: "Module 2",
-      title: "Maîtriser les prompts pour développer avec l'IA",
+      title: "Module 2 · Prompt Craft",
+      subtitle: "Écrire des demandes qui produisent de bons résultats.",
       bullets: [
-        { text: "Comment donner de bonnes instructions" },
-        { text: "Conserver le contexte sur plusieurs tours" },
-        { text: "Décomposer une tâche complexe" },
+        {
+          text: "Contexte utile",
+          detail: "Fournir objectif, contraintes, fichiers concernés et résultat attendu.",
+        },
+        {
+          text: "Sortie contrôlée",
+          detail: "Demander un format clair : plan, code, checklist ou tests.",
+        },
+        {
+          text: "Itération courte",
+          detail: "Améliorer le prompt après chaque réponse au lieu de tout demander d’un coup.",
+        },
       ],
       illustration: "prompt-craft",
+      notes: "Rappel : présenter le prompt comme une compétence d’ingénierie.",
     }),
     s({
       id: "stub-m3",
       layout: "content",
       palette: "violet",
-      eyebrow: "Module 3",
-      title: "De l'idée au cahier des charges",
+      title: "Module 3 · Idée vers spec",
+      subtitle: "Clarifier avant de construire.",
       bullets: [
-        { text: "Transformer une idée en projet concret" },
-        { text: "User stories, contraintes, critères de succès" },
-        { text: "Valider le scope avant de coder" },
+        {
+          text: "Problème utilisateur",
+          detail: "Identifier qui souffre, dans quelle situation et avec quel enjeu.",
+        },
+        {
+          text: "Parcours principal",
+          detail: "Décrire le chemin minimal qui crée de la valeur.",
+        },
+        {
+          text: "Critères d’acceptation",
+          detail: "Définir ce qui prouve qu’une fonctionnalité est terminée.",
+        },
       ],
       illustration: "idea-to-spec",
+      notes: "Rappel : relier la spec à la réduction du gaspillage de code.",
     }),
     s({
       id: "stub-m4",
       layout: "content",
       palette: "sky",
-      eyebrow: "Module 4",
-      title: "Construire une application avec l'IA",
+      title: "Module 4 · Build Stack",
+      subtitle: "Construire une base technique solide.",
       bullets: [
-        { text: "Frontend, backend, base de données, API" },
-        { text: "Brancher les fonctionnalités du défi" },
-        { text: "Itérer vers une démo crédible" },
+        {
+          text: "Architecture minimale",
+          detail: "Choisir une structure simple, adaptée au prototype.",
+        },
+        {
+          text: "Composants réutilisables",
+          detail: "Découper l’interface pour éviter les fichiers énormes.",
+        },
+        {
+          text: "Tests essentiels",
+          detail: "Couvrir les comportements critiques avant la démo.",
+        },
       ],
       illustration: "build-stack",
+      notes: "Rappel : orienter le module vers la simplicité robuste.",
     }),
     s({
       id: "stub-m5",
       layout: "content",
       palette: "coral",
-      eyebrow: "Module 5",
-      title: "Déboguer et améliorer avec l'IA",
+      title: "Module 5 · Debug assisté",
+      subtitle: "Corriger avec méthode.",
       bullets: [
-        { text: "Lire les erreurs et les stack traces" },
-        { text: "Tests, refactoring, optimisation" },
-        { text: "Ne jamais « patcher à l'aveugle »" },
+        {
+          text: "Symptôme clair",
+          detail: "Décrire ce qui se passe, ce qui était attendu et comment reproduire.",
+        },
+        {
+          text: "Hypothèses testables",
+          detail: "Lister les causes probables avant de modifier le code.",
+        },
+        {
+          text: "Correction prouvée",
+          detail: "Valider avec un test, un cas manuel ou une comparaison avant/après.",
+        },
       ],
       illustration: "debug",
+      notes: "Rappel : éviter la logique du patch aléatoire.",
     }),
     s({
       id: "stub-m6",
       layout: "content",
       palette: "slate",
-      eyebrow: "Module 6",
-      title: "Git, GitHub et gestion du projet",
+      title: "Module 6 · Git Flow",
+      subtitle: "Travailler proprement en équipe.",
       bullets: [
-        { text: "Versions, commits, branches" },
-        { text: "Sauvegarde et collaboration d'équipe" },
-        { text: "Préparer le repo pour le jury" },
+        {
+          text: "Branches ciblées",
+          detail: "Une branche doit correspondre à une fonctionnalité ou une correction.",
+        },
+        {
+          text: "Commits atomiques",
+          detail: "Chaque commit représente une avancée lisible et réversible.",
+        },
+        {
+          text: "Review efficace",
+          detail: "Relire le code, les impacts et les risques avant intégration.",
+        },
       ],
       illustration: "git-flow",
+      notes: "Rappel : l’équipe gagne du temps quand l’historique est propre.",
     }),
     s({
       id: "stub-m7",
       layout: "content",
       palette: "coral",
-      eyebrow: "Module 7",
-      title: "Sécurité et bonnes pratiques du Vibe Coding",
+      title: "Module 7 · Sécurité",
+      subtitle: "Protéger le projet dès le prototype.",
       bullets: [
-        { text: "Données sensibles et clés API" },
-        { text: "Dépendances et code généré par l'IA" },
-        { text: "Checklist avant Demo Day" },
+        {
+          text: "Secrets protégés",
+          detail: "Ne jamais exposer clés, tokens ou accès sensibles dans le dépôt.",
+        },
+        {
+          text: "Entrées validées",
+          detail: "Contrôler les données utilisateur avant traitement ou stockage.",
+        },
+        {
+          text: "Permissions limitées",
+          detail: "Donner le minimum d’accès nécessaire aux services et comptes.",
+        },
       ],
       illustration: "security",
+      notes: "Rappel : présenter la sécurité comme une habitude, pas une finition.",
     }),
     s({
       id: "stub-m8",
       layout: "content",
       palette: "forest",
-      eyebrow: "Module 8",
-      title: "Projet final",
+      title: "Module 8 · Projet final",
+      subtitle: "Assembler, stabiliser, présenter.",
       bullets: [
-        { text: "Chaque participant construit une app de A à Z" },
-        { text: "Mentorat et itérations ciblées" },
-        { text: "Livrables : démo, repo, pitch" },
+        {
+          text: "Démo centrée utilisateur",
+          detail: "Montrer le parcours qui résout le problème principal.",
+        },
+        {
+          text: "Code stabilisé",
+          detail: "Nettoyer les parties critiques et corriger les bugs visibles.",
+        },
+        {
+          text: "Pitch technique",
+          detail: "Expliquer les choix, les limites et les prochaines étapes.",
+        },
       ],
       illustration: "project",
+      notes: "Rappel : relier le projet final à la valeur démontrable.",
     }),
     s({
       id: "stub-eval",
       layout: "content",
       palette: "mint",
-      eyebrow: "Clôture du parcours",
-      title: "Évaluation finale + présentation des projets",
+      title: "Évaluation",
+      subtitle: "Ce qui comptera dans votre progression.",
       bullets: [
-        { text: "Démonstration en visioconférence ou sur scène" },
-        { text: "Évaluation du projet (innovation, impact, technique…)" },
-        { text: "Feedback jury et suite incubation" },
+        {
+          text: "Livrable fonctionnel",
+          detail: "Le prototype doit permettre de tester le parcours principal.",
+        },
+        {
+          text: "Qualité du dépôt",
+          detail: "README clair, commits lisibles et structure compréhensible.",
+        },
+        {
+          text: "Usage responsable de l’IA",
+          detail: "Les choix générés sont relus, adaptés et expliqués.",
+        },
       ],
       illustration: "eval",
+      notes: "Rappel : l’évaluation porte sur le résultat et la maîtrise du processus.",
     }),
-
     s({
       id: "closing",
       layout: "closing",
       palette: "mint",
-      eyebrow: "McBuleli Hackathon",
-      title: "Prêts pour le Module 1 en action",
-      subtitle:
-        "Ouvrez Cursor. Clonez. Prompt. Review. Commit. On construit maintenant — pas ce soir.",
-      bullets: [
-        { text: "Installer Cursor si ce n'est pas déjà fait" },
-        { text: "Repo GitHub d'équipe : un seul remote, README avec le défi" },
-        { text: "Premier prompt : « explique la structure en 8 puces »" },
-        { text: "Q&A 5 min, puis on passe aux équipes" },
+      title: "Prêts pour la boucle",
+      subtitle: "Prompt, code, review, test, commit.",
+      body: [
+        "Votre avantage ne vient pas seulement de l’IA. Il vient de votre capacité à la guider et à livrer proprement.",
       ],
-      ctas: [
-        { label: "Live", href: "/hackathon/live" },
-        { label: "Mon espace", href: "/hackathon/espace" },
+      bullets: [
+        {
+          text: "Cadrer l’intention",
+          detail: "Écrivez le résultat utilisateur avant d’ouvrir le chat IA.",
+        },
+        {
+          text: "Garder le contrôle",
+          detail: "Relisez, testez, refusez ce qui est fragile ou opaque.",
+        },
+        {
+          text: "Livrer une preuve",
+          detail: "Repo + README + commit lisible : ce que le jury regarde.",
+        },
       ],
       illustration: "vibe-loop",
-      notes: "Remercier. Lancer le devoir. Proposer Q&A 5 min.",
+      ctas: [
+        {
+          label: "Mon espace",
+          href: "/hackathon/espace",
+        },
+      ],
+      notes: "Rappel : terminer sur l’action immédiate attendue des participants.",
     }),
   ],
 };

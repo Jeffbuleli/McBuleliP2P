@@ -9,25 +9,38 @@ import { SlideIllustration } from "@/components/hackathon/slide-illustrations";
 import { HackathonAtmosphere } from "@/components/hackathon/hackathon-atmosphere";
 import { McStagePortraitFrame } from "@/components/hackathon/mc-stage-portrait-frame";
 
-function BulletList({ items }: { items: Array<{ text: string }> }) {
+function BulletList({
+  items,
+}: {
+  items: Array<{ text: string; detail?: string }>;
+}) {
   return (
-    <ul className="space-y-2.5">
+    <ul className="space-y-3">
       {items.map((b, i) => (
         <motion.li
-          key={b.text}
+          key={`${b.text}-${i}`}
           initial={{ opacity: 0, x: -8 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.05 * i, duration: 0.28 }}
-          className="flex gap-3 text-[clamp(0.95rem,1.55vw,1.22rem)] leading-snug text-[color:var(--hk-text)]"
+          className="flex gap-3"
         >
           <span
-            className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[11px] font-black tabular-nums text-white"
+            className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-[11px] font-black tabular-nums text-white shadow-sm"
             style={{ background: "var(--slide-accent)" }}
             aria-hidden
           >
             {String(i + 1).padStart(2, "0")}
           </span>
-          <span className="pt-0.5">{b.text}</span>
+          <div className="min-w-0 flex-1 rounded-2xl border border-[color:var(--hk-border)] bg-[color:var(--hk-surface)]/90 px-3.5 py-3 shadow-[0_8px_22px_-16px_var(--hk-shadow)]">
+            <p className="text-[clamp(1rem,1.6vw,1.28rem)] font-bold leading-snug text-[color:var(--hk-text)]">
+              {b.text}
+            </p>
+            {b.detail ? (
+              <p className="mt-1.5 text-[clamp(0.85rem,1.25vw,1.02rem)] leading-relaxed text-[color:var(--hk-muted)]">
+                {b.detail}
+              </p>
+            ) : null}
+          </div>
         </motion.li>
       ))}
     </ul>
@@ -337,7 +350,16 @@ export function HackathonSlideFrame({
                   </SoftCard>
                 ) : null}
                 <BulletList
-                  items={slide.homework.tasks.map((t) => ({ text: t }))}
+                  items={slide.homework.tasks.map((t) => {
+                    const sep = t.indexOf(" — ");
+                    if (sep > 0) {
+                      return {
+                        text: t.slice(0, sep),
+                        detail: t.slice(sep + 3),
+                      };
+                    }
+                    return { text: t };
+                  })}
                 />
               </div>
             ) : null}

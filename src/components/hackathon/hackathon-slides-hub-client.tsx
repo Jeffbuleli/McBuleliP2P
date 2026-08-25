@@ -31,8 +31,8 @@ export function HackathonSlidesHubClient({
         title={isFr ? "Préparer & présenter" : "Prepare & present"}
         lede={
           isFr
-            ? "Decks speakers pour le bootcamp. Répétez ici, Passer On Air → le projecteur /hackathon/live bascule en mode Slides."
-            : "Speaker decks for the bootcamp. Rehearse here, Go On Air → /hackathon/live switches to Slides mode."
+            ? "Decks du bootcamp. Préparez avec notes speaker, présentez, Passer On Air → le projecteur /hackathon/live affiche uniquement le contenu public."
+            : "Bootcamp decks. Prepare with speaker notes, present, Go On Air → /hackathon/live shows public content only."
         }
         actions={
           <div className="flex flex-wrap gap-2">
@@ -115,13 +115,7 @@ export function HackathonSlidesHubClient({
                   <span className="font-bold text-[color:var(--hk-accent)]">
                     -
                   </span>
-                  ~{d.estimatedMinutes} min
-                </li>
-                <li className="flex gap-2">
-                  <span className="font-bold text-[color:var(--hk-accent)]">
-                    -
-                  </span>
-                  {isFr ? d.speakerHintFr : d.speakerHintEn}
+                  ~{d.estimatedMinutes} min · bootcamp pratique
                 </li>
               </ul>
             </HkSection>
