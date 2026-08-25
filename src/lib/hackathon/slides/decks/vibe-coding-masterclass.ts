@@ -366,25 +366,33 @@ export const vibeCodingMasterclassDeck: HackathonDeck = {
         {
           id: "cursor",
           name: "Cursor",
-          role: "Coder dans le projet — Idéal pour modifier des fichiers avec le contexte du dépôt.",
+          role: "Coder dans le projet",
+          detail:
+            "Idéal pour modifier des fichiers avec le contexte du dépôt.",
           accent: "sky",
         },
         {
           id: "claude",
           name: "Claude",
-          role: "Raisonner et structurer — Utile pour clarifier une spec, analyser un problème ou préparer un plan.",
+          role: "Raisonner et structurer",
+          detail:
+            "Utile pour clarifier une spec, analyser un problème ou préparer un plan.",
           accent: "amber",
         },
         {
           id: "codex",
           name: "Codex",
-          role: "Générer et expliquer — Pratique pour produire du code, proposer des tests et détailler une solution.",
+          role: "Générer et expliquer",
+          detail:
+            "Pratique pour produire du code, proposer des tests et détailler une solution.",
           accent: "indigo",
         },
         {
           id: "github",
           name: "GitHub",
-          role: "Versionner et collaborer — Base du travail en équipe, des commits, des branches et des revues.",
+          role: "Versionner et collaborer",
+          detail:
+            "Base du travail en équipe, des commits, des branches et des revues.",
           accent: "slate",
         },
       ],

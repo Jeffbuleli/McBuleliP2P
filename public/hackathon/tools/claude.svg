@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" role="img" aria-label="Claude">
+  <!-- Claude / Anthropic-inspired starburst mark -->
+  <rect width="64" height="64" rx="14" fill="#D97706"/>
+  <path fill="#FFF7ED" d="M32 10l3.2 16.4L50 22l-12.2 11.2L50 42l-14.8-4.4L32 54l-3.2-16.4L14 42l12.2-8.8L14 22l14.8 4.4L32 10z"/>
+</svg>

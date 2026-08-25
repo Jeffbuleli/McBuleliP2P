@@ -59,7 +59,10 @@ export type SlideQuizOption = {
 export type SlideToolCard = {
   id: string;
   name: string;
+  /** Short role line (optional if detail carries the explanation). */
   role: string;
+  /** Explanation under the name (preferred for tools map cards). */
+  detail?: string;
   accent: SlidePalette;
 };
 

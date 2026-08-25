@@ -1,13 +1,39 @@
 "use client";
 
 import type { ReactNode } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import type { HackathonSlide } from "@/lib/hackathon/slides/types";
 import { slidePaletteStyle } from "@/lib/hackathon/slides/palette";
+import { hackathonToolLogoSrc } from "@/lib/hackathon/slides/tool-logos";
 import { SlideIllustration } from "@/components/hackathon/slide-illustrations";
 import { HackathonAtmosphere } from "@/components/hackathon/hackathon-atmosphere";
 import { McStagePortraitFrame } from "@/components/hackathon/mc-stage-portrait-frame";
+
+function ToolLogo({
+  idOrName,
+  size = 36,
+  className = "",
+}: {
+  idOrName: string;
+  size?: number;
+  className?: string;
+}) {
+  const src = hackathonToolLogoSrc(idOrName);
+  if (!src) return null;
+  return (
+    <Image
+      src={src}
+      alt=""
+      width={size}
+      height={size}
+      unoptimized
+      className={`shrink-0 rounded-xl object-contain ${className}`}
+      aria-hidden
+    />
+  );
+}
 
 function BulletList({
   items,
@@ -106,6 +132,12 @@ export function HackathonSlideFrame({
     Boolean(slide.illustration) &&
     slide.layout !== "agenda" &&
     slide.layout !== "tools";
+  const titleLogoSrc =
+    hackathonToolLogoSrc(slide.id.replace(/^m1-/, "")) ||
+    hackathonToolLogoSrc(slide.title) ||
+    (slide.illustration
+      ? hackathonToolLogoSrc(slide.illustration)
+      : null);
 
   return (
     <div
@@ -141,9 +173,20 @@ export function HackathonSlideFrame({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.04 }}
-          className={`mt-3 font-black tracking-tight text-[color:var(--hk-text)] ${titleSize}`}
+          className={`mt-3 flex items-center gap-3 font-black tracking-tight text-[color:var(--hk-text)] ${titleSize}`}
         >
-          {slide.title}
+          {titleLogoSrc ? (
+            <Image
+              src={titleLogoSrc}
+              alt=""
+              width={compact ? 36 : 48}
+              height={compact ? 36 : 48}
+              unoptimized
+              className="shrink-0 rounded-2xl object-contain shadow-sm"
+              aria-hidden
+            />
+          ) : null}
+          <span>{slide.title}</span>
         </motion.h2>
 
         {slide.subtitle ? (
@@ -181,31 +224,35 @@ export function HackathonSlideFrame({
 
             {slide.layout === "tools" && slide.tools ? (
               <div className="grid gap-3 sm:grid-cols-2">
-                {slide.tools.map((t, i) => (
-                  <motion.div
-                    key={t.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.06 * i }}
-                    style={slidePaletteStyle(t.accent)}
-                    className="hk-slide-card"
-                  >
-                    <SoftCard className="h-full !py-3.5">
-                      <div
-                        className="mb-2.5 flex h-8 w-8 items-center justify-center rounded-xl text-xs font-black text-white"
-                        style={{ background: "var(--slide-accent)" }}
-                      >
-                        {t.name.slice(0, 1)}
-                      </div>
-                      <p className="text-base font-black tracking-tight text-[color:var(--slide-accent)]">
-                        {t.name}
-                      </p>
-                      <p className="mt-1.5 text-sm leading-snug text-[color:var(--hk-muted)]">
-                        {t.role}
-                      </p>
-                    </SoftCard>
-                  </motion.div>
-                ))}
+                {slide.tools.map((t, i) => {
+                  const explanation = t.detail
+                    ? t.role
+                      ? `${t.role}. ${t.detail}`
+                      : t.detail
+                    : t.role;
+                  return (
+                    <motion.div
+                      key={t.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.06 * i }}
+                      style={slidePaletteStyle(t.accent)}
+                      className="hk-slide-card"
+                    >
+                      <SoftCard className="h-full !py-3.5">
+                        <div className="flex items-center gap-3">
+                          <ToolLogo idOrName={t.id} size={40} />
+                          <p className="min-w-0 text-base font-black tracking-tight text-[color:var(--hk-text)] sm:text-lg">
+                            {t.name}
+                          </p>
+                        </div>
+                        <p className="mt-2.5 text-sm leading-snug text-[color:var(--hk-muted)]">
+                          {explanation}
+                        </p>
+                      </SoftCard>
+                    </motion.div>
+                  );
+                })}
               </div>
             ) : null}
 
