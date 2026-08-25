@@ -22,12 +22,15 @@ export type McRemoteUiContext = {
   stepKind: "cue" | "slide";
   stepPrevLabel: string;
   stepNextLabel: string;
+  /** True when On Air on the last deck slide (next → resume Live MC). */
+  slidesAtEnd: boolean;
   statusLine: string;
   showVoice: boolean;
   showChrono: boolean;
   showHumanOverride: boolean;
   showProjectorModes: ProjectorMode[];
   showOnAirSlides: boolean;
+  showEndSlides: boolean;
   /** Hide cue nav / jumps when Visio plein écran */
   showCueNav: boolean;
   /** Pilotage Mur : annonces + file pitch + aperçu salle */
@@ -55,14 +58,24 @@ export function buildMcRemoteUiContext(
   const stepKind: "cue" | "slide" =
     mode === "slides" && slidesLive ? "slide" : "cue";
 
+  const slidesAtEnd =
+    stepKind === "slide" &&
+    Boolean(slides) &&
+    slides!.slideIndex >= slides!.totalSlides - 1;
+
   const stepPrevLabel =
     stepKind === "slide" ? "← Slide" : "← Cue AI";
-  const stepNextLabel =
-    stepKind === "slide" ? "Slide →" : "Cue AI →";
+  const stepNextLabel = slidesAtEnd
+    ? "Fin → Live MC"
+    : stepKind === "slide"
+      ? "Slide →"
+      : "Cue AI →";
 
   let statusLine = session.cue.labelFr;
   if (stepKind === "slide" && slides) {
-    statusLine = `Slide ${slides.slideIndex + 1}/${slides.totalSlides}`;
+    statusLine = slidesAtEnd
+      ? `Fin du deck · ${slides.slideIndex + 1}/${slides.totalSlides}`
+      : `Slide ${slides.slideIndex + 1}/${slides.totalSlides}`;
   } else if (mode === "wall") {
     statusLine = `Mur · ${session.cue.labelFr}`;
   } else if (mode === "meet") {
@@ -141,18 +154,22 @@ export function buildMcRemoteUiContext(
     mode === "slides" &&
     !slidesLive;
 
+  const showEndSlides = mode === "slides" && slidesLive;
+
   return {
     phaseId: phase.id,
     phaseLabel: phase.labelFr,
     stepKind,
     stepPrevLabel,
     stepNextLabel,
+    slidesAtEnd,
     statusLine,
     showVoice,
     showChrono,
     showHumanOverride,
     showProjectorModes,
     showOnAirSlides,
+    showEndSlides,
     showCueNav: mode !== "meet",
     showWallControls,
     smartActions,

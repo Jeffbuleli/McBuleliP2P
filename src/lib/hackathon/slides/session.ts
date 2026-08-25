@@ -141,7 +141,7 @@ export async function stepSlideSession(input: {
   editionId: string;
   delta: number;
   userId: string;
-}): Promise<SlideSessionPublic> {
+}): Promise<SlideSessionPublic & { atEnd?: boolean }> {
   const current = await getSlideSessionForEdition(input.editionId);
   if (!current?.deckSlug || current.status !== "live") {
     throw new Error("not_live");
@@ -149,15 +149,19 @@ export async function stepSlideSession(input: {
   const deck = getHackathonDeck(current.deckSlug);
   if (!deck) throw new Error("deck_not_found");
   const max = deck.slides.length - 1;
+  if (input.delta > 0 && current.slideIndex >= max) {
+    return { ...current, atEnd: true };
+  }
   const index = Math.max(
     0,
     Math.min(current.slideIndex + input.delta, max),
   );
-  return setSlideSessionIndex({
+  const next = await setSlideSessionIndex({
     editionId: input.editionId,
     slideIndex: index,
     userId: input.userId,
   });
+  return { ...next, atEnd: false };
 }
 
 export async function getMcSlideRemoteSummary(): Promise<{
@@ -195,7 +199,8 @@ export async function endSlideSession(input: {
       "@/lib/hackathon/mc-state"
     );
     if (getMcSession().projectorMode === "slides") {
-      setProjectorMode("wall");
+      // After bootcamp deck: back to MC stage (not Mur).
+      setProjectorMode("mc");
     }
   } catch {
     /* ignore */

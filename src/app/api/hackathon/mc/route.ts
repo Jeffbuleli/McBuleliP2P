@@ -31,6 +31,7 @@ import {
 import {
   getMcSlideRemoteSummary,
   goLiveSlideSession,
+  endSlideSession,
   stepSlideSession,
 } from "@/lib/hackathon/slides/session";
 
@@ -100,6 +101,7 @@ const actionSchema = z.discriminatedUnion("action", [
     ]),
   }),
   z.object({ action: z.literal("go_live_slides") }),
+  z.object({ action: z.literal("end_slides") }),
   z.object({
     action: z.literal("voice"),
     on: z.boolean(),
@@ -157,6 +159,21 @@ function applySmart(
   }
 }
 
+async function finishSlidesAndResumeMc() {
+  const edition = await getFeaturedEditionRow();
+  const userId = await mcOperatorUserId();
+  if (edition && userId) {
+    await endSlideSession({ editionId: edition.id, userId });
+  }
+  let s = setMcCueById("jeff-bootcamp");
+  s = setProjectorMode("mc");
+  const cue = s.cue;
+  if (cue.timerSeconds) {
+    s = startMcTimer(cue.timerSeconds);
+  }
+  return s;
+}
+
 async function applyStep(delta: number) {
   const mc = getMcSession();
   if (mc.projectorMode === "slides") {
@@ -169,9 +186,26 @@ async function applyStep(delta: number) {
       slides?.status === "live" &&
       slides.totalSlides > 0
     ) {
-      await stepSlideSession({
+      if (delta > 0 && slides.slideIndex >= slides.totalSlides - 1) {
+        return finishSlidesAndResumeMc();
+      }
+      const stepped = await stepSlideSession({
         editionId: edition.id,
         delta,
+        userId,
+      });
+      if (stepped.atEnd && delta > 0) {
+        return finishSlidesAndResumeMc();
+      }
+      return toMcPublic(getMcSession());
+    }
+    // Mode Slides sans On Air : démarrer le deck plutôt que sauter des cues MC
+    if (edition && userId && delta > 0) {
+      await goLiveSlideSession({
+        editionId: edition.id,
+        deckSlug: BOOTCAMP_DECK_SLUG,
+        slideIndex: 0,
+        speakerLabel: "Ir Jeff Buleli",
         userId,
       });
       return toMcPublic(getMcSession());
@@ -217,9 +251,32 @@ export async function POST(req: Request) {
       case "human_override":
         session = setMcHumanOverride(a.on, a.messageFr);
         break;
-      case "projector":
+      case "projector": {
         session = setProjectorMode(a.mode as ProjectorMode);
+        // Slides : démarrer On Air (ou reprendre depuis 0 si collé à la dernière slide)
+        if (a.mode === "slides") {
+          const edition = await getFeaturedEditionRow();
+          const userId = await mcOperatorUserId();
+          const slides = await slideRemoteSummary();
+          const stuckAtEnd =
+            slides?.status === "live" &&
+            slides.totalSlides > 0 &&
+            slides.slideIndex >= slides.totalSlides - 1;
+          if (edition && userId && (slides?.status !== "live" || stuckAtEnd)) {
+            const user = await getSessionUser();
+            await goLiveSlideSession({
+              editionId: edition.id,
+              deckSlug: BOOTCAMP_DECK_SLUG,
+              slideIndex: 0,
+              speakerLabel:
+                user?.email?.split("@")[0] ?? "Ir Jeff Buleli",
+              userId,
+            });
+            session = toMcPublic(getMcSession());
+          }
+        }
         break;
+      }
       case "meet":
         session = setMcMeetSlug(a.slug);
         break;
@@ -244,12 +301,15 @@ export async function POST(req: Request) {
           editionId: edition.id,
           deckSlug: BOOTCAMP_DECK_SLUG,
           slideIndex: 0,
-          speakerLabel: user?.email?.split("@")[0] ?? "Jeff Buleli",
+          speakerLabel: user?.email?.split("@")[0] ?? "Ir Jeff Buleli",
           userId,
         });
         session = toMcPublic(getMcSession());
         break;
       }
+      case "end_slides":
+        session = await finishSlidesAndResumeMc();
+        break;
       case "voice":
         session = setMcVoiceEnabled(a.on);
         break;

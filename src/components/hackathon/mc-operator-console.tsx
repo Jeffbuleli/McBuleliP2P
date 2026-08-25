@@ -211,6 +211,21 @@ export function McOperatorConsole({
             Slides · Passer On Air
           </SwitchBtn>
         ) : null}
+        {ui.showEndSlides ? (
+          <SwitchBtn
+            disabled={busy}
+            onClick={() => post({ action: "end_slides" })}
+            className={
+              ui.slidesAtEnd
+                ? "mt-2 w-full bg-emerald-400 text-black"
+                : "mt-2 w-full border border-white/20 bg-white/5 text-white/80"
+            }
+          >
+            {ui.slidesAtEnd
+              ? "Terminer · retour Live MC"
+              : "Quitter slides · Live MC"}
+          </SwitchBtn>
+        ) : null}
         {session.meetSlug && session.projectorMode !== "meet" ? (
           <Link
             href={`/meet/${session.meetSlug}/host`}
