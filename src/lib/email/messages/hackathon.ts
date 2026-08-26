@@ -522,3 +522,226 @@ export async function sendHackathonSponsorAckEmail(args: {
 
   return sendEmail({ to: args.to, subject, html, text });
 }
+
+/** @deprecated Legacy 24h confirm links. */
+export async function sendKinshasaConfirmEmail(args: {
+  to: string;
+  firstName: string;
+  confirmUrl: string;
+  scorePercent: number;
+  holdExpiresAt: string | null;
+  locale?: "fr" | "en";
+}): Promise<boolean> {
+  const isFr = args.locale !== "en";
+  const subject = isFr
+    ? "Confirmez votre place gratuite - promo Kinshasa"
+    : "Confirm your free seat - Kinshasa promo";
+  const { html, text } = renderMcBuleliEmail({
+    locale: isFr ? "fr" : "en",
+    illustration: "verify",
+    actionUrl: args.confirmUrl,
+    copy: {
+      subject,
+      preheader: isFr
+        ? `Quiz réussi (${args.scorePercent} %). Confirmez pour recevoir votre ticket.`
+        : `Quiz passed (${args.scorePercent}%). Confirm to receive your ticket.`,
+      title: isFr ? `Bravo ${args.firstName}` : `Well done ${args.firstName}`,
+      body: isFr
+        ? `Vous avez réussi le quiz promo Kinshasa (${args.scorePercent} %). Confirmez votre place pour recevoir le ticket QR.`
+        : `You passed the Kinshasa promo quiz (${args.scorePercent}%). Confirm your seat to receive the QR ticket.`,
+      cta: isFr ? "Confirmer ma place" : "Confirm my seat",
+      footerHelp: isFr ? "Besoin d'aide ?" : "Need help?",
+      footerContact: isFr ? "Contactez-nous" : "Contact us",
+    },
+    detailRows: [
+      { label: isFr ? "Score" : "Score", value: `${args.scorePercent} %` },
+      { label: isFr ? "Promo" : "Promo", value: "KINSHASA" },
+    ],
+  });
+  return sendEmail({ to: args.to, subject, html, text });
+}
+
+/** Quiz Kinshasa - échec (une seule tentative). */
+export async function sendKinshasaFailEmail(args: {
+  to: string;
+  firstName: string;
+  scorePercent: number;
+  correct: number;
+  total: number;
+  locale?: "fr" | "en";
+}): Promise<boolean> {
+  const isFr = args.locale !== "en";
+  const subject = isFr
+    ? "Résultat quiz Kinshasa - score insuffisant"
+    : "Kinshasa quiz result - score too low";
+  const { html, text } = renderMcBuleliEmail({
+    locale: isFr ? "fr" : "en",
+    illustration: "verify",
+    actionUrl: "https://mcbuleli.org/hackathon",
+    copy: {
+      subject,
+      preheader: isFr
+        ? `Score ${args.scorePercent} % - place gratuite non débloquée.`
+        : `Score ${args.scorePercent}% - free seat not unlocked.`,
+      title: isFr ? `Bonjour ${args.firstName}` : `Hi ${args.firstName}`,
+      body: isFr
+        ? `Merci d'avoir passé le quiz informatique promo Kinshasa. Votre score est de ${args.correct}/${args.total} (${args.scorePercent} %). Il faut au moins 70 % (7/10) pour une place gratuite. Cette tentative est close : le même e-mail ou téléphone ne peut pas repasser le quiz. Vous pouvez toujours vous inscrire au tarif normal sur le site du hackathon.`
+        : `Thanks for taking the Kinshasa promo IT quiz. Your score is ${args.correct}/${args.total} (${args.scorePercent}%). You need at least 70% (7/10) for a free seat. This attempt is closed: the same email or phone cannot retake the quiz. You can still register at the standard price on the hackathon site.`,
+      cta: isFr ? "Voir le hackathon" : "View the hackathon",
+      footerHelp: isFr ? "Besoin d'aide ?" : "Need help?",
+      footerContact: isFr ? "Contactez-nous" : "Contact us",
+    },
+    detailRows: [
+      {
+        label: isFr ? "Score" : "Score",
+        value: `${args.correct}/${args.total} · ${args.scorePercent} %`,
+      },
+      {
+        label: isFr ? "Seuil" : "Pass mark",
+        value: isFr ? "70 % (7/10)" : "70% (7/10)",
+      },
+      {
+        label: isFr ? "Statut" : "Status",
+        value: isFr ? "Tentative close" : "Attempt closed",
+      },
+    ],
+  });
+  return sendEmail({ to: args.to, subject, html, text });
+}
+
+function renderPracticalListHtml(title: string, items: string[]): string {
+  const rows = items
+    .map(
+      (item, i) => `<tr>
+      <td style="padding:8px 12px;${i < items.length - 1 ? `border-bottom:1px solid ${EMAIL_BRAND.border};` : ""}font-size:14px;line-height:1.45;color:${EMAIL_BRAND.text};">
+        <span style="display:inline-block;width:22px;height:22px;line-height:22px;text-align:center;border-radius:8px;background:${EMAIL_BRAND.mint};color:${EMAIL_BRAND.primary};font-size:11px;font-weight:800;margin-right:8px;">${i + 1}</span>${item}
+      </td>
+    </tr>`,
+    )
+    .join("");
+  return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:${EMAIL_BRAND.white};border:1px solid ${EMAIL_BRAND.border};border-radius:16px;overflow:hidden;margin-top:12px;">
+  <tr>
+    <td style="padding:14px 18px 8px;background:${EMAIL_BRAND.mint};border-bottom:1px solid ${EMAIL_BRAND.border};">
+      <p style="margin:0;font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:${EMAIL_BRAND.primary};">${title}</p>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:8px 10px 14px;background:${EMAIL_BRAND.white};">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border:1px solid ${EMAIL_BRAND.border};border-radius:12px;overflow:hidden;">
+        ${rows}
+      </table>
+    </td>
+  </tr>
+</table>`;
+}
+
+/** After Kinshasa confirm: ticket + orientation (à apporter / déroulé). */
+export async function sendKinshasaTicketAndOrientationEmail(args: {
+  registrationId: string;
+}): Promise<boolean> {
+  const db = getDb();
+  const [reg] = await db
+    .select()
+    .from(hackathonRegistrations)
+    .where(eq(hackathonRegistrations.id, args.registrationId))
+    .limit(1);
+  if (!reg?.ticketCode || reg.paymentStatus !== "paid") return false;
+
+  const [edition] = await db
+    .select()
+    .from(hackathonEditions)
+    .where(eq(hackathonEditions.id, reg.editionId))
+    .limit(1);
+
+  const isFr = reg.locale !== "en";
+  const ticketUrl = passPublicUrl(reg.ticketCode);
+  const editionName = isFr
+    ? (edition?.nameFr ?? "McBuleli Hackathon")
+    : (edition?.nameEn ?? "McBuleli Hackathon");
+
+  const { HACKATHON_PRACTICAL_SECTIONS } = await import(
+    "@/lib/hackathon/practical-info"
+  );
+  const bring = HACKATHON_PRACTICAL_SECTIONS.find((s) => s.id === "bring");
+  const dayFlow = HACKATHON_PRACTICAL_SECTIONS.find((s) => s.id === "day-flow");
+  const whenWhere = HACKATHON_PRACTICAL_SECTIONS.find(
+    (s) => s.id === "when-where",
+  );
+
+  const orientationHtml = [
+    whenWhere
+      ? renderPracticalListHtml(
+          isFr ? whenWhere.titleFr : whenWhere.titleEn,
+          isFr ? whenWhere.itemsFr : whenWhere.itemsEn,
+        )
+      : "",
+    bring
+      ? renderPracticalListHtml(
+          isFr ? bring.titleFr : bring.titleEn,
+          isFr ? bring.itemsFr : bring.itemsEn,
+        )
+      : "",
+    dayFlow
+      ? renderPracticalListHtml(
+          isFr ? dayFlow.titleFr : dayFlow.titleEn,
+          isFr ? dayFlow.itemsFr : dayFlow.itemsEn,
+        )
+      : "",
+  ].join("");
+
+  const qrCard = renderHackathonTicketQrCardHtml({
+    ticketUrl,
+    ticketCode: reg.ticketCode,
+    isFr,
+  });
+
+  const subject = isFr
+    ? `Votre ticket gratuit - promo Kinshasa · ${editionName}`
+    : `Your free ticket - Kinshasa promo · ${editionName}`;
+
+  const securityFr = `Sécurité : seul le compte McBuleli connecté avec ${reg.email} peut ouvrir ce ticket.`;
+  const securityEn = `Security: only the McBuleli account signed in as ${reg.email} can open this ticket.`;
+
+  const { html, text } = renderMcBuleliEmail({
+    locale: isFr ? "fr" : "en",
+    illustration: "verify",
+    actionUrl: ticketUrl,
+    extraHtml: `${qrCard}${orientationHtml}`,
+    copy: {
+      subject,
+      preheader: isFr
+        ? `Quiz réussi · Ticket ${reg.ticketCode} · Silikin Village`
+        : `Quiz passed · Ticket ${reg.ticketCode} · Silikin Village`,
+      title: isFr ? `Bienvenue ${reg.firstName}` : `Welcome ${reg.firstName}`,
+      body: isFr
+        ? `Bravo : vous avez réussi le quiz informatique promo Kinshasa. Votre place gratuite pour ${editionName} est confirmée. Conservez ce ticket QR pour l'entrée. Préparez laptop, chargeur, Cursor et compte GitHub (détails ci-dessous). ${securityFr}`
+        : `Well done: you passed the Kinshasa promo IT quiz. Your free seat for ${editionName} is confirmed. Keep this QR ticket for entry. Bring laptop, charger, Cursor and a GitHub account (details below). ${securityEn}`,
+      cta: isFr ? "Ouvrir mon ticket" : "Open my ticket",
+      footerHelp: isFr ? "Besoin d'aide ?" : "Need help?",
+      footerContact: isFr ? "Contactez-nous" : "Contact us",
+    },
+    detailRows: [
+      {
+        label: isFr ? "Participant" : "Participant",
+        value: `${reg.firstName} ${reg.lastName}`,
+      },
+      { label: "Email", value: reg.email },
+      { label: isFr ? "Téléphone" : "Phone", value: reg.phone },
+      { label: isFr ? "Lieu" : "Venue", value: venueLabel(edition) },
+      { label: isFr ? "Date" : "Date", value: dateLabel(isFr) },
+      { label: isFr ? "Code ticket" : "Ticket code", value: reg.ticketCode },
+      {
+        label: isFr ? "Accès" : "Access",
+        value: isFr
+          ? `Exclusif · compte = ${reg.email}`
+          : `Exclusive · account = ${reg.email}`,
+      },
+      {
+        label: isFr ? "Promo" : "Promo",
+        value: isFr ? "KINSHASA · gratuit" : "KINSHASA · free",
+      },
+    ],
+  });
+
+  return sendEmail({ to: reg.email, subject, html, text });
+}
