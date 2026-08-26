@@ -1,21 +1,21 @@
 /**
  * Campagne places gratuites « Kinshasa » - quiz info / programmation.
- * Cap 15 réussites. 4 séries de 10 QCM (3 choix), réussite ≥ 70 %.
+ * Cap 25 réussites. 4 séries de 10 QCM (3 choix), réussite ≥ 70 %.
  */
 import { createHmac, randomInt, timingSafeEqual } from "node:crypto";
 
 export const KINSHASA_PROMO_CODE = "KINSHASA";
 export const KINSHASA_UTM_CAMPAIGN = "quiz_kinshasa";
 /** Hard stop (internal). Public messaging uses KINSHASA_PUBLIC_CAP. */
-export const KINSHASA_QUIZ_CAP = 15;
+export const KINSHASA_QUIZ_CAP = 25;
 /**
  * Public gauge (10/10). Mapped proportionally from internal seats:
- * publicRemaining = round(internalRemaining × 10 / 15).
- * Ex. 4/10 public ≈ 6 places restantes sur 15 en code.
+ * publicRemaining = round(internalRemaining × 10 / 25).
+ * Ex. 10 public = 100 % de 25 places code.
  */
 export const KINSHASA_PUBLIC_CAP = 10;
 
-/** Public remaining seats (0…10) from internal claimed count (0…15). */
+/** Public remaining seats (0…10) from internal claimed count (0…25). */
 export function kinshasaPublicRemaining(claimed: number): number {
   const internalLeft = Math.max(0, KINSHASA_QUIZ_CAP - Math.max(0, claimed));
   if (internalLeft <= 0) return 0;

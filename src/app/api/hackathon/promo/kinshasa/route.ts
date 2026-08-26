@@ -69,7 +69,7 @@ function statsPayload(stats: Awaited<ReturnType<typeof getKinshasaSeatStats>>) {
   return {
     closed,
     claimed,
-    /** Proportional gauge: 10 public ≡ 15 internal. */
+    /** Proportional gauge: 10 public ≡ 25 internal. */
     remaining: kinshasaPublicRemaining(claimed),
     cap: KINSHASA_PUBLIC_CAP,
     passPercent: KINSHASA_PASS_PERCENT,
