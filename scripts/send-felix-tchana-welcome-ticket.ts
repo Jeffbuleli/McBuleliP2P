@@ -53,10 +53,16 @@ function parseArgs(argv: string[]) {
 
 function vpsAt(sql: string): string {
   const b64 = Buffer.from(sql, "utf8").toString("base64");
-  return execSync(
-    `ssh -o BatchMode=yes -o ConnectTimeout=20 root@162.35.181.98 "echo ${b64} | base64 -d | docker compose -f /opt/mcbuleli/ops/vps/docker-compose.yml exec -T db psql -U mcbuleli -d mcbuleli -v ON_ERROR_STOP=1 -At"`,
+  const out = execSync(
+    `ssh -o BatchMode=yes -o ConnectTimeout=20 root@162.35.181.98 "echo ${b64} | base64 -d | docker compose -f /opt/mcbuleli/ops/vps/docker-compose.yml exec -T db psql -U mcbuleli -d mcbuleli -v ON_ERROR_STOP=1 -Atq"`,
     { encoding: "utf8" },
-  ).trim();
+  );
+  return out
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l && !/^INSERT\s/i.test(l) && !/^UPDATE\s/i.test(l))
+    .join("\n")
+    .trim();
 }
 
 /** Ensure paid complimentary registration; return ticket code. */
