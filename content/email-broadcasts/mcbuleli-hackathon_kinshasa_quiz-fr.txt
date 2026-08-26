@@ -1,0 +1,19 @@
+Bonjour {{{contact.first_name|ami}}},
+
+CANDIDATURE GRATUITE VIA QUIZ
+
+Un partenaire offre 10 places gratuites au McBuleli Hackathon (28 août · Silikin Village) à ceux qui réussissent un quiz de bases en informatique et programmation.
+
+IMPORTANT
+Passez le quiz seulement si vous êtes à Kinshasa et disponible le 28 août toute la journée. Sinon, ne candidatez pas : les places sont limitées.
+
+LE QUIZ
+10 questions · 3 choix · une par une · 9 minutes · réussite à 70 % · une seule tentative · ticket QR par e-mail si réussi.
+
+Lien :
+https://mcbuleli.org/hackathon/promo/kinshasa?utm_source=email&utm_medium=broadcast&utm_campaign=kinshasa_quiz
+
+Hackathon : https://mcbuleli.org/hackathon
+
+McBuleli · hi@mcbuleli.org
+Se désabonner : {{{RESEND_UNSUBSCRIBE_URL}}}

@@ -192,6 +192,12 @@
       "name": "McBuleli · hackathon_ambassadeurs_partenaires (EN)",
       "subject": "McBuleli Hackathon - become an Ambassador or Partner",
       "html": "mcbuleli-hackathon_ambassadeurs_partenaires-en.html"
+    },
+    {
+      "slug": "mcbuleli-hackathon_kinshasa_quiz-fr",
+      "name": "McBuleli · hackathon_kinshasa_quiz (FR)",
+      "subject": "10 places gratuites - quiz Kinshasa · McBuleli Hackathon",
+      "html": "mcbuleli-hackathon_kinshasa_quiz-fr.html"
     }
   ]
 }

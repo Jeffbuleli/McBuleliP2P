@@ -78,16 +78,15 @@ export async function isKinshasaBlacklisted(args: {
       id: hackathonRegistrations.id,
       paymentStatus: hackathonRegistrations.paymentStatus,
       ticketCode: hackathonRegistrations.ticketCode,
+      promoCode: hackathonRegistrations.promoCode,
+      utmCampaign: hackathonRegistrations.utmCampaign,
+      utmContent: hackathonRegistrations.utmContent,
     })
     .from(hackathonRegistrations)
     .where(
       and(
         eq(hackathonRegistrations.editionId, edition.id),
         eq(hackathonRegistrations.email, email),
-        or(
-          eq(hackathonRegistrations.promoCode, KINSHASA_PROMO_CODE),
-          eq(hackathonRegistrations.utmCampaign, KINSHASA_UTM_CAMPAIGN),
-        ),
       ),
     )
     .limit(1);
@@ -96,31 +95,46 @@ export async function isKinshasaBlacklisted(args: {
     if (byEmail.paymentStatus === "paid") {
       return { blocked: true, reason: "paid" };
     }
-    if (byEmail.paymentStatus === "failed") {
+    if (
+      byEmail.utmContent?.startsWith("kinshasa_fail_") ||
+      (byEmail.paymentStatus === "failed" &&
+        (byEmail.promoCode === KINSHASA_PROMO_CODE ||
+          byEmail.utmCampaign === KINSHASA_UTM_CAMPAIGN))
+    ) {
       return { blocked: true, reason: "email" };
     }
   }
 
   if (isValidCodMsisdn(phone)) {
     const [byPhone] = await db
-      .select({ id: hackathonRegistrations.id })
+      .select({
+        id: hackathonRegistrations.id,
+        paymentStatus: hackathonRegistrations.paymentStatus,
+        promoCode: hackathonRegistrations.promoCode,
+        utmCampaign: hackathonRegistrations.utmCampaign,
+        utmContent: hackathonRegistrations.utmContent,
+      })
       .from(hackathonRegistrations)
       .where(
         and(
           eq(hackathonRegistrations.editionId, edition.id),
           eq(hackathonRegistrations.phone, phone),
-          or(
-            eq(hackathonRegistrations.promoCode, KINSHASA_PROMO_CODE),
-            eq(hackathonRegistrations.utmCampaign, KINSHASA_UTM_CAMPAIGN),
-          ),
-          or(
-            eq(hackathonRegistrations.paymentStatus, "paid"),
-            eq(hackathonRegistrations.paymentStatus, "failed"),
-          ),
         ),
       )
       .limit(1);
-    if (byPhone) return { blocked: true, reason: "phone" };
+    if (byPhone) {
+      if (byPhone.paymentStatus === "paid") {
+        return { blocked: true, reason: "paid" };
+      }
+      if (
+        byPhone.utmContent?.startsWith("kinshasa_fail_") ||
+        (byPhone.paymentStatus === "failed" &&
+          (byPhone.promoCode === KINSHASA_PROMO_CODE ||
+            byPhone.utmCampaign === KINSHASA_UTM_CAMPAIGN))
+      ) {
+        return { blocked: true, reason: "phone" };
+      }
+    }
   }
 
   return { blocked: false };
@@ -306,6 +320,30 @@ export async function recordKinshasaFailure(args: GrantKinshasaArgs) {
   }
 
   const now = new Date();
+  const failMarker = `kinshasa_fail_s${args.seriesId}_${args.scorePercent}`;
+
+  /**
+   * Reserved / pending holds must not be wiped on quiz fail — otherwise a
+   * pay-later registrant loses their payment link when trying for a free seat.
+   * Mark the fail on utmContent only; blacklist reads that marker.
+   */
+  const preserveHold =
+    existing &&
+    (existing.paymentStatus === "reserved" ||
+      existing.paymentStatus === "pending" ||
+      existing.paymentStatus === "pending_verify");
+
+  if (preserveHold && existing) {
+    await db
+      .update(hackathonRegistrations)
+      .set({
+        utmContent: failMarker,
+        updatedAt: now,
+      })
+      .where(eq(hackathonRegistrations.id, existing.id));
+    return { ok: true as const, alreadyPaid: false as const };
+  }
+
   const profile = {
     firstName: args.firstName.trim(),
     lastName: args.lastName.trim(),
@@ -328,7 +366,7 @@ export async function recordKinshasaFailure(args: GrantKinshasaArgs) {
     utmSource: args.utmSource?.trim().slice(0, 64) || "quiz",
     utmMedium: "organic",
     utmCampaign: KINSHASA_UTM_CAMPAIGN,
-    utmContent: `s${args.seriesId}_fail_${args.scorePercent}`,
+    utmContent: failMarker,
     paymentMethod: null as string | null,
     paymentStatus: "failed" as const,
     paymentToken: null as string | null,
