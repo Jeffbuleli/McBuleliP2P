@@ -143,6 +143,7 @@ export const PARTNER_MEET_CATALOG: Record<string, CreatePartnerMeetInput> = {
     timezone: "Africa/Kinshasa",
     allowlistEmails: [
       "support@kileloapp.com",
+      "kileloapp@gmail.com",
       "ceo@mcbuleli.org",
       "hi@mcbuleli.org",
     ],

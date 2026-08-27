@@ -3,7 +3,7 @@
  *
  *   npx tsx scripts/send-kilelo-hackathon-remote-email.ts --preview
  *   npx tsx scripts/send-kilelo-hackathon-remote-email.ts --to hi@mcbuleli.org --send
- *   npx tsx scripts/send-kilelo-hackathon-remote-email.ts --to support@kileloapp.com --send
+ *   npx tsx scripts/send-kilelo-hackathon-remote-email.ts --to kileloapp@gmail.com --send
  */
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
@@ -17,6 +17,7 @@ import { SUPPORT_EMAIL } from "../src/lib/support-contact";
 import { partnershipArchiveBcc } from "../src/lib/email/partnership/partnership-email-config";
 
 export const KILELO_HACKATHON_REMOTE_TO = "support@kileloapp.com";
+export const KILELO_HACKATHON_REMOTE_ALT = "kileloapp@gmail.com";
 export const KILELO_HACKATHON_REMOTE_CC = "ceo@mcbuleli.org";
 export const KILELO_HACKATHON_REMOTE_REPLY_TO = "ceo@mcbuleli.org";
 
@@ -72,6 +73,9 @@ async function main() {
     );
     console.log(
       `Prod: npx tsx scripts/send-kilelo-hackathon-remote-email.ts --to ${KILELO_HACKATHON_REMOTE_TO} --send`,
+    );
+    console.log(
+      `Alt:  npx tsx scripts/send-kilelo-hackathon-remote-email.ts --to ${KILELO_HACKATHON_REMOTE_ALT} --send`,
     );
     return;
   }

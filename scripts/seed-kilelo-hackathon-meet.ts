@@ -38,6 +38,7 @@ async function main() {
     timezone: "Africa/Kinshasa",
     allowlistEmails: [
       "support@kileloapp.com",
+      "kileloapp@gmail.com",
       "ceo@mcbuleli.org",
       "hi@mcbuleli.org",
     ],
