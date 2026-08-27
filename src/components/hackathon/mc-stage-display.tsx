@@ -189,7 +189,7 @@ export function McStageDisplay({
         <McStageHumanCard
           title="Ouverture"
           hostName="Mme Patty Basoga"
-          role="Hôte institutionnelle"
+          role="Chargée des Finances · McBuleli"
           subtitle="Accueil de la salle · puis passage à McBuleli IA"
           photoSrc="/hackathon/patty-basoga.png"
           photoAlt="Portrait de Mme Patty Basoga"
@@ -202,7 +202,7 @@ export function McStageDisplay({
         <McStageHumanCard
           title="Clôture"
           hostName="Mme Patty Basoga"
-          role="Hôte institutionnelle"
+          role="Chargée des Finances · McBuleli"
           subtitle={cue.detailFr}
           photoSrc="/hackathon/patty-basoga.png"
           photoAlt="Portrait de Mme Patty Basoga"

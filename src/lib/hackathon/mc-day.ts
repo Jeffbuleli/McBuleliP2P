@@ -14,11 +14,31 @@ export const MC_VENUE_FR = "Silikin Village";
 /** Magic handoff phrases - whole team learns these. */
 export const MC_MAGIC_PHRASES = {
   pattyToAi:
-    "Bienvenue au McBuleli Hackathon. Je passe la parole à McBuleli IA pour présenter McBuleli et accompagner le déroulé.",
+    "Pour présenter McBuleli et accompagner le déroulé, je passe maintenant la parole à McBuleli IA.",
   humanToAi: "Merci McBuleli IA.",
-  aiToPatty: "Je passe maintenant la parole à Mme Patty Basoga pour la clôture.",
+  aiToPatty:
+    "Je passe maintenant la parole à Mme Patty Basoga, chargée des Finances chez McBuleli, pour la clôture.",
   aiToJeff:
     "Je passe maintenant la parole à Ir Jeff Buleli, fondateur et développeur principal de McBuleli, pour le bootcamp.",
+} as const;
+
+/** Short stage scripts for Mme Patty (print / ODT / cue card). */
+export const PATTY_STAGE_SCRIPTS = {
+  roleFr: "Chargée des Finances · McBuleli",
+  openFr: [
+    "Bonjour à toutes et à tous.",
+    "Bienvenue au McBuleli Hackathon, ici à Silikin Village, Kinshasa.",
+    "Je suis Mme Patty Basoga, chargée des Finances chez McBuleli.",
+    "Au nom de toute l'équipe, merci d'être avec nous aujourd'hui.",
+    MC_MAGIC_PHRASES.pattyToAi,
+  ].join(" "),
+  closeFr: [
+    "Merci à toutes et à tous.",
+    "Merci aux partenaires, aux builders, à Ir Jeff Buleli pour le bootcamp, et à McBuleli IA pour la modération de cette journée.",
+    "Je suis Mme Patty Basoga, chargée des Finances chez McBuleli.",
+    "Conservez vos contacts, vos photos, et la suite incubation McBuleli.",
+    "Bonne continuation avec McBuleli. À très bientôt.",
+  ].join(" "),
 } as const;
 
 export type McCueKind =
@@ -214,11 +234,10 @@ export const MC_CUES: McCue[] = [
     id: "patty-open",
     kind: "patty_open",
     labelFr: "Patty · Ouverture",
-    stageLineFr: "Ouverture · Mme Patty Basoga",
-    detailFr: "Mme Patty Basoga accueille · puis McBuleli IA",
+    stageLineFr: "Ouverture · Mme Patty Basoga · Finances McBuleli",
+    detailFr: "Chargée des Finances · accueille · annonce McBuleli IA",
     humanScriptFr: [
-      "Bonjour et bienvenue au McBuleli Hackathon, ici à Silikin Village.",
-      MC_MAGIC_PHRASES.pattyToAi,
+      PATTY_STAGE_SCRIPTS.openFr,
       "(Puis silence - l'opérateur lance INTRO IA.)",
     ].join(" "),
   },
@@ -381,8 +400,7 @@ export const MC_CUES: McCue[] = [
     id: "ai-wrap",
     kind: "ai_wrap",
     labelFr: "McBuleli IA · Synthèse",
-    stageLineFr:
-      "Merci à toutes et à tous. Ce fut un plaisir d'accompagner le tempo avec l'équipe. Je passe maintenant la parole à Mme Patty Basoga pour la clôture.",
+    stageLineFr: `Merci à toutes et à tous. Ce fut un plaisir d'accompagner le tempo avec l'équipe. ${MC_MAGIC_PHRASES.aiToPatty}`,
     detailFr: MC_MAGIC_PHRASES.aiToPatty,
     projectorMode: "mc",
     humanScriptFr: "Patty prête pour clôturer.",
@@ -391,13 +409,10 @@ export const MC_CUES: McCue[] = [
     id: "patty-close",
     kind: "patty_close",
     labelFr: "Patty · Clôture",
-    stageLineFr: "Clôture · Mme Patty Basoga",
+    stageLineFr: "Clôture · Mme Patty Basoga · Finances McBuleli",
+    detailFr: PATTY_STAGE_SCRIPTS.roleFr,
     projectorMode: "mc",
-    humanScriptFr: [
-      "Merci aux partenaires, aux builders, à Ir Jeff Buleli pour le bootcamp, et à McBuleli IA pour la modération.",
-      "Photos, contacts et suite incubation McBuleli.",
-      "Bonne continuation avec McBuleli.",
-    ].join(" "),
+    humanScriptFr: PATTY_STAGE_SCRIPTS.closeFr,
   },
 ];
 
