@@ -18,9 +18,13 @@ import {
   resendSendBlockedReason,
   sendEmail,
 } from "../src/lib/email/send";
+import { CANONICAL_PRODUCTION_ORIGIN } from "../src/lib/app-url";
 import { ILOKWE_PARTNER } from "../src/lib/hackathon/event-content";
-import { passPublicUrl } from "../src/lib/hackathon/access";
 import { SUPPORT_EMAIL } from "../src/lib/support-contact";
+
+function partnerPassUrl(code: string): string {
+  return `${CANONICAL_PRODUCTION_ORIGIN}/hackathon/pass/${encodeURIComponent(code)}`;
+}
 
 const PARTNER = {
   orgSlug: "ilokwe",
@@ -157,7 +161,7 @@ RETURNING p.ticket_code;
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const ticketCode = await ensureIlokweAccess();
-  const ticketUrl = passPublicUrl(ticketCode);
+  const ticketUrl = partnerPassUrl(ticketCode);
   const email = buildPartnerWelcomeBadgeEmail({
     firstName: PARTNER.firstName,
     lastName: PARTNER.lastName,

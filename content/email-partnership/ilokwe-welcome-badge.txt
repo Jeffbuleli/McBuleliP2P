@@ -9,7 +9,7 @@ Rôle : Partenaire Agriculture & AgriBusiness - Sponsor Or - Jury - Mentorat - A
 Créneau scène : 10h10 - 10h20 · Agro · Sponsor Or · Prix ILOKWE
 
 Code badge : MBP-1DEA0C5F4A
-Lien badge : http://localhost:3000/hackathon/pass/MBP-1DEA0C5F4A
+Lien badge : https://mcbuleli.org/hackathon/pass/MBP-1DEA0C5F4A
 
 DATE & LIEU
 28 Août 2026 · 08h00 - 17h00
@@ -35,7 +35,7 @@ CE QUI VOUS REVIENT
 CONNEXION (compte McBuleli)
 1. Connectez-vous avec ilokwegroup@gmail.com : https://mcbuleli.org/login
 2. Si vous n'avez pas encore de mot de passe : https://mcbuleli.org/forgot-password (même email) → créez-en un
-3. Ouvrez votre badge : http://localhost:3000/hackathon/pass/MBP-1DEA0C5F4A
+3. Ouvrez votre badge : https://mcbuleli.org/hackathon/pass/MBP-1DEA0C5F4A
 4. Espace partenaires (chat & préparation) : https://mcbuleli.org/hackathon/chat
 
 À APPORTER
