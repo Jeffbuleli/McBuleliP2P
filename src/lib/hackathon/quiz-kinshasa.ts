@@ -1,31 +1,28 @@
 /**
  * Campagne places gratuites « Kinshasa » - quiz info / programmation.
- * Cap 25 réussites. 4 séries de 10 QCM (3 choix), réussite ≥ 70 %.
+ * Cap 30 réussites. 4 séries de 10 QCM (3 choix), réussite ≥ 70 %.
  */
 import { createHmac, randomInt, timingSafeEqual } from "node:crypto";
 
 export const KINSHASA_PROMO_CODE = "KINSHASA";
 export const KINSHASA_UTM_CAMPAIGN = "quiz_kinshasa";
 /** Hard stop (internal). Public messaging uses KINSHASA_PUBLIC_CAP. */
-export const KINSHASA_QUIZ_CAP = 25;
+export const KINSHASA_QUIZ_CAP = 30;
 /**
  * Public gauge (10/10). Mapped proportionally from internal seats:
- * publicRemaining = round(internalRemaining × 10 / 25).
- * Ex. 10 public = 100 % de 25 places code.
+ * publicRemaining = round(internalRemaining × 10 / 30), minimum 1 while any code seat remains.
+ * Ex. 10 public = 100 % de 30 places code.
  */
 export const KINSHASA_PUBLIC_CAP = 10;
 
-/** Public remaining seats (0…10) from internal claimed count (0…25). */
+/** Public remaining seats (0…10) from internal claimed count (0…30). */
 export function kinshasaPublicRemaining(claimed: number): number {
   const internalLeft = Math.max(0, KINSHASA_QUIZ_CAP - Math.max(0, claimed));
   if (internalLeft <= 0) return 0;
-  return Math.max(
-    0,
-    Math.min(
-      KINSHASA_PUBLIC_CAP,
-      Math.round((internalLeft * KINSHASA_PUBLIC_CAP) / KINSHASA_QUIZ_CAP),
-    ),
+  const scaled = Math.round(
+    (internalLeft * KINSHASA_PUBLIC_CAP) / KINSHASA_QUIZ_CAP,
   );
+  return Math.max(1, Math.min(KINSHASA_PUBLIC_CAP, scaled));
 }
 export const KINSHASA_PASS_PERCENT = 70;
 export const KINSHASA_QUESTION_COUNT = 10;

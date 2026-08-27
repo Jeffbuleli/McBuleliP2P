@@ -69,7 +69,7 @@ function statsPayload(stats: Awaited<ReturnType<typeof getKinshasaSeatStats>>) {
   return {
     closed,
     claimed,
-    /** Proportional gauge: 10 public ≡ 25 internal. */
+    /** Proportional gauge: 10 public ≡ 30 internal (min 1/10 while code seats remain). */
     remaining: kinshasaPublicRemaining(claimed),
     cap: KINSHASA_PUBLIC_CAP,
     passPercent: KINSHASA_PASS_PERCENT,
@@ -90,6 +90,8 @@ export async function GET() {
         cap: KINSHASA_QUIZ_CAP,
         closed: false,
       }),
+      remaining: kinshasaPublicRemaining(0),
+      cap: KINSHASA_PUBLIC_CAP,
       quizMinutes: KINSHASA_QUIZ_MINUTES,
       warning: "seat_stats_unavailable",
     });
