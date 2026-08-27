@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
-import { and, desc, eq, or } from "drizzle-orm";
+import { and, desc, eq, isNull, or } from "drizzle-orm";
 import { getDb, hackathonRegistrations, users } from "@/db";
 import {
   canonicalEmailForDedup,
@@ -88,6 +88,30 @@ export async function ensureHackathonUser(args: {
     emailVerifiedAt: created.emailVerifiedAt,
     created: true,
   };
+}
+
+/**
+ * Passing the Kinshasa quiz (or receiving a complimentary ticket) proves inbox
+ * ownership enough to open Mon espace / password reset without a second email step.
+ */
+export async function markHackathonUserEmailVerified(
+  userId: string,
+): Promise<Date> {
+  const db = getDb();
+  const now = new Date();
+  const [row] = await db
+    .update(users)
+    .set({ emailVerifiedAt: now })
+    .where(and(eq(users.id, userId), isNull(users.emailVerifiedAt)))
+    .returning({ emailVerifiedAt: users.emailVerifiedAt });
+  if (row?.emailVerifiedAt) return row.emailVerifiedAt;
+
+  const [existing] = await db
+    .select({ emailVerifiedAt: users.emailVerifiedAt })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  return existing?.emailVerifiedAt ?? now;
 }
 
 /** Link unpaid/paid hackathon rows to a user after login/signup (by email). */

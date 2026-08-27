@@ -1,7 +1,7 @@
 import { and, eq, or, sql } from "drizzle-orm";
 import { getDb, hackathonRegistrations } from "@/db";
 import { normalizeAuthEmail } from "@/lib/auth/email-normalize";
-import { ensureHackathonUser } from "@/lib/hackathon/ensure-user";
+import { ensureHackathonUser, markHackathonUserEmailVerified } from "@/lib/hackathon/ensure-user";
 import { getFeaturedEditionRow } from "@/lib/hackathon/hub";
 import { generateTicketCode } from "@/lib/hackathon/service";
 import {
@@ -223,6 +223,7 @@ export async function grantKinshasaPaidSeat(args: GrantKinshasaArgs) {
     firstName: args.firstName,
     lastName: args.lastName,
   });
+  await markHackathonUserEmailVerified(account.id);
 
   const ticketCode = existing?.ticketCode ?? generateTicketCode();
   const now = new Date();
@@ -436,6 +437,17 @@ export async function confirmKinshasaSeat(token: string) {
   }
 
   const ticketCode = reg.ticketCode ?? generateTicketCode();
+  let userId = reg.userId;
+  if (!userId) {
+    const account = await ensureHackathonUser({
+      email: reg.email,
+      firstName: reg.firstName,
+      lastName: reg.lastName,
+    });
+    userId = account.id;
+  }
+  await markHackathonUserEmailVerified(userId);
+
   await db
     .update(hackathonRegistrations)
     .set({
@@ -446,6 +458,7 @@ export async function confirmKinshasaSeat(token: string) {
       priceUsd: "0.00",
       promoCode: KINSHASA_PROMO_CODE,
       utmCampaign: KINSHASA_UTM_CAMPAIGN,
+      userId,
       updatedAt: new Date(),
     })
     .where(eq(hackathonRegistrations.id, reg.id));
