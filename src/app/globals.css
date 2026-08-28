@@ -833,6 +833,48 @@ html[data-hk-theme="dark"] .hackathon-theme .hk-slide-card .hk-slide-illu {
   --slide-soft: color-mix(in srgb, var(--slide-accent, var(--hk-accent)) 22%, #1a2420);
 }
 
+/* Slides — always light (deck + Live projector), even when hackathon dark is on */
+.hackathon-theme.hk-slides-light,
+html[data-hk-theme="dark"] .hackathon-theme.hk-slides-light,
+.hackathon-theme[data-hk-theme="dark"].hk-slides-light {
+  --hk-page: #fafaf8;
+  --hk-surface: #ffffff;
+  --hk-border: #e5e5e0;
+  --hk-text: #222222;
+  --hk-muted: #8a8a8a;
+  --hk-accent: #1f6b43;
+  --hk-soft: #eaf6ee;
+  --hk-shadow: rgba(34, 34, 34, 0.28);
+  --hk-glow: rgba(31, 107, 67, 0.55);
+  --hk-dot: rgba(31, 107, 67, 0.07);
+  --hk-wash: rgba(234, 246, 238, 0.18);
+  --hk-warn-text: #92400e;
+  --hk-warn-muted: #b45309;
+  --hk-ok-bg: #ecfdf5;
+  --hk-ok-text: #065f46;
+  --hk-ok-ring: #a7f3d0;
+  --hk-err: #b91c1c;
+  color-scheme: light;
+}
+.hackathon-theme.hk-slides-light .hk-slide-card,
+html[data-hk-theme="dark"] .hackathon-theme.hk-slides-light .hk-slide-card {
+  --slide-soft: color-mix(in srgb, var(--slide-soft-raw, #eaf6ee) 82%, var(--hk-surface));
+  --slide-deep: color-mix(in srgb, var(--slide-accent, var(--hk-accent)) 42%, var(--hk-text));
+  --slide-glow: color-mix(in srgb, var(--slide-accent, var(--hk-accent)) 22%, transparent);
+}
+.hackathon-theme.hk-slides-light .hk-slide-card .hk-slide-illu,
+html[data-hk-theme="dark"] .hackathon-theme.hk-slides-light .hk-slide-card .hk-slide-illu {
+  --slide-soft: color-mix(in srgb, var(--slide-soft-raw, #eaf6ee) 82%, var(--hk-surface));
+}
+.hackathon-theme.hk-slides-light .fd-app-topbar,
+html[data-hk-theme="dark"] .hackathon-theme.hk-slides-light .fd-app-topbar {
+  border-color: rgba(48, 95, 51, 0.16);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow:
+    0 2px 8px rgba(48, 95, 51, 0.08),
+    0 8px 24px rgba(28, 25, 23, 0.05);
+}
+
 .hackathon-theme[data-hk-theme="dark"] .fd-app-topbar,
 html[data-hk-theme="dark"] .hackathon-theme .fd-app-topbar {
   border-color: rgba(94, 201, 138, 0.18);

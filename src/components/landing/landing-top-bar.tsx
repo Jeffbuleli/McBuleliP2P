@@ -135,7 +135,7 @@ export function LandingTopBar({ authReturnPath = "/app/wallet" }: { authReturnPa
             <div className="sm:hidden">
               <LangSwitch variant={hkTheme?.surface === "dark" ? "dark" : "light"} />
             </div>
-            {hkTheme ? (
+            {hkTheme && !hkTheme.slidesLight ? (
               <button
                 type="button"
                 onClick={hkTheme.toggle}

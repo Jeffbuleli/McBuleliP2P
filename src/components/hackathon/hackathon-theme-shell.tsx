@@ -8,6 +8,8 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { usePathname } from "next/navigation";
+import { HK_SLIDES_LIGHT_CLASS } from "@/lib/hackathon/slides-light";
 import {
   HACKATHON_THEME_DEFAULT,
   HACKATHON_THEME_STORAGE,
@@ -20,6 +22,8 @@ export { HACKATHON_THEME_STORAGE, HACKATHON_THEME_DEFAULT };
 type Ctx = {
   surface: HackathonSurface;
   toggle: () => void;
+  /** Slides routes always render light (no dark toggle). */
+  slidesLight: boolean;
 };
 
 const HackathonThemeCtx = createContext<Ctx | null>(null);
@@ -49,19 +53,31 @@ function applyHtmlTheme(surface: HackathonSurface) {
 }
 
 export function HackathonThemeShell({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  const slidesLight = pathname?.startsWith("/hackathon/slides") ?? false;
   // Always match SSR + first client paint (light default) to avoid hydration mismatch.
   const [surface, setSurface] = useState<HackathonSurface>(HACKATHON_THEME_DEFAULT);
+  const effectiveSurface: HackathonSurface = slidesLight ? "light" : surface;
 
   useEffect(() => {
+    if (slidesLight) {
+      applyHtmlTheme("light");
+      return;
+    }
     const next = readStored();
     applyHtmlTheme(next);
     setSurface((prev) => (prev === next ? prev : next));
     return () => {
       document.documentElement.removeAttribute("data-hk-theme");
     };
-  }, []);
+  }, [slidesLight]);
+
+  useEffect(() => {
+    if (!slidesLight) applyHtmlTheme(surface);
+  }, [slidesLight, surface]);
 
   const toggle = useCallback(() => {
+    if (slidesLight) return;
     setSurface((prev) => {
       const next: HackathonSurface = prev === "light" ? "dark" : "light";
       try {
@@ -72,13 +88,15 @@ export function HackathonThemeShell({ children }: { children: ReactNode }) {
       applyHtmlTheme(next);
       return next;
     });
-  }, []);
+  }, [slidesLight]);
 
   return (
-    <HackathonThemeCtx.Provider value={{ surface, toggle }}>
+    <HackathonThemeCtx.Provider
+      value={{ surface: effectiveSurface, toggle, slidesLight }}
+    >
       <div
-        className="hackathon-theme home-theme fd-public-light min-h-dvh"
-        data-hk-theme={surface}
+        className={`hackathon-theme home-theme fd-public-light min-h-dvh ${slidesLight ? HK_SLIDES_LIGHT_CLASS : ""}`}
+        data-hk-theme={effectiveSurface}
         suppressHydrationWarning
       >
         {children}

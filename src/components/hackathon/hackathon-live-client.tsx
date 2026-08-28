@@ -12,6 +12,7 @@ import { LiveRemoteMeet } from "@/components/hackathon/live-remote-meet";
 import { BRAND_LOGO_MARK_256 } from "@/lib/brand-logo";
 import { PODIUM_PRIZE_BY_RANK } from "@/lib/hackathon/live-wall-content";
 import type { HackathonSlide } from "@/lib/hackathon/slides/types";
+import { HK_SLIDES_LIGHT_CLASS } from "@/lib/hackathon/slides-light";
 import type {
   McSessionPublic,
   ProjectorMode,
@@ -127,7 +128,10 @@ function LiveProjector({
   isFr: boolean;
 }) {
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-[#FAFAF8]">
+    <div
+      className={`hackathon-theme ${HK_SLIDES_LIGHT_CLASS} fixed inset-0 z-40 flex flex-col bg-[#FAFAF8]`}
+      data-hk-theme="light"
+    >
       <header className="relative z-20 flex shrink-0 items-center justify-between gap-3 border-b border-[#1F6B43]/12 bg-white/85 px-4 py-3.5 backdrop-blur-md sm:px-6">
         <div
           aria-hidden
