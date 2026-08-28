@@ -317,8 +317,8 @@ export function HackathonEspaceClient({
             title={isFr ? "Phase Build" : "Build phase"}
             hint={
               isFr
-                ? "Mur Live : défis - prix - mentorat - compte à rebours livrables."
-                : "Live wall: challenges - prizes - mentoring - deliverable countdown."
+                ? "Mur Live : défis · prix · mentorat · compte à rebours livrables."
+                : "Live wall: challenges · prizes · mentoring · deliverable countdown."
             }
           >
             <div className="grid gap-3 sm:grid-cols-2">
@@ -328,8 +328,8 @@ export function HackathonEspaceClient({
                 </p>
                 <p className="mt-1 text-sm text-[color:var(--hk-text,var(--fd-text))]">
                   {isFr
-                    ? "Démo + GitHub avant 15h30 - pitch PDF avant 16h00 - onglet Build ci-dessous."
-                    : "Demo + GitHub before 3:30 PM - pitch PDF before 4:00 PM - Build tab below."}
+                    ? "Démo + GitHub avant 15h30 · pitch PDF avant 16h00 · onglet Build ci-dessous."
+                    : "Demo + GitHub before 3:30 PM · pitch PDF before 4:00 PM · Build tab below."}
                 </p>
               </div>
               <div className="rounded-xl bg-[color:var(--hk-page,var(--fd-bg))] px-4 py-3 ring-1 ring-[color:var(--hk-border,var(--fd-border))]">

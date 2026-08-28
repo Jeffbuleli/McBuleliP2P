@@ -156,7 +156,7 @@ function applySmart(
       s = setProjectorMode("wall");
       s = setMcHumanOverride(
         true,
-        "Rappel mentorat : demandez un mentor depuis Mon espace - onglet Build. Les partenaires sont en salle.",
+        "Rappel mentorat : demandez un mentor depuis Mon espace → onglet Build. Les partenaires sont en salle.",
       );
       s = requestMcVoiceReplay();
       return s;

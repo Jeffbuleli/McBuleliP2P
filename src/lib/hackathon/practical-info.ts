@@ -102,13 +102,13 @@ export const HACKATHON_PRACTICAL_SECTIONS: PracticalSection[] = [
       "Mon espace : /hackathon/espace - équipe, livrables, mentorat",
       "Pass QR : /hackathon/pass/[code] - présentez à l'entrée",
       "Demande mentorat : depuis Mon espace (phase Build)",
-      "Live salle : /hackathon/live - mur défis - prix - équipes - mentorat",
+      "Live salle : /hackathon/live - mur défis · prix · équipes · mentorat",
     ],
     itemsEn: [
       "My hub: /hackathon/espace - team, deliverables, mentoring",
       "QR pass: /hackathon/pass/[code] - show at the door",
       "Mentor request: from My hub (Build phase)",
-      "Room live: /hackathon/live - wall: challenges - prizes - teams - mentoring",
+      "Room live: /hackathon/live - wall: challenges · prizes · teams · mentoring",
     ],
   },
   {

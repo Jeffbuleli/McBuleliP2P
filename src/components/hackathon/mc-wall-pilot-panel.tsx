@@ -117,7 +117,7 @@ export function McWallPilotPanel({
       if (!res.ok) {
         setErr(
           json?.error === "forbidden"
-            ? "Session expirée - reconnectez-vous admin."
+            ? "Session expirée · reconnectez-vous admin."
             : json?.error || "Erreur file pitch",
         );
         return;
@@ -138,7 +138,7 @@ export function McWallPilotPanel({
           Pilote Mur
         </p>
         <p className="mt-0.5 text-[11px] text-white/55">
-          Mur = défis - prix - partenaires - équipes - mentorat
+          Mur = défis · prix · partenaires · équipes · mentorat
         </p>
       </div>
 
@@ -196,7 +196,7 @@ export function McWallPilotPanel({
           Contenu fixe Mur
         </p>
         <p className="mt-1 text-[11px] leading-relaxed text-white/60">
-          4 défis - 5 prix - logos partenaires - repères pratiques. Pas de
+          4 défis · 5 prix · logos partenaires · repères pratiques. Pas de
           communiqués - les builders utilisent Mon espace.
         </p>
       </div>
@@ -208,20 +208,20 @@ export function McWallPilotPanel({
         {queue?.active && queue.current ? (
           <div className="rounded-xl bg-black/25 px-3 py-2.5">
             <p className="text-[9px] font-bold uppercase tracking-wider text-amber-200/80">
-              En scène - {queue.position}/{queue.total}
+              En scène · {queue.position}/{queue.total}
             </p>
             <p className="mt-0.5 text-base font-black text-white">
               {queue.current.teamName}
             </p>
             {queue.next ? (
               <p className="mt-1 text-[11px] text-white/50">
-                Suivante - {queue.next.teamName}
+                Suivante · {queue.next.teamName}
               </p>
             ) : null}
           </div>
         ) : (
           <p className="text-xs text-white/45">
-            File inactive{queue?.total ? ` - ${queue.total} équipe(s)` : ""}.
+            File inactive{queue?.total ? ` · ${queue.total} équipe(s)` : ""}.
           </p>
         )}
         <div className="grid grid-cols-2 gap-1.5">

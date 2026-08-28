@@ -362,7 +362,7 @@ function LiveWall({
             />
             <div className="min-w-0">
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#1F6B43]">
-                McBuleli Live - Mur - Build
+                McBuleli Live · Mur · Build
               </p>
               <h1 className="truncate text-base font-black text-[#0c0a09] sm:text-lg">
                 {title}
@@ -410,7 +410,7 @@ function LiveWall({
               className="overflow-hidden rounded-2xl border border-amber-300/70 bg-gradient-to-r from-amber-50 to-white px-5 py-4 shadow-sm"
             >
               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-800">
-                {isFr ? "Mini Demo - en scène" : "Mini Demo - on stage"}
+                {isFr ? "Mini Demo · en scène" : "Mini Demo · on stage"}
               </p>
               <p className="mt-1 text-2xl font-black text-[#0c0a09] sm:text-3xl">
                 {data.pitchQueue.current.teamName}
@@ -419,7 +419,7 @@ function LiveWall({
                 {isFr ? "Passage" : "Slot"} {data.pitchQueue.position}/
                 {data.pitchQueue.total}
                 {data.pitchQueue.next
-                  ? ` - ${isFr ? "Suivante" : "Next"}: ${data.pitchQueue.next.teamName}`
+                  ? ` · ${isFr ? "Suivante" : "Next"}: ${data.pitchQueue.next.teamName}`
                   : ""}
               </p>
             </motion.div>
@@ -429,7 +429,7 @@ function LiveWall({
           <div className="grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
             <section className="rounded-2xl border border-[#1F6B43]/15 bg-white/95 p-4 shadow-sm sm:p-5">
               <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#1F6B43]">
-                {isFr ? "4 défis - choisissez votre terrain" : "4 challenges - pick your track"}
+                {isFr ? "4 défis · choisissez votre terrain" : "4 challenges · pick your track"}
               </h2>
               <div className="mt-3 grid gap-2 sm:grid-cols-2">
                 {(wall?.challenges ?? []).map((c, i) => (
@@ -531,8 +531,8 @@ function LiveWall({
               {data.mentoring.length === 0 ? (
                 <p className="mt-3 text-sm text-[#a8a29e]">
                   {isFr
-                    ? "Demandez un mentor depuis Mon espace - Build."
-                    : "Request a mentor from My hub - Build."}
+                    ? "Demandez un mentor depuis Mon espace → Build."
+                    : "Request a mentor from My hub → Build."}
                 </p>
               ) : (
                 <ul className="mt-3 space-y-2">
@@ -557,7 +557,7 @@ function LiveWall({
                 <span className="font-mono text-sm font-black text-[#1F6B43]">
                   {data.teams.length}{" "}
                   <span className="text-[10px] font-bold uppercase tracking-wider text-[#a8a29e]">
-                    - {buildingCount} {isFr ? "actives" : "active"}
+                    · {buildingCount} {isFr ? "actives" : "active"}
                   </span>
                 </span>
               </div>
@@ -567,7 +567,7 @@ function LiveWall({
                     key={status}
                     className="rounded-full border border-[#E5E5E0] bg-[#FAFAF8] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#78716c]"
                   >
-                    {status} - {n}
+                    {status} · {n}
                   </span>
                 ))}
               </div>
@@ -590,8 +590,8 @@ function LiveWall({
               ) : (
                 <p className="mt-3 text-sm text-[#a8a29e]">
                   {isFr
-                    ? "Formation équipes - Mon espace"
-                    : "Team formation - My hub"}
+                    ? "Formation équipes · Mon espace"
+                    : "Team formation · My hub"}
                 </p>
               )}
             </section>
@@ -601,7 +601,7 @@ function LiveWall({
 
       <footer className="relative z-20 shrink-0 border-t border-[#1F6B43]/12 bg-white/90 px-4 py-2.5 backdrop-blur-md sm:px-8">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-[0.14em] text-[#a8a29e]">
-          <span>Silikin Village - 28 Août 2026{programLabel ? ` - ${programLabel}` : ""}</span>
+          <span>Silikin Village · 28 Août 2026{programLabel ? ` · ${programLabel}` : ""}</span>
           <div className="flex items-center gap-4">
             <Link
               href="/hackathon/mc"

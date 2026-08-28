@@ -61,8 +61,8 @@ export function buildLiveWallContent(): LiveWallContent {
   const highlights: LiveWallHighlight[] = [
     {
       id: "deadline",
-      labelFr: "Livrables : déposez démo + GitHub avant 15h30 - pitch PDF avant 16h00",
-      labelEn: "Deliverables: demo + GitHub before 3:30 PM - pitch PDF before 4:00 PM",
+      labelFr: "Livrables : déposez démo + GitHub avant 15h30 · pitch PDF avant 16h00",
+      labelEn: "Deliverables: demo + GitHub before 3:30 PM · pitch PDF before 4:00 PM",
     },
     {
       id: "mentor",
@@ -75,8 +75,8 @@ export function buildLiveWallContent(): LiveWallContent {
     },
     {
       id: "wifi",
-      labelFr: wifi.fr[0] ?? "WiFi Silikin - hotspot de secours recommandé",
-      labelEn: wifi.en[0] ?? "Silikin WiFi - backup hotspot recommended",
+      labelFr: wifi.fr[0] ?? "WiFi Silikin · hotspot de secours recommandé",
+      labelEn: wifi.en[0] ?? "Silikin WiFi · backup hotspot recommended",
     },
     {
       id: "apis",
