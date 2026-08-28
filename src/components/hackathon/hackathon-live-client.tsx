@@ -10,6 +10,7 @@ import { HackathonSlideFrame } from "@/components/hackathon/hackathon-slide-fram
 import { McStageDisplay } from "@/components/hackathon/mc-stage-display";
 import { LiveRemoteMeet } from "@/components/hackathon/live-remote-meet";
 import { BRAND_LOGO_MARK_256 } from "@/lib/brand-logo";
+import { PODIUM_PRIZE_BY_RANK } from "@/lib/hackathon/live-wall-content";
 import type { HackathonSlide } from "@/lib/hackathon/slides/types";
 import type {
   McSessionPublic,
@@ -42,6 +43,29 @@ type LivePresentation = {
   updatedAt: string;
 };
 
+type LiveWallContent = {
+  challenges: Array<{
+    slug: string;
+    labelFr: string;
+    labelEn: string;
+    blurbFr: string;
+    blurbEn: string;
+  }>;
+  prizes: Array<{
+    id: string;
+    titleFr: string;
+    titleEn: string;
+    bodyFr: string;
+    bodyEn: string;
+  }>;
+  partnerLogos: Array<{ id: string; name: string; logoUrl: string }>;
+  highlights: Array<{
+    id: string;
+    labelFr: string;
+    labelEn: string;
+  }>;
+};
+
 type LivePayload = {
   edition: {
     id: string;
@@ -60,12 +84,7 @@ type LivePayload = {
       activityEn?: string;
     } | null;
   } | null;
-  announcement: {
-    id: string;
-    title: string;
-    body: string;
-    pinned: boolean;
-  } | null;
+  wall?: LiveWallContent;
   mentoring: Array<{ id: string; topic: string; teamName: string }>;
   teams: Array<{
     id: string;
@@ -188,7 +207,6 @@ function LiveAwardsPodium({
   awards: AwardsPayload;
   isFr: boolean;
 }) {
-  const medals = ["1", "2", "3"] as const;
   return (
     <div className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-[#FAFAF8] px-6 py-10 text-center">
       <HackathonAtmosphere variant="page" />
@@ -231,7 +249,7 @@ function LiveAwardsPodium({
                 }`}
               >
                 <span
-                  className={`flex h-12 w-12 items-center justify-center rounded-full text-lg font-black ${
+                  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg font-black ${
                     entry.rank === 1
                       ? "bg-amber-400 text-[#1c1917]"
                       : entry.rank === 2
@@ -239,9 +257,14 @@ function LiveAwardsPodium({
                         : "bg-[#EAF6EE] text-[#1F6B43]"
                   }`}
                 >
-                  {medals[entry.rank - 1] ?? entry.rank}
+                  {entry.rank}
                 </span>
                 <div className="min-w-0 flex-1">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#1F6B43]">
+                    {isFr
+                      ? (PODIUM_PRIZE_BY_RANK[entry.rank]?.titleFr ?? `Prix ${entry.rank}`)
+                      : (PODIUM_PRIZE_BY_RANK[entry.rank]?.titleEn ?? `Prize ${entry.rank}`)}
+                  </p>
                   <p className="truncate text-xl font-black text-[#0c0a09]">
                     {entry.teamName}
                   </p>
@@ -319,230 +342,266 @@ function LiveWall({
       ? data.program.slot.activityFr
       : (data.program.slot.activityEn ?? data.program.slot.activityFr)
     : null;
+  const wall = data.wall;
+  const buildingCount =
+    byStatus.find(([s]) => s === "building")?.[1] ??
+    data.teams.filter((t) => t.status === "building").length;
 
   return (
     <div className="relative flex min-h-dvh flex-col overflow-hidden bg-[#FAFAF8] text-[#111111]">
-      <header className="relative z-20 shrink-0 border-b border-[#1F6B43]/12 bg-white/85 px-5 py-4 backdrop-blur-md sm:px-10">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#1F6B43]/35 to-transparent"
-        />
-        <div className="flex items-start justify-between gap-4">
+      <header className="relative z-20 shrink-0 border-b border-[#1F6B43]/12 bg-white/90 px-4 py-3 backdrop-blur-md sm:px-8">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
             <Image
               src={BRAND_LOGO_MARK_256}
               alt=""
-              width={44}
-              height={44}
+              width={40}
+              height={40}
               unoptimized
-              className="h-11 w-11 object-contain"
+              className="h-10 w-10 object-contain"
             />
             <div className="min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#1F6B43]">
-                McBuleli Live · Mur · Kinshasa
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#1F6B43]">
+                McBuleli Live - Mur - Build
               </p>
-              <h1 className="truncate text-lg font-black tracking-tight text-[#0c0a09] sm:text-xl">
+              <h1 className="truncate text-base font-black text-[#0c0a09] sm:text-lg">
                 {title}
               </h1>
             </div>
           </div>
-          <div className="rounded-2xl border border-[#E5E5E0] bg-white/95 px-4 py-2.5 text-right shadow-sm">
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#a8a29e]">
-              {isFr ? "Clôture livrables" : "Deadline"}
-            </p>
-            <p className="mt-0.5 font-mono text-2xl font-black tabular-nums text-[#1F6B43] sm:text-3xl">
-              {countdown}
-            </p>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            {slotActivity ? (
+              <div className="hidden max-w-md rounded-xl border border-[#E5E5E0] bg-white px-3 py-2 sm:block">
+                <p className="truncate text-xs font-bold text-[#0c0a09]">
+                  {slotActivity}
+                </p>
+                <p className="truncate text-[10px] text-[#78716c]">
+                  {data.program?.slot?.time}
+                </p>
+              </div>
+            ) : null}
+            <div className="rounded-xl border border-[#1F6B43]/20 bg-[#EAF6EE] px-3 py-2 text-center">
+              <p className="text-[9px] font-bold uppercase tracking-wider text-[#1F6B43]">
+                {isFr ? "Clôture livrables" : "Deadline"}
+              </p>
+              <p className="font-mono text-xl font-black tabular-nums text-[#1F6B43] sm:text-2xl">
+                {countdown}
+              </p>
+            </div>
+            <div className="rounded-xl border border-[#E5E5E0] bg-white px-3 py-2 text-center">
+              <p className="text-[9px] font-bold uppercase tracking-wider text-[#a8a29e]">
+                {isFr ? "Présents" : "Inside"}
+              </p>
+              <p className="font-mono text-xl font-black tabular-nums text-[#0c0a09]">
+                {data.presence.inside}
+              </p>
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="relative z-10 flex min-h-0 flex-1 flex-col overflow-hidden px-4 py-5 sm:px-8 sm:py-7">
-        <HackathonAtmosphere variant="page" className="opacity-95" />
+      <main className="relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-4 sm:px-8 sm:py-5">
+        <HackathonAtmosphere variant="page" className="opacity-90" />
 
-        <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col gap-4">
+        <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-4">
           {data.pitchQueue?.active && data.pitchQueue.current ? (
             <motion.div
               layout
-              className="overflow-hidden rounded-[1.75rem] border border-amber-300/70 bg-gradient-to-br from-amber-50 to-white px-5 py-4 shadow-sm"
+              className="overflow-hidden rounded-2xl border border-amber-300/70 bg-gradient-to-r from-amber-50 to-white px-5 py-4 shadow-sm"
             >
               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-800">
-                {isFr ? "Mini Demo · en scène" : "Mini Demo · on stage"}
+                {isFr ? "Mini Demo - en scène" : "Mini Demo - on stage"}
               </p>
-              <p className="mt-1 text-3xl font-black text-[#0c0a09] sm:text-4xl">
+              <p className="mt-1 text-2xl font-black text-[#0c0a09] sm:text-3xl">
                 {data.pitchQueue.current.teamName}
               </p>
               <p className="mt-1 text-sm text-[#78716c]">
                 {isFr ? "Passage" : "Slot"} {data.pitchQueue.position}/
                 {data.pitchQueue.total}
                 {data.pitchQueue.next
-                  ? ` · ${isFr ? "Suivante" : "Next"}: ${data.pitchQueue.next.teamName}`
+                  ? ` - ${isFr ? "Suivante" : "Next"}: ${data.pitchQueue.next.teamName}`
                   : ""}
               </p>
             </motion.div>
           ) : null}
 
-          {/* Hero: presence + current slot */}
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.4fr)]">
-            <div className="rounded-[1.75rem] border border-[#1F6B43]/15 bg-white/92 p-5 shadow-[0_16px_40px_-28px_rgba(31,107,67,0.4)] backdrop-blur-sm sm:p-6">
-              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#a8a29e]">
-                {isFr ? "Présents en salle" : "Inside the room"}
-              </p>
-              <p className="mt-2 font-mono text-6xl font-black tabular-nums leading-none text-[#1F6B43] sm:text-7xl">
-                {data.presence.inside}
-              </p>
-              <div className="mt-5 grid grid-cols-3 gap-2 border-t border-[#E5E5E0] pt-4">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#a8a29e]">
-                    {isFr ? "Dehors" : "Outside"}
-                  </p>
-                  <p className="mt-1 font-mono text-xl font-black tabular-nums text-[#292524]">
-                    {data.presence.outside}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#a8a29e]">
-                    {isFr ? "Absents" : "Absent"}
-                  </p>
-                  <p className="mt-1 font-mono text-xl font-black tabular-nums text-[#292524]">
-                    {data.presence.absent}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#a8a29e]">
-                    Paid
-                  </p>
-                  <p className="mt-1 font-mono text-xl font-black tabular-nums text-[#292524]">
-                    {data.presence.paid}
-                  </p>
-                </div>
+          {/* 4 défis + 5 prix */}
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
+            <section className="rounded-2xl border border-[#1F6B43]/15 bg-white/95 p-4 shadow-sm sm:p-5">
+              <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#1F6B43]">
+                {isFr ? "4 défis - choisissez votre terrain" : "4 challenges - pick your track"}
+              </h2>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                {(wall?.challenges ?? []).map((c, i) => (
+                  <div
+                    key={c.slug}
+                    className="rounded-xl border border-[#E5E5E0] bg-[#FAFAF8]/80 px-3.5 py-3"
+                  >
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-[#1F6B43]">
+                      {isFr ? `Défi ${i + 1}` : `Track ${i + 1}`}
+                    </p>
+                    <p className="mt-1 text-sm font-black leading-snug text-[#0c0a09]">
+                      {isFr ? c.labelFr : c.labelEn}
+                    </p>
+                    <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-[#78716c]">
+                      {isFr ? c.blurbFr : c.blurbEn}
+                    </p>
+                  </div>
+                ))}
               </div>
-            </div>
-
-            <div className="rounded-[1.75rem] border border-[#E5E5E0] bg-white/92 p-5 shadow-sm backdrop-blur-sm sm:p-6">
-              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#a8a29e]">
-                {isFr ? "Créneau actuel" : "Current slot"}
-              </p>
-              {slotActivity ? (
-                <>
-                  <p className="mt-3 text-2xl font-black leading-tight tracking-tight text-[#0c0a09] sm:text-3xl lg:text-4xl">
-                    {slotActivity}
-                  </p>
-                  <p className="mt-3 text-sm font-semibold text-[#1F6B43] sm:text-base">
-                    {programLabel}
-                    {data.program?.slot?.time
-                      ? ` · ${data.program.slot.time}`
-                      : ""}
-                  </p>
-                </>
-              ) : (
-                <p className="mt-4 text-xl font-semibold text-[#78716c]">
-                  {isFr ? "Hors programme" : "Off schedule"}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Announcement + mentoring */}
-          <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-2">
-            <section className="flex flex-col rounded-[1.75rem] border border-[#E5E5E0] bg-white/90 p-5 shadow-sm backdrop-blur-sm sm:p-6">
-              <div className="flex items-center justify-between gap-2">
-                <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#a8a29e]">
-                  {isFr ? "Annonce" : "Announcement"}
-                </h2>
-                {data.announcement?.pinned ? (
-                  <span className="rounded-full bg-[#EAF6EE] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#1F6B43]">
-                    Pin
-                  </span>
-                ) : null}
-              </div>
-              {data.announcement ? (
-                <div className="mt-3 min-h-0 flex-1">
-                  <p className="text-xl font-black text-[#0c0a09] sm:text-2xl">
-                    {data.announcement.title}
-                  </p>
-                  <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-[#57534e] sm:text-base">
-                    {data.announcement.body}
-                  </p>
-                </div>
-              ) : (
-                <p className="mt-4 text-sm text-[#a8a29e]">
-                  {isFr ? "Aucune annonce." : "No announcement."}
-                </p>
-              )}
             </section>
 
-            <section className="flex flex-col rounded-[1.75rem] border border-[#E5E5E0] bg-white/90 p-5 shadow-sm backdrop-blur-sm sm:p-6">
-              <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#a8a29e]">
-                {isFr ? "Mentorat en cours" : "Mentoring now"}
+            <section className="rounded-2xl border border-amber-300/40 bg-gradient-to-br from-amber-50/80 to-white p-4 shadow-sm sm:p-5">
+              <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-amber-800">
+                {isFr ? "5 prix à gagner" : "5 awards"}
               </h2>
+              <ul className="mt-3 space-y-2">
+                {(wall?.prizes ?? []).map((p) => (
+                  <li
+                    key={p.id}
+                    className="rounded-xl border border-amber-200/60 bg-white/90 px-3 py-2.5"
+                  >
+                    <p className="text-sm font-black text-[#0c0a09]">
+                      {isFr ? p.titleFr : p.titleEn}
+                    </p>
+                    <p className="mt-0.5 line-clamp-2 text-[11px] leading-relaxed text-[#78716c]">
+                      {isFr ? p.bodyFr : p.bodyEn}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          </div>
+
+          {/* Partenaires */}
+          {wall?.partnerLogos?.length ? (
+            <section className="rounded-2xl border border-[#E5E5E0] bg-white/95 px-4 py-3 shadow-sm sm:px-5">
+              <h2 className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#a8a29e]">
+                {isFr ? "Écosystème partenaires" : "Partner ecosystem"}
+              </h2>
+              <div className="mt-2 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+                {wall.partnerLogos.map((p) => (
+                  <div
+                    key={p.id}
+                    title={p.name}
+                    className="flex h-11 w-[4.5rem] items-center justify-center rounded-lg border border-[#E5E5E0] bg-[#FAFAF8] px-1.5 sm:h-12 sm:w-20"
+                  >
+                    <img
+                      src={p.logoUrl}
+                      alt={p.name}
+                      className="max-h-8 max-w-full object-contain"
+                    />
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : null}
+
+          {/* Repères pratiques */}
+          {wall?.highlights?.length ? (
+            <section className="rounded-2xl border border-[#E5E5E0] bg-white/95 p-4 shadow-sm sm:p-5">
+              <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#a8a29e]">
+                {isFr ? "Repères du jour" : "Day essentials"}
+              </h2>
+              <ul className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {wall.highlights.map((h) => (
+                  <li
+                    key={h.id}
+                    className="flex gap-2 rounded-xl bg-[#EAF6EE]/60 px-3 py-2.5 text-xs leading-relaxed text-[#292524]"
+                  >
+                    <span className="mt-0.5 text-[#1F6B43]">●</span>
+                    <span>{isFr ? h.labelFr : h.labelEn}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+
+          {/* Mentorat + équipes */}
+          <div className="grid gap-4 lg:grid-cols-2">
+            <section className="rounded-2xl border border-[#E5E5E0] bg-white/95 p-4 shadow-sm sm:p-5">
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#a8a29e]">
+                  {isFr ? "Mentorat en cours" : "Mentoring now"}
+                </h2>
+                <span className="rounded-full bg-[#EAF6EE] px-2 py-0.5 text-[10px] font-bold text-[#1F6B43]">
+                  {data.mentoring.length}
+                </span>
+              </div>
               {data.mentoring.length === 0 ? (
-                <p className="mt-4 text-sm text-[#a8a29e]">
-                  {isFr ? "Aucune session active." : "No active session."}
+                <p className="mt-3 text-sm text-[#a8a29e]">
+                  {isFr
+                    ? "Demandez un mentor depuis Mon espace - Build."
+                    : "Request a mentor from My hub - Build."}
                 </p>
               ) : (
                 <ul className="mt-3 space-y-2">
                   {data.mentoring.map((m) => (
                     <li
                       key={m.id}
-                      className="rounded-xl border border-[#E5E5E0] bg-[#FAFAF8]/90 px-3.5 py-3"
+                      className="rounded-xl border border-[#E5E5E0] bg-[#FAFAF8] px-3 py-2.5"
                     >
                       <p className="font-bold text-[#0c0a09]">{m.teamName}</p>
-                      <p className="mt-0.5 text-sm text-[#78716c]">{m.topic}</p>
+                      <p className="mt-0.5 text-xs text-[#78716c]">{m.topic}</p>
                     </li>
                   ))}
                 </ul>
               )}
             </section>
-          </div>
 
-          {/* Teams strip */}
-          <section className="rounded-[1.75rem] border border-[#E5E5E0] bg-white/90 p-5 shadow-sm backdrop-blur-sm sm:p-6">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#a8a29e]">
-                {isFr ? "Équipes" : "Teams"}
-              </h2>
-              <div className="flex flex-wrap gap-1.5">
+            <section className="rounded-2xl border border-[#E5E5E0] bg-white/95 p-4 shadow-sm sm:p-5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#a8a29e]">
+                  {isFr ? "Équipes en build" : "Teams building"}
+                </h2>
+                <span className="font-mono text-sm font-black text-[#1F6B43]">
+                  {data.teams.length}{" "}
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#a8a29e]">
+                    - {buildingCount} {isFr ? "actives" : "active"}
+                  </span>
+                </span>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-1.5">
                 {byStatus.map(([status, n]) => (
                   <span
                     key={status}
                     className="rounded-full border border-[#E5E5E0] bg-[#FAFAF8] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#78716c]"
                   >
-                    {status} · {n}
+                    {status} - {n}
                   </span>
                 ))}
               </div>
-            </div>
-            {data.teams.length === 0 ? (
-              <p className="mt-4 text-sm text-[#a8a29e]">
-                {isFr ? "Aucune équipe." : "No teams yet."}
-              </p>
-            ) : (
-              <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {data.teams.map((t) => (
-                  <div
-                    key={t.id}
-                    className="rounded-xl border border-[#E5E5E0] bg-[#FAFAF8]/80 px-3.5 py-3"
-                  >
-                    <p className="truncate font-bold text-[#0c0a09]">{t.name}</p>
-                    <p className="mt-1 truncate text-xs text-[#78716c]">
-                      {isFr ? t.labelFr : (t.labelEn ?? t.labelFr)}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
+              {data.teams.length > 0 ? (
+                <div className="mt-3 flex max-h-28 flex-wrap gap-1.5 overflow-y-auto">
+                  {data.teams.slice(0, 24).map((t) => (
+                    <span
+                      key={t.id}
+                      className="rounded-lg border border-[#E5E5E0] bg-white px-2 py-1 text-[11px] font-semibold text-[#57534e]"
+                    >
+                      {t.name}
+                    </span>
+                  ))}
+                  {data.teams.length > 24 ? (
+                    <span className="self-center text-[10px] text-[#a8a29e]">
+                      +{data.teams.length - 24}
+                    </span>
+                  ) : null}
+                </div>
+              ) : (
+                <p className="mt-3 text-sm text-[#a8a29e]">
+                  {isFr
+                    ? "Formation équipes - Mon espace"
+                    : "Team formation - My hub"}
+                </p>
+              )}
+            </section>
+          </div>
         </div>
       </main>
 
-      <footer className="relative z-20 shrink-0 border-t border-[#1F6B43]/12 bg-white/90 px-5 py-3 backdrop-blur-md sm:px-10">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#1F6B43]/35 to-transparent"
-        />
-        <div className="flex items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-[0.14em] text-[#a8a29e]">
-          <span>Silikin Village · 28 Août 2026</span>
+      <footer className="relative z-20 shrink-0 border-t border-[#1F6B43]/12 bg-white/90 px-4 py-2.5 backdrop-blur-md sm:px-8">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-[0.14em] text-[#a8a29e]">
+          <span>Silikin Village - 28 Août 2026{programLabel ? ` - ${programLabel}` : ""}</span>
           <div className="flex items-center gap-4">
             <Link
               href="/hackathon/mc"

@@ -33,7 +33,7 @@ export type McRemoteUiContext = {
   showEndSlides: boolean;
   /** Hide cue nav / jumps when Visio plein écran */
   showCueNav: boolean;
-  /** Pilotage Mur : annonces + file pitch + aperçu salle */
+  /** Pilotage Mur : file pitch + aperçu salle (contenu fixe sur le Mur) */
   showWallControls: boolean;
   smartActions: McSmartAction[];
   jumpCues: McCue[];

@@ -97,6 +97,7 @@ const actionSchema = z.discriminatedUnion("action", [
       "visio_off",
       "bootcamp_slides",
       "build_wall",
+      "mentor_reminder",
       "podium",
     ]),
   }),
@@ -118,6 +119,7 @@ function applySmart(
     | "visio_off"
     | "bootcamp_slides"
     | "build_wall"
+    | "mentor_reminder"
     | "podium",
 ): ReturnType<typeof toMcPublic> {
   switch (id) {
@@ -147,6 +149,16 @@ function applySmart(
     case "build_wall": {
       let s = setMcCueById("build-mentors");
       s = setProjectorMode("wall");
+      return s;
+    }
+    case "mentor_reminder": {
+      let s = setMcCueById("build-mentors");
+      s = setProjectorMode("wall");
+      s = setMcHumanOverride(
+        true,
+        "Rappel mentorat : demandez un mentor depuis Mon espace - onglet Build. Les partenaires sont en salle.",
+      );
+      s = requestMcVoiceReplay();
       return s;
     }
     case "podium": {

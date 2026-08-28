@@ -1,7 +1,6 @@
 import { and, desc, eq } from "drizzle-orm";
 import {
   getDb,
-  hackathonAnnouncements,
   hackathonMentorRequests,
   hackathonRegistrations,
   hackathonTeams,
@@ -10,6 +9,7 @@ import { hackathonProgramDays } from "@/lib/hackathon/event-content";
 import { buildAwardsLeaderboard } from "@/lib/hackathon/awards";
 import { getPitchQueue, toPitchQueuePublic } from "@/lib/hackathon/pitch-queue";
 import { getFeaturedEditionRow } from "@/lib/hackathon/hub";
+import { buildLiveWallContent } from "@/lib/hackathon/live-wall-content";
 import { getLivePresentationPayload } from "@/lib/hackathon/slides/session";
 import {
   TEAM_STATUS_LABELS_EN,
@@ -92,27 +92,6 @@ export async function buildLivePayload() {
     )
     .limit(20);
 
-  const [pinned] = await db
-    .select()
-    .from(hackathonAnnouncements)
-    .where(
-      and(
-        eq(hackathonAnnouncements.editionId, edition.id),
-        eq(hackathonAnnouncements.pinned, true),
-      ),
-    )
-    .orderBy(desc(hackathonAnnouncements.publishedAt))
-    .limit(1);
-
-  const [latest] = await db
-    .select()
-    .from(hackathonAnnouncements)
-    .where(eq(hackathonAnnouncements.editionId, edition.id))
-    .orderBy(desc(hackathonAnnouncements.publishedAt))
-    .limit(1);
-
-  const announcement = pinned ?? latest ?? null;
-
   let presentation = null;
   try {
     presentation = await getLivePresentationPayload();
@@ -134,15 +113,7 @@ export async function buildLivePayload() {
     },
     presence: { inside, outside, absent, paid: regs.length },
     program: currentProgramSlot(),
-    announcement: announcement
-      ? {
-          id: announcement.id,
-          title: announcement.title,
-          body: announcement.body,
-          pinned: announcement.pinned,
-          publishedAt: announcement.publishedAt.toISOString(),
-        }
-      : null,
+    wall: buildLiveWallContent(),
     mentoring,
     teams: teams.map((t) => ({
       id: t.id,

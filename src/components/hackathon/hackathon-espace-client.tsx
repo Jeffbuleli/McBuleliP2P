@@ -26,6 +26,7 @@ import {
   useHkLocale,
 } from "@/components/hackathon/hk-ui";
 import type { HubPayloadOk } from "@/lib/hackathon/hub-types";
+import { PODIUM_PRIZE_BY_RANK } from "@/lib/hackathon/live-wall-content";
 import { phaseUnlocks } from "@/lib/hackathon/phases";
 import {
   TEAM_MAX_MEMBERS,
@@ -311,28 +312,51 @@ export function HackathonEspaceClient({
           <HackathonPhaseStepper isFr={isFr} currentId={currentPhase} />
         </HkSection>
 
-        {data.announcements.length > 0 ? (
-          <HkSection title={isFr ? "Annonces" : "Announcements"}>
-            {data.announcements.slice(0, 5).map((announcement) => (
-              <article
-                key={announcement.id}
-                className="rounded-xl bg-[color:var(--hk-page,var(--fd-bg))] px-4 py-3 ring-1 ring-[color:var(--hk-border,var(--fd-border))]"
-              >
-                <div className="flex flex-wrap items-center gap-2">
-                  {announcement.pinned ? (
-                    <HkStatusPill tone="accent">
-                      {isFr ? "Épinglé" : "Pinned"}
-                    </HkStatusPill>
-                  ) : null}
-                  <p className="font-bold text-[color:var(--hk-text,var(--fd-text))]">
-                    {announcement.title}
-                  </p>
-                </div>
-                <p className="mt-1 whitespace-pre-wrap text-sm text-[color:var(--hk-muted,var(--fd-muted))]">
-                  {announcement.body}
+        {data.team && data.isPaid && (currentPhase === "development" || currentPhase === "mentoring") ? (
+          <HkSection
+            title={isFr ? "Phase Build" : "Build phase"}
+            hint={
+              isFr
+                ? "Mur Live : défis - prix - mentorat - compte à rebours livrables."
+                : "Live wall: challenges - prizes - mentoring - deliverable countdown."
+            }
+          >
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-xl bg-[color:var(--hk-soft,var(--fd-mint))] px-4 py-3 ring-1 ring-[color:var(--hk-accent,var(--fd-primary))]/20">
+                <p className="text-xs font-bold uppercase tracking-wider text-[color:var(--hk-accent,var(--fd-primary))]">
+                  {isFr ? "Livrables" : "Deliverables"}
                 </p>
-              </article>
-            ))}
+                <p className="mt-1 text-sm text-[color:var(--hk-text,var(--fd-text))]">
+                  {isFr
+                    ? "Démo + GitHub avant 15h30 - pitch PDF avant 16h00 - onglet Build ci-dessous."
+                    : "Demo + GitHub before 3:30 PM - pitch PDF before 4:00 PM - Build tab below."}
+                </p>
+              </div>
+              <div className="rounded-xl bg-[color:var(--hk-page,var(--fd-bg))] px-4 py-3 ring-1 ring-[color:var(--hk-border,var(--fd-border))]">
+                <p className="text-xs font-bold uppercase tracking-wider text-[color:var(--hk-muted,var(--fd-muted))]">
+                  {isFr ? "Mentorat" : "Mentoring"}
+                </p>
+                <p className="mt-1 text-sm text-[color:var(--hk-text,var(--fd-text))]">
+                  {isFr
+                    ? "Demandez un mentor depuis l'onglet Build - les partenaires voient la file."
+                    : "Request a mentor from the Build tab - partners see the queue."}
+                </p>
+              </div>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Link
+                href="/hackathon/live"
+                className="rounded-xl bg-[color:var(--hk-accent,var(--fd-primary))] px-4 py-2 text-sm font-bold text-white"
+              >
+                {isFr ? "Voir le Mur Live" : "Open Live wall"}
+              </Link>
+              <Link
+                href="/hackathon/infos"
+                className="rounded-xl px-4 py-2 text-sm font-bold ring-1 ring-[color:var(--hk-border,var(--fd-border))] text-[color:var(--hk-text,var(--fd-text))]"
+              >
+                {isFr ? "Infos pratiques" : "Practical info"}
+              </Link>
+            </div>
           </HkSection>
         ) : null}
 
@@ -1059,8 +1083,13 @@ export function HackathonEspaceClient({
                     }`}
                   >
                     <div>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-[color:var(--hk-accent)]">
+                        {isFr
+                          ? (PODIUM_PRIZE_BY_RANK[entry.rank]?.titleFr ?? `Prix ${entry.rank}`)
+                          : (PODIUM_PRIZE_BY_RANK[entry.rank]?.titleEn ?? `Prize ${entry.rank}`)}
+                      </p>
                       <p className="font-bold text-[color:var(--hk-text)]">
-                        #{entry.rank} {entry.teamName}
+                        {entry.teamName}
                         {data.team?.id === entry.teamId
                           ? isFr
                             ? " (votre équipe)"
@@ -1079,11 +1108,29 @@ export function HackathonEspaceClient({
                 ))}
               </ol>
             ) : (
-              <p className="text-sm text-[color:var(--hk-muted,var(--fd-muted))]">
-                {isFr
-                  ? "Les résultats apparaîtront ici après la délibération. Suivez aussi le projecteur salle."
-                  : "Results will appear here after deliberation. Also watch the room projector."}
-              </p>
+              <div className="space-y-3">
+                <p className="text-sm text-[color:var(--hk-muted,var(--fd-muted))]">
+                  {isFr
+                    ? "Podium mis à jour après délibération (16h40-16h50). Suivez le projecteur mode Prix."
+                    : "Podium updates after deliberation (4:40-4:50 PM). Watch projector Awards mode."}
+                </p>
+                <ul className="grid gap-2 sm:grid-cols-2">
+                  {[
+                    isFr ? "Prix ILOKWE" : "ILOKWE Prize",
+                    isFr ? "Deuxième Prix" : "Second Prize",
+                    isFr ? "Troisième Prix" : "Third Prize",
+                    isFr ? "Prix Innovation" : "Innovation Award",
+                    isFr ? "Prix Impact Social" : "Social Impact Award",
+                  ].map((label) => (
+                    <li
+                      key={label}
+                      className="rounded-lg bg-[color:var(--hk-page,var(--fd-bg))] px-3 py-2 text-xs font-semibold text-[color:var(--hk-muted,var(--fd-muted))] ring-1 ring-[color:var(--hk-border,var(--fd-border))]"
+                    >
+                      {label}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
             <p className="mt-3 text-sm text-[color:var(--hk-muted,var(--fd-muted))]">
               {unlocks.showJuryLink ? (

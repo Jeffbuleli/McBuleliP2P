@@ -18,8 +18,8 @@ type LiveSnap = {
     labelFr: string;
     slot: { time: string; activityFr: string } | null;
   } | null;
-  announcement: { title: string; body: string; pinned: boolean } | null;
   mentoringCount: number;
+  teamCount: number;
 };
 
 function SwitchBtn({
@@ -51,7 +51,7 @@ function SwitchBtn({
   );
 }
 
-/** Pilotage Mur depuis /mc : aperçu salle, annonces, file pitch. */
+/** Pilotage Mur depuis /mc : aperçu salle + file pitch (sans communiqués). */
 export function McWallPilotPanel({
   busy,
   setBusy,
@@ -63,8 +63,6 @@ export function McWallPilotPanel({
 }) {
   const [snap, setSnap] = useState<LiveSnap | null>(null);
   const [queue, setQueue] = useState<PitchQueue | null>(null);
-  const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
 
   const refresh = useCallback(async () => {
     try {
@@ -88,16 +86,10 @@ export function McWallPilotPanel({
                   : null,
               }
             : null,
-          announcement: live.announcement
-            ? {
-                title: live.announcement.title,
-                body: live.announcement.body,
-                pinned: live.announcement.pinned,
-              }
-            : null,
           mentoringCount: Array.isArray(live.mentoring)
             ? live.mentoring.length
             : 0,
+          teamCount: Array.isArray(live.teams) ? live.teams.length : 0,
         });
       }
       if (pitch?.queue) setQueue(pitch.queue);
@@ -125,46 +117,12 @@ export function McWallPilotPanel({
       if (!res.ok) {
         setErr(
           json?.error === "forbidden"
-            ? "Session expirée · reconnectez-vous admin."
+            ? "Session expirée - reconnectez-vous admin."
             : json?.error || "Erreur file pitch",
         );
         return;
       }
       if (json.queue) setQueue(json.queue);
-      await refresh();
-    } catch {
-      setErr("Réseau indisponible");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const publishAnnounce = async () => {
-    const t = title.trim();
-    const b = body.trim();
-    if (t.length < 2 || b.length < 1) {
-      setErr("Annonce : titre + texte requis");
-      return;
-    }
-    setBusy(true);
-    setErr(null);
-    try {
-      const res = await fetch("/api/hackathon/announcements", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ title: t, body: b, pinned: true }),
-      });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setErr(
-          json?.error === "forbidden"
-            ? "Session expirée · reconnectez-vous admin."
-            : json?.error || "Erreur annonce",
-        );
-        return;
-      }
-      setTitle("");
-      setBody("");
       await refresh();
     } catch {
       setErr("Réseau indisponible");
@@ -180,13 +138,13 @@ export function McWallPilotPanel({
           Pilote Mur
         </p>
         <p className="mt-0.5 text-[11px] text-white/55">
-          Ce que voit le projecteur · annonces & file pitch
+          Mur = défis - prix - partenaires - équipes - mentorat
         </p>
       </div>
 
       {snap ? (
-        <div className="grid grid-cols-3 gap-1.5">
-          <div className="rounded-xl bg-black/25 px-2.5 py-2 text-center">
+        <div className="grid grid-cols-4 gap-1.5">
+          <div className="rounded-xl bg-black/25 px-2 py-2 text-center">
             <p className="text-[9px] font-bold uppercase tracking-wider text-white/45">
               Présents
             </p>
@@ -194,7 +152,7 @@ export function McWallPilotPanel({
               {snap.presence.inside}
             </p>
           </div>
-          <div className="rounded-xl bg-black/25 px-2.5 py-2 text-center">
+          <div className="rounded-xl bg-black/25 px-2 py-2 text-center">
             <p className="text-[9px] font-bold uppercase tracking-wider text-white/45">
               Mentorat
             </p>
@@ -202,9 +160,17 @@ export function McWallPilotPanel({
               {snap.mentoringCount}
             </p>
           </div>
-          <div className="rounded-xl bg-black/25 px-2.5 py-2 text-center">
+          <div className="rounded-xl bg-black/25 px-2 py-2 text-center">
             <p className="text-[9px] font-bold uppercase tracking-wider text-white/45">
-              Paid
+              Équipes
+            </p>
+            <p className="font-mono text-xl font-black tabular-nums text-white">
+              {snap.teamCount}
+            </p>
+          </div>
+          <div className="rounded-xl bg-black/25 px-2 py-2 text-center">
+            <p className="text-[9px] font-bold uppercase tracking-wider text-white/45">
+              Inscrits
             </p>
             <p className="font-mono text-xl font-black tabular-nums text-white">
               {snap.presence.paid}
@@ -225,41 +191,14 @@ export function McWallPilotPanel({
         </div>
       ) : null}
 
-      {snap?.announcement ? (
-        <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2">
-          <p className="text-[9px] font-bold uppercase tracking-wider text-white/45">
-            Annonce affichée{snap.announcement.pinned ? " · pin" : ""}
-          </p>
-          <p className="mt-0.5 text-sm font-bold text-white">
-            {snap.announcement.title}
-          </p>
-        </div>
-      ) : null}
-
-      <div className="space-y-1.5">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-white/50">
-          Nouvelle annonce → Mur
+      <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2.5">
+        <p className="text-[9px] font-bold uppercase tracking-wider text-white/45">
+          Contenu fixe Mur
         </p>
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Titre"
-          className="w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2.5 text-sm text-white placeholder:text-white/35"
-        />
-        <textarea
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          placeholder="Message salle"
-          rows={2}
-          className="w-full resize-none rounded-xl border border-white/15 bg-black/40 px-3 py-2.5 text-sm text-white placeholder:text-white/35"
-        />
-        <SwitchBtn
-          disabled={busy}
-          onClick={() => void publishAnnounce()}
-          className="w-full bg-amber-400 text-black hover:bg-amber-300"
-        >
-          Publier sur Mur (épinglée)
-        </SwitchBtn>
+        <p className="mt-1 text-[11px] leading-relaxed text-white/60">
+          4 défis - 5 prix - logos partenaires - repères pratiques. Pas de
+          communiqués - les builders utilisent Mon espace.
+        </p>
       </div>
 
       <div className="space-y-1.5 border-t border-white/10 pt-3">
@@ -269,20 +208,20 @@ export function McWallPilotPanel({
         {queue?.active && queue.current ? (
           <div className="rounded-xl bg-black/25 px-3 py-2.5">
             <p className="text-[9px] font-bold uppercase tracking-wider text-amber-200/80">
-              En scène · {queue.position}/{queue.total}
+              En scène - {queue.position}/{queue.total}
             </p>
             <p className="mt-0.5 text-base font-black text-white">
               {queue.current.teamName}
             </p>
             {queue.next ? (
               <p className="mt-1 text-[11px] text-white/50">
-                Suivante · {queue.next.teamName}
+                Suivante - {queue.next.teamName}
               </p>
             ) : null}
           </div>
         ) : (
           <p className="text-xs text-white/45">
-            File inactive{queue?.total ? ` · ${queue.total} équipe(s)` : ""}.
+            File inactive{queue?.total ? ` - ${queue.total} équipe(s)` : ""}.
           </p>
         )}
         <div className="grid grid-cols-2 gap-1.5">

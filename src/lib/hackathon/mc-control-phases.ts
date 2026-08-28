@@ -114,9 +114,16 @@ export const MC_SMART_ACTIONS: McSmartAction[] = [
   {
     id: "build_wall",
     labelFr: "Build · Mur Live",
-    hintFr: "Mur équipes + file pitch si active",
+    hintFr: "Défis - prix - partenaires - équipes",
     phaseId: "build",
     variant: "primary",
+  },
+  {
+    id: "mentor_reminder",
+    labelFr: "Rappel mentorat",
+    hintFr: "Mur + cue build - rappel aux équipes",
+    phaseId: "build",
+    variant: "amber",
   },
   {
     id: "podium",

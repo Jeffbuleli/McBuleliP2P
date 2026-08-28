@@ -721,7 +721,8 @@ export function hackathonProgramDays(): ProgramDay[] {
         { time: "15h30 - 15h45", activityFr: "Pause café", activityEn: "Coffee break", icon: "coffee" },
         { time: "15h45 - 16h00", activityFr: "Préparation pitch & démo", activityEn: "Pitch & demo prep", icon: "presentation" },
         { time: "16h00 - 16h40", activityFr: "Mini Demo Day (pitches courts)", activityEn: "Mini Demo Day (short pitches)", icon: "jury" },
-        { time: "16h40 - 17h00", activityFr: "Synthèse McBuleli IA puis clôture Mme Patty B.", activityEn: "McBuleli IA wrap then close by Mrs Patty B.", icon: "clock" },
+        { time: "16h40 - 16h50", activityFr: "Délibération jury", activityEn: "Jury deliberation", icon: "jury" },
+        { time: "16h50 - 17h00", activityFr: "Remise des prix puis clôture Mme Patty B.", activityEn: "Awards then close by Mrs Patty B.", icon: "clock" },
       ],
     },
   ];

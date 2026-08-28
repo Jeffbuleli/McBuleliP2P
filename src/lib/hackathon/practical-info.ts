@@ -80,6 +80,7 @@ export const HACKATHON_PRACTICAL_SECTIONS: PracticalSection[] = [
       "11h30 - Formation équipes et choix des défis (Mon espace)",
       "12h45-15h30 - Build intensif + mentorat partenaires",
       "16h00 - Mini Demo Day (pitches courts)",
+      "16h40 - Délibération jury",
       "16h50 - Remise des prix et clôture",
     ],
     itemsEn: [
@@ -89,6 +90,7 @@ export const HACKATHON_PRACTICAL_SECTIONS: PracticalSection[] = [
       "11:30 AM - Team formation and challenges (My hub)",
       "12:45-3:30 PM - Intensive build + partner mentoring",
       "4:00 PM - Mini Demo Day (short pitches)",
+      "4:40 PM - Jury deliberation",
       "4:50 PM - Awards and closing",
     ],
   },
@@ -100,13 +102,13 @@ export const HACKATHON_PRACTICAL_SECTIONS: PracticalSection[] = [
       "Mon espace : /hackathon/espace - équipe, livrables, mentorat",
       "Pass QR : /hackathon/pass/[code] - présentez à l'entrée",
       "Demande mentorat : depuis Mon espace (phase Build)",
-      "Live salle : /hackathon/live - annonces et statuts équipes",
+      "Live salle : /hackathon/live - mur défis - prix - équipes - mentorat",
     ],
     itemsEn: [
       "My hub: /hackathon/espace - team, deliverables, mentoring",
       "QR pass: /hackathon/pass/[code] - show at the door",
       "Mentor request: from My hub (Build phase)",
-      "Room live: /hackathon/live - announcements and team statuses",
+      "Room live: /hackathon/live - wall: challenges - prizes - teams - mentoring",
     ],
   },
   {
