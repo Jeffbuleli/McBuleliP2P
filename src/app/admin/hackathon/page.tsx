@@ -11,8 +11,11 @@ export default async function AdminHackathonPage() {
     u.role === UserRole.SUPER_ADMIN || agentHasScope(u, "hackathon_stats");
   const canAdmin = u.role === UserRole.SUPER_ADMIN;
   if (!canStats && !canAdmin) {
-    if (agentHasScope(u, "hackathon_scan")) {
-      redirect("/admin/hackathon/scan");
+    if (
+      agentHasScope(u, "hackathon_scan") ||
+      u.role === UserRole.AGENT
+    ) {
+      redirect("/hackathon/scan");
     }
     redirect("/admin");
   }

@@ -377,6 +377,12 @@ export function McOperatorConsole({
       ) : null}
 
       <footer className="flex gap-2 pt-1">
+        <Link
+          href="/hackathon/scan"
+          className="flex flex-1 items-center justify-center rounded-xl border border-white/15 py-3 text-xs font-semibold text-white/70"
+        >
+          Porte
+        </Link>
         <SwitchBtn
           disabled={busy}
           onClick={() => post({ action: "reset" })}

@@ -8,7 +8,8 @@ import {
   recordAccessScan,
   rosterBuckets,
 } from "@/lib/hackathon/access";
-import { StaffAuthError, requireStaffScope } from "@/lib/session-user";
+import { StaffAuthError, getSessionUser, requireStaffScope } from "@/lib/session-user";
+import { mcControlAuthorized, requireMcControl } from "@/lib/hackathon/mc-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -17,9 +18,26 @@ function authError(e: unknown) {
   return NextResponse.json({ error: msg }, { status: 403 });
 }
 
+async function requireDoorControl() {
+  if (await mcControlAuthorized()) {
+    await requireMcControl();
+    return;
+  }
+  await requireStaffScope("hackathon_scan");
+}
+
+async function requireDoorControlStaff() {
+  if (await mcControlAuthorized()) {
+    const user = await getSessionUser();
+    if (!user) throw new StaffAuthError("login_required");
+    return user;
+  }
+  return requireStaffScope("hackathon_scan");
+}
+
 export async function GET(req: Request) {
   try {
-    await requireStaffScope("hackathon_scan");
+    await requireDoorControl();
   } catch (e) {
     return authError(e);
   }
@@ -83,7 +101,7 @@ const scanZ = z.object({
 export async function POST(req: Request) {
   let staff;
   try {
-    staff = await requireStaffScope("hackathon_scan");
+    staff = await requireDoorControlStaff();
   } catch (e) {
     return authError(e);
   }

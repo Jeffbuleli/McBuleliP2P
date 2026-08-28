@@ -39,7 +39,9 @@ export default async function AdminLayout({
   const showLandingAds =
     u.role === UserRole.SUPER_ADMIN || agentHasScope(u, "landing_ads");
   const showHackathonScan =
-    u.role === UserRole.SUPER_ADMIN || agentHasScope(u, "hackathon_scan");
+    u.role === UserRole.SUPER_ADMIN ||
+    u.role === UserRole.AGENT ||
+    agentHasScope(u, "hackathon_scan");
   const showHackathonStats =
     u.role === UserRole.SUPER_ADMIN || agentHasScope(u, "hackathon_stats");
   const showHackathonAdmin = u.role === UserRole.SUPER_ADMIN;
@@ -159,7 +161,7 @@ export default async function AdminLayout({
                 </AdminNavLink>
               ) : null}
               {showHackathonScan ? (
-                <AdminNavLink href="/admin/hackathon/scan" variant="support" icon="users">
+                <AdminNavLink href="/hackathon/scan" variant="support" icon="users">
                   {d.admin_nav_hackathon_scan}
                 </AdminNavLink>
               ) : null}

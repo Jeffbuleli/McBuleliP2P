@@ -425,7 +425,7 @@ export function HackathonAdminClient({ mode = "admin" }: Props) {
           </a>
           {" · "}
           <a
-            href="/admin/hackathon/scan"
+            href="/hackathon/scan"
             className="font-semibold text-[color:var(--fd-primary)]"
           >
             Scanner porte
