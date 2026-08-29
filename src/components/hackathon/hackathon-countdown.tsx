@@ -110,8 +110,8 @@ export function HackathonCountdown({
     <aside
       className={`rounded-2xl border px-3 py-2 ${
         onDark
-          ? "border-white/25 bg-white/10 text-white shadow-sm backdrop-blur-md"
-          : "border-[color:var(--hk-border,var(--fd-border))] bg-[color:var(--hk-surface,var(--fd-card))]/90 text-[color:var(--hk-text,var(--fd-text))] shadow-[0_10px_28px_-16px_var(--hk-shadow,rgba(34,34,34,0.35))] backdrop-blur-md"
+          ? "border-white/25 bg-[#163322]/85 text-white shadow-sm"
+          : "border-[color:var(--hk-border,var(--fd-border))] bg-[color:var(--hk-surface,var(--fd-card))] text-[color:var(--hk-text,var(--fd-text))] shadow-[0_10px_28px_-16px_var(--hk-shadow,rgba(34,34,34,0.35))]"
       } ${className}`}
       aria-live="polite"
       aria-label={aria}

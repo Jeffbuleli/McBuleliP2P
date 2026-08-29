@@ -789,6 +789,15 @@ html {
     background-color 0.25s ease,
     color 0.25s ease;
 }
+/* Hackathon — crisp surfaces (no frosted glass on nav / topbar) */
+.hackathon-theme .fd-app-topbar,
+.hackathon-theme[data-hk-theme="dark"] .fd-app-topbar,
+html[data-hk-theme="dark"] .hackathon-theme .fd-app-topbar {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: var(--hk-surface);
+  border-color: var(--hk-border);
+}
 .hackathon-theme[data-hk-theme="dark"],
 html[data-hk-theme="dark"] .hackathon-theme {
   --hk-page: #0c1210;

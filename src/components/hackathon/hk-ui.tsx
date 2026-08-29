@@ -82,7 +82,7 @@ export function HkSection({
   action?: ReactNode;
 }) {
   return (
-    <section className="rounded-2xl bg-[color:var(--hk-surface,var(--fd-card))]/90 p-5 shadow-sm ring-1 ring-[color:var(--hk-border,var(--fd-border))] backdrop-blur-sm sm:p-6">
+    <section className="rounded-2xl bg-[color:var(--hk-surface,var(--fd-card))] p-5 shadow-sm ring-1 ring-[color:var(--hk-border,var(--fd-border))] sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <h2 className="text-base font-bold text-[color:var(--hk-text,var(--fd-text))]">

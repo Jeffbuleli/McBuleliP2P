@@ -100,7 +100,7 @@ export function HackathonLandingJourney({ isFr }: { isFr: boolean }) {
       {HACKATHON_PHASES.map((phase) => (
         <article
           key={phase.id}
-          className="rounded-2xl bg-[color:var(--hk-surface,var(--fd-card))]/90 p-4 shadow-sm ring-1 ring-[color:var(--hk-border,var(--fd-border))]"
+          className="rounded-2xl bg-[color:var(--hk-surface,var(--fd-card))] p-4 shadow-sm ring-1 ring-[color:var(--hk-border,var(--fd-border))]"
         >
           <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[color:var(--hk-accent,var(--fd-primary))]">
             {isFr ? `Étape ${phase.order}` : `Step ${phase.order}`}

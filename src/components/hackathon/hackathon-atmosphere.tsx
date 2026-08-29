@@ -231,16 +231,8 @@ export function HackathonAtmosphere({
           preserveAspectRatio="xMidYMax meet"
           xmlns="http://www.w3.org/2000/svg"
         >
-          <KinshasaPixelSkylineOnce opacity={0.22} />
+          <KinshasaPixelSkylineOnce opacity={0.12} />
         </svg>
-        {/* Soft top mist — leave skyline readable in lower half */}
-        <div
-          className="absolute inset-x-0 top-0 h-[28%]"
-          style={{
-            background:
-              "linear-gradient(180deg, #FAFAF8 0%, rgba(250,250,248,0.55) 55%, transparent 100%)",
-          }}
-        />
       </div>
     );
   }

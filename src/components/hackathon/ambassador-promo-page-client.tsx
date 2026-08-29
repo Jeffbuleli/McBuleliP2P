@@ -31,7 +31,7 @@ export function AmbassadorPromoPageClient({
       </h1>
       <p className="mt-3 text-sm leading-relaxed text-[color:var(--hk-muted,var(--fd-muted))]">{c.lede}</p>
 
-      <ul className="mt-6 space-y-2.5 rounded-2xl bg-[color:var(--hk-surface,var(--fd-card))]/90 px-4 py-4 text-sm text-[color:var(--hk-text,var(--fd-text))] shadow-sm ring-1 ring-[color:var(--hk-border,var(--fd-border))] backdrop-blur-sm">
+      <ul className="mt-6 space-y-2.5 rounded-2xl bg-[color:var(--hk-surface,var(--fd-card))] px-4 py-4 text-sm text-[color:var(--hk-text,var(--fd-text))] shadow-sm ring-1 ring-[color:var(--hk-border,var(--fd-border))]">
         <li className="flex gap-2">
           <span className="shrink-0 font-bold text-[color:var(--hk-accent,var(--fd-primary))]">
             -{AMBASSADOR_DISCOUNT_PERCENT}%

@@ -169,7 +169,7 @@ function CtaSecondary({
       href={href}
       className={
         onDark
-          ? "relative inline-flex min-h-11 items-center justify-center rounded-xl border border-white/55 bg-white/10 px-6 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
+          ? "relative inline-flex min-h-11 items-center justify-center rounded-xl border border-white/45 bg-[#163322]/75 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1a3d2a]/90"
           : "relative inline-flex min-h-11 items-center justify-center rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--hk-surface)] px-6 py-2.5 text-sm font-semibold text-[color:var(--fd-text)] transition hover:bg-[color:var(--fd-mint)]"
       }
     >
@@ -557,7 +557,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
         </div>
         <div className="relative mx-auto flex max-w-6xl flex-col justify-end px-4 pb-8 pt-12 sm:px-6 sm:pb-10 sm:pt-16 lg:min-h-[min(48vh,420px)] lg:flex-row lg:items-center lg:justify-between lg:gap-8">
           <div className="max-w-2xl">
-            <div className="mb-4 inline-flex items-center gap-3 rounded-2xl bg-white/10 p-2 ring-1 ring-white/20 backdrop-blur-sm">
+            <div className="mb-4 inline-flex items-center gap-3 rounded-2xl bg-[#163322]/75 p-2 ring-1 ring-white/25">
               <HackathonLogo className="h-14 w-12 sm:h-16 sm:w-14" />
               <span className="pr-2 text-[11px] font-extrabold uppercase tracking-[0.14em] text-white/90">
                 McBuleli Hackathon
@@ -1313,7 +1313,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
             <a
               href="#register"
               onClick={() => setFormsOpen("sponsor-form")}
-              className="inline-flex min-h-11 items-center rounded-xl border border-white/45 bg-white/10 px-6 py-2.5 text-sm font-extrabold text-white backdrop-blur-sm transition hover:bg-white/20"
+              className="inline-flex min-h-11 items-center rounded-xl border border-white/45 bg-[#163322]/75 px-6 py-2.5 text-sm font-extrabold text-white transition hover:bg-[#1a3d2a]/90"
             >
               {isFr ? "Devenir sponsor" : "Become a sponsor"}
             </a>
@@ -1389,7 +1389,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
       </footer>
 
       {/* Mobile sticky CTA */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[color:var(--fd-border)] bg-[color:var(--hk-surface)]/95 p-3 backdrop-blur sm:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[color:var(--fd-border)] bg-[color:var(--hk-surface)] p-3 sm:hidden">
         <div className="flex gap-2">
           <a
             href="#register"

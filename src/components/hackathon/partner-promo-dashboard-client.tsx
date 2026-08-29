@@ -450,7 +450,7 @@ export function PartnerPromoDashboardClient({ token }: Props) {
         </header>
 
         {/* Share strip */}
-        <section className="rounded-2xl bg-[color:var(--hk-surface,var(--fd-card))]/90 px-4 py-3.5 shadow-sm ring-1 ring-[color:var(--hk-border,var(--fd-border))] backdrop-blur-sm sm:px-5">
+        <section className="rounded-2xl bg-[color:var(--hk-surface,var(--fd-card))] px-4 py-3.5 shadow-sm ring-1 ring-[color:var(--hk-border,var(--fd-border))] sm:px-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="min-w-0 flex-1">
               <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[color:var(--hk-muted,var(--fd-muted))]">
@@ -1064,7 +1064,7 @@ function SeatTier({
           {done ? "OK" : current}
         </span>
       </div>
-      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[color:var(--hk-surface,var(--fd-card))]/90">
+      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[color:var(--hk-surface,var(--fd-card))]">
         <motion.div
           className={`h-full rounded-full ${done ? "bg-[color:var(--hk-accent,var(--fd-primary))]" : "bg-[color:var(--hk-accent,var(--fd-primary))]/55"}`}
           initial={{ width: 0 }}
