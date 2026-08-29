@@ -780,7 +780,7 @@ html {
   --fd-card: var(--hk-surface);
   --fd-text: var(--hk-text);
   --fd-muted: var(--hk-muted);
-  --fd-border: color-mix(in srgb, var(--hk-border) 85%, transparent);
+  --fd-border: var(--hk-border);
   --fd-mint: var(--hk-soft);
   --fd-mint-deep: color-mix(in srgb, var(--hk-soft) 80%, var(--hk-accent));
   color: var(--hk-text);
@@ -886,8 +886,10 @@ html[data-hk-theme="dark"] .hackathon-theme.hk-slides-light .fd-app-topbar {
 
 .hackathon-theme[data-hk-theme="dark"] .fd-app-topbar,
 html[data-hk-theme="dark"] .hackathon-theme .fd-app-topbar {
-  border-color: rgba(94, 201, 138, 0.18);
-  background: rgba(21, 28, 24, 0.94);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-color: var(--hk-border);
+  background: var(--hk-surface);
   box-shadow:
     0 2px 8px rgba(0, 0, 0, 0.35),
     0 8px 24px rgba(0, 0, 0, 0.25);
@@ -944,6 +946,36 @@ html[data-hk-theme="dark"] .hackathon-theme .hk-tier-chip {
 /* Footer links stay bright on always-dark legal footer */
 .hackathon-theme .hk-footer-link:hover {
   color: #86efac !important;
+}
+
+/* Hackathon landing — crisp legal footer in light + dark */
+.hackathon-theme .hk-landing-footer {
+  position: relative;
+  z-index: 10;
+  isolation: isolate;
+  border-top: 1px solid var(--hk-border);
+  background: #0c1c12;
+  color: #f4faf6;
+}
+.hackathon-theme[data-hk-theme="dark"] .hk-landing-footer,
+html[data-hk-theme="dark"] .hackathon-theme .hk-landing-footer {
+  background: var(--hk-surface);
+  color: var(--hk-text);
+}
+.hackathon-theme .hk-landing-footer .hk-footer-muted {
+  color: rgba(244, 250, 246, 0.78);
+}
+.hackathon-theme[data-hk-theme="dark"] .hk-landing-footer .hk-footer-muted,
+html[data-hk-theme="dark"] .hackathon-theme .hk-landing-footer .hk-footer-muted {
+  color: var(--hk-muted);
+}
+.hackathon-theme[data-hk-theme="dark"] .hk-landing-footer .hk-footer-link,
+html[data-hk-theme="dark"] .hackathon-theme .hk-landing-footer .hk-footer-link {
+  color: var(--hk-muted);
+}
+.hackathon-theme[data-hk-theme="dark"] .hk-landing-footer .hk-footer-link:hover,
+html[data-hk-theme="dark"] .hackathon-theme .hk-landing-footer .hk-footer-link:hover {
+  color: var(--hk-accent) !important;
 }
 
 /* Autofill stays readable in dark surface */

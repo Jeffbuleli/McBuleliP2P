@@ -5,7 +5,14 @@ import type { Locale } from "@/i18n/locale";
 import { useI18n } from "@/components/i18n-provider";
 import { ProfileIconFlagEn, ProfileIconFlagFr } from "@/components/icons/profile-icons";
 
-export function LangSwitch({ variant = "light" }: { variant?: "light" | "dark" }) {
+export function LangSwitch({
+  variant = "light",
+  opaque = false,
+}: {
+  variant?: "light" | "dark";
+  /** Solid background — no frosted glass (hackathon landing). */
+  opaque?: boolean;
+}) {
   const { locale, setLocale, t } = useI18n();
   const dark = variant === "dark";
   const enActive = locale === "en";
@@ -46,10 +53,14 @@ export function LangSwitch({ variant = "light" }: { variant?: "light" | "dark" }
 
   return (
     <div
-      className={`relative flex items-center gap-0.5 rounded-full p-0.5 shadow-sm backdrop-blur ${
-        dark
-          ? "border border-stone-600/80 bg-stone-900/90"
-          : "border border-[color:var(--fd-border)] bg-white/95"
+      className={`relative flex items-center gap-0.5 rounded-full p-0.5 shadow-sm ${
+        opaque ? "" : "backdrop-blur"
+      } ${
+        opaque
+          ? "border border-[color:var(--hk-border,var(--fd-border))] bg-[color:var(--hk-surface,var(--fd-card))]"
+          : dark
+            ? "border border-stone-600/80 bg-stone-900/90"
+            : "border border-[color:var(--fd-border)] bg-white/95"
       }`}
       role="group"
       aria-label={locale === "fr" ? "Langue" : "Language"}

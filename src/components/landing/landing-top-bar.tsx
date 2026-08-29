@@ -133,7 +133,10 @@ export function LandingTopBar({ authReturnPath = "/app/wallet" }: { authReturnPa
           </nav>
           <div className="flex shrink-0 items-center gap-2">
             <div className="sm:hidden">
-              <LangSwitch variant={hkTheme?.surface === "dark" ? "dark" : "light"} />
+              <LangSwitch
+                variant={hkTheme?.surface === "dark" ? "dark" : "light"}
+                opaque={!!hkTheme}
+              />
             </div>
             {hkTheme && !hkTheme.slidesLight ? (
               <button
@@ -170,7 +173,10 @@ export function LandingTopBar({ authReturnPath = "/app/wallet" }: { authReturnPa
               </a>
             )}
             <div className="hidden sm:block">
-              <LangSwitch variant={hkTheme?.surface === "dark" ? "dark" : "light"} />
+              <LangSwitch
+                variant={hkTheme?.surface === "dark" ? "dark" : "light"}
+                opaque={!!hkTheme}
+              />
             </div>
             <Link
               href={loginHref}

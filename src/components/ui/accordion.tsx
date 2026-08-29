@@ -67,14 +67,14 @@ export function AccordionItem({
   const triggerId = useId();
 
   return (
-    <div className="overflow-hidden rounded-[22px] border border-[color:var(--hk-border,var(--fd-border))] bg-[color:var(--hk-surface,var(--fd-card))] shadow-[0_14px_44px_-28px_var(--hk-shadow,rgba(34,34,34,0.28))]">
+    <div className="overflow-hidden rounded-[22px] border border-[color:var(--hk-border,var(--fd-border))] bg-[color:var(--hk-surface,var(--fd-card))] shadow-sm">
       <button
         type="button"
         id={triggerId}
         aria-expanded={isOpen}
         aria-controls={panelId}
         onClick={() => toggle(itemId)}
-        className="flex w-full items-center gap-3 px-4 py-4 text-left transition hover:bg-[color:var(--hk-soft,var(--fd-mint))]/60 sm:px-5"
+        className="flex w-full items-center gap-3 px-4 py-4 text-left transition hover:bg-[color:var(--hk-soft,var(--fd-mint))] sm:px-5"
       >
         {icon ? (
           <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[color:var(--hk-soft,var(--fd-mint))] text-[color:var(--hk-accent,var(--fd-primary))]">

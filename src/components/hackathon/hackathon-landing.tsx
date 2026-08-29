@@ -1231,7 +1231,12 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
       </Section>
 
       {/* FAQ */}
-      <Section id="faq" eyebrow="FAQ" title={isFr ? "Questions fréquentes" : "FAQ"}>
+      <Section
+        id="faq"
+        className="bg-[color:var(--hk-surface)]"
+        eyebrow="FAQ"
+        title={isFr ? "Questions fréquentes" : "FAQ"}
+      >
         <Accordion>
           {faq.map((item, i) => (
             <AccordionItem key={item.q} id={`faq-${i}`} title={item.q}>
@@ -1307,12 +1312,12 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-white/10 bg-[#0c1c12] text-white">
+      <footer className="hk-landing-footer pb-24 sm:pb-0">
         <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-3">
           <div>
             <p className="text-sm font-semibold">{HACKATHON_LEGAL.legalName}</p>
-            <p className="mt-2 text-sm text-white/65">{HACKATHON_LEGAL.address}</p>
-            <p className="mt-3 text-xs text-white/50">
+            <p className="hk-footer-muted mt-2 text-sm">{HACKATHON_LEGAL.address}</p>
+            <p className="hk-footer-muted mt-3 text-xs">
               RCCM : {HACKATHON_LEGAL.rccm}
               <br />
               ID Nat : {HACKATHON_LEGAL.idNat}
@@ -1320,7 +1325,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
           </div>
           <div>
             <p className="text-sm font-semibold">{isFr ? "Contact" : "Contact"}</p>
-            <ul className="mt-2 space-y-1 text-sm text-white/65">
+            <ul className="hk-footer-muted mt-2 space-y-1 text-sm">
               <li>
                 <a className="hk-footer-link hover:text-[#86efac]" href={`mailto:${SUPPORT_EMAIL}`}>
                   {SUPPORT_EMAIL}
@@ -1331,7 +1336,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
           </div>
           <div>
             <p className="text-sm font-semibold">{isFr ? "Mentions légales" : "Legal"}</p>
-            <ul className="mt-2 space-y-1 text-sm text-white/65">
+            <ul className="hk-footer-muted mt-2 space-y-1 text-sm">
               <li>
                 <Link className="hk-footer-link hover:text-[#86efac]" href="/privacy">
                   {isFr ? "Confidentialité" : "Privacy"}
@@ -1353,7 +1358,7 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                 href={SUPPORT_X}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hk-footer-link text-white/65 hover:text-[#86efac]"
+                className="hk-footer-link hk-footer-muted hover:text-[#86efac]"
               >
                 X / Twitter
               </a>
@@ -1361,14 +1366,14 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
                 href={SUPPORT_WA_PATH}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hk-footer-link text-white/65 hover:text-[#86efac]"
+                className="hk-footer-link hk-footer-muted hover:text-[#86efac]"
               >
                 WhatsApp
               </a>
             </div>
           </div>
         </div>
-        <div className="border-t border-white/10 px-4 py-6 text-center text-xs text-white/50 sm:px-6">
+        <div className="hk-footer-muted border-t border-[color:var(--hk-border)] px-4 py-6 text-center text-xs sm:px-6">
           © {year} {HACKATHON_LEGAL.legalName}. {isFr ? "Tous droits réservés." : "All rights reserved."}
         </div>
       </footer>
