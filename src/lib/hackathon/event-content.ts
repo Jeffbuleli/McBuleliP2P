@@ -106,6 +106,8 @@ export const HACKATHON_HOURS_COMPACT_EN = "8:00 AM - 5:00 PM";
 
 /** Day 1 door open - Africa/Kinshasa (UTC+1). */
 export const HACKATHON_START_AT = "2026-08-28T08:00:00+01:00";
+/** Day 1 close - Africa/Kinshasa (UTC+1). */
+export const HACKATHON_END_AT = "2026-08-28T17:00:00+01:00";
 
 export const HACKATHON_VENUE_SHORT = "Silikin Village";
 

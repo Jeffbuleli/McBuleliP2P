@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { HACKATHON_START_AT } from "@/lib/hackathon/event-content";
+import { HACKATHON_END_AT, HACKATHON_START_AT } from "@/lib/hackathon/event-content";
 
 type Parts = {
   days: number;
@@ -31,6 +31,7 @@ function pad(n: number): string {
 export function HackathonCountdown({
   isFr,
   targetAt = HACKATHON_START_AT,
+  endAt = HACKATHON_END_AT,
   onDark = false,
   className = "",
   /** Digits only (jj h mm ss) - no card, no “Compte à rebours” label. */
@@ -38,11 +39,13 @@ export function HackathonCountdown({
 }: {
   isFr: boolean;
   targetAt?: string;
+  endAt?: string;
   onDark?: boolean;
   className?: string;
   bare?: boolean;
 }) {
   const target = new Date(targetAt).getTime();
+  const end = new Date(endAt).getTime();
   const [parts, setParts] = useState<Parts>(() =>
     diffParts(target, Date.now()),
   );
@@ -59,19 +62,28 @@ export function HackathonCountdown({
   if (!Number.isFinite(target)) return null;
 
   const started = parts.totalMs <= 0;
+  const ended = Number.isFinite(end) && Date.now() >= end;
   const ink = onDark ? "text-white" : "text-[color:var(--hk-accent,var(--fd-primary))]";
   const muted = onDark ? "text-white/65" : "text-[color:var(--hk-muted,var(--fd-muted))]";
   const sep = onDark ? "text-white/40" : "text-[color:var(--hk-border,#C5C5C0)]";
 
-  const aria = started
+  const aria = ended
     ? isFr
-      ? "Hackathon en cours"
-      : "Hackathon in progress"
-    : isFr
-      ? `Compte à rebours ${pad(parts.days)} jours ${pad(parts.hours)} heures ${pad(parts.minutes)} minutes`
-      : `Countdown ${pad(parts.days)} days ${pad(parts.hours)} hours ${pad(parts.minutes)} minutes`;
+      ? "Hackathon terminé"
+      : "Hackathon ended"
+    : started
+      ? isFr
+        ? "Hackathon en cours"
+        : "Hackathon in progress"
+      : isFr
+        ? `Compte à rebours ${pad(parts.days)} jours ${pad(parts.hours)} heures ${pad(parts.minutes)} minutes`
+        : `Countdown ${pad(parts.days)} days ${pad(parts.hours)} hours ${pad(parts.minutes)} minutes`;
 
-  const digits = started ? (
+  const digits = ended ? (
+    <span className={`text-sm font-extrabold tabular-nums ${ink}`}>
+      {isFr ? "Terminé" : "Ended"}
+    </span>
+  ) : started ? (
     <span className={`text-sm font-extrabold tabular-nums ${ink}`}>
       {isFr ? "En cours" : "Live"}
     </span>
