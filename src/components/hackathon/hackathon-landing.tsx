@@ -48,7 +48,6 @@ import {
 import { PORTRAIT_PATH } from "@/lib/launch-campaign";
 import { BRAND_LOGO_256 } from "@/lib/brand-logo";
 import { BUILDERS_TIER_VISUAL } from "@/lib/builders/builders-visual";
-import { HackathonAtmosphere } from "@/components/hackathon/hackathon-atmosphere";
 import { HackathonCountdown } from "@/components/hackathon/hackathon-countdown";
 import { HackathonParticipantForm } from "@/components/hackathon/hackathon-participant-form";
 import { HackathonPartnerForm } from "@/components/hackathon/hackathon-partner-form";
@@ -536,22 +535,8 @@ export function HackathonLanding({ data }: { data: FeaturedHackathonPayload }) {
 
   return (
     <div className="relative overflow-hidden bg-[color:var(--hk-page)] pb-24 text-[color:var(--hk-text)] sm:pb-10">
-      <HackathonAtmosphere variant="page" />
       {/* Hero */}
-      <header className="relative z-10 min-h-[min(48vh,420px)] overflow-hidden border-b border-[color:var(--fd-border)]">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/hackathon/kinshasa-skyline.jpg"
-          alt={isFr ? "Kinshasa" : "Kinshasa"}
-          className="absolute inset-0 h-full w-full object-cover object-[center_40%]"
-        />
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(105deg, rgba(12, 28, 18, 0.9) 0%, rgba(18, 42, 28, 0.75) 50%, rgba(12, 28, 18, 0.55) 100%)",
-          }}
-        />
+      <header className="relative z-10 min-h-[min(48vh,420px)] overflow-hidden border-b border-[color:var(--fd-border)] bg-gradient-to-br from-[#0f2418] via-[#1a3d2a] to-[#163322]">
         <div className="absolute right-3 top-1.5 z-20 sm:right-6 sm:top-2">
           <HackathonCountdown isFr={isFr} onDark bare />
         </div>
