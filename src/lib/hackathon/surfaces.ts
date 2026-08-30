@@ -120,6 +120,15 @@ export const HACKATHON_SURFACES: HackathonSurface[] = [
     audience: "participant",
   },
   {
+    id: "gallery",
+    href: "/hackathon/gallery",
+    labelFr: "Galerie photos",
+    labelEn: "Photo gallery",
+    jobFr: "Photos HD du hackathon (téléchargement)",
+    jobEn: "Hackathon HD photos (download)",
+    audience: "public",
+  },
+  {
     id: "runbook",
     href: "/hackathon/ops/runbook",
     labelFr: "Runbook ops",

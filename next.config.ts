@@ -52,6 +52,11 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
       {
+        source: "/hackathon/galery",
+        destination: "/hackathon/gallery",
+        permanent: true,
+      },
+      {
         source: "/app/deposit/:id",
         destination: "/app/wallet/deposit/:id",
         permanent: true,

@@ -675,6 +675,7 @@ export function hackathonFeaturedMentors(): HackathonFeaturedMentor[] {
 export const HACKATHON_NAV: EventNavItem[] = [
   { id: "register", labelFr: "Participer", labelEn: "Join" },
   { id: "espace", labelFr: "Mon espace", labelEn: "My hub", href: "/hackathon/espace" },
+  { id: "gallery", labelFr: "Galerie", labelEn: "Gallery", href: "/hackathon/gallery" },
   { id: "infos", labelFr: "Infos pratiques", labelEn: "Practical info", href: "/hackathon/infos" },
   { id: "defis", labelFr: "Défis", labelEn: "Challenges" },
   { id: "prix", labelFr: "Prix", labelEn: "Prizes" },
