@@ -1,28 +1,24 @@
 /**
  * Hackathon gallery — Smash public links → Cloudflare R2 (stream, one file at a time).
  *
- * Run on VPS (R2 creds in ops/vps/.env, disk for Playwright cache):
+ * Run on VPS (R2 creds in ops/vps/.env):
  *   cd /opt/mcbuleli
- *   set -a && source ops/vps/.env && set +a
- *   npx playwright install chromium
- *   npx tsx scripts/upload-hackathon-gallery-r2.ts
+ *   node --env-file=ops/vps/.env ./node_modules/.bin/tsx scripts/upload-hackathon-gallery-r2.ts
  *
- *   npx tsx scripts/upload-hackathon-gallery-r2.ts --dry-run
+ *   node --env-file=ops/vps/.env ./node_modules/.bin/tsx scripts/upload-hackathon-gallery-r2.ts --dry-run
  */
 import { createHash } from "node:crypto";
 import { existsSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { loadEnvFile } from "node:process";
-import { chromium, type Response } from "playwright";
 import {
   communityR2Configured,
-  getCommunityR2Config,
   putCommunityObjectToR2,
 } from "../src/lib/community/media-r2";
 
 const SMASH_LINKS = [
-  { batch: "batch-a", url: "https://fromsmash.com/qWDn~O~YFm-ct" },
-  { batch: "batch-b", url: "https://fromsmash.com/Hq8ESr1yiD-ct" },
+  { batch: "batch-a", slug: "qWDn~O~YFm-ct" },
+  { batch: "batch-b", slug: "Hq8ESr1yiD-ct" },
 ] as const;
 
 const R2_PREFIX = "mcbuleli-community/hackathon/gallery/2026";
@@ -31,11 +27,12 @@ const MANIFEST_PATH = path.resolve(
   "src/lib/hackathon/gallery-manifest.ts",
 );
 
-type SmashFile = {
+type SmashApiFile = {
   id: string;
   name: string;
-  url: string;
-  mimeType?: string;
+  ext?: string;
+  size?: number;
+  download?: string;
 };
 
 type GalleryPhoto = {
@@ -68,8 +65,7 @@ function slugify(name: string): string {
     .slice(0, 120);
 }
 
-function guessMime(name: string, fallback?: string): string {
-  if (fallback?.startsWith("image/")) return fallback;
+function guessMime(name: string): string {
   const lower = name.toLowerCase();
   if (lower.endsWith(".png")) return "image/png";
   if (lower.endsWith(".webp")) return "image/webp";
@@ -78,181 +74,111 @@ function guessMime(name: string, fallback?: string): string {
   return "image/jpeg";
 }
 
-function isImageName(name: string): boolean {
-  return /\.(jpe?g|png|webp|heic|gif)$/i.test(name);
+async function createSmashGuestToken(): Promise<string> {
+  const res = await fetch("https://iam.us-west-1.fromsmash.co/account", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Origin: "https://fromsmash.com",
+      Authorization: "true",
+    },
+    body: "{}",
+  });
+  if (!res.ok) {
+    throw new Error(`Smash IAM account failed: HTTP ${res.status}`);
+  }
+  const json = (await res.json()) as {
+    account?: { token?: { token?: string } };
+  };
+  const token = json.account?.token?.token;
+  if (!token) throw new Error("Smash guest token missing in IAM response");
+  return token;
 }
 
-function extractFilesFromJson(obj: unknown, out: SmashFile[], seen: Set<string>): void {
-  if (!obj || typeof obj !== "object") return;
+async function listSmashFiles(slug: string, token: string): Promise<SmashApiFile[]> {
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    Accept: "application/json",
+    Origin: "https://fromsmash.com",
+  };
 
-  if (Array.isArray(obj)) {
-    for (const item of obj) extractFilesFromJson(item, out, seen);
-    return;
+  const targetRes = await fetch(
+    `https://link.fromsmash.co/target/fromsmash.com%2F${encodeURIComponent(slug)}?version=10-2019`,
+    { headers },
+  );
+  if (!targetRes.ok) {
+    throw new Error(`Smash target ${slug}: HTTP ${targetRes.status}`);
   }
 
-  const record = obj as Record<string, unknown>;
-  const name =
-    (typeof record.name === "string" && record.name) ||
-    (typeof record.fileName === "string" && record.fileName) ||
-    (typeof record.filename === "string" && record.filename) ||
-    "";
+  const targetJson = (await targetRes.json()) as {
+    target?: { url?: string };
+  };
+  const previewUrl = targetJson.target?.url;
+  if (!previewUrl) throw new Error(`Smash target URL missing for ${slug}`);
 
-  const urlCandidates = [
-    record.downloadUrl,
-    record.url,
-    record.link,
-    record.signedUrl,
-    record.href,
-  ].filter((v): v is string => typeof v === "string" && v.startsWith("http"));
+  const previewBase = previewUrl.replace(/\/preview$/, "");
+  const files: SmashApiFile[] = [];
+  let next: string | null = null;
+  let page = 0;
 
-  if (name && urlCandidates.length > 0 && isImageName(name)) {
-    const url = urlCandidates[0]!;
-    const id = String(record.id ?? record.fileId ?? record.uuid ?? name);
-    const key = `${id}:${url}`;
-    if (!seen.has(key)) {
-      seen.add(key);
-      out.push({
-        id,
-        name,
-        url,
-        mimeType: typeof record.mimeType === "string" ? record.mimeType : undefined,
-      });
-    }
-  }
+  do {
+    const u = new URL(`${previewBase}/files/preview`);
+    u.searchParams.set("limit", "100");
+    u.searchParams.set("version", "01-2024");
+    if (next) u.searchParams.set("next", next);
 
-  for (const value of Object.values(record)) {
-    extractFilesFromJson(value, out, seen);
-  }
-}
-
-async function scrapeSmashLink(linkUrl: string): Promise<SmashFile[]> {
-  const browser = await chromium.launch({ headless: true });
-  const files: SmashFile[] = [];
-  const seen = new Set<string>();
-  let bearerToken: string | null = null;
-
-  try {
-    const page = await browser.newPage({
-      userAgent:
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-    });
-
-    page.on("request", (req) => {
-      const auth = req.headers()["authorization"];
-      if (auth?.startsWith("Bearer ") && auth.length > 20) {
-        bearerToken = auth.slice(7);
-      }
-    });
-
-    page.on("response", async (response: Response) => {
-      const url = response.url();
-      if (!url.includes("fromsmash.co")) return;
-      if (response.status() !== 200) return;
-      const ct = response.headers()["content-type"] ?? "";
-      if (!ct.includes("json")) return;
-      try {
-        const json = await response.json();
-        extractFilesFromJson(json, files, seen);
-      } catch {
-        /* ignore */
-      }
-    });
-
-    console.log(`[smash] open ${linkUrl}`);
-    await page.goto(linkUrl, { waitUntil: "networkidle", timeout: 180_000 });
-    await page.waitForTimeout(8_000);
-
-    // Some transfers lazy-load file rows after scroll.
-    await page.evaluate(async () => {
-      for (let i = 0; i < 6; i++) {
-        window.scrollTo(0, document.body.scrollHeight);
-        await new Promise((r) => setTimeout(r, 800));
-      }
-    });
-    await page.waitForTimeout(3_000);
-
-    // Anchor hrefs on download buttons.
-    const hrefs = await page.$$eval("a[href]", (anchors) =>
-      anchors
-        .map((a) => ({ href: a.href, text: a.textContent?.trim() ?? "" }))
-        .filter((x) => x.href.startsWith("http")),
-    );
-    for (const { href } of hrefs) {
-      if (!/fromsmash|cloudfront|amazonaws|r2\.cloudflarestorage/i.test(href)) continue;
-      const name = decodeURIComponent(href.split("/").pop()?.split("?")[0] ?? "");
-      if (name && isImageName(name)) {
-        const key = `${name}:${href}`;
-        if (!seen.has(key)) {
-          seen.add(key);
-          files.push({ id: name, name, url: href });
-        }
-      }
+    const res = await fetch(u, { headers });
+    if (!res.ok) {
+      throw new Error(`Smash files ${slug}: HTTP ${res.status}`);
     }
 
-    if (files.length === 0 && bearerToken) {
-      const slug = linkUrl.replace(/\/$/, "").split("/").pop() ?? "";
-      const targetUrls = [
-        `https://link.fromsmash.co/target/${slug}`,
-        `https://transfer.eu-west-3.fromsmash.co/transfers/${slug}`,
-      ];
-      for (const apiUrl of targetUrls) {
-        const res = await fetch(apiUrl, {
-          headers: {
-            Accept: "application/json",
-            Origin: "https://fromsmash.com",
-            Authorization: `Bearer ${bearerToken}`,
-          },
-        });
-        if (!res.ok) continue;
-        const json = await res.json();
-        extractFilesFromJson(json, files, seen);
-      }
-    }
-  } finally {
-    await browser.close();
-  }
+    const json = (await res.json()) as {
+      files?: SmashApiFile[];
+      next?: string | null;
+    };
+    files.push(...(json.files ?? []));
+    next = json.next ?? null;
+    page += 1;
+    if (page > 30) break;
+  } while (next);
 
-  console.log(`[smash] ${linkUrl} → ${files.length} image(s)`);
-  return files;
+  return files.filter((f) => typeof f.download === "string" && f.download.startsWith("http"));
 }
 
 async function uploadFile(args: {
   batch: string;
-  file: SmashFile;
+  file: SmashApiFile;
   index: number;
   dryRun: boolean;
 }): Promise<GalleryPhoto | null> {
   const { batch, file, index, dryRun } = args;
-  const ext = path.extname(file.name) || ".jpg";
-  const base = slugify(path.basename(file.name, ext)) || `photo-${index + 1}`;
-  const hash = createHash("sha1").update(`${batch}:${file.id}:${file.name}`).digest("hex").slice(0, 8);
+  const fileName = file.name || `${file.id}${file.ext ?? ".jpg"}`;
+  const ext = path.extname(fileName) || file.ext || ".jpg";
+  const base = slugify(path.basename(fileName, ext)) || `photo-${index + 1}`;
+  const hash = createHash("sha1").update(`${batch}:${file.id}:${fileName}`).digest("hex").slice(0, 8);
   const objectKey = `${R2_PREFIX}/${batch}/${String(index + 1).padStart(3, "0")}-${base}-${hash}${ext.toLowerCase()}`;
-  const mime = guessMime(file.name, file.mimeType);
+  const mime = guessMime(fileName);
+  const downloadUrl = file.download!;
 
   if (dryRun) {
     return {
       id: `${batch}-${hash}`,
       batch,
-      fileName: file.name,
-      thumbUrl: file.url,
-      hdUrl: file.url,
+      fileName,
+      thumbUrl: downloadUrl,
+      hdUrl: downloadUrl,
     };
   }
 
-  const cfg = getCommunityR2Config();
-  if (!cfg) {
-    throw new Error("COMMUNITY_R2_* not configured");
-  }
-
-  console.log(`[r2] ${file.name} → ${objectKey}`);
-  const res = await fetch(file.url);
+  console.log(`[r2] ${fileName} → ${objectKey}`);
+  const res = await fetch(downloadUrl);
   if (!res.ok) {
-    console.error(`[r2] download failed ${file.name}: HTTP ${res.status}`);
+    console.error(`[download] failed ${fileName}: HTTP ${res.status}`);
     return null;
   }
   const body = new Uint8Array(await res.arrayBuffer());
   if (body.byteLength < 1024) {
-    console.error(`[r2] skip tiny file ${file.name} (${body.byteLength} B)`);
+    console.error(`[download] skip tiny ${fileName} (${body.byteLength} B)`);
     return null;
   }
 
@@ -266,7 +192,7 @@ async function uploadFile(args: {
   return {
     id: `${batch}-${hash}`,
     batch,
-    fileName: file.name,
+    fileName,
     thumbUrl: publicUrl,
     hdUrl: publicUrl,
   };
@@ -298,18 +224,19 @@ async function main(): Promise<void> {
   const dryRun = process.argv.includes("--dry-run");
 
   if (!dryRun && !communityR2Configured()) {
-    console.error("ERROR: COMMUNITY_R2_* missing. Source ops/vps/.env on the VPS.");
+    console.error("ERROR: COMMUNITY_R2_* missing. Use node --env-file=ops/vps/.env on the VPS.");
     process.exit(1);
   }
 
+  const token = await createSmashGuestToken();
   const allPhotos: GalleryPhoto[] = [];
 
-  for (const { batch, url } of SMASH_LINKS) {
-    const files = await scrapeSmashLink(url);
-    if (files.length === 0) {
-      console.warn(`WARN: no images found for ${url}`);
-      continue;
-    }
+  for (const { batch, slug } of SMASH_LINKS) {
+    console.log(`[smash] listing ${slug}…`);
+    const files = await listSmashFiles(slug, token);
+    console.log(`[smash] ${slug} → ${files.length} file(s)`);
+    if (files.length === 0) continue;
+
     for (let i = 0; i < files.length; i++) {
       const photo = await uploadFile({ batch, file: files[i]!, index: i, dryRun });
       if (photo) allPhotos.push(photo);
