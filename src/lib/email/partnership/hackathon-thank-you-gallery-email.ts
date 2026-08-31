@@ -17,6 +17,10 @@ const PHOTO_COUNT = HACKATHON_GALLERY_PHOTOS.length;
 
 export type HackathonThankYouGalleryArgs = {
   firstName?: string;
+  /** Resend Broadcast merge tag */
+  resendAudience?: boolean;
+  /** hackathon = transactional list; broadcast = Resend segment */
+  medium?: "hackathon" | "broadcast";
 };
 
 function esc(s: string): string {
@@ -31,10 +35,13 @@ export function buildHackathonThankYouGalleryEmail(
   args: HackathonThankYouGalleryArgs = {},
 ): { subject: string; html: string; text: string } {
   const base = partnershipPublicBaseUrl();
-  const galleryUrl = `${base}/hackathon/gallery?utm_source=email&utm_medium=hackathon&utm_campaign=thank_you_gallery`;
-  const espaceUrl = `${base}/hackathon/espace?utm_source=email&utm_medium=hackathon&utm_campaign=thank_you_gallery`;
-  const firstName = args.firstName?.trim() || "Builder";
-  const greeting = `Bonjour ${esc(firstName)},`;
+  const medium = args.medium ?? "hackathon";
+  const campaign = "thank_you_gallery";
+  const galleryUrl = `${base}/hackathon/gallery?utm_source=email&utm_medium=${medium}&utm_campaign=${campaign}`;
+  const espaceUrl = `${base}/hackathon/espace?utm_source=email&utm_medium=${medium}&utm_campaign=${campaign}`;
+  const greeting = args.resendAudience
+    ? "Bonjour {{{contact.first_name|ami}}},"
+    : `Bonjour ${esc(args.firstName?.trim() || "Builder")},`;
   const subject = `Merci · galerie photos HD · McBuleli Hackathon Kinshasa`;
 
   const html = `<!DOCTYPE html>

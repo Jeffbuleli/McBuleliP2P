@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-15T13:30:54.170Z",
+  "generatedAt": "2026-08-31T00:53:04.585Z",
   "broadcasts": [
     {
       "slug": "mcbuleli-welcome-fr",
@@ -198,6 +198,12 @@
       "name": "McBuleli · hackathon_kinshasa_quiz (FR)",
       "subject": "10 places gratuites - quiz Kinshasa · McBuleli Hackathon",
       "html": "mcbuleli-hackathon_kinshasa_quiz-fr.html"
+    },
+    {
+      "slug": "mcbuleli-hackathon_thank_you_gallery-fr",
+      "name": "McBuleli · hackathon_thank_you_gallery (FR)",
+      "subject": "Merci · galerie photos HD · McBuleli Hackathon Kinshasa",
+      "html": "mcbuleli-hackathon_thank_you_gallery-fr.html"
     }
   ]
 }
