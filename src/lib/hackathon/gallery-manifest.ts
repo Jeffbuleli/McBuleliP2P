@@ -535,6 +535,706 @@ export const HACKATHON_GALLERY_PHOTOS: HackathonGalleryPhoto[] = [
     "fileName": "SILIKIN9.jpg",
     "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-a/075-SILIKIN9-3405ad94.jpg",
     "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-a/075-SILIKIN9-3405ad94.jpg"
+  },
+  {
+    "id": "batch-b-a34c17b8",
+    "batch": "batch-b",
+    "fileName": "SILIKIN100.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/001-SILIKIN100-a34c17b8.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/001-SILIKIN100-a34c17b8.jpg"
+  },
+  {
+    "id": "batch-b-3d5eea19",
+    "batch": "batch-b",
+    "fileName": "SILIKIN101.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/002-SILIKIN101-3d5eea19.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/002-SILIKIN101-3d5eea19.jpg"
+  },
+  {
+    "id": "batch-b-f6e2a1df",
+    "batch": "batch-b",
+    "fileName": "SILIKIN102.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/003-SILIKIN102-f6e2a1df.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/003-SILIKIN102-f6e2a1df.jpg"
+  },
+  {
+    "id": "batch-b-a9f0038f",
+    "batch": "batch-b",
+    "fileName": "SILIKIN103.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/004-SILIKIN103-a9f0038f.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/004-SILIKIN103-a9f0038f.jpg"
+  },
+  {
+    "id": "batch-b-4485f628",
+    "batch": "batch-b",
+    "fileName": "SILIKIN104.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/005-SILIKIN104-4485f628.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/005-SILIKIN104-4485f628.jpg"
+  },
+  {
+    "id": "batch-b-7ed482cc",
+    "batch": "batch-b",
+    "fileName": "SILIKIN105.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/006-SILIKIN105-7ed482cc.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/006-SILIKIN105-7ed482cc.jpg"
+  },
+  {
+    "id": "batch-b-c6929a54",
+    "batch": "batch-b",
+    "fileName": "SILIKIN106.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/007-SILIKIN106-c6929a54.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/007-SILIKIN106-c6929a54.jpg"
+  },
+  {
+    "id": "batch-b-3c5fc4b9",
+    "batch": "batch-b",
+    "fileName": "SILIKIN107.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/008-SILIKIN107-3c5fc4b9.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/008-SILIKIN107-3c5fc4b9.jpg"
+  },
+  {
+    "id": "batch-b-c91b7a92",
+    "batch": "batch-b",
+    "fileName": "SILIKIN108.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/009-SILIKIN108-c91b7a92.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/009-SILIKIN108-c91b7a92.jpg"
+  },
+  {
+    "id": "batch-b-8eba3b53",
+    "batch": "batch-b",
+    "fileName": "SILIKIN109.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/010-SILIKIN109-8eba3b53.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/010-SILIKIN109-8eba3b53.jpg"
+  },
+  {
+    "id": "batch-b-d77b89bf",
+    "batch": "batch-b",
+    "fileName": "SILIKIN110.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/011-SILIKIN110-d77b89bf.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/011-SILIKIN110-d77b89bf.jpg"
+  },
+  {
+    "id": "batch-b-18bd86c0",
+    "batch": "batch-b",
+    "fileName": "SILIKIN111.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/012-SILIKIN111-18bd86c0.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/012-SILIKIN111-18bd86c0.jpg"
+  },
+  {
+    "id": "batch-b-8d3d09fa",
+    "batch": "batch-b",
+    "fileName": "SILIKIN112.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/013-SILIKIN112-8d3d09fa.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/013-SILIKIN112-8d3d09fa.jpg"
+  },
+  {
+    "id": "batch-b-facc6a15",
+    "batch": "batch-b",
+    "fileName": "SILIKIN113.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/014-SILIKIN113-facc6a15.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/014-SILIKIN113-facc6a15.jpg"
+  },
+  {
+    "id": "batch-b-27b6451c",
+    "batch": "batch-b",
+    "fileName": "SILIKIN114.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/015-SILIKIN114-27b6451c.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/015-SILIKIN114-27b6451c.jpg"
+  },
+  {
+    "id": "batch-b-14d43715",
+    "batch": "batch-b",
+    "fileName": "SILIKIN115.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/016-SILIKIN115-14d43715.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/016-SILIKIN115-14d43715.jpg"
+  },
+  {
+    "id": "batch-b-29864e1d",
+    "batch": "batch-b",
+    "fileName": "SILIKIN116.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/017-SILIKIN116-29864e1d.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/017-SILIKIN116-29864e1d.jpg"
+  },
+  {
+    "id": "batch-b-99de236d",
+    "batch": "batch-b",
+    "fileName": "SILIKIN117.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/018-SILIKIN117-99de236d.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/018-SILIKIN117-99de236d.jpg"
+  },
+  {
+    "id": "batch-b-bc665880",
+    "batch": "batch-b",
+    "fileName": "SILIKIN118.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/019-SILIKIN118-bc665880.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/019-SILIKIN118-bc665880.jpg"
+  },
+  {
+    "id": "batch-b-25483308",
+    "batch": "batch-b",
+    "fileName": "SILIKIN119.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/020-SILIKIN119-25483308.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/020-SILIKIN119-25483308.jpg"
+  },
+  {
+    "id": "batch-b-372c5ba9",
+    "batch": "batch-b",
+    "fileName": "SILIKIN120.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/021-SILIKIN120-372c5ba9.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/021-SILIKIN120-372c5ba9.jpg"
+  },
+  {
+    "id": "batch-b-2c9f81b7",
+    "batch": "batch-b",
+    "fileName": "SILIKIN121.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/022-SILIKIN121-2c9f81b7.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/022-SILIKIN121-2c9f81b7.jpg"
+  },
+  {
+    "id": "batch-b-fbcb6ca8",
+    "batch": "batch-b",
+    "fileName": "SILIKIN122.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/023-SILIKIN122-fbcb6ca8.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/023-SILIKIN122-fbcb6ca8.jpg"
+  },
+  {
+    "id": "batch-b-6f6b1929",
+    "batch": "batch-b",
+    "fileName": "SILIKIN123.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/024-SILIKIN123-6f6b1929.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/024-SILIKIN123-6f6b1929.jpg"
+  },
+  {
+    "id": "batch-b-67a9e011",
+    "batch": "batch-b",
+    "fileName": "SILIKIN124.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/025-SILIKIN124-67a9e011.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/025-SILIKIN124-67a9e011.jpg"
+  },
+  {
+    "id": "batch-b-8b6cd5c5",
+    "batch": "batch-b",
+    "fileName": "SILIKIN125.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/026-SILIKIN125-8b6cd5c5.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/026-SILIKIN125-8b6cd5c5.jpg"
+  },
+  {
+    "id": "batch-b-e97ab3e6",
+    "batch": "batch-b",
+    "fileName": "SILIKIN126.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/027-SILIKIN126-e97ab3e6.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/027-SILIKIN126-e97ab3e6.jpg"
+  },
+  {
+    "id": "batch-b-5463c145",
+    "batch": "batch-b",
+    "fileName": "SILIKIN127.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/028-SILIKIN127-5463c145.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/028-SILIKIN127-5463c145.jpg"
+  },
+  {
+    "id": "batch-b-a6709c61",
+    "batch": "batch-b",
+    "fileName": "SILIKIN128.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/029-SILIKIN128-a6709c61.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/029-SILIKIN128-a6709c61.jpg"
+  },
+  {
+    "id": "batch-b-47a76fb6",
+    "batch": "batch-b",
+    "fileName": "SILIKIN129.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/030-SILIKIN129-47a76fb6.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/030-SILIKIN129-47a76fb6.jpg"
+  },
+  {
+    "id": "batch-b-f77a0bcf",
+    "batch": "batch-b",
+    "fileName": "SILIKIN130.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/031-SILIKIN130-f77a0bcf.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/031-SILIKIN130-f77a0bcf.jpg"
+  },
+  {
+    "id": "batch-b-212bb3cc",
+    "batch": "batch-b",
+    "fileName": "SILIKIN131.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/032-SILIKIN131-212bb3cc.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/032-SILIKIN131-212bb3cc.jpg"
+  },
+  {
+    "id": "batch-b-03343b3e",
+    "batch": "batch-b",
+    "fileName": "SILIKIN132.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/033-SILIKIN132-03343b3e.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/033-SILIKIN132-03343b3e.jpg"
+  },
+  {
+    "id": "batch-b-74613048",
+    "batch": "batch-b",
+    "fileName": "SILIKIN133.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/034-SILIKIN133-74613048.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/034-SILIKIN133-74613048.jpg"
+  },
+  {
+    "id": "batch-b-ad6f63fb",
+    "batch": "batch-b",
+    "fileName": "SILIKIN134.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/035-SILIKIN134-ad6f63fb.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/035-SILIKIN134-ad6f63fb.jpg"
+  },
+  {
+    "id": "batch-b-597c28d7",
+    "batch": "batch-b",
+    "fileName": "SILIKIN135.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/036-SILIKIN135-597c28d7.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/036-SILIKIN135-597c28d7.jpg"
+  },
+  {
+    "id": "batch-b-d6700c46",
+    "batch": "batch-b",
+    "fileName": "SILIKIN136.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/037-SILIKIN136-d6700c46.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/037-SILIKIN136-d6700c46.jpg"
+  },
+  {
+    "id": "batch-b-89a3727e",
+    "batch": "batch-b",
+    "fileName": "SILIKIN137.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/038-SILIKIN137-89a3727e.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/038-SILIKIN137-89a3727e.jpg"
+  },
+  {
+    "id": "batch-b-1f586df1",
+    "batch": "batch-b",
+    "fileName": "SILIKIN138.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/039-SILIKIN138-1f586df1.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/039-SILIKIN138-1f586df1.jpg"
+  },
+  {
+    "id": "batch-b-d61abe0d",
+    "batch": "batch-b",
+    "fileName": "SILIKIN139.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/040-SILIKIN139-d61abe0d.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/040-SILIKIN139-d61abe0d.jpg"
+  },
+  {
+    "id": "batch-b-54659f25",
+    "batch": "batch-b",
+    "fileName": "SILIKIN140.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/041-SILIKIN140-54659f25.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/041-SILIKIN140-54659f25.jpg"
+  },
+  {
+    "id": "batch-b-36976161",
+    "batch": "batch-b",
+    "fileName": "SILIKIN141.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/042-SILIKIN141-36976161.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/042-SILIKIN141-36976161.jpg"
+  },
+  {
+    "id": "batch-b-0c4f9e16",
+    "batch": "batch-b",
+    "fileName": "SILIKIN142.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/043-SILIKIN142-0c4f9e16.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/043-SILIKIN142-0c4f9e16.jpg"
+  },
+  {
+    "id": "batch-b-deb8da43",
+    "batch": "batch-b",
+    "fileName": "SILIKIN143.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/044-SILIKIN143-deb8da43.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/044-SILIKIN143-deb8da43.jpg"
+  },
+  {
+    "id": "batch-b-ed52c3ec",
+    "batch": "batch-b",
+    "fileName": "SILIKIN144.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/045-SILIKIN144-ed52c3ec.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/045-SILIKIN144-ed52c3ec.jpg"
+  },
+  {
+    "id": "batch-b-f7b4c7af",
+    "batch": "batch-b",
+    "fileName": "SILIKIN145.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/046-SILIKIN145-f7b4c7af.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/046-SILIKIN145-f7b4c7af.jpg"
+  },
+  {
+    "id": "batch-b-ca0ccb7b",
+    "batch": "batch-b",
+    "fileName": "SILIKIN146.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/047-SILIKIN146-ca0ccb7b.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/047-SILIKIN146-ca0ccb7b.jpg"
+  },
+  {
+    "id": "batch-b-cadcfe32",
+    "batch": "batch-b",
+    "fileName": "SILIKIN147.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/048-SILIKIN147-cadcfe32.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/048-SILIKIN147-cadcfe32.jpg"
+  },
+  {
+    "id": "batch-b-7d35e78c",
+    "batch": "batch-b",
+    "fileName": "SILIKIN148.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/049-SILIKIN148-7d35e78c.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/049-SILIKIN148-7d35e78c.jpg"
+  },
+  {
+    "id": "batch-b-7f37c756",
+    "batch": "batch-b",
+    "fileName": "SILIKIN149.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/050-SILIKIN149-7f37c756.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/050-SILIKIN149-7f37c756.jpg"
+  },
+  {
+    "id": "batch-b-cfcd8e6a",
+    "batch": "batch-b",
+    "fileName": "SILIKIN150.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/051-SILIKIN150-cfcd8e6a.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/051-SILIKIN150-cfcd8e6a.jpg"
+  },
+  {
+    "id": "batch-b-105ed0ff",
+    "batch": "batch-b",
+    "fileName": "SILIKIN151.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/052-SILIKIN151-105ed0ff.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/052-SILIKIN151-105ed0ff.jpg"
+  },
+  {
+    "id": "batch-b-e2bdf386",
+    "batch": "batch-b",
+    "fileName": "SILIKIN152.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/053-SILIKIN152-e2bdf386.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/053-SILIKIN152-e2bdf386.jpg"
+  },
+  {
+    "id": "batch-b-3a0e3cf0",
+    "batch": "batch-b",
+    "fileName": "SILIKIN153.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/054-SILIKIN153-3a0e3cf0.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/054-SILIKIN153-3a0e3cf0.jpg"
+  },
+  {
+    "id": "batch-b-f3df6839",
+    "batch": "batch-b",
+    "fileName": "SILIKIN154.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/055-SILIKIN154-f3df6839.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/055-SILIKIN154-f3df6839.jpg"
+  },
+  {
+    "id": "batch-b-1d0c34dc",
+    "batch": "batch-b",
+    "fileName": "SILIKIN155.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/056-SILIKIN155-1d0c34dc.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/056-SILIKIN155-1d0c34dc.jpg"
+  },
+  {
+    "id": "batch-b-e6da5ee4",
+    "batch": "batch-b",
+    "fileName": "SILIKIN156.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/057-SILIKIN156-e6da5ee4.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/057-SILIKIN156-e6da5ee4.jpg"
+  },
+  {
+    "id": "batch-b-6482eca2",
+    "batch": "batch-b",
+    "fileName": "SILIKIN157.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/058-SILIKIN157-6482eca2.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/058-SILIKIN157-6482eca2.jpg"
+  },
+  {
+    "id": "batch-b-4229117b",
+    "batch": "batch-b",
+    "fileName": "SILIKIN158.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/059-SILIKIN158-4229117b.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/059-SILIKIN158-4229117b.jpg"
+  },
+  {
+    "id": "batch-b-3aef4938",
+    "batch": "batch-b",
+    "fileName": "SILIKIN159.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/060-SILIKIN159-3aef4938.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/060-SILIKIN159-3aef4938.jpg"
+  },
+  {
+    "id": "batch-b-9b51d250",
+    "batch": "batch-b",
+    "fileName": "SILIKIN160.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/061-SILIKIN160-9b51d250.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/061-SILIKIN160-9b51d250.jpg"
+  },
+  {
+    "id": "batch-b-8da64951",
+    "batch": "batch-b",
+    "fileName": "SILIKIN161.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/062-SILIKIN161-8da64951.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/062-SILIKIN161-8da64951.jpg"
+  },
+  {
+    "id": "batch-b-304e5910",
+    "batch": "batch-b",
+    "fileName": "SILIKIN162.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/063-SILIKIN162-304e5910.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/063-SILIKIN162-304e5910.jpg"
+  },
+  {
+    "id": "batch-b-788768b9",
+    "batch": "batch-b",
+    "fileName": "SILIKIN163.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/064-SILIKIN163-788768b9.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/064-SILIKIN163-788768b9.jpg"
+  },
+  {
+    "id": "batch-b-12d8810d",
+    "batch": "batch-b",
+    "fileName": "SILIKIN164.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/065-SILIKIN164-12d8810d.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/065-SILIKIN164-12d8810d.jpg"
+  },
+  {
+    "id": "batch-b-19348e02",
+    "batch": "batch-b",
+    "fileName": "SILIKIN165.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/066-SILIKIN165-19348e02.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/066-SILIKIN165-19348e02.jpg"
+  },
+  {
+    "id": "batch-b-f76f3f72",
+    "batch": "batch-b",
+    "fileName": "SILIKIN166.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/067-SILIKIN166-f76f3f72.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/067-SILIKIN166-f76f3f72.jpg"
+  },
+  {
+    "id": "batch-b-5aed5cab",
+    "batch": "batch-b",
+    "fileName": "SILIKIN167.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/068-SILIKIN167-5aed5cab.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/068-SILIKIN167-5aed5cab.jpg"
+  },
+  {
+    "id": "batch-b-121da813",
+    "batch": "batch-b",
+    "fileName": "SILIKIN168.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/069-SILIKIN168-121da813.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/069-SILIKIN168-121da813.jpg"
+  },
+  {
+    "id": "batch-b-454b8ef0",
+    "batch": "batch-b",
+    "fileName": "SILIKIN169.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/070-SILIKIN169-454b8ef0.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/070-SILIKIN169-454b8ef0.jpg"
+  },
+  {
+    "id": "batch-b-72dcedc5",
+    "batch": "batch-b",
+    "fileName": "SILIKIN170.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/071-SILIKIN170-72dcedc5.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/071-SILIKIN170-72dcedc5.jpg"
+  },
+  {
+    "id": "batch-b-8d3f47fa",
+    "batch": "batch-b",
+    "fileName": "SILIKIN171.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/072-SILIKIN171-8d3f47fa.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/072-SILIKIN171-8d3f47fa.jpg"
+  },
+  {
+    "id": "batch-b-70145236",
+    "batch": "batch-b",
+    "fileName": "SILIKIN172.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/073-SILIKIN172-70145236.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/073-SILIKIN172-70145236.jpg"
+  },
+  {
+    "id": "batch-b-e148d67c",
+    "batch": "batch-b",
+    "fileName": "SILIKIN173.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/074-SILIKIN173-e148d67c.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/074-SILIKIN173-e148d67c.jpg"
+  },
+  {
+    "id": "batch-b-46353196",
+    "batch": "batch-b",
+    "fileName": "SILIKIN174.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/075-SILIKIN174-46353196.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/075-SILIKIN174-46353196.jpg"
+  },
+  {
+    "id": "batch-b-358569f6",
+    "batch": "batch-b",
+    "fileName": "SILIKIN175.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/076-SILIKIN175-358569f6.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/076-SILIKIN175-358569f6.jpg"
+  },
+  {
+    "id": "batch-b-7b81bda8",
+    "batch": "batch-b",
+    "fileName": "SILIKIN76.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/077-SILIKIN76-7b81bda8.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/077-SILIKIN76-7b81bda8.jpg"
+  },
+  {
+    "id": "batch-b-2c4994ea",
+    "batch": "batch-b",
+    "fileName": "SILIKIN77.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/078-SILIKIN77-2c4994ea.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/078-SILIKIN77-2c4994ea.jpg"
+  },
+  {
+    "id": "batch-b-d984daae",
+    "batch": "batch-b",
+    "fileName": "SILIKIN78.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/079-SILIKIN78-d984daae.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/079-SILIKIN78-d984daae.jpg"
+  },
+  {
+    "id": "batch-b-cfe20c6a",
+    "batch": "batch-b",
+    "fileName": "SILIKIN79.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/080-SILIKIN79-cfe20c6a.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/080-SILIKIN79-cfe20c6a.jpg"
+  },
+  {
+    "id": "batch-b-6b3741d9",
+    "batch": "batch-b",
+    "fileName": "SILIKIN80.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/081-SILIKIN80-6b3741d9.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/081-SILIKIN80-6b3741d9.jpg"
+  },
+  {
+    "id": "batch-b-176fad1a",
+    "batch": "batch-b",
+    "fileName": "SILIKIN81.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/082-SILIKIN81-176fad1a.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/082-SILIKIN81-176fad1a.jpg"
+  },
+  {
+    "id": "batch-b-df9f3e94",
+    "batch": "batch-b",
+    "fileName": "SILIKIN82.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/083-SILIKIN82-df9f3e94.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/083-SILIKIN82-df9f3e94.jpg"
+  },
+  {
+    "id": "batch-b-63842fd5",
+    "batch": "batch-b",
+    "fileName": "SILIKIN83.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/084-SILIKIN83-63842fd5.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/084-SILIKIN83-63842fd5.jpg"
+  },
+  {
+    "id": "batch-b-05d5bbb1",
+    "batch": "batch-b",
+    "fileName": "SILIKIN84.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/085-SILIKIN84-05d5bbb1.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/085-SILIKIN84-05d5bbb1.jpg"
+  },
+  {
+    "id": "batch-b-f8b8e515",
+    "batch": "batch-b",
+    "fileName": "SILIKIN85.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/086-SILIKIN85-f8b8e515.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/086-SILIKIN85-f8b8e515.jpg"
+  },
+  {
+    "id": "batch-b-edc528dc",
+    "batch": "batch-b",
+    "fileName": "SILIKIN86.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/087-SILIKIN86-edc528dc.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/087-SILIKIN86-edc528dc.jpg"
+  },
+  {
+    "id": "batch-b-e01a806f",
+    "batch": "batch-b",
+    "fileName": "SILIKIN87.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/088-SILIKIN87-e01a806f.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/088-SILIKIN87-e01a806f.jpg"
+  },
+  {
+    "id": "batch-b-c41d4771",
+    "batch": "batch-b",
+    "fileName": "SILIKIN88.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/089-SILIKIN88-c41d4771.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/089-SILIKIN88-c41d4771.jpg"
+  },
+  {
+    "id": "batch-b-015b5146",
+    "batch": "batch-b",
+    "fileName": "SILIKIN89.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/090-SILIKIN89-015b5146.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/090-SILIKIN89-015b5146.jpg"
+  },
+  {
+    "id": "batch-b-6c59540b",
+    "batch": "batch-b",
+    "fileName": "SILIKIN90.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/091-SILIKIN90-6c59540b.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/091-SILIKIN90-6c59540b.jpg"
+  },
+  {
+    "id": "batch-b-2fc165b4",
+    "batch": "batch-b",
+    "fileName": "SILIKIN91.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/092-SILIKIN91-2fc165b4.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/092-SILIKIN91-2fc165b4.jpg"
+  },
+  {
+    "id": "batch-b-dae53cd3",
+    "batch": "batch-b",
+    "fileName": "SILIKIN92.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/093-SILIKIN92-dae53cd3.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/093-SILIKIN92-dae53cd3.jpg"
+  },
+  {
+    "id": "batch-b-435bbce4",
+    "batch": "batch-b",
+    "fileName": "SILIKIN93.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/094-SILIKIN93-435bbce4.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/094-SILIKIN93-435bbce4.jpg"
+  },
+  {
+    "id": "batch-b-47eebf12",
+    "batch": "batch-b",
+    "fileName": "SILIKIN94.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/095-SILIKIN94-47eebf12.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/095-SILIKIN94-47eebf12.jpg"
+  },
+  {
+    "id": "batch-b-21d8d114",
+    "batch": "batch-b",
+    "fileName": "SILIKIN95.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/096-SILIKIN95-21d8d114.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/096-SILIKIN95-21d8d114.jpg"
+  },
+  {
+    "id": "batch-b-817f02b3",
+    "batch": "batch-b",
+    "fileName": "SILIKIN96.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/097-SILIKIN96-817f02b3.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/097-SILIKIN96-817f02b3.jpg"
+  },
+  {
+    "id": "batch-b-7698e6cc",
+    "batch": "batch-b",
+    "fileName": "SILIKIN97.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/098-SILIKIN97-7698e6cc.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/098-SILIKIN97-7698e6cc.jpg"
+  },
+  {
+    "id": "batch-b-d2dcf7b1",
+    "batch": "batch-b",
+    "fileName": "SILIKIN98.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/099-SILIKIN98-d2dcf7b1.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/099-SILIKIN98-d2dcf7b1.jpg"
+  },
+  {
+    "id": "batch-b-a21790ad",
+    "batch": "batch-b",
+    "fileName": "SILIKIN99.JPG",
+    "thumbUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/100-SILIKIN99-a21790ad.jpg",
+    "hdUrl": "https://pub-1c80c0f78d1d4fb2bbf1179753cdb92c.r2.dev/mcbuleli-community/hackathon/gallery/2026/batch-b/100-SILIKIN99-a21790ad.jpg"
   }
 ];
 
