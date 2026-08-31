@@ -77,11 +77,14 @@ function guessMime(name: string): string {
   return "image/jpeg";
 }
 
-async function fetchWithRetry(url: string, attempts = 4): Promise<Response> {
+async function fetchWithRetry(url: string, init?: RequestInit, attempts = 4): Promise<Response> {
   let lastError: unknown;
   for (let i = 0; i < attempts; i++) {
     try {
-      const res = await fetch(url, { signal: AbortSignal.timeout(180_000) });
+      const res = await fetch(url, {
+        ...init,
+        signal: AbortSignal.timeout(180_000),
+      });
       if (res.ok) return res;
       if (res.status >= 500 && i < attempts - 1) {
         await new Promise((r) => setTimeout(r, 1500 * (i + 1)));
@@ -100,7 +103,7 @@ async function fetchWithRetry(url: string, attempts = 4): Promise<Response> {
 }
 
 async function createSmashGuestToken(): Promise<string> {
-  const res = await fetch("https://iam.us-west-1.fromsmash.co/account", {
+  const res = await fetchWithRetry("https://iam.us-west-1.fromsmash.co/account", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -127,7 +130,7 @@ async function listSmashFiles(slug: string, token: string): Promise<SmashApiFile
     Origin: "https://fromsmash.com",
   };
 
-  const targetRes = await fetch(
+  const targetRes = await fetchWithRetry(
     `https://link.fromsmash.co/target/fromsmash.com%2F${encodeURIComponent(slug)}?version=10-2019`,
     { headers },
   );
@@ -152,7 +155,7 @@ async function listSmashFiles(slug: string, token: string): Promise<SmashApiFile
     u.searchParams.set("version", "01-2024");
     if (next) u.searchParams.set("next", next);
 
-    const res = await fetch(u, { headers });
+    const res = await fetchWithRetry(u.toString(), { headers });
     if (!res.ok) {
       throw new Error(`Smash files ${slug}: HTTP ${res.status}`);
     }
@@ -258,16 +261,30 @@ export const HACKATHON_GALLERY_READY = HACKATHON_GALLERY_PHOTOS.length > 0;
 async function main(): Promise<void> {
   loadEnv();
   const dryRun = process.argv.includes("--dry-run");
+  const batchFilter = process.argv.find((a) => a.startsWith("--batch="))?.slice(8);
 
   if (!dryRun && !communityR2Configured()) {
     console.error("ERROR: COMMUNITY_R2_* missing. Use node --env-file=ops/vps/.env on the VPS.");
     process.exit(1);
   }
 
-  const token = await createSmashGuestToken();
-  const allPhotos: GalleryPhoto[] = [];
+  let allPhotos: GalleryPhoto[] = [];
+  if (existsSync(MANIFEST_PATH)) {
+    try {
+      const mod = await import("../src/lib/hackathon/gallery-manifest");
+      allPhotos = [...mod.HACKATHON_GALLERY_PHOTOS];
+    } catch {
+      /* fresh run */
+    }
+  }
 
-  for (const { batch, slug } of SMASH_LINKS) {
+  const token = await createSmashGuestToken();
+  const links = batchFilter
+    ? SMASH_LINKS.filter((l) => l.batch === batchFilter)
+    : SMASH_LINKS;
+
+  for (const { batch, slug } of links) {
+    allPhotos = allPhotos.filter((p) => p.batch !== batch);
     console.log(`[smash] listing ${slug}…`);
     const files = await listSmashFiles(slug, token);
     console.log(`[smash] ${slug} → ${files.length} file(s)`);
