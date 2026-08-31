@@ -13,7 +13,10 @@ import path from "node:path";
 import { loadEnvFile } from "node:process";
 import {
   communityR2Configured,
+  communityMediaPublicUrl,
+  getCommunityR2Config,
   putCommunityObjectToR2,
+  verifyCommunityR2Object,
 } from "../src/lib/community/media-r2";
 
 const SMASH_LINKS = [
@@ -72,6 +75,28 @@ function guessMime(name: string): string {
   if (lower.endsWith(".gif")) return "image/gif";
   if (lower.endsWith(".heic")) return "image/heic";
   return "image/jpeg";
+}
+
+async function fetchWithRetry(url: string, attempts = 4): Promise<Response> {
+  let lastError: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(180_000) });
+      if (res.ok) return res;
+      if (res.status >= 500 && i < attempts - 1) {
+        await new Promise((r) => setTimeout(r, 1500 * (i + 1)));
+        continue;
+      }
+      return res;
+    } catch (e) {
+      lastError = e;
+      if (i < attempts - 1) {
+        await new Promise((r) => setTimeout(r, 2000 * (i + 1)));
+        continue;
+      }
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error(String(lastError));
 }
 
 async function createSmashGuestToken(): Promise<string> {
@@ -159,10 +184,11 @@ async function uploadFile(args: {
   const objectKey = `${R2_PREFIX}/${batch}/${String(index + 1).padStart(3, "0")}-${base}-${hash}${ext.toLowerCase()}`;
   const mime = guessMime(fileName);
   const downloadUrl = file.download!;
+  const photoId = `${batch}-${hash}`;
 
   if (dryRun) {
     return {
-      id: `${batch}-${hash}`,
+      id: photoId,
       batch,
       fileName,
       thumbUrl: downloadUrl,
@@ -170,8 +196,18 @@ async function uploadFile(args: {
     };
   }
 
+  const cfg = getCommunityR2Config();
+  if (!cfg) return null;
+
+  const exists = await verifyCommunityR2Object({ objectKey, minSizeBytes: 1024 });
+  if (exists) {
+    const publicUrl = communityMediaPublicUrl(cfg, objectKey);
+    console.log(`[r2] skip existing ${fileName}`);
+    return { id: photoId, batch, fileName, thumbUrl: publicUrl, hdUrl: publicUrl };
+  }
+
   console.log(`[r2] ${fileName} → ${objectKey}`);
-  const res = await fetch(downloadUrl);
+  const res = await fetchWithRetry(downloadUrl);
   if (!res.ok) {
     console.error(`[download] failed ${fileName}: HTTP ${res.status}`);
     return null;
@@ -190,7 +226,7 @@ async function uploadFile(args: {
   if (!publicUrl) return null;
 
   return {
-    id: `${batch}-${hash}`,
+    id: photoId,
     batch,
     fileName,
     thumbUrl: publicUrl,
@@ -241,6 +277,7 @@ async function main(): Promise<void> {
       const photo = await uploadFile({ batch, file: files[i]!, index: i, dryRun });
       if (photo) allPhotos.push(photo);
     }
+    writeManifest(allPhotos);
   }
 
   if (allPhotos.length === 0) {
