@@ -50,12 +50,12 @@ function LoginForm() {
       </div>
       <h1 className="text-xl font-semibold text-ng-text">Connexion</h1>
       <p className="mt-2 text-sm text-ng-muted">
-        Acces reserve aux operateurs ONG.
+        Accès réservé aux opérateurs ONG accrédités.
       </p>
 
       <form onSubmit={submit} className="mt-8 space-y-4">
         <label className="block text-xs font-semibold text-ng-muted">
-          Code operateur
+          Code opérateur
           <input
             type="password"
             value={token}

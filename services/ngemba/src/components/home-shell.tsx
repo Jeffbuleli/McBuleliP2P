@@ -163,12 +163,29 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
         </Link>
 
         <div className="grid w-full grid-cols-2 gap-3">
-          <Tile icon={<IconBook className="size-5" />} label={t.prevent} />
-          <Tile icon={<IconSpark className="size-5" />} label={t.resources} />
+          <Tile
+            icon={<IconBook className="size-5" />}
+            label={t.prevent}
+            href={`/prevent?lang=${locale}`}
+          />
+          <Tile
+            icon={<IconSpark className="size-5" />}
+            label={t.resources}
+            href={`/resources?lang=${locale}`}
+          />
         </div>
 
         <p className="max-w-[16rem] text-center text-sm font-medium leading-snug text-ng-primary">
           {t.line}
+        </p>
+        <p className="text-center text-[11px] text-ng-muted">
+          <Link href={`/legal/confidentialite?lang=${locale}`} className="underline">
+            Confidentialité
+          </Link>
+          {" · "}
+          <Link href={`/legal/cgu?lang=${locale}`} className="underline">
+            CGU
+          </Link>
         </p>
       </section>
     </main>

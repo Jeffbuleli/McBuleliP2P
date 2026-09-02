@@ -5,29 +5,34 @@
 | S1-S4 + deploy live | ✅ |
 | Localisation nationale + i18n | ✅ |
 | **Bloc A** (auth, SSE, dossier, email) | ✅ |
-| **Bloc B** (ONG pilote, juridique, formation) | ⏳ en cours |
-| Phase 2 (medias, chat, ressources) | ⏳ apres Bloc B |
+| **Bloc B** (pilote JGL, legal, formation) | ✅ technique · signatures ⏳ |
+| Phase 2 (medias, chat, ressources) | ⏳ prochaine |
 
 Live : https://ngemba.cyberalert-rdc.org
 
-## Bloc A — termine
+## Bloc B — termine (technique)
 
-- Ops : `/ops/login` + tokens par role (`NGEMBA_OPS_TOKEN_ADMIN`, etc.)
-- Email : Resend McBuleli → **hi@mcbuleli.org** (verification) · BCC **ceo@mcbuleli.org**
-- From : `McBuleli NGEMBA <noreply@mcbuleli.org>`
-- Logo NGEMBA : app + emails
-- Dashboards differencies : admin / ONG / securite / partenaire (lecture seule)
-- Securite v1 : rate limit, CSP, headers, blocage chemins sensibles
+- Pilote JGL : verification via **hi@mcbuleli.org**
+- Pages : `/resources` · `/prevent` · `/legal/confidentialite` · `/legal/cgu` · `/legal/charte-ong`
+- Docs : accord pilote · formation 30 min · smoke `ops/vps/bloc-b-smoke.sh`
+- Token ONG : actif pour test McBuleli (pas encore transmis a JGL)
 
-## Bloc B — pilote JGL AFRICA
+## Reste humain avant go JGL
 
-- **Justicia Great Lakes (JGL AFRICA)** — Me Arjoule Karinda
-- **En verification McBuleli** — pas d'acces ops direct ; alertes via **hi@mcbuleli.org**
-- Apres validation : token `NGEMBA_OPS_TOKEN_NGO` + acces dashboard ONG
-- Voir [09-BLOC-B.md](./09-BLOC-B.md)
+1. Signer [12-ACCORD-PILOTE-JGL.md](./12-ACCORD-PILOTE-JGL.md)
+2. Relecture avocat RDC des pages legal
+3. Formation JGL ([13-FORMATION-OPS-JGL.md](./13-FORMATION-OPS-JGL.md))
+4. Activer `NGEMBA_OPS_PILOT_VERIFIED=true` + email Me Arjoule
+5. Premiere alerte citoyenne reelle orientee par JGL
 
 ## Test local
 
 ```bash
 cd services/ngemba && npm run dev
+```
+
+## Smoke prod
+
+```bash
+bash services/ngemba/ops/vps/bloc-b-smoke.sh   # sur VPS
 ```
