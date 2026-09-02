@@ -51,10 +51,15 @@ function pilotPartnerLine(): string | undefined {
   const name = readEnvKey("NGEMBA_OPS_PARTNER_NAME");
   const contact = readEnvKey("NGEMBA_OPS_PARTNER_CONTACT");
   if (!name) return undefined;
-  if (contact) {
-    return `Partenaire pilote : ${name} — ${contact} (verification McBuleli en cours)`;
+  const referent = contact ? ` — ${contact}` : "";
+  if (pilotVerified()) {
+    return `Partenaire ONG pilote : ${name}${referent}.`;
   }
-  return `Partenaire pilote : ${name} (verification McBuleli en cours)`;
+  return (
+    `Partenaire ONG pilote prévu : ${name}${referent}. ` +
+    `L'accès opérateur JGL n'est pas encore activé ; ` +
+    `cette alerte vous est transmise sur hi@mcbuleli.org pour vérification par McBuleli.`
+  );
 }
 
 export async function notifyNewAlert(session: AlertSessionRecord) {
@@ -132,7 +137,9 @@ async function sendOpsEmail(session: AlertSessionRecord) {
     title: "Nouvelle alerte citoyenne",
     preheader: `${urgency} — ${category} — ${place}`,
     greeting: "Bonjour,",
-    body: "Une personne a signale une situation via NGEMBA. Merci de consulter le dossier et de prendre en charge si necessaire.",
+    body:
+      "Une personne a signalé une situation via NGEMBA. " +
+      "Merci de consulter le dossier et de la prendre en charge si nécessaire.",
     messageExcerpt: message,
     summary: session.aiSummary,
     actionUrl: link,

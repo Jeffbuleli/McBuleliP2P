@@ -72,7 +72,7 @@ export function renderOpsAlertEmail(args: OpsAlertEmailArgs): {
                   </td>
                   <td style="vertical-align:middle;text-align:left;">
                     <p style="margin:0;font-size:20px;font-weight:800;color:${B.primary};letter-spacing:-0.02em;">NGEMBA</p>
-                    <p style="margin:2px 0 0;font-size:11px;color:${B.muted};">Securite · Paix citoyenne</p>
+                    <p style="margin:2px 0 0;font-size:11px;color:${B.muted};">Sécurité · Paix citoyenne</p>
                   </td>
                 </tr>
               </table>
@@ -99,7 +99,7 @@ export function renderOpsAlertEmail(args: OpsAlertEmailArgs): {
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:${B.white};border:1px solid ${B.border};border-radius:16px;overflow:hidden;">
                 <tr>
                   <td style="padding:14px 18px 6px;background:${B.mint};border-bottom:1px solid ${B.border};">
-                    <p style="margin:0;font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:${B.primary};">Details alerte</p>
+                    <p style="margin:0;font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:${B.primary};">Détails de l'alerte</p>
                   </td>
                 </tr>
                 <tr>
@@ -140,7 +140,7 @@ export function renderOpsAlertEmail(args: OpsAlertEmailArgs): {
               <p style="margin:0 0 8px;font-size:12px;color:${B.muted};">
                 Support : <a href="mailto:${NGEMBA_EMAIL_ASSETS.supportEmail}" style="color:${B.primary};text-decoration:none;font-weight:600;">${NGEMBA_EMAIL_ASSETS.supportEmail}</a>
               </p>
-              <p style="margin:0;font-size:11px;color:${B.muted};">© ${year} McBuleli · Tous droits reserves.</p>
+              <p style="margin:0;font-size:11px;color:${B.muted};">© ${year} McBuleli · Tous droits réservés.</p>
             </td>
           </tr>
         </table>
