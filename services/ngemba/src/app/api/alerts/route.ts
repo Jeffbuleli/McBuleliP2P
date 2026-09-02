@@ -33,6 +33,7 @@ const createBody = z.object({
   commune: z.string().nullable().optional(),
   locationLabel: z.string().nullable().optional(),
   locationSource: z.string().nullable().optional(),
+  discrete: z.boolean().optional(),
 });
 
 export async function POST(req: Request) {
@@ -130,6 +131,7 @@ export async function POST(req: Request) {
     aiMode,
     status: "active",
     citizenToken,
+    discreteMode: Boolean(body.discrete),
   });
 
   await notifyNewAlert(session);

@@ -56,6 +56,11 @@ type Copy = {
   chatPlaceholder: string;
   chatSend: string;
   chatEmpty: string;
+  discrete: string;
+  discreteHint: string;
+  discreteSend: string;
+  discreteSafety: string;
+  discreteTap: string;
 };
 
 const baseFr: Copy = {
@@ -103,6 +108,11 @@ const baseFr: Copy = {
   chatPlaceholder: "Votre message...",
   chatSend: "Envoyer",
   chatEmpty: "Un opérateur vous répondra ici si disponible.",
+  discrete: "Mode discret",
+  discreteHint: "Écran sobre · vibration · pas de flash rouge",
+  discreteSend: "Envoyer discrètement",
+  discreteSafety: "Si quelqu'un surveille votre écran, écrivez peu de mots.",
+  discreteTap: "Triple-tap sur le logo NGEMBA ouvre le mode discret.",
 };
 
 export const messages: Record<Locale, Copy> = {
@@ -152,6 +162,11 @@ export const messages: Record<Locale, Copy> = {
     chatPlaceholder: "Your message...",
     chatSend: "Send",
     chatEmpty: "An operator will reply here when available.",
+    discrete: "Discrete mode",
+    discreteHint: "Subtle screen · vibration · no red flash",
+    discreteSend: "Send discreetly",
+    discreteSafety: "If someone is watching your screen, use few words.",
+    discreteTap: "Triple-tap the NGEMBA logo opens discrete mode.",
   },
   ln: {
     ...baseFr,

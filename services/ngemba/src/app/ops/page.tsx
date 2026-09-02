@@ -27,6 +27,7 @@ type Row = {
   assignedTo: string | null;
   createdAt: string;
   source: string;
+  discreteMode?: boolean;
 };
 
 function badge(u: string) {
@@ -190,6 +191,11 @@ export default function OpsPage() {
                 <span className="text-xs text-ng-muted">
                   {statusLabelFr(r.status)}
                 </span>
+                {r.discreteMode ? (
+                  <span className="rounded-full bg-[#2a1524] px-2.5 py-0.5 text-[11px] font-semibold text-[#c9a0bc]">
+                    Discret
+                  </span>
+                ) : null}
               </div>
               <p className="mt-2 text-sm text-ng-text">
                 {preview(r.message)}

@@ -19,6 +19,7 @@ import {
   messages,
   type Locale,
 } from "@/lib/i18n";
+import { useTripleTap } from "@/lib/discrete/triple-tap";
 
 function Tile({
   icon,
@@ -71,6 +72,9 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
     initialLocale && isLocale(initialLocale) ? initialLocale : "fr",
   );
   const t = messages[locale];
+  const onLogoTap = useTripleTap(() => {
+    router.push(`/discrete?lang=${locale}`);
+  });
 
   useEffect(() => {
     if (initialLocale && isLocale(initialLocale)) setLocale(initialLocale);
@@ -90,13 +94,21 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
 
       <header className="relative z-10 flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
-          <img
-            src="/brand/ngemba-logo.png"
-            alt="NGEMBA"
-            width={48}
-            height={48}
-            className="size-12 rounded-xl object-contain"
-          />
+          <button
+            type="button"
+            onClick={onLogoTap}
+            className="rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-ng-primary"
+            aria-label={t.discrete}
+            title={t.discreteTap}
+          >
+            <img
+              src="/brand/ngemba-logo.png"
+              alt="NGEMBA"
+              width={48}
+              height={48}
+              className="size-12 rounded-xl object-contain"
+            />
+          </button>
           <div>
             <p className="text-[11px] font-semibold tracking-[0.2em] text-ng-primary uppercase">
               NGEMBA
@@ -179,6 +191,10 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
           {t.line}
         </p>
         <p className="text-center text-[11px] text-ng-muted">
+          <Link href={`/discrete?lang=${locale}`} className="underline">
+            {t.discrete}
+          </Link>
+          {" · "}
           <Link href={`/me?lang=${locale}`} className="underline">
             {t.myAlerts}
           </Link>

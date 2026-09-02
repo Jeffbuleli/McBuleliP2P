@@ -46,6 +46,7 @@ type Session = {
   createdAt: string;
   orientedAt: string | null;
   closedAt: string | null;
+  discreteMode?: boolean;
   media?: Array<{
     id: string;
     kind: string;
@@ -162,6 +163,11 @@ export function OpsDossierView({ id }: { id: string }) {
           <span className="rounded-full bg-ng-primary-muted px-2.5 py-0.5 text-[11px] font-semibold text-ng-primary">
             {statusLabelFr(session.status)}
           </span>
+          {session.discreteMode ? (
+            <span className="rounded-full bg-[#2a1524] px-2.5 py-0.5 text-[11px] font-semibold text-[#c9a0bc]">
+              Mode discret
+            </span>
+          ) : null}
         </div>
       </header>
 

@@ -13,6 +13,12 @@ export const metadata: Metadata = {
   title: "NGEMBA - Sécurité et paix",
   description: "Alertez - McBuleli IA comprend - orientation humaine.",
   applicationName: "NGEMBA",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: "NGEMBA",
+    statusBarStyle: "black-translucent",
+  },
 };
 
 export const viewport: Viewport = {

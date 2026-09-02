@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { IconShield } from "@/components/icons";
 import { VoiceButton } from "@/components/voice-button";
+import { vibrateDiscreteConfirm } from "@/lib/discrete/vibrate";
 import { isLocale, messages, type Locale } from "@/lib/i18n";
 
 type Step = "tell" | "place";
@@ -19,9 +20,11 @@ type ProvinceOption = {
 export function SosFlow({
   initialLocale,
   source = "sos_button",
+  discrete = false,
 }: {
   initialLocale: string;
   source?: Source;
+  discrete?: boolean;
 }) {
   const router = useRouter();
   const locale: Locale = isLocale(initialLocale) ? initialLocale : "fr";
@@ -53,6 +56,12 @@ export function SosFlow({
       .catch(() => setProvinces([]));
   }, []);
 
+  useEffect(() => {
+    if (!discrete) return;
+    document.body.classList.add("ng-discrete");
+    return () => document.body.classList.remove("ng-discrete");
+  }, [discrete]);
+
   async function submit(opts: {
     shareLocation?: boolean;
     lat?: number;
@@ -76,6 +85,7 @@ export function SosFlow({
           lng: opts.lng ?? null,
           provinceId: opts.provinceId || null,
           cityId: opts.cityId || null,
+          discrete,
         }),
       });
       const data = await res.json();
@@ -84,7 +94,8 @@ export function SosFlow({
         setBusy(false);
         return;
       }
-      router.push(`/session/${data.id}?lang=${locale}`);
+      if (discrete) vibrateDiscreteConfirm();
+      router.push(`/session/${data.id}?lang=${locale}${discrete ? "&discrete=1" : ""}`);
     } catch {
       setError(t.errorGeneric);
       setBusy(false);
@@ -133,23 +144,33 @@ export function SosFlow({
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col px-4 pb-8 pt-5">
+    <main
+      className={`mx-auto flex min-h-dvh max-w-md flex-col px-4 pb-8 pt-5 ${discrete ? "ng-discrete-surface" : ""}`}
+    >
       <header className="flex items-center justify-between gap-3">
         <Link
           href={`/?lang=${locale}`}
-          className="text-sm font-medium text-ng-muted"
+          className={`text-sm font-medium ${discrete ? "ng-discrete-muted" : "text-ng-muted"}`}
         >
           {t.back}
         </Link>
-        <div className="inline-flex items-center gap-1.5 text-ng-urgent">
+        <div
+          className={`inline-flex items-center gap-1.5 ${discrete ? "text-[#c9a0bc]" : "text-ng-urgent"}`}
+        >
           <IconShield className="size-4" />
           <span className="text-xs font-bold tracking-wide">
-            {isWitness ? t.witness : t.sos}
+            {discrete ? t.discrete : isWitness ? t.witness : t.sos}
           </span>
         </div>
       </header>
 
-      {isWitness ? (
+      {discrete ? (
+        <p className="mt-4 rounded-xl bg-[#88236433] px-3 py-2 text-xs font-medium leading-relaxed text-[#e8d4e3]">
+          {t.discreteSafety}
+        </p>
+      ) : null}
+
+      {isWitness && !discrete ? (
         <p className="mt-4 rounded-xl bg-ng-secondary-muted px-3 py-2 text-xs font-medium leading-relaxed text-ng-secondary">
           {t.witnessSafety}
         </p>
@@ -157,15 +178,21 @@ export function SosFlow({
 
       {step === "tell" ? (
         <section className="mt-6 flex flex-1 flex-col gap-4">
-          <h1 className="text-xl font-semibold text-ng-primary">
-            {isWitness ? t.witnessTell : t.tell}
+          <h1
+            className={`text-xl font-semibold ${discrete ? "text-[#e8d4e3]" : "text-ng-primary"}`}
+          >
+            {discrete ? t.discrete : isWitness ? t.witnessTell : t.tell}
           </h1>
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder={t.placeholder}
-            rows={6}
-            className="w-full resize-none rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-4 text-base leading-relaxed text-ng-text outline-none ring-ng-primary focus:ring-2"
+            rows={discrete ? 4 : 6}
+            className={`w-full resize-none rounded-2xl border p-4 text-base leading-relaxed outline-none focus:ring-2 ${
+              discrete
+                ? "ng-discrete-surface border-white/10 text-[#f5f0f4] ring-[#882364]"
+                : "border-[var(--ng-border)] bg-ng-surface text-ng-text ring-ng-primary"
+            }`}
             autoFocus
           />
           <VoiceButton
@@ -183,10 +210,12 @@ export function SosFlow({
           <button
             type="button"
             disabled={!canSend || busy}
-            onClick={() => setStep("place")}
-            className="mt-auto min-h-12 rounded-2xl bg-ng-urgent px-4 text-sm font-semibold text-white disabled:opacity-50"
+            onClick={() => (discrete ? void submit({}) : setStep("place"))}
+            className={`mt-auto min-h-12 rounded-2xl px-4 text-sm font-semibold text-white disabled:opacity-50 ${
+              discrete ? "ng-discrete-btn" : "bg-ng-urgent"
+            }`}
           >
-            {t.send}
+            {discrete ? t.discreteSend : t.send}
           </button>
         </section>
       ) : (

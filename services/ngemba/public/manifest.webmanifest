@@ -1,0 +1,32 @@
+{
+  "name": "NGEMBA — Sécurité et paix",
+  "short_name": "NGEMBA",
+  "description": "Alertez — orientation humaine — RDC",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#06402b",
+  "theme_color": "#06402b",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "/brand/ngemba-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Mode discret",
+      "url": "/discrete",
+      "description": "Alerte sans écran voyant"
+    },
+    {
+      "name": "SOS",
+      "url": "/sos",
+      "description": "Urgence"
+    }
+  ]
+}

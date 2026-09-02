@@ -151,6 +151,9 @@ async function sendOpsEmail(session: AlertSessionRecord) {
       { label: "Source", value: source },
       { label: "Lieu", value: place },
       { label: "Langue", value: session.locale.toUpperCase() },
+      ...(session.discreteMode
+        ? [{ label: "Mode", value: "Discret (vibration)" }]
+        : []),
     ],
   });
 

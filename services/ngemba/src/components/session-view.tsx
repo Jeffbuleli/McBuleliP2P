@@ -46,15 +46,23 @@ function urgencyClass(u: string) {
 export function SessionView({
   id,
   initialLocale,
+  discrete = false,
 }: {
   id: string;
   initialLocale: string;
+  discrete?: boolean;
 }) {
   const locale: Locale = isLocale(initialLocale) ? initialLocale : "fr";
   const t = messages[locale];
   const [session, setSession] = useState<SessionPayload | null>(null);
   const [media, setMedia] = useState<SessionPayload["media"]>([]);
   const [error, setError] = useState(false);
+
+  useEffect(() => {
+    if (!discrete) return;
+    document.body.classList.add("ng-discrete");
+    return () => document.body.classList.remove("ng-discrete");
+  }, [discrete]);
 
   useEffect(() => {
     let cancelled = false;
@@ -82,7 +90,9 @@ export function SessionView({
   }, [id]);
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col px-4 pb-8 pt-5">
+    <main
+      className={`mx-auto flex min-h-dvh max-w-md flex-col px-4 pb-8 pt-5 ${discrete ? "ng-discrete-surface" : ""}`}
+    >
       <header className="flex items-center justify-between">
         <Link href={`/?lang=${locale}`} className="text-sm font-medium text-ng-muted">
           {t.home}
@@ -100,14 +110,24 @@ export function SessionView({
       ) : (
         <section className="mt-8 flex flex-1 flex-col gap-5">
           <div className="flex items-center gap-3">
-            <span className="inline-flex size-11 items-center justify-center rounded-2xl bg-ng-urgent/10 text-ng-urgent">
+            <span
+              className={`inline-flex size-11 items-center justify-center rounded-2xl ${
+                discrete
+                  ? "bg-white/5 text-[#c9a0bc]"
+                  : "bg-ng-urgent/10 text-ng-urgent"
+              }`}
+            >
               <IconShield className="size-5" />
             </span>
             <div>
-              <h1 className="text-lg font-semibold text-ng-primary">
+              <h1
+                className={`text-lg font-semibold ${discrete ? "text-[#e8d4e3]" : "text-ng-primary"}`}
+              >
                 {t.alertOk}
               </h1>
-              <p className="text-sm text-ng-muted">{t.humanSoon}</p>
+              <p className={`text-sm ${discrete ? "ng-discrete-muted" : "text-ng-muted"}`}>
+                {t.humanSoon}
+              </p>
             </div>
           </div>
 

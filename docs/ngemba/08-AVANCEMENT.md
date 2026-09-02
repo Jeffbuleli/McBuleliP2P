@@ -7,9 +7,16 @@
 | **Bloc A** (auth, SSE, dossier, email) | ✅ |
 | **Bloc B** (pilote JGL, legal, formation) | ✅ technique · signatures ⏳ |
 | **Phase 2** (medias, chat, compte citoyen) | ✅ v1 |
-| Phase 3 (alerte discrète, app native) | ⏳ |
+| **Phase 3** (discret, vibration, PWA) | ✅ v1 web |
+| Phase 3b (Expo, secousse native) | ⏳ |
 
 Live : https://ngemba.cyberalert-rdc.org
+
+## Phase 3 — livre (web v1)
+
+- `/discrete` · triple-tap logo · vibration · PWA manifest
+- OpenAI hybrid + Whisper actifs sur VPS
+- Voir [15-PHASE-3.md](./15-PHASE-3.md)
 
 ## Phase 2 — livre (v1)
 

@@ -27,6 +27,9 @@ services:
       NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://ngemba.cyberalert-rdc.org}
       APP_URL: ${APP_URL:-https://ngemba.cyberalert-rdc.org}
       NGEMBA_AI_MODE: ${NGEMBA_AI_MODE:-hybrid}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_WHISPER_MODEL: ${OPENAI_WHISPER_MODEL:-whisper-1}
+      OPENAI_ASSISTANT_MODEL: ${OPENAI_ASSISTANT_MODEL:-gpt-4o-mini}
       NGEMBA_OPS_TOKEN: ${NGEMBA_OPS_TOKEN:-}
       NGEMBA_OPS_TOKEN_ADMIN: ${NGEMBA_OPS_TOKEN_ADMIN:-}
       NGEMBA_OPS_TOKEN_NGO: ${NGEMBA_OPS_TOKEN_NGO:-}

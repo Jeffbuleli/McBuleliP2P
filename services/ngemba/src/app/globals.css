@@ -75,6 +75,30 @@ body {
   animation: ng-pulse 2.2s ease-in-out infinite;
 }
 
+body.ng-discrete {
+  background: #1a1520;
+  color: #f5f0f4;
+}
+
+body.ng-discrete .ng-discrete-surface {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #f5f0f4;
+}
+
+body.ng-discrete .ng-discrete-muted {
+  color: rgba(245, 240, 244, 0.72);
+}
+
+body.ng-discrete .ng-discrete-btn {
+  background: #882364;
+  color: #fff;
+}
+
+body.ng-discrete .ng-discrete-btn:disabled {
+  opacity: 0.45;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;

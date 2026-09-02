@@ -43,6 +43,7 @@ export type AlertSessionRecord = {
   orientedAt: string | null;
   closedAt: string | null;
   citizenToken: string | null;
+  discreteMode: boolean;
   media: MediaAttachment[];
   chatMessages: ChatMessage[];
 };
@@ -59,6 +60,7 @@ function normalizeRecord(row: AlertSessionRecord): AlertSessionRecord {
   const base = {
     ...row,
     citizenToken: row.citizenToken ?? null,
+    discreteMode: row.discreteMode ?? false,
     media: row.media ?? [],
     chatMessages: row.chatMessages ?? [],
   };
@@ -122,9 +124,11 @@ export function createSession(
     | "media"
     | "chatMessages"
     | "citizenToken"
+    | "discreteMode"
   > & {
     status?: AlertSessionRecord["status"];
     citizenToken?: string | null;
+    discreteMode?: boolean;
     media?: MediaAttachment[];
     chatMessages?: ChatMessage[];
   },
@@ -145,6 +149,7 @@ export function createSession(
     ],
     ...input,
     citizenToken: input.citizenToken ?? null,
+    discreteMode: input.discreteMode ?? false,
     media: input.media ?? [],
     chatMessages: input.chatMessages ?? [],
   };
