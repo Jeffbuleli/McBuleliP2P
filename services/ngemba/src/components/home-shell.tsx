@@ -179,6 +179,10 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
           {t.line}
         </p>
         <p className="text-center text-[11px] text-ng-muted">
+          <Link href={`/me?lang=${locale}`} className="underline">
+            {t.myAlerts}
+          </Link>
+          {" · "}
           <Link href={`/legal/confidentialite?lang=${locale}`} className="underline">
             Confidentialité
           </Link>

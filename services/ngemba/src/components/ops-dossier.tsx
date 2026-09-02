@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { SessionChat } from "@/components/session-chat";
+import { SessionMediaList } from "@/components/session-media";
 import {
   categoryLabelFr,
   locationSourceLabelFr,
@@ -44,6 +46,18 @@ type Session = {
   createdAt: string;
   orientedAt: string | null;
   closedAt: string | null;
+  media?: Array<{
+    id: string;
+    kind: string;
+    fileName: string;
+    transcription: string | null;
+  }>;
+  chatMessages?: Array<{
+    id: string;
+    role: string;
+    body: string;
+    createdAt: string;
+  }>;
 };
 
 function badge(u: string) {
@@ -248,6 +262,27 @@ export function OpsDossierView({ id }: { id: string }) {
             Enregistrer notes
           </button>
         </article>
+
+        {session.media?.length ? (
+          <article className="rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-4">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-ng-muted">
+              Médias citoyen
+            </h2>
+            <div className="mt-3">
+              <SessionMediaList sessionId={session.id} items={session.media} />
+            </div>
+          </article>
+        ) : null}
+
+        <SessionChat
+          sessionId={session.id}
+          labels={{
+            chatTitle: "Échange citoyen",
+            chatPlaceholder: "Réponse opérateur...",
+            chatSend: "Envoyer",
+            chatEmpty: "Aucun message pour l'instant.",
+          }}
+        />
 
         <article className="rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-4">
           <h2 className="text-xs font-semibold uppercase tracking-wide text-ng-muted">

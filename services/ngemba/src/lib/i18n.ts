@@ -48,6 +48,14 @@ type Copy = {
   voice: string;
   voiceListening: string;
   voiceUnsupported: string;
+  myAlerts: string;
+  addMedia: string;
+  mediaHint: string;
+  mediaUploading: string;
+  chatTitle: string;
+  chatPlaceholder: string;
+  chatSend: string;
+  chatEmpty: string;
 };
 
 const baseFr: Copy = {
@@ -87,6 +95,14 @@ const baseFr: Copy = {
   voice: "Parler",
   voiceListening: "Écoute...",
   voiceUnsupported: "Voix non dispo sur cet appareil",
+  myAlerts: "Mes alertes",
+  addMedia: "Ajouter photo ou audio",
+  mediaHint: "Optionnel — max 8 Mo, sans certifier une preuve",
+  mediaUploading: "Envoi du fichier...",
+  chatTitle: "Échange avec l'opérateur",
+  chatPlaceholder: "Votre message...",
+  chatSend: "Envoyer",
+  chatEmpty: "Un opérateur vous répondra ici si disponible.",
 };
 
 export const messages: Record<Locale, Copy> = {
@@ -128,6 +144,14 @@ export const messages: Record<Locale, Copy> = {
     voice: "Speak",
     voiceListening: "Listening...",
     voiceUnsupported: "Voice not available on this device",
+    myAlerts: "My alerts",
+    addMedia: "Add photo or audio",
+    mediaHint: "Optional — max 8 MB, not legal proof",
+    mediaUploading: "Uploading...",
+    chatTitle: "Chat with operator",
+    chatPlaceholder: "Your message...",
+    chatSend: "Send",
+    chatEmpty: "An operator will reply here when available.",
   },
   ln: {
     ...baseFr,

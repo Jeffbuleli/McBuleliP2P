@@ -2,6 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { SessionChat } from "@/components/session-chat";
+import {
+  SessionMediaList,
+  SessionMediaUpload,
+} from "@/components/session-media";
 import { IconShield, IconSpark } from "@/components/icons";
 import { isLocale, messages, type Locale } from "@/lib/i18n";
 import { urgencyLabel } from "@/lib/labels";
@@ -24,6 +29,12 @@ type SessionPayload = {
   routingQueue: string;
   lat: number | null;
   lng: number | null;
+  media?: Array<{
+    id: string;
+    kind: string;
+    fileName: string;
+    transcription: string | null;
+  }>;
 };
 
 function urgencyClass(u: string) {
@@ -42,19 +53,25 @@ export function SessionView({
   const locale: Locale = isLocale(initialLocale) ? initialLocale : "fr";
   const t = messages[locale];
   const [session, setSession] = useState<SessionPayload | null>(null);
+  const [media, setMedia] = useState<SessionPayload["media"]>([]);
   const [error, setError] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     void (async () => {
       try {
-        const res = await fetch(`/api/alerts/${id}`);
+        const res = await fetch(`/api/alerts/${id}`, {
+          credentials: "include",
+        });
         const data = await res.json();
         if (!res.ok || !data.session) {
           if (!cancelled) setError(true);
           return;
         }
-        if (!cancelled) setSession(data.session);
+        if (!cancelled) {
+          setSession(data.session);
+          setMedia(data.session.media ?? []);
+        }
       } catch {
         if (!cancelled) setError(true);
       }
@@ -133,6 +150,33 @@ export function SessionView({
               {session.aiPayload.ai_disclaimer}
             </p>
           ) : null}
+
+          <SessionMediaUpload
+            sessionId={id}
+            labels={{
+              addMedia: t.addMedia,
+              mediaHint: t.mediaHint,
+              mediaUploading: t.mediaUploading,
+            }}
+            onUploaded={setMedia}
+          />
+          <SessionMediaList sessionId={id} items={media ?? []} />
+          <SessionChat
+            sessionId={id}
+            labels={{
+              chatTitle: t.chatTitle,
+              chatPlaceholder: t.chatPlaceholder,
+              chatSend: t.chatSend,
+              chatEmpty: t.chatEmpty,
+            }}
+          />
+
+          <Link
+            href={`/me?lang=${locale}`}
+            className="text-center text-sm font-semibold text-ng-primary underline"
+          >
+            {t.myAlerts}
+          </Link>
         </section>
       )}
     </main>

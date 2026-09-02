@@ -1,5 +1,12 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { z } from "zod";
+import {
+  CITIZEN_COOKIE,
+  citizenCookieOptions,
+  newCitizenToken,
+  readCitizenToken,
+} from "@/lib/citizen/token";
 import { runTriage } from "@/lib/ai/triage";
 import { isLocale } from "@/lib/i18n";
 import {
@@ -94,6 +101,10 @@ export async function POST(req: Request) {
     source: body.source,
   });
 
+  const jar = await cookies();
+  let citizenToken = jar.get(CITIZEN_COOKIE)?.value ?? null;
+  if (!citizenToken) citizenToken = newCitizenToken();
+
   const session = createSession({
     source: body.source,
     locale,
@@ -118,11 +129,12 @@ export async function POST(req: Request) {
     provider,
     aiMode,
     status: "active",
+    citizenToken,
   });
 
   await notifyNewAlert(session);
 
-  return NextResponse.json({
+  const response = NextResponse.json({
     id: session.id,
     urgency: session.urgency,
     category: session.category,
@@ -132,6 +144,14 @@ export async function POST(req: Request) {
     aiMode: session.aiMode,
     locationLabel: session.locationLabel,
   });
+
+  const secure = process.env.NODE_ENV === "production";
+  response.cookies.set(
+    CITIZEN_COOKIE,
+    citizenToken,
+    citizenCookieOptions(secure),
+  );
+  return response;
 }
 
 export async function GET(req: Request) {

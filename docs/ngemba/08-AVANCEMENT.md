@@ -6,24 +6,24 @@
 | Localisation nationale + i18n | ✅ |
 | **Bloc A** (auth, SSE, dossier, email) | ✅ |
 | **Bloc B** (pilote JGL, legal, formation) | ✅ technique · signatures ⏳ |
-| Phase 2 (medias, chat, ressources) | ⏳ prochaine |
+| **Phase 2** (medias, chat, compte citoyen) | ✅ v1 |
+| Phase 3 (alerte discrète, app native) | ⏳ |
 
 Live : https://ngemba.cyberalert-rdc.org
 
-## Bloc B — termine (technique)
+## Phase 2 — livre (v1)
 
-- Pilote JGL : verification via **hi@mcbuleli.org**
-- Pages : `/resources` · `/prevent` · `/legal/confidentialite` · `/legal/cgu` · `/legal/charte-ong`
-- Docs : accord pilote · formation 30 min · smoke `ops/vps/bloc-b-smoke.sh`
-- Token ONG : actif pour test McBuleli (pas encore transmis a JGL)
+- Upload photo / audio / video sur session
+- Chat citoyen ↔ opérateur
+- `/me` — historique alertes (cookie appareil)
+- Whisper optionnel si `OPENAI_API_KEY`
+- Voir [14-PHASE-2.md](./14-PHASE-2.md)
 
-## Reste humain avant go JGL
+## Bloc B — reste humain
 
 1. Signer [12-ACCORD-PILOTE-JGL.md](./12-ACCORD-PILOTE-JGL.md)
-2. Relecture avocat RDC des pages legal
-3. Formation JGL ([13-FORMATION-OPS-JGL.md](./13-FORMATION-OPS-JGL.md))
-4. Activer `NGEMBA_OPS_PILOT_VERIFIED=true` + email Me Arjoule
-5. Premiere alerte citoyenne reelle orientee par JGL
+2. Relecture avocat RDC
+3. Formation JGL · activer JGL apres validation
 
 ## Test local
 
@@ -34,5 +34,5 @@ cd services/ngemba && npm run dev
 ## Smoke prod
 
 ```bash
-bash services/ngemba/ops/vps/bloc-b-smoke.sh   # sur VPS
+bash services/ngemba/ops/vps/bloc-b-smoke.sh
 ```

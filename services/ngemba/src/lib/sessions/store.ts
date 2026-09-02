@@ -2,6 +2,10 @@ import { randomUUID } from "crypto";
 import fs from "fs";
 import path from "path";
 import type { TriageResult, RoutingQueue } from "@/lib/ai/triage-schema";
+import type { MediaAttachment } from "@/lib/media/types";
+import type { ChatMessage } from "@/lib/sessions/chat";
+
+export type { ChatMessage };
 
 export type StatusHistoryEntry = {
   at: string;
@@ -38,6 +42,9 @@ export type AlertSessionRecord = {
   createdAt: string;
   orientedAt: string | null;
   closedAt: string | null;
+  citizenToken: string | null;
+  media: MediaAttachment[];
+  chatMessages: ChatMessage[];
 };
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -49,13 +56,19 @@ const g = globalThis as unknown as {
 };
 
 function normalizeRecord(row: AlertSessionRecord): AlertSessionRecord {
-  if (row.statusHistory?.length) return row;
-  return {
+  const base = {
     ...row,
+    citizenToken: row.citizenToken ?? null,
+    media: row.media ?? [],
+    chatMessages: row.chatMessages ?? [],
+  };
+  if (base.statusHistory?.length) return base;
+  return {
+    ...base,
     statusHistory: [
       {
-        at: row.createdAt,
-        status: row.status,
+        at: base.createdAt,
+        status: base.status,
         actor: null,
         note: "Alerte creee",
       },
@@ -106,8 +119,14 @@ export function createSession(
     | "statusHistory"
     | "orientedAt"
     | "closedAt"
+    | "media"
+    | "chatMessages"
+    | "citizenToken"
   > & {
     status?: AlertSessionRecord["status"];
+    citizenToken?: string | null;
+    media?: MediaAttachment[];
+    chatMessages?: ChatMessage[];
   },
 ): AlertSessionRecord {
   const map = ensureLoaded();
@@ -125,6 +144,9 @@ export function createSession(
       { at: createdAt, status, actor: null, note: "Alerte creee" },
     ],
     ...input,
+    citizenToken: input.citizenToken ?? null,
+    media: input.media ?? [],
+    chatMessages: input.chatMessages ?? [],
   };
   map.set(record.id, record);
   persist();
@@ -141,6 +163,63 @@ export function listSessions(limit = 50): AlertSessionRecord[] {
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .slice(0, limit)
     .map(normalizeRecord);
+}
+
+export function listSessionsByCitizen(
+  citizenToken: string,
+  limit = 20,
+): AlertSessionRecord[] {
+  return [...ensureLoaded().values()]
+    .filter((s) => s.citizenToken === citizenToken)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .slice(0, limit)
+    .map(normalizeRecord);
+}
+
+export function addSessionMedia(
+  id: string,
+  attachment: MediaAttachment,
+): AlertSessionRecord | null {
+  const current = getSession(id);
+  if (!current) return null;
+  const media = [...current.media, attachment];
+  return updateSessionRaw(id, { media });
+}
+
+export function setMediaTranscription(
+  id: string,
+  mediaId: string,
+  transcription: string,
+): AlertSessionRecord | null {
+  const current = getSession(id);
+  if (!current) return null;
+  const media = current.media.map((m) =>
+    m.id === mediaId ? { ...m, transcription } : m,
+  );
+  return updateSessionRaw(id, { media });
+}
+
+export function addSessionChatMessage(
+  id: string,
+  message: ChatMessage,
+): AlertSessionRecord | null {
+  const current = getSession(id);
+  if (!current) return null;
+  const chatMessages = [...current.chatMessages, message];
+  return updateSessionRaw(id, { chatMessages });
+}
+
+function updateSessionRaw(
+  id: string,
+  patch: Partial<Pick<AlertSessionRecord, "media" | "chatMessages">>,
+): AlertSessionRecord | null {
+  const map = ensureLoaded();
+  const current = map.get(id);
+  if (!current) return null;
+  const next = { ...normalizeRecord(current), ...patch };
+  map.set(id, next);
+  persist();
+  return next;
 }
 
 export function updateSession(
