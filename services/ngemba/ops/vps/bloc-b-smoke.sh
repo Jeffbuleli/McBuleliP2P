@@ -15,10 +15,15 @@ if [[ ! -f "$ENV_FILE" ]]; then
   exit 1
 fi
 
-# shellcheck disable=SC1090
-source "$ENV_FILE"
+read_env() {
+  local key="$1"
+  grep -E "^${key}=" "$ENV_FILE" 2>/dev/null | tail -1 | cut -d= -f2- | tr -d '\r' | sed 's/^["'\''"]//;s/["'\''"]$//' || true
+}
 
-ADMIN_TOKEN="${NGEMBA_OPS_TOKEN_ADMIN:-${NGEMBA_OPS_TOKEN:-}}"
+ADMIN_TOKEN="$(read_env NGEMBA_OPS_TOKEN_ADMIN)"
+if [[ -z "$ADMIN_TOKEN" ]]; then
+  ADMIN_TOKEN="$(read_env NGEMBA_OPS_TOKEN)"
+fi
 if [[ -z "$ADMIN_TOKEN" ]]; then
   echo "ERROR: NGEMBA_OPS_TOKEN or NGEMBA_OPS_TOKEN_ADMIN required" >&2
   exit 1
@@ -37,8 +42,15 @@ CREATE=$(curl -sf -X POST "$BASE/api/alerts" \
     "source": "sos_button",
     "provinceId": "kinshasa",
     "cityId": "gombe"
-  }')
-SESSION_ID=$(echo "$CREATE" | python3 -c "import sys,json; print(json.load(sys.stdin)['session']['id'])")
+  }') || {
+  echo "ERROR: alert create failed" >&2
+  exit 1
+}
+SESSION_ID=$(echo "$CREATE" | sed -n 's/.*"id":"\([^"]*\)".*/\1/p' | head -1)
+if [[ -z "$SESSION_ID" ]]; then
+  echo "ERROR: could not parse session id from: $CREATE" >&2
+  exit 1
+fi
 echo "Session: $SESSION_ID"
 
 echo "==> Ops auth (admin)"
@@ -50,20 +62,20 @@ curl -sf -X POST "$BASE/api/ops/auth" \
   -d "{\"token\":\"$ADMIN_TOKEN\"}" >/dev/null
 
 echo "==> Take charge + close (B8)"
-curl -sf -X PATCH "$BASE/api/alerts/$SESSION_ID" \
+PATCH=$(curl -sf -X PATCH "$BASE/api/alerts/$SESSION_ID" \
   -b "$COOKIE_JAR" \
   -H "Content-Type: application/json" \
   -d '{
     "status": "oriented",
     "assignedTo": "McBuleli — test pilote Bloc B",
     "operatorNotes": "Alerte test Bloc B — prise en charge simulee. Email hi@mcbuleli.org a verifier."
-  }' >/dev/null
+  }') || {
+  echo "ERROR: patch failed" >&2
+  exit 1
+}
 
-FINAL=$(curl -sf "$BASE/api/alerts/$SESSION_ID" -b "$COOKIE_JAR")
-STATUS=$(echo "$FINAL" | python3 -c "import sys,json; print(json.load(sys.stdin)['session']['status'])")
-
-if [[ "$STATUS" != "oriented" ]]; then
-  echo "ERROR: expected status oriented, got $STATUS" >&2
+if ! echo "$PATCH" | grep -q '"status":"oriented"'; then
+  echo "ERROR: patch did not set oriented: $PATCH" >&2
   exit 1
 fi
 
@@ -71,4 +83,4 @@ echo "==> Email log (last 5 lines)"
 docker compose -f "$COMPOSE_DIR/docker-compose.yml" logs web --tail 30 2>/dev/null \
   | grep -E "ops email|resend" | tail -5 || echo "(no email log line — check RESEND_API_KEY)"
 
-echo "OK — Bloc B smoke passed · session $SESSION_ID · status $STATUS"
+echo "OK — Bloc B smoke passed · session $SESSION_ID · status oriented"
