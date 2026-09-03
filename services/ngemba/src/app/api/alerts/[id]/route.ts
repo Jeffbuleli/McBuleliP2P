@@ -27,9 +27,15 @@ export async function GET(req: Request, ctx: Ctx) {
     if (!roleHasPermission(role, "alerts.view")) {
       return NextResponse.json({ error: "forbidden" }, { status: 403 });
     }
+    // Ops : dossier complet (proches inclus pour actions manuelles)
+    return NextResponse.json({ session, role });
   }
 
-  return NextResponse.json({ session });
+  // Citoyen / public : jamais exposer les proches de confiance
+  const { trustedContacts: _hidden, ...publicSession } = session;
+  return NextResponse.json({
+    session: { ...publicSession, trustedContacts: [] },
+  });
 }
 
 const patchBody = z.object({

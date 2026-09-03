@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { SessionChat } from "@/components/session-chat";
 import { SessionMediaList } from "@/components/session-media";
+import { OpsTrustedContacts } from "@/components/ops-trusted-contacts";
 import {
   categoryLabelFr,
   locationSourceLabelFr,
@@ -15,6 +16,7 @@ import {
 } from "@/lib/labels";
 import { SCHOOL_CONCERN_LABELS_FR } from "@/lib/school/types";
 import type { StatusHistoryEntry } from "@/lib/sessions/store";
+import type { TrustedContact } from "@/lib/trusted-contacts/types";
 import { shellMaxWidth, useDeviceClass } from "@/lib/ui/device";
 
 type Session = {
@@ -49,6 +51,7 @@ type Session = {
   orientedAt: string | null;
   closedAt: string | null;
   discreteMode?: boolean;
+  trustedContacts?: TrustedContact[];
   schoolContext?: {
     concernType: string;
     establishmentHint: string | null;
@@ -288,6 +291,8 @@ export function OpsDossierView({ id }: { id: string }) {
             </ul>
           ) : null}
         </article>
+
+        <OpsTrustedContacts contacts={session.trustedContacts ?? []} />
 
         <article className="rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-4">
           <h2 className="text-xs font-semibold uppercase tracking-wide text-ng-muted">

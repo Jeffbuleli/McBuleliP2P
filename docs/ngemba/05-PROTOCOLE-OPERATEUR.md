@@ -41,6 +41,12 @@ Si **Non** → mode discret : messages courts, pas de détails à voix haute.
 | Enfant en danger | Protocole protection de l’enfant |
 | Opérateur débordé | Escalade admin ONG · ne pas laisser en file sans ack |
 
+## 5bis. Proches de confiance
+
+- Visibles sur le dossier ops (Appeler / WhatsApp / Email) - **pas** notifies automatiquement.
+- Contacter un proche seulement si : victime injoignable, suivi dossier, ou demande explicite.
+- Si risque agresseur / mode discret : **ne pas** appeler ni WhatsApp sans relecture.
+
 ## 6. Fausses alertes
 
 - 1ère : rappel bienveillant des règles

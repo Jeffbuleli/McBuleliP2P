@@ -4,10 +4,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { IconShield } from "@/components/icons";
+import { TrustedContactsEditor } from "@/components/trusted-contacts-editor";
 import { VoiceButton } from "@/components/voice-button";
 import { useCitizenLocale } from "@/hooks/use-citizen-locale";
 import { messages } from "@/lib/i18n";
 import type { SchoolConcernType } from "@/lib/school/types";
+import { readLocalTrustedContacts } from "@/lib/trusted-contacts/client-store";
 import { citizenShellMaxWidth, useDeviceClass } from "@/lib/ui/device";
 
 type Step = "concern" | "tell" | "place";
@@ -77,6 +79,7 @@ export function SchoolFlow({ initialLocale }: { initialLocale?: string }) {
     setBusy(true);
     setError(null);
     try {
+      const trustedContacts = readLocalTrustedContacts();
       const res = await fetch("/api/alerts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -90,6 +93,7 @@ export function SchoolFlow({ initialLocale }: { initialLocale?: string }) {
           lng: opts.lng ?? null,
           provinceId: opts.provinceId || null,
           cityId: opts.cityId || null,
+          trustedContacts,
           schoolContext: {
             concernType,
             establishmentHint: establishment.trim() || null,
@@ -271,6 +275,8 @@ export function SchoolFlow({ initialLocale }: { initialLocale?: string }) {
               ))}
             </select>
           </label>
+
+          <TrustedContactsEditor />
 
           <div className="mt-auto flex flex-col gap-3">
             <button

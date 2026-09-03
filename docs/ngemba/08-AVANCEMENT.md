@@ -69,6 +69,13 @@ Live : https://ngemba.cyberalert-rdc.org
 - Whisper optionnel si `OPENAI_API_KEY`
 - Voir [14-PHASE-2.md](./14-PHASE-2.md)
 
+## Philosophie orientation (direction)
+
+- Service competent **proche** de la victime (pas diffusion nationale aveugle)
+- Proches de confiance = **aide dossier** (wa.me / email), pas notify auto systematique
+- **v1 aligne** : champs enrichis, bloc ops, notify auto retire
+- Voir [19-PHILO-ORIENTATION-PROCHES.md](./19-PHILO-ORIENTATION-PROCHES.md)
+
 ## Bloc B - reste humain
 
 1. Signer [12-ACCORD-PILOTE-JGL.md](./12-ACCORD-PILOTE-JGL.md)

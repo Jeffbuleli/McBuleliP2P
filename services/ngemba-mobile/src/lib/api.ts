@@ -26,6 +26,8 @@ export type CreateAlertInput = {
     name: string;
     phone?: string | null;
     email?: string | null;
+    address?: string | null;
+    relation?: string | null;
   }>;
   schoolContext?: {
     concernType: string;

@@ -13,7 +13,6 @@ import {
 } from "@/lib/labels";
 import { SCHOOL_CONCERN_LABELS_FR } from "@/lib/school/types";
 import { emitOpsEvent } from "@/lib/ops/events";
-import { notifyTrustedContacts } from "@/lib/ops/notify-trusted-contacts";
 
 function appUrl(): string {
   return (
@@ -72,11 +71,9 @@ export async function notifyNewAlert(session: AlertSessionRecord) {
     createdAt: session.createdAt,
   });
 
-  await Promise.allSettled([
-    sendOpsWebhook(session),
-    sendOpsEmail(session),
-    notifyTrustedContacts(session, session.trustedContacts ?? []),
-  ]);
+  // Proches : PAS de notify auto - visibles sur dossier ops (Appeler / WhatsApp / Email).
+  // Voir docs/ngemba/19-PHILO-ORIENTATION-PROCHES.md
+  await Promise.allSettled([sendOpsWebhook(session), sendOpsEmail(session)]);
 }
 
 export async function notifySessionUpdated(session: AlertSessionRecord) {

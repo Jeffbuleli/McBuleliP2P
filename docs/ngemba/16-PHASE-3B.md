@@ -13,7 +13,7 @@
 | **Mode discret** | Ecran sombre + haptics triple impact |
 | **Triple-tap logo** | Navigation vers `/discrete` |
 | **Secousse 5x** | `expo-sensors` → mode discret (`source: shake`) |
-| **Contacts de confiance** | 1-3 contacts · onboarding · alerte email/SMS |
+| **Contacts de confiance** | 1-3 contacts · dossier ops · actions manuelles |
 | **GPS** | `expo-location` (permission foreground) |
 | **Session** | Recap urgence + resume IA |
 | **i18n** | FR / EN / LN / SW / LU / KG |
@@ -22,11 +22,14 @@
 
 ## Contacts de confiance
 
-1. Onboarding au premier lancement (skippable)
-2. Stockage local AsyncStorage + envoi avec chaque alerte
-3. Backend notifie en parallele de l'ops :
-   - **Email** via Resend si contact a un email
-   - **SMS** via `NGEMBA_SMS_WEBHOOK_URL` ou Africa's Talking (`NGEMBA_AT_*`)
+1. Onboarding au premier lancement (skippable) + ecran dedie
+2. Champs : nom, lien, telephone, email, adresse/quartier
+3. Stockage local AsyncStorage + envoi avec chaque alerte
+4. **Pas de notify auto** a la creation (philosophie proches = ressource dossier)
+5. Ops : bloc proches sur `/ops/[id]` avec Appeler / WhatsApp (`wa.me/243…`) / Email
+6. API citoyen : `trustedContacts` masques hors session ops
+
+Voir [19-PHILO-ORIENTATION-PROCHES.md](./19-PHILO-ORIENTATION-PROCHES.md)
 
 ---
 

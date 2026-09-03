@@ -64,6 +64,8 @@ export default function SchoolScreen() {
           name: c.name,
           phone: c.phone,
           email: c.email ?? null,
+          address: c.address ?? null,
+          relation: c.relation ?? null,
         })),
       });
       await hapticSosConfirm();

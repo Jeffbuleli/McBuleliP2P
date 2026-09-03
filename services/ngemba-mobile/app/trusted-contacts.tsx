@@ -21,7 +21,7 @@ import {
 import { colors } from "../src/theme/colors";
 
 function emptyContact(): TrustedContact {
-  return { name: "", phone: "", email: "" };
+  return { name: "", phone: "", email: "", address: "", relation: "" };
 }
 
 export default function TrustedContactsScreen() {
@@ -66,7 +66,9 @@ export default function TrustedContactsScreen() {
     setBusy(true);
     setError(null);
     const valid = contacts.filter(
-      (c) => c.name.trim().length >= 2 && c.phone.trim().length >= 8,
+      (c) =>
+        c.name.trim().length >= 2 &&
+        (c.phone.trim().length >= 8 || (c.email ?? "").trim().includes("@")),
     );
     if (!valid.length) {
       setError(t.trustedContactsError);
@@ -107,6 +109,13 @@ export default function TrustedContactsScreen() {
               style={styles.input}
             />
             <TextInput
+              value={contact.relation ?? ""}
+              onChangeText={(v) => updateContact(index, "relation", v)}
+              placeholder={t.trustedContactRelation}
+              placeholderTextColor={colors.muted}
+              style={styles.input}
+            />
+            <TextInput
               value={contact.phone}
               onChangeText={(v) => updateContact(index, "phone", v)}
               placeholder={t.trustedContactPhone}
@@ -121,6 +130,13 @@ export default function TrustedContactsScreen() {
               placeholderTextColor={colors.muted}
               keyboardType="email-address"
               autoCapitalize="none"
+              style={styles.input}
+            />
+            <TextInput
+              value={contact.address ?? ""}
+              onChangeText={(v) => updateContact(index, "address", v)}
+              placeholder={t.trustedContactAddress}
+              placeholderTextColor={colors.muted}
               style={styles.input}
             />
             {contacts.length > 1 ? (

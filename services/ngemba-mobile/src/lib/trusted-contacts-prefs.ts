@@ -4,6 +4,8 @@ export type TrustedContact = {
   name: string;
   phone: string;
   email?: string;
+  address?: string;
+  relation?: string;
 };
 
 const KEY = "ngemba_trusted_contacts";

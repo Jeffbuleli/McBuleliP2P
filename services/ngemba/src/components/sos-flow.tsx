@@ -4,10 +4,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { IconShield } from "@/components/icons";
+import { TrustedContactsEditor } from "@/components/trusted-contacts-editor";
 import { VoiceButton } from "@/components/voice-button";
 import { useCitizenLocale } from "@/hooks/use-citizen-locale";
 import { vibrateDiscreteConfirm } from "@/lib/discrete/vibrate";
 import { messages } from "@/lib/i18n";
+import { readLocalTrustedContacts } from "@/lib/trusted-contacts/client-store";
 import { citizenShellMaxWidth, useDeviceClass } from "@/lib/ui/device";
 
 type Step = "tell" | "place";
@@ -75,6 +77,7 @@ export function SosFlow({
     setBusy(true);
     setError(null);
     try {
+      const trustedContacts = readLocalTrustedContacts();
       const res = await fetch("/api/alerts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -89,6 +92,7 @@ export function SosFlow({
           provinceId: opts.provinceId || null,
           cityId: opts.cityId || null,
           discrete,
+          trustedContacts,
         }),
       });
       const data = await res.json();
@@ -271,6 +275,8 @@ export function SosFlow({
               ))}
             </select>
           </label>
+
+          {!discrete ? <TrustedContactsEditor /> : null}
 
           <div className="mt-auto flex flex-col gap-3">
             <button
