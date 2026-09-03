@@ -14,13 +14,19 @@ export async function GET(req: Request) {
   const windowDays =
     Number.isFinite(daysRaw) && daysRaw > 0 ? Math.min(365, daysRaw) : 30;
   const format = (url.searchParams.get("format") || "csv").toLowerCase();
+  const provinceId = url.searchParams.get("province")?.trim() || null;
+  const category = url.searchParams.get("category")?.trim() || null;
 
-  const rows = exportAnonymizedRows(windowDays);
+  const rows = exportAnonymizedRows(windowDays, undefined, {
+    provinceId,
+    category,
+  });
 
   if (format === "json") {
     return NextResponse.json({
       generatedAt: new Date().toISOString(),
       windowDays,
+      filters: { provinceId, category },
       count: rows.length,
       rows,
       note: "Export anonymise - zones k-anonymes seulement, sans PII.",
@@ -28,11 +34,19 @@ export async function GET(req: Request) {
   }
 
   const csv = csvFromAnonymized(rows);
+  const suffix = [
+    `${windowDays}d`,
+    provinceId ? provinceId : null,
+    category ? category : null,
+  ]
+    .filter(Boolean)
+    .join("-");
+
   return new NextResponse(csv, {
     status: 200,
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="ngemba-observatory-${windowDays}d.csv"`,
+      "Content-Disposition": `attachment; filename="ngemba-observatory-${suffix}.csv"`,
       "Cache-Control": "no-store",
     },
   });

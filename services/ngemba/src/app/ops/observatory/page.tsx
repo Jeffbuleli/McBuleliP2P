@@ -1,29 +1,80 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { urgencyLabelFr } from "@/lib/labels";
 import { shellMaxWidth, useDeviceClass } from "@/lib/ui/device";
 
+const ObservatoryMap = dynamic(
+  () =>
+    import("@/components/observatory-map").then((m) => m.ObservatoryMap),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-72 items-center justify-center rounded-2xl border border-[var(--ng-border)] bg-ng-surface text-sm text-ng-muted md:h-96">
+        Chargement de la carte...
+      </div>
+    ),
+  },
+);
+
 type ZoneBucket = {
   zoneKey: string;
+  province: string | null;
+  provinceId: string | null;
+  lat: number | null;
+  lng: number | null;
   count: number;
   urgencyMax: string;
   categories: Record<string, number>;
+};
+
+type MapPoint = {
+  zoneKey: string;
+  province: string | null;
+  lat: number;
+  lng: number;
+  count: number;
+  urgencyMax: string;
 };
 
 type Snapshot = {
   k: number;
   generatedAt: string;
   windowDays: number;
+  filters: { provinceId: string | null; category: string | null };
   totalSessionsInWindow: number;
   publishedZones: ZoneBucket[];
+  mapPoints: MapPoint[];
   suppressedZones: number;
   suppressedCount: number;
   byCategory: Array<{ category: string; label: string; count: number }>;
   byDay: Array<{ day: string; count: number }>;
   note: string;
 };
+
+type ProvinceOpt = { id: string; name: string };
+
+const CATEGORY_OPTIONS: Array<{ id: string; label: string }> = [
+  { id: "", label: "Toutes categories" },
+  { id: "vbg", label: "VBG" },
+  { id: "sexual_violence", label: "Violence sexuelle" },
+  { id: "domestic_violence", label: "Violence conjugale" },
+  { id: "child_danger", label: "Enfant en danger" },
+  { id: "school", label: "Ecole / mineur" },
+  { id: "assault", label: "Agression" },
+  { id: "robbery", label: "Vol / braquage" },
+  { id: "harassment", label: "Harcelement" },
+  { id: "accident", label: "Accident" },
+  { id: "medical", label: "Medical" },
+  { id: "fire", label: "Incendie" },
+  { id: "flood", label: "Inondation" },
+  { id: "cyber_threat", label: "Menace numerique" },
+  { id: "scam", label: "Arnaque" },
+  { id: "other", label: "Autre" },
+  { id: "unknown", label: "A clarifier" },
+];
 
 function intensityClass(count: number, max: number): string {
   if (max <= 0) return "bg-ng-primary-muted";
@@ -37,13 +88,23 @@ function intensityClass(count: number, max: number): string {
 export default function ObservatoryPage() {
   const device = useDeviceClass();
   const [days, setDays] = useState(30);
+  const [provinceId, setProvinceId] = useState("");
+  const [category, setCategory] = useState("");
+  const [provinces, setProvinces] = useState<ProvinceOpt[]>([]);
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [canExport, setCanExport] = useState(false);
 
+  const query = useMemo(() => {
+    const p = new URLSearchParams({ days: String(days) });
+    if (provinceId) p.set("province", provinceId);
+    if (category) p.set("category", category);
+    return p.toString();
+  }, [days, provinceId, category]);
+
   const load = useCallback(async () => {
     setError(null);
-    const res = await fetch(`/api/observatory/heatmap?days=${days}`, {
+    const res = await fetch(`/api/observatory/heatmap?${query}`, {
       credentials: "include",
     });
     const data = await res.json().catch(() => ({}));
@@ -57,7 +118,10 @@ export default function ObservatoryPage() {
       return;
     }
     setSnapshot(data.snapshot ?? null);
-  }, [days]);
+    if (Array.isArray(data.provinces)) {
+      setProvinces(data.provinces);
+    }
+  }, [query]);
 
   useEffect(() => {
     void load();
@@ -67,14 +131,13 @@ export default function ObservatoryPage() {
     void fetch("/api/ops/auth")
       .then((r) => r.json())
       .then((d) => {
-        setCanExport(
-          d.role === "admin" || d.role === "partner",
-        );
+        setCanExport(d.role === "admin" || d.role === "partner");
       })
       .catch(() => undefined);
   }, []);
 
   const maxZone = snapshot?.publishedZones[0]?.count ?? 0;
+  const mapPoints = snapshot?.mapPoints ?? [];
 
   return (
     <main
@@ -89,7 +152,7 @@ export default function ObservatoryPage() {
             Observatoire citoyen
           </h1>
           <p className="mt-1 text-xs text-ng-muted">
-            Heatmap agrégée - aucune PII - k-anonymity
+            Carte OSM + heatmap - centroides uniquement - k-anonymity
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -109,7 +172,7 @@ export default function ObservatoryPage() {
           ))}
           {canExport ? (
             <a
-              href={`/api/observatory/export?days=${days}&format=csv`}
+              href={`/api/observatory/export?${query}&format=csv`}
               className="rounded-full bg-ng-secondary px-3 py-1 text-xs font-semibold text-white"
             >
               Export CSV
@@ -117,6 +180,38 @@ export default function ObservatoryPage() {
           ) : null}
         </div>
       </header>
+
+      <section className="mt-5 grid gap-3 sm:grid-cols-2">
+        <label className="block text-xs font-semibold text-ng-muted">
+          Province
+          <select
+            value={provinceId}
+            onChange={(e) => setProvinceId(e.target.value)}
+            className="mt-1 w-full rounded-xl border border-[var(--ng-border)] bg-ng-surface px-3 py-2 text-sm text-ng-text"
+          >
+            <option value="">Toutes provinces</option>
+            {provinces.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block text-xs font-semibold text-ng-muted">
+          Categorie
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="mt-1 w-full rounded-xl border border-[var(--ng-border)] bg-ng-surface px-3 py-2 text-sm text-ng-text"
+          >
+            {CATEGORY_OPTIONS.map((c) => (
+              <option key={c.id || "all"} value={c.id}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </section>
 
       {error ? (
         <p className="mt-6 text-sm font-medium text-ng-urgent">{error}</p>
@@ -130,13 +225,16 @@ export default function ObservatoryPage() {
         <>
           <section className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
             <Stat
-              label="Alertes (fenêtre)"
+              label="Alertes (fenetre)"
               value={String(snapshot.totalSessionsInWindow)}
             />
-            <Stat label="Zones publiées" value={String(snapshot.publishedZones.length)} />
+            <Stat
+              label="Zones publiees"
+              value={String(snapshot.publishedZones.length)}
+            />
             <Stat label="Seuil k" value={String(snapshot.k)} />
             <Stat
-              label="Zones masquées"
+              label="Zones masquees"
               value={`${snapshot.suppressedZones} (${snapshot.suppressedCount})`}
             />
           </section>
@@ -146,15 +244,29 @@ export default function ObservatoryPage() {
           </p>
 
           <section className="mt-8">
+            <h2 className="mb-3 text-sm font-semibold text-ng-text">
+              Carte (centroides)
+            </h2>
+            {mapPoints.length === 0 ? (
+              <p className="rounded-xl border border-[var(--ng-border)] bg-ng-surface p-4 text-sm text-ng-muted">
+                Aucun centroide a afficher pour ce filtre (seuil k ou zone hors
+                referentiel RDC).
+              </p>
+            ) : (
+              <ObservatoryMap points={mapPoints} />
+            )}
+          </section>
+
+          <section className="mt-8">
             <h2 className="text-sm font-semibold text-ng-text">
-              Intensité par zone
+              Intensite par zone
             </h2>
             {snapshot.publishedZones.length === 0 ? (
               <p className="mt-3 rounded-xl border border-[var(--ng-border)] bg-ng-surface p-4 text-sm text-ng-muted">
                 Aucune zone n&apos;atteint encore le seuil k={snapshot.k}. Les
-                petits volumes restent masqués pour protéger les personnes.
+                petits volumes restent masques pour proteger les personnes.
                 {snapshot.suppressedCount > 0
-                  ? ` (${snapshot.suppressedCount} signalements agrégés hors affichage)`
+                  ? ` (${snapshot.suppressedCount} signalements agreges hors affichage)`
                   : ""}
               </p>
             ) : (
@@ -164,6 +276,12 @@ export default function ObservatoryPage() {
                     <div className="mb-1 flex items-center justify-between gap-2 text-xs">
                       <span className="font-semibold text-ng-text">
                         {z.zoneKey}
+                        {z.province ? (
+                          <span className="font-normal text-ng-muted">
+                            {" "}
+                            - {z.province}
+                          </span>
+                        ) : null}
                       </span>
                       <span className="text-ng-muted">
                         {z.count} · max {urgencyLabelFr(z.urgencyMax)}
@@ -199,7 +317,7 @@ export default function ObservatoryPage() {
                   </li>
                 ))}
                 {snapshot.byCategory.length === 0 ? (
-                  <li className="text-sm text-ng-muted">Pas encore de données.</li>
+                  <li className="text-sm text-ng-muted">Pas encore de donnees.</li>
                 ) : null}
               </ul>
             </div>
@@ -218,7 +336,7 @@ export default function ObservatoryPage() {
                   </li>
                 ))}
                 {snapshot.byDay.length === 0 ? (
-                  <li className="text-sm text-ng-muted">Pas encore de données.</li>
+                  <li className="text-sm text-ng-muted">Pas encore de donnees.</li>
                 ) : null}
               </ul>
             </div>
