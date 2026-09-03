@@ -1,8 +1,21 @@
 import { Stack, useRouter } from "expo-router";
 import * as Linking from "expo-linking";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { LocaleProvider } from "../src/context/locale";
+import { hapticDiscreteConfirm } from "../src/lib/haptics";
+import { useShakeDetector } from "../src/lib/shake-detector";
+
+function ShakeListener() {
+  const router = useRouter();
+  const onShake = useCallback(() => {
+    void hapticDiscreteConfirm();
+    router.push({ pathname: "/discrete", params: { from: "shake" } });
+  }, [router]);
+
+  useShakeDetector(onShake, true);
+  return null;
+}
 
 export default function RootLayout() {
   const router = useRouter();
@@ -25,6 +38,7 @@ export default function RootLayout() {
   return (
     <LocaleProvider>
       <StatusBar style="auto" />
+      <ShakeListener />
       <Stack screenOptions={{ headerShown: false }} />
     </LocaleProvider>
   );

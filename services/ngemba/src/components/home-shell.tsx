@@ -7,9 +7,11 @@ import {
   IconBook,
   IconEye,
   IconGlobe,
+  IconGraduation,
   IconMic,
   IconShield,
   IconSpark,
+  IconUsers,
 } from "@/components/icons";
 import { useCitizenLocale } from "@/hooks/use-citizen-locale";
 import {
@@ -167,6 +169,17 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
             icon={<IconSpark className="size-5" />}
             label={t.resources}
             href={href("/resources")}
+          />
+          <Tile
+            icon={<IconGraduation className="size-5" />}
+            label={t.school}
+            accent="secondary"
+            href={href("/school")}
+          />
+          <Tile
+            icon={<IconUsers className="size-5" />}
+            label={t.youth}
+            href={href("/jeunesse")}
           />
         </div>
 

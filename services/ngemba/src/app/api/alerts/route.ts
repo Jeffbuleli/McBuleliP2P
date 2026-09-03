@@ -20,11 +20,15 @@ import { requireOpsAuth } from "@/lib/ops/auth";
 import { sessionVisibleToRole } from "@/lib/ops/roles";
 import { clientIp, rateLimit, rateLimitResponse } from "@/lib/security/rate-limit";
 import { createSession, getSession, listSessions } from "@/lib/sessions/store";
+import { normalizeTrustedContacts } from "@/lib/trusted-contacts/types";
+import { normalizeSchoolContext } from "@/lib/school/types";
 
 const createBody = z.object({
   message: z.string().trim().min(3).max(4000),
   locale: z.string().default("fr"),
-  source: z.enum(["sos_button", "witness", "chat"]).default("sos_button"),
+  source: z
+    .enum(["sos_button", "witness", "chat", "shake", "school"])
+    .default("sos_button"),
   lat: z.number().nullable().optional(),
   lng: z.number().nullable().optional(),
   shareLocation: z.boolean().optional(),
@@ -34,6 +38,14 @@ const createBody = z.object({
   locationLabel: z.string().nullable().optional(),
   locationSource: z.string().nullable().optional(),
   discrete: z.boolean().optional(),
+  trustedContacts: z.array(z.unknown()).max(3).optional(),
+  schoolContext: z
+    .object({
+      concernType: z.string(),
+      establishmentHint: z.string().nullable().optional(),
+      isMinor: z.boolean().optional(),
+    })
+    .optional(),
 });
 
 export async function POST(req: Request) {
@@ -55,6 +67,14 @@ export async function POST(req: Request) {
 
   const body = parsed.data;
   const locale = isLocale(body.locale) ? body.locale : "fr";
+  const trustedContacts = normalizeTrustedContacts(body.trustedContacts) ?? [];
+  const schoolContext =
+    body.source === "school"
+      ? normalizeSchoolContext(body.schoolContext)
+      : null;
+  if (body.source === "school" && !schoolContext) {
+    return NextResponse.json({ error: "invalid_school_context" }, { status: 400 });
+  }
 
   let lat: number | null = null;
   let lng: number | null = null;
@@ -96,11 +116,26 @@ export async function POST(req: Request) {
     locationConsentAt = new Date().toISOString();
   }
 
-  const { triage, routing, provider, aiMode } = await runTriage({
+  const { triage, routing: baseRouting, provider, aiMode } = await runTriage({
     message: body.message,
     locale,
     source: body.source,
   });
+
+  let routing = baseRouting;
+  if (body.source === "school") {
+    routing = { queue: "school_referent", autoRoute: false };
+  } else if (
+    triage.immediate_danger ||
+    triage.urgency === "critical"
+  ) {
+    routing = { queue: "operator_urgent", autoRoute: false };
+  }
+
+  const triageForSession =
+    body.source === "school" && triage.category === "unknown"
+      ? { ...triage, category: "school" as const }
+      : triage;
 
   const jar = await cookies();
   let citizenToken = jar.get(CITIZEN_COOKIE)?.value ?? null;
@@ -110,9 +145,9 @@ export async function POST(req: Request) {
     source: body.source,
     locale,
     message: body.message,
-    urgency: triage.urgency,
-    category: triage.category,
-    immediateDanger: triage.immediate_danger,
+    urgency: triageForSession.urgency,
+    category: triageForSession.category,
+    immediateDanger: triageForSession.immediate_danger,
     lat,
     lng,
     locationLabel,
@@ -120,11 +155,11 @@ export async function POST(req: Request) {
     locationSource,
     locationConsentAt,
     aiSummary:
-      triage.summary_user_locale ||
-      triage.summary_fr ||
-      opsSummaryFr(triage.category, triage.urgency),
-    aiConfidence: triage.confidence,
-    aiPayload: triage,
+      triageForSession.summary_user_locale ||
+      triageForSession.summary_fr ||
+      opsSummaryFr(triageForSession.category, triageForSession.urgency),
+    aiConfidence: triageForSession.confidence,
+    aiPayload: triageForSession,
     routingQueue: routing.queue,
     autoRoute: routing.autoRoute,
     provider,
@@ -132,6 +167,8 @@ export async function POST(req: Request) {
     status: "active",
     citizenToken,
     discreteMode: Boolean(body.discrete),
+    trustedContacts,
+    schoolContext,
   });
 
   await notifyNewAlert(session);

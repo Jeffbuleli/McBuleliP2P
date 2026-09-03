@@ -36,7 +36,7 @@ const LOCAL_SKIP_THRESHOLD = Number(
 export async function runTriage(input: {
   message: string;
   locale: string;
-  source: "sos_button" | "witness" | "chat";
+  source: "sos_button" | "witness" | "chat" | "shake" | "school";
 }): Promise<{
   triage: TriageResult;
   routing: ReturnType<typeof applyTriageRules>;

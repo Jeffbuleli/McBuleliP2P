@@ -78,7 +78,8 @@ export type RoutingQueue =
   | "operator_urgent"
   | "operator_standard"
   | "self_service"
-  | "aggregated_report";
+  | "aggregated_report"
+  | "school_referent";
 
 export function applyTriageRules(triage: TriageResult): {
   queue: RoutingQueue;
@@ -99,6 +100,12 @@ export function applyTriageRules(triage: TriageResult): {
   }
   if (triage.category === "infrastructure" && triage.urgency !== "high") {
     return { queue: "aggregated_report", autoRoute: true };
+  }
+  if (
+    triage.category === "school" ||
+    triage.routing_hint === "school_referent"
+  ) {
+    return { queue: "school_referent", autoRoute: false };
   }
   return { queue: "operator_standard", autoRoute: false };
 }

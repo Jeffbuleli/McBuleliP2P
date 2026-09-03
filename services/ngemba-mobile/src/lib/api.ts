@@ -15,13 +15,18 @@ export function apiBaseUrl(): string {
 export type CreateAlertInput = {
   message: string;
   locale: string;
-  source: "sos_button" | "witness" | "chat";
+  source: "sos_button" | "witness" | "chat" | "shake";
   discrete?: boolean;
   shareLocation?: boolean;
   lat?: number | null;
   lng?: number | null;
   provinceId?: string | null;
   cityId?: string | null;
+  trustedContacts?: Array<{
+    name: string;
+    phone?: string | null;
+    email?: string | null;
+  }>;
 };
 
 export type CreateAlertResult = {
@@ -48,6 +53,7 @@ export async function createAlert(
       lng: input.lng ?? null,
       provinceId: input.provinceId ?? null,
       cityId: input.cityId ?? null,
+      trustedContacts: input.trustedContacts ?? [],
     }),
   });
   const data = await res.json().catch(() => ({}));

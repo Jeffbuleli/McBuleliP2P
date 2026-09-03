@@ -49,13 +49,16 @@ export function sessionVisibleToRole(
 
   if (role === "ngo") {
     return (
-      ["operator_urgent", "operator_standard"].includes(session.routingQueue) ||
+      ["operator_urgent", "operator_standard", "school_referent"].includes(
+        session.routingQueue,
+      ) ||
       [
         "vbg",
         "sexual_violence",
         "domestic_violence",
         "child_danger",
         "harassment",
+        "school",
         "unknown",
         "other",
       ].includes(session.category)

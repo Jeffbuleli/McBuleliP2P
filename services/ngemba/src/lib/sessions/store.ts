@@ -4,6 +4,8 @@ import path from "path";
 import type { TriageResult, RoutingQueue } from "@/lib/ai/triage-schema";
 import type { MediaAttachment } from "@/lib/media/types";
 import type { ChatMessage } from "@/lib/sessions/chat";
+import type { SchoolContext } from "@/lib/school/types";
+import type { TrustedContact } from "@/lib/trusted-contacts/types";
 
 export type { ChatMessage };
 
@@ -17,7 +19,7 @@ export type StatusHistoryEntry = {
 export type AlertSessionRecord = {
   id: string;
   status: "opened" | "active" | "oriented" | "closed" | "cancelled";
-  source: "sos_button" | "witness" | "chat";
+  source: "sos_button" | "witness" | "chat" | "shake" | "school";
   locale: string;
   message: string;
   urgency: TriageResult["urgency"];
@@ -44,6 +46,8 @@ export type AlertSessionRecord = {
   closedAt: string | null;
   citizenToken: string | null;
   discreteMode: boolean;
+  trustedContacts: TrustedContact[];
+  schoolContext: SchoolContext | null;
   media: MediaAttachment[];
   chatMessages: ChatMessage[];
 };
@@ -61,6 +65,8 @@ function normalizeRecord(row: AlertSessionRecord): AlertSessionRecord {
     ...row,
     citizenToken: row.citizenToken ?? null,
     discreteMode: row.discreteMode ?? false,
+    trustedContacts: row.trustedContacts ?? [],
+    schoolContext: row.schoolContext ?? null,
     media: row.media ?? [],
     chatMessages: row.chatMessages ?? [],
   };
@@ -125,10 +131,14 @@ export function createSession(
     | "chatMessages"
     | "citizenToken"
     | "discreteMode"
+    | "trustedContacts"
+    | "schoolContext"
   > & {
     status?: AlertSessionRecord["status"];
     citizenToken?: string | null;
     discreteMode?: boolean;
+    trustedContacts?: TrustedContact[];
+    schoolContext?: SchoolContext | null;
     media?: MediaAttachment[];
     chatMessages?: ChatMessage[];
   },
@@ -150,6 +160,8 @@ export function createSession(
     ...input,
     citizenToken: input.citizenToken ?? null,
     discreteMode: input.discreteMode ?? false,
+    trustedContacts: input.trustedContacts ?? [],
+    schoolContext: input.schoolContext ?? null,
     media: input.media ?? [],
     chatMessages: input.chatMessages ?? [],
   };

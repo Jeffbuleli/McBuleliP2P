@@ -43,6 +43,8 @@ const SOURCE_FR: Record<string, string> = {
   sos_button: "SOS",
   witness: "Témoin",
   chat: "Chat",
+  shake: "Secousse",
+  school: "Safe School",
 };
 
 const ROUTING_FR: Record<RoutingQueue, string> = {
@@ -50,6 +52,7 @@ const ROUTING_FR: Record<RoutingQueue, string> = {
   operator_standard: "Opérateur standard",
   self_service: "Auto-orientation",
   aggregated_report: "Signalement agrégé",
+  school_referent: "Référent école",
 };
 
 const LOCATION_SOURCE_FR: Record<string, string> = {

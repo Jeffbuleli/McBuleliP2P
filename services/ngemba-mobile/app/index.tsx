@@ -1,4 +1,5 @@
 import { Link, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import {
   Image,
   Pressable,
@@ -12,6 +13,11 @@ import { useLocale } from "../src/context/locale";
 import { localeLabels, locales, messages, type Locale } from "../src/lib/i18n";
 import { hapticTap } from "../src/lib/haptics";
 import { useTripleTap } from "../src/lib/triple-tap";
+import {
+  needsTrustedContactsOnboarding,
+  readTrustedContacts,
+  readTrustedContactsSkipped,
+} from "../src/lib/trusted-contacts-prefs";
 import { brand, colors } from "../src/theme/colors";
 
 function Tile({
@@ -48,6 +54,18 @@ export default function HomeScreen() {
   const { locale, setLocale } = useLocale();
   const t = messages[locale];
   const onLogoTap = useTripleTap(() => router.push("/discrete"));
+
+  useEffect(() => {
+    void (async () => {
+      const [contacts, skipped] = await Promise.all([
+        readTrustedContacts(),
+        readTrustedContactsSkipped(),
+      ]);
+      if (needsTrustedContactsOnboarding(contacts, skipped)) {
+        router.push("/trusted-contacts");
+      }
+    })();
+  }, [router]);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -111,6 +129,13 @@ export default function HomeScreen() {
           </Pressable>
         </Link>
         <Text style={styles.discreteHint}>{t.discreteTap}</Text>
+        <Text style={styles.discreteHint}>{t.discreteShake}</Text>
+
+        <Link href="/trusted-contacts" asChild>
+          <Pressable style={styles.trustedLink}>
+            <Text style={styles.trustedLinkText}>{t.trustedContactsLink}</Text>
+          </Pressable>
+        </Link>
       </ScrollView>
     </SafeAreaView>
   );
@@ -212,5 +237,12 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: colors.muted,
     paddingHorizontal: 16,
+  },
+  trustedLink: { alignSelf: "center", marginTop: 20 },
+  trustedLinkText: {
+    fontSize: 12,
+    color: colors.primary,
+    fontWeight: "600",
+    textDecorationLine: "underline",
   },
 });

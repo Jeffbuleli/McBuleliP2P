@@ -13,6 +13,7 @@ import {
   statusLabelFr,
   urgencyLabelFr,
 } from "@/lib/labels";
+import { SCHOOL_CONCERN_LABELS_FR } from "@/lib/school/types";
 import type { StatusHistoryEntry } from "@/lib/sessions/store";
 import { shellMaxWidth, useDeviceClass } from "@/lib/ui/device";
 
@@ -48,6 +49,11 @@ type Session = {
   orientedAt: string | null;
   closedAt: string | null;
   discreteMode?: boolean;
+  schoolContext?: {
+    concernType: string;
+    establishmentHint: string | null;
+    isMinor: boolean;
+  } | null;
   media?: Array<{
     id: string;
     kind: string;
@@ -194,6 +200,11 @@ export function OpsDossierView({ id }: { id: string }) {
               Mode discret
             </span>
           ) : null}
+          {session.source === "school" || session.schoolContext ? (
+            <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-[11px] font-semibold text-indigo-700">
+              Safe School · mineur
+            </span>
+          ) : null}
         </div>
       </header>
 
@@ -222,6 +233,24 @@ export function OpsDossierView({ id }: { id: string }) {
               <dt className="font-semibold">File</dt>
               <dd>{routingLabelFr(session.routingQueue)}</dd>
             </div>
+            {session.schoolContext ? (
+              <>
+                <div>
+                  <dt className="font-semibold">Safe School</dt>
+                  <dd>
+                    {SCHOOL_CONCERN_LABELS_FR[
+                      session.schoolContext.concernType as keyof typeof SCHOOL_CONCERN_LABELS_FR
+                    ] ?? session.schoolContext.concernType}
+                  </dd>
+                </div>
+                {session.schoolContext.establishmentHint ? (
+                  <div>
+                    <dt className="font-semibold">Établissement</dt>
+                    <dd>{session.schoolContext.establishmentHint}</dd>
+                  </div>
+                ) : null}
+              </>
+            ) : null}
             <div className="col-span-2">
               <dt className="font-semibold">Lieu</dt>
               <dd>

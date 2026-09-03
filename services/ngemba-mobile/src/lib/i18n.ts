@@ -44,8 +44,21 @@ type Copy = {
   discreteSend: string;
   discreteSafety: string;
   discreteTap: string;
+  discreteShake: string;
   resources: string;
   prevent: string;
+  trustedContactsTitle: string;
+  trustedContactsSubtitle: string;
+  trustedContactLabel: string;
+  trustedContactName: string;
+  trustedContactPhone: string;
+  trustedContactEmail: string;
+  trustedContactRemove: string;
+  trustedContactAdd: string;
+  trustedContactsSave: string;
+  trustedContactsSkip: string;
+  trustedContactsError: string;
+  trustedContactsLink: string;
 };
 
 const fr: Copy = {
@@ -79,8 +92,22 @@ const fr: Copy = {
   discreteSafety:
     "Si quelqu'un surveille votre ecran, ecrivez peu de mots.",
   discreteTap: "Triple-tap sur le logo pour le mode discret.",
+  discreteShake: "Secouez le telephone 5 fois pour le mode discret.",
   resources: "Aide",
   prevent: "Prevenir",
+  trustedContactsTitle: "Contacts de confiance",
+  trustedContactsSubtitle:
+    "1 a 3 personnes prevenues en meme temps que l'operateur NGEMBA.",
+  trustedContactLabel: "Contact",
+  trustedContactName: "Prenom ou surnom",
+  trustedContactPhone: "Telephone (+243...)",
+  trustedContactEmail: "Email (optionnel)",
+  trustedContactRemove: "Retirer",
+  trustedContactAdd: "Ajouter un contact",
+  trustedContactsSave: "Enregistrer",
+  trustedContactsSkip: "Plus tard",
+  trustedContactsError: "Ajoutez au moins un contact avec nom et telephone.",
+  trustedContactsLink: "Mes contacts de confiance",
 };
 
 export const messages: Record<Locale, Copy> = {
@@ -111,8 +138,22 @@ export const messages: Record<Locale, Copy> = {
     discreteSend: "Send discreetly",
     discreteSafety: "If someone is watching your screen, use few words.",
     discreteTap: "Triple-tap the logo for discrete mode.",
+    discreteShake: "Shake your phone 5 times for discrete mode.",
     resources: "Help",
     prevent: "Prevent",
+    trustedContactsTitle: "Trusted contacts",
+    trustedContactsSubtitle:
+      "1 to 3 people notified alongside the NGEMBA operator.",
+    trustedContactLabel: "Contact",
+    trustedContactName: "First name or nickname",
+    trustedContactPhone: "Phone (+243...)",
+    trustedContactEmail: "Email (optional)",
+    trustedContactRemove: "Remove",
+    trustedContactAdd: "Add a contact",
+    trustedContactsSave: "Save",
+    trustedContactsSkip: "Later",
+    trustedContactsError: "Add at least one contact with name and phone.",
+    trustedContactsLink: "My trusted contacts",
   },
   ln: {
     ...fr,
@@ -141,6 +182,20 @@ export const messages: Record<Locale, Copy> = {
     discreteSend: "Tinda na bosembo",
     discreteSafety: "Soki moto azali kotala ecran na yo, koma maloba moke.",
     discreteTap: "Tina logo NGEMBA mbala 3 mpo na mode ya bosembo.",
+    discreteShake: "Kokanga telefone mbala 5 mpo na mode ya bosembo.",
+    trustedContactsTitle: "Bandeko ya confiance",
+    trustedContactsSubtitle:
+      "Bato 1 tii 3 bakoyebisama elongo na operateur NGEMBA.",
+    trustedContactLabel: "Contact",
+    trustedContactName: "Nkombo to surnom",
+    trustedContactPhone: "Telephone (+243...)",
+    trustedContactEmail: "Email (ya posible te)",
+    trustedContactRemove: "Longola",
+    trustedContactAdd: "Bakisa contact",
+    trustedContactsSave: "Kobomba",
+    trustedContactsSkip: "Na nsima",
+    trustedContactsError: "Bakisa contact moko na nkombo na telephone.",
+    trustedContactsLink: "Bandeko na ngai ya confiance",
     resources: "Lisalisi",
     prevent: "Kobatela",
   },
@@ -171,6 +226,20 @@ export const messages: Record<Locale, Copy> = {
     discreteSend: "Tuma kwa siri",
     discreteSafety: "Ikiwa mtu anaangalia skrini yako, andika maneno machache.",
     discreteTap: "Gusa logo ya NGEMBA mara 3 kwa hali ya siri.",
+    discreteShake: "tikisa simu mara 5 kwa hali ya siri.",
+    trustedContactsTitle: "Mawasiliano wa kuaminiwa",
+    trustedContactsSubtitle:
+      "Watu 1 hadi 3 huarifiwa pamoja na mwendeshaji NGEMBA.",
+    trustedContactLabel: "Mawasiliano",
+    trustedContactName: "Jina au jina la utani",
+    trustedContactPhone: "Simu (+243...)",
+    trustedContactEmail: "Barua pepe (hiari)",
+    trustedContactRemove: "Ondoa",
+    trustedContactAdd: "Ongeza mawasiliano",
+    trustedContactsSave: "Hifadhi",
+    trustedContactsSkip: "Baadaye",
+    trustedContactsError: "Ongeza angalau mawasiliano moja na jina na simu.",
+    trustedContactsLink: "Mawasiliano yangu ya kuaminiwa",
     resources: "Msaada",
     prevent: "Zuia",
   },
@@ -201,6 +270,20 @@ export const messages: Record<Locale, Copy> = {
     discreteSend: "Tuma na bosembo",
     discreteSafety: "Nguwe muntu udi kutala ecran na nge, soneka maloba moke.",
     discreteTap: "Tina logo NGEMBA mbala 3 mpo na mode ya bosembo.",
+    discreteShake: "Kokanga telefone mbala 5 mpo na mode ya bosembo.",
+    trustedContactsTitle: "Bandeko ya confiance",
+    trustedContactsSubtitle:
+      "Bantu 1 tii 3 bakoyebisama elongo na operateur NGEMBA.",
+    trustedContactLabel: "Contact",
+    trustedContactName: "Dijina to surnom",
+    trustedContactPhone: "Telefone (+243...)",
+    trustedContactEmail: "Email (ya posible ve)",
+    trustedContactRemove: "Longola",
+    trustedContactAdd: "Bakisa contact",
+    trustedContactsSave: "Kubomba",
+    trustedContactsSkip: "Na nsima",
+    trustedContactsError: "Bakisa contact moko na dijina na telefone.",
+    trustedContactsLink: "Bandeko na ngie ya confiance",
     resources: "Dishinda",
     prevent: "Lukengela",
   },
@@ -231,6 +314,20 @@ export const messages: Record<Locale, Copy> = {
     discreteSend: "Tinda na bosembo",
     discreteSafety: "Soki muntu ke talaka ecran na nge, sonika bangogo fioti.",
     discreteTap: "Tina logo NGEMBA mbala 3 mpo na mode ya bosembo.",
+    discreteShake: "Kokanga telefone mbala 5 mpo na mode ya bosembo.",
+    trustedContactsTitle: "Bandeko ya confiance",
+    trustedContactsSubtitle:
+      "Bantu 1 tii 3 bakoyebisama elongo na operateur NGEMBA.",
+    trustedContactLabel: "Contact",
+    trustedContactName: "Dijina to surnom",
+    trustedContactPhone: "Telefone (+243...)",
+    trustedContactEmail: "Email (ya posible ve)",
+    trustedContactRemove: "Longola",
+    trustedContactAdd: "Bakisa contact",
+    trustedContactsSave: "Kubomba",
+    trustedContactsSkip: "Na nsima",
+    trustedContactsError: "Bakisa contact moko na dijina na telefone.",
+    trustedContactsLink: "Bandeko na nge ya confiance",
     resources: "Lusadisu",
     prevent: "Lunda",
   },

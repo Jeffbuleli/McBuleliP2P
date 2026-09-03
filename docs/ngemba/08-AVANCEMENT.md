@@ -10,8 +10,22 @@
 | **Phase 3** (discret, vibration, PWA) | ✅ v1 web |
 | **Phase 3b** (Expo mobile v0.1) | ✅ scaffold |
 | **Phase 3b.2** (i18n LN+, locale persist, EAS) | ✅ v0.2 |
+| **Phase 3b.3** (contacts confiance + secousse 5x) | ✅ v0.3 |
+| **Phase 4** (Safe School + Jeunesse 10 scenarios) | ✅ v0.1 web |
 
 Live : https://ngemba.cyberalert-rdc.org
+
+## Phase 4 - livre (web v0.1)
+
+- `/school` Safe School · file referent ecole · protocole mineur
+- `/jeunesse` + 10 scenarios IA interactifs · 6 langues
+- Voir [17-PHASE-4.md](./17-PHASE-4.md)
+
+## Phase 3b.3 - livre (Expo v0.3)
+
+- Contacts de confiance (1-3) · onboarding · notify email/SMS backend
+- Secousse 5x → mode discret (`source: shake`)
+- Voir [16-PHASE-3B.md](./16-PHASE-3B.md)
 
 ## Phase 3b - livre (Expo v0.1)
 

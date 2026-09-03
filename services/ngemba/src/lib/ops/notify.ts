@@ -11,7 +11,9 @@ import {
   sourceLabelFr,
   urgencyLabelFr,
 } from "@/lib/labels";
+import { SCHOOL_CONCERN_LABELS_FR } from "@/lib/school/types";
 import { emitOpsEvent } from "@/lib/ops/events";
+import { notifyTrustedContacts } from "@/lib/ops/notify-trusted-contacts";
 
 function appUrl(): string {
   return (
@@ -70,7 +72,11 @@ export async function notifyNewAlert(session: AlertSessionRecord) {
     createdAt: session.createdAt,
   });
 
-  await Promise.allSettled([sendOpsWebhook(session), sendOpsEmail(session)]);
+  await Promise.allSettled([
+    sendOpsWebhook(session),
+    sendOpsEmail(session),
+    notifyTrustedContacts(session, session.trustedContacts ?? []),
+  ]);
 }
 
 export async function notifySessionUpdated(session: AlertSessionRecord) {
@@ -153,6 +159,23 @@ async function sendOpsEmail(session: AlertSessionRecord) {
       { label: "Langue", value: session.locale.toUpperCase() },
       ...(session.discreteMode
         ? [{ label: "Mode", value: "Discret (vibration)" }]
+        : []),
+      ...(session.schoolContext
+        ? [
+            {
+              label: "Safe School",
+              value: SCHOOL_CONCERN_LABELS_FR[session.schoolContext.concernType] ??
+                session.schoolContext.concernType,
+            },
+            ...(session.schoolContext.establishmentHint
+              ? [
+                  {
+                    label: "Établissement",
+                    value: session.schoolContext.establishmentHint,
+                  },
+                ]
+              : []),
+          ]
         : []),
     ],
   });

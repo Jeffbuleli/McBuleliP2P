@@ -68,6 +68,29 @@ type Copy = {
   charterLink: string;
   legalDraftNotice: string;
   myAlertsEmpty: string;
+  school: string;
+  youth: string;
+  schoolTitle: string;
+  schoolSubtitle: string;
+  schoolSafety: string;
+  schoolConcernPick: string;
+  schoolConcernHarassment: string;
+  schoolConcernViolence: string;
+  schoolConcernAbuse: string;
+  schoolConcernCyber: string;
+  schoolConcernOther: string;
+  schoolEstablishment: string;
+  schoolEstablishmentPlaceholder: string;
+  schoolTell: string;
+  schoolAnonymousNote: string;
+  youthTitle: string;
+  youthSubtitle: string;
+  youthYourTurn: string;
+  youthPlaceholder: string;
+  youthSend: string;
+  youthSosHint: string;
+  youthBackToList: string;
+  youthDisclaimer: string;
 };
 
 const baseFr: Copy = {
@@ -128,6 +151,32 @@ const baseFr: Copy = {
   legalDraftNotice: "",
   myAlertsEmpty:
     "Aucune alerte enregistrée sur cet appareil. Utilisez SOS pour créer une alerte - elle apparaîtra ici automatiquement.",
+  school: "École",
+  youth: "Jeunesse",
+  schoolTitle: "Safe School — signalement protégé",
+  schoolSubtitle: "Harcèlement, violence, abus ou cyber — référent école informé.",
+  schoolSafety:
+    "Ton identité est protégée. Ce signalement va au référent école, séparé des dossiers adultes.",
+  schoolConcernPick: "Type de situation",
+  schoolConcernHarassment: "Harcèlement",
+  schoolConcernViolence: "Violence",
+  schoolConcernAbuse: "Abus / comportement inapproprié",
+  schoolConcernCyber: "Cyberharcèlement",
+  schoolConcernOther: "Autre",
+  schoolEstablishment: "École ou quartier (optionnel)",
+  schoolEstablishmentPlaceholder: "Ex. Lycée X, commune Y",
+  schoolTell: "Raconte ce qui se passe",
+  schoolAnonymousNote: "Pas besoin de donner ton nom complet.",
+  youthTitle: "McBuleli Jeunesse",
+  youthSubtitle:
+    "10 situations pour réfléchir — consentement, cyber, corruption, amitié. Pas de classement public.",
+  youthYourTurn: "Et toi, que ferais-tu ?",
+  youthPlaceholder: "Écris ta réponse...",
+  youthSend: "Envoyer",
+  youthSosHint: "Situation grave ? Utilise le bouton",
+  youthBackToList: "← Tous les scénarios",
+  youthDisclaimer:
+    "Guide éducatif — pas un avocat ni un médecin. En danger réel, utilise SOS NGEMBA.",
 };
 
 export const messages: Record<Locale, Copy> = {
@@ -190,6 +239,32 @@ export const messages: Record<Locale, Copy> = {
     legalDraftNotice: "",
     myAlertsEmpty:
       "No alerts saved on this device. Use SOS to create one - it will appear here automatically.",
+    school: "School",
+    youth: "Youth",
+    schoolTitle: "Safe School — protected report",
+    schoolSubtitle: "Harassment, violence, abuse or cyber — school referent notified.",
+    schoolSafety:
+      "Your identity is protected. This report goes to the school referent, separate from adult cases.",
+    schoolConcernPick: "Type of situation",
+    schoolConcernHarassment: "Harassment",
+    schoolConcernViolence: "Violence",
+    schoolConcernAbuse: "Abuse / inappropriate behavior",
+    schoolConcernCyber: "Cyberbullying",
+    schoolConcernOther: "Other",
+    schoolEstablishment: "School or area (optional)",
+    schoolEstablishmentPlaceholder: "E.g. High school X, district Y",
+    schoolTell: "Tell us what is happening",
+    schoolAnonymousNote: "You do not need to give your full name.",
+    youthTitle: "McBuleli Youth",
+    youthSubtitle:
+      "10 scenarios to reflect — consent, cyber, corruption, friendship. No public ranking.",
+    youthYourTurn: "What would you do?",
+    youthPlaceholder: "Write your answer...",
+    youthSend: "Send",
+    youthSosHint: "Serious situation? Use the",
+    youthBackToList: "← All scenarios",
+    youthDisclaimer:
+      "Educational guide — not legal or medical advice. In real danger, use NGEMBA SOS.",
   },
   ln: {
     ...baseFr,

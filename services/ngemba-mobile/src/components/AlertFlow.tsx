@@ -22,6 +22,7 @@ import {
   hapticSosConfirm,
 } from "../lib/haptics";
 import { messages } from "../lib/i18n";
+import { readTrustedContacts } from "../lib/trusted-contacts-prefs";
 import { colors } from "../theme/colors";
 
 type Step = "tell" | "place";
@@ -30,7 +31,7 @@ export function AlertFlow({
   source,
   discrete = false,
 }: {
-  source: "sos_button" | "witness";
+  source: "sos_button" | "witness" | "shake";
   discrete?: boolean;
 }) {
   const router = useRouter();
@@ -68,6 +69,7 @@ export function AlertFlow({
     setBusy(true);
     setError(null);
     try {
+      const trustedContacts = await readTrustedContacts();
       const result = await createAlert({
         message: message.trim(),
         locale,
@@ -78,6 +80,11 @@ export function AlertFlow({
         lng: opts.lng ?? null,
         provinceId: opts.provinceId ?? null,
         cityId: opts.cityId ?? null,
+        trustedContacts: trustedContacts.map((c) => ({
+          name: c.name,
+          phone: c.phone,
+          email: c.email ?? null,
+        })),
       });
       if (discrete) await hapticDiscreteConfirm();
       else await hapticSosConfirm();

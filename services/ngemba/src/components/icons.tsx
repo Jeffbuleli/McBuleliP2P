@@ -128,3 +128,50 @@ export function IconGlobe({ title, className = "size-6", ...rest }: IconProps) {
     </svg>
   );
 }
+
+export function IconGraduation({ title, className = "size-6", ...rest }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden={title ? undefined : true}
+      className={className}
+      {...rest}
+    >
+      {title ? <title>{title}</title> : null}
+      <path
+        d="M12 3 3 7.5 12 12l9-4.5L12 3Z"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M6 10v4.5c0 2 3.5 3.5 6 3.5s6-1.5 6-3.5V10M21 7.5V14"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+export function IconUsers({ title, className = "size-6", ...rest }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden={title ? undefined : true}
+      className={className}
+      {...rest}
+    >
+      {title ? <title>{title}</title> : null}
+      <circle cx="9" cy="8" r="3" stroke="currentColor" strokeWidth="1.75" />
+      <path
+        d="M3.5 19c0-2.5 2.5-4 5.5-4s5.5 1.5 5.5 4M16 7.5a2.5 2.5 0 1 1 0 5M14.5 19c.3-1.8 2.2-3 4.5-3"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
