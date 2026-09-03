@@ -33,6 +33,12 @@ type Row = {
     scope: "local" | "national_fallback" | "unassigned";
     provinceName: string | null;
   } | null;
+  sla?: {
+    label: string;
+    breached: boolean;
+    escalated: boolean;
+    remainingMs: number | null;
+  };
 };
 
 function badge(u: string) {
@@ -57,6 +63,7 @@ export default function OpsPage() {
     critical: number;
     high: number;
     open: number;
+    slaBreached?: number;
   } | null>(null);
 
   const canPatch = role !== "partner";
@@ -90,6 +97,7 @@ export default function OpsPage() {
     es.addEventListener("connected", () => setLive(true));
     es.addEventListener("alert_created", () => void load());
     es.addEventListener("alert_updated", () => void load());
+    es.addEventListener("alert_escalated", () => void load());
     es.onerror = () => setLive(false);
     return () => es.close();
   }, [load]);
@@ -184,6 +192,16 @@ export default function OpsPage() {
             <p className="text-[10px] font-semibold uppercase text-ng-muted">Visibles</p>
             <p className="text-lg font-bold text-ng-text">{stats.total}</p>
           </div>
+          {typeof stats.slaBreached === "number" ? (
+            <div className="rounded-xl border border-[var(--ng-border)] bg-ng-surface px-3 py-2">
+              <p className="text-[10px] font-semibold uppercase text-ng-muted">
+                SLA / escalade
+              </p>
+              <p className="text-lg font-bold text-ng-urgent">
+                {stats.slaBreached}
+              </p>
+            </div>
+          ) : null}
         </div>
       ) : null}
 
@@ -226,6 +244,19 @@ export default function OpsPage() {
                 {r.routingMeta?.scope === "local" ? (
                   <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-800">
                     Local
+                  </span>
+                ) : null}
+                {r.sla?.escalated ? (
+                  <span className="rounded-full bg-ng-urgent/15 px-2.5 py-0.5 text-[11px] font-semibold text-ng-urgent">
+                    Escalade
+                  </span>
+                ) : r.sla?.breached ? (
+                  <span className="rounded-full bg-ng-urgent/15 px-2.5 py-0.5 text-[11px] font-semibold text-ng-urgent">
+                    SLA depasse
+                  </span>
+                ) : r.sla?.label ? (
+                  <span className="rounded-full bg-ng-primary-muted px-2.5 py-0.5 text-[11px] font-semibold text-ng-primary">
+                    {r.sla.label}
                   </span>
                 ) : null}
               </div>

@@ -18,7 +18,10 @@ import { opsSummaryFr } from "@/lib/labels";
 import { notifyNewAlert } from "@/lib/ops/notify";
 import { requireOpsAuth } from "@/lib/ops/auth";
 import { sessionVisibleToRole } from "@/lib/ops/visibility";
+import { applySlaEscalationIfNeeded } from "@/lib/ops/sla-engine";
+import { computeSlaDueAt, slaUiState } from "@/lib/ops/sla";
 import { buildRoutingMeta } from "@/lib/partners/match";
+import { listPartners } from "@/lib/partners/directory";
 import { clientIp, rateLimit, rateLimitResponse } from "@/lib/security/rate-limit";
 import { createSession, getSession, listSessions } from "@/lib/sessions/store";
 import { normalizeTrustedContacts } from "@/lib/trusted-contacts/types";
@@ -148,6 +151,22 @@ export async function POST(req: Request) {
     category: triageForSession.category,
   });
 
+  let partnerSla: number | null = null;
+  for (const id of routingMeta.matchedPartnerIds) {
+    const p = listPartners().find((x) => x.id === id);
+    if (p?.slaMinutesCritical != null) {
+      if (partnerSla == null || p.slaMinutesCritical < partnerSla) {
+        partnerSla = p.slaMinutesCritical;
+      }
+    }
+  }
+  const createdAtPreview = new Date().toISOString();
+  const slaDueAt = computeSlaDueAt(
+    createdAtPreview,
+    triageForSession.urgency,
+    partnerSla,
+  );
+
   const session = createSession({
     source: body.source,
     locale,
@@ -177,6 +196,7 @@ export async function POST(req: Request) {
     trustedContacts,
     schoolContext,
     routingMeta,
+    slaDueAt,
   });
 
   await notifyNewAlert(session);
@@ -216,9 +236,13 @@ export async function GET(req: Request) {
   if (auth instanceof NextResponse) return auth;
 
   const boundId = auth.partner?.id ?? null;
-  const sessions = listSessions(80).filter((s) =>
-    sessionVisibleToRole(auth.role, s, boundId),
-  );
+  const sessions = listSessions(80)
+    .map((s) => applySlaEscalationIfNeeded(s))
+    .filter((s) => sessionVisibleToRole(auth.role, s, boundId))
+    .map((s) => ({
+      ...s,
+      sla: slaUiState(s),
+    }));
 
   const stats =
     auth.role === "admin"
@@ -229,6 +253,8 @@ export async function GET(req: Request) {
           open: sessions.filter(
             (s) => s.status !== "closed" && s.status !== "cancelled",
           ).length,
+          slaBreached: sessions.filter((s) => s.sla.breached || s.sla.escalated)
+            .length,
         }
       : undefined;
 

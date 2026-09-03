@@ -76,10 +76,10 @@ Sans token dedie, la file `NGO` voit l'union des partenaires ngo.
 
 ## Prochain
 
-1. SLA local + escalation si pas de prise en charge
-2. Tokens par org en prod (JGL, ecole, Beni…)
-3. Edition annuaire via UI admin (aujourd'hui seed / JSON)
+1. Tokens par org en prod (JGL, ecole, Beni…)
+2. Edition annuaire via UI admin (aujourd'hui seed / JSON)
+3. SLA / escalade : voir [21-SLA-ESCALADE.md](./21-SLA-ESCALADE.md)
 
 ---
 
-*Document v0.1*
+*Document v0.2*

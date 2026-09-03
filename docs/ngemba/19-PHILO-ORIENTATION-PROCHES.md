@@ -40,7 +40,7 @@ Ne pas confondre : les proches **ne remplacent pas** le service competent.
 |-------|---------|
 | **Fait** | File unique / roles + lieu sur dossier |
 | **Fait (v2)** | Annuaire partenaires par zone + filtrage file ops |
-| **Puis** | SLA local + escalation si pas de prise en charge |
+| **Fait (v3)** | SLA local + escalation nationale si pas de prise en charge |
 
 ---
 

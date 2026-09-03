@@ -53,6 +53,12 @@ type Session = {
   closedAt: string | null;
   discreteMode?: boolean;
   trustedContacts?: TrustedContact[];
+  escalation?: {
+    level: number;
+    escalatedAt: string;
+    reason: string;
+    fromScope: string;
+  } | null;
   routingMeta?: {
     provinceId: string | null;
     provinceName: string | null;
@@ -104,6 +110,13 @@ export function OpsDossierView({ id }: { id: string }) {
       nationalFallback: boolean;
     }>
   >([]);
+  const [sla, setSla] = useState<{
+    label: string;
+    breached: boolean;
+    escalated: boolean;
+    dueAt: string | null;
+    remainingMs: number | null;
+  } | null>(null);
   const [notes, setNotes] = useState("");
   const [assignedTo, setAssignedTo] = useState("");
   const [busy, setBusy] = useState(false);
@@ -127,6 +140,7 @@ export function OpsDossierView({ id }: { id: string }) {
     setError(null);
     setSession(data.session);
     setSuggestedPartners(data.suggestedPartners ?? []);
+    setSla(data.sla ?? null);
     setNotes(data.session.operatorNotes ?? "");
     setAssignedTo(data.session.assignedTo ?? "");
   }, [id]);
@@ -226,8 +240,27 @@ export function OpsDossierView({ id }: { id: string }) {
               Safe School - mineur
             </span>
           ) : null}
+          {sla?.escalated ? (
+            <span className="rounded-full bg-ng-urgent/15 px-2.5 py-0.5 text-[11px] font-semibold text-ng-urgent">
+              Escalade SLA
+            </span>
+          ) : sla?.breached ? (
+            <span className="rounded-full bg-ng-urgent/15 px-2.5 py-0.5 text-[11px] font-semibold text-ng-urgent">
+              SLA depasse
+            </span>
+          ) : sla ? (
+            <span className="rounded-full bg-ng-primary-muted px-2.5 py-0.5 text-[11px] font-semibold text-ng-primary">
+              {sla.label}
+            </span>
+          ) : null}
         </div>
       </header>
+
+      {session.escalation ? (
+        <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+          {session.escalation.reason}
+        </p>
+      ) : null}
 
       <section className="mt-6 ng-ops-dossier-grid">
         <article className="rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-4">

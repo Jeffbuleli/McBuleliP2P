@@ -75,7 +75,8 @@ Live : https://ngemba.cyberalert-rdc.org
 - Proches de confiance = **aide dossier** (wa.me / email), pas notify auto systematique
 - **v1 aligne** : champs enrichis, bloc ops, notify auto retire
 - **v2 aligne** : annuaire partenaires par zone + file filtree + fallback national
-- Voir [19-PHILO-ORIENTATION-PROCHES.md](./19-PHILO-ORIENTATION-PROCHES.md) · [20-PARTENAIRES-ZONES.md](./20-PARTENAIRES-ZONES.md)
+- **v3 aligne** : SLA + escalade nationale si pas de prise en charge
+- Voir [19-PHILO-ORIENTATION-PROCHES.md](./19-PHILO-ORIENTATION-PROCHES.md) · [20-PARTENAIRES-ZONES.md](./20-PARTENAIRES-ZONES.md) · [21-SLA-ESCALADE.md](./21-SLA-ESCALADE.md)
 
 ## Bloc B - reste humain
 

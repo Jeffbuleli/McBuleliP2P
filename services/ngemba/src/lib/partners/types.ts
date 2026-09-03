@@ -18,6 +18,8 @@ export type PartnerOrg = {
   contactHint?: string | null;
   /** Env optionnel pour token dedie (ex. NGEMBA_OPS_TOKEN_NGO_JGL) */
   tokenEnv?: string | null;
+  /** SLA critique override (minutes) pour ce partenaire */
+  slaMinutesCritical?: number | null;
 };
 
 export type RoutingScope = "local" | "national_fallback" | "unassigned";

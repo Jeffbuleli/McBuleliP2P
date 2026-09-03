@@ -35,6 +35,7 @@ const SEED_PARTNERS: PartnerOrg[] = [
     active: true,
     contactHint: "Me Arjoule Karinda",
     tokenEnv: "NGEMBA_OPS_TOKEN_NGO_JGL",
+    slaMinutesCritical: 5,
   },
   {
     id: "kinshasa-school-pilot",
@@ -48,6 +49,7 @@ const SEED_PARTNERS: PartnerOrg[] = [
     active: true,
     contactHint: "Safe School Kinshasa",
     tokenEnv: "NGEMBA_OPS_TOKEN_SCHOOL",
+    slaMinutesCritical: 10,
   },
   {
     id: "security-national",
@@ -119,6 +121,10 @@ function parseEnvPartners(): PartnerOrg[] | null {
         contactHint:
           typeof r.contactHint === "string" ? r.contactHint : null,
         tokenEnv: typeof r.tokenEnv === "string" ? r.tokenEnv : null,
+        slaMinutesCritical:
+          typeof r.slaMinutesCritical === "number"
+            ? r.slaMinutesCritical
+            : null,
       });
     }
     return out.length ? out : null;

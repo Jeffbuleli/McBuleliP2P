@@ -40,6 +40,7 @@ Si **Non** → mode discret : messages courts, pas de détails à voix haute.
 | Vie en danger immédiat | Numéros locaux + procédure ONG |
 | Enfant en danger | Protocole protection de l’enfant |
 | Opérateur débordé | Escalade admin ONG · ne pas laisser en file sans ack |
+| **SLA depasse** | Escalade automatique nationale (voir `21-SLA-ESCALADE.md`) |
 
 ## 5bis. Proches de confiance
 

@@ -6,6 +6,7 @@ import type { MediaAttachment } from "@/lib/media/types";
 import type { ChatMessage } from "@/lib/sessions/chat";
 import type { SchoolContext } from "@/lib/school/types";
 import type { SessionRoutingMeta } from "@/lib/partners/types";
+import type { SessionEscalation } from "@/lib/ops/sla";
 import type { TrustedContact } from "@/lib/trusted-contacts/types";
 
 export type { ChatMessage };
@@ -50,6 +51,8 @@ export type AlertSessionRecord = {
   trustedContacts: TrustedContact[];
   schoolContext: SchoolContext | null;
   routingMeta: SessionRoutingMeta | null;
+  slaDueAt: string | null;
+  escalation: SessionEscalation | null;
   media: MediaAttachment[];
   chatMessages: ChatMessage[];
 };
@@ -70,6 +73,8 @@ function normalizeRecord(row: AlertSessionRecord): AlertSessionRecord {
     trustedContacts: row.trustedContacts ?? [],
     schoolContext: row.schoolContext ?? null,
     routingMeta: row.routingMeta ?? null,
+    slaDueAt: row.slaDueAt ?? null,
+    escalation: row.escalation ?? null,
     media: row.media ?? [],
     chatMessages: row.chatMessages ?? [],
   };
@@ -137,6 +142,8 @@ export function createSession(
     | "trustedContacts"
     | "schoolContext"
     | "routingMeta"
+    | "slaDueAt"
+    | "escalation"
   > & {
     status?: AlertSessionRecord["status"];
     citizenToken?: string | null;
@@ -144,6 +151,8 @@ export function createSession(
     trustedContacts?: TrustedContact[];
     schoolContext?: SchoolContext | null;
     routingMeta?: SessionRoutingMeta | null;
+    slaDueAt?: string | null;
+    escalation?: SessionEscalation | null;
     media?: MediaAttachment[];
     chatMessages?: ChatMessage[];
   },
@@ -168,6 +177,8 @@ export function createSession(
     trustedContacts: input.trustedContacts ?? [],
     schoolContext: input.schoolContext ?? null,
     routingMeta: input.routingMeta ?? null,
+    slaDueAt: input.slaDueAt ?? null,
+    escalation: input.escalation ?? null,
     media: input.media ?? [],
     chatMessages: input.chatMessages ?? [],
   };
@@ -282,6 +293,51 @@ export function updateSession(
   }
   if (patch.status === "closed" && !next.closedAt) {
     next.closedAt = new Date().toISOString();
+  }
+
+  map.set(id, next);
+  persist();
+  return next;
+}
+
+/** Patch SLA / escalade / routingMeta (systeme). */
+export function patchSessionSla(
+  id: string,
+  patch: {
+    slaDueAt?: string | null;
+    escalation?: SessionEscalation | null;
+    routingMeta?: SessionRoutingMeta | null;
+    historyNote?: string;
+  },
+): AlertSessionRecord | null {
+  const map = ensureLoaded();
+  const current = map.get(id);
+  if (!current) return null;
+
+  const next: AlertSessionRecord = {
+    ...normalizeRecord(current),
+    slaDueAt:
+      patch.slaDueAt !== undefined ? patch.slaDueAt : current.slaDueAt ?? null,
+    escalation:
+      patch.escalation !== undefined
+        ? patch.escalation
+        : current.escalation ?? null,
+    routingMeta:
+      patch.routingMeta !== undefined
+        ? patch.routingMeta
+        : current.routingMeta ?? null,
+  };
+
+  if (patch.historyNote) {
+    next.statusHistory = [
+      {
+        at: new Date().toISOString(),
+        status: next.status,
+        actor: "systeme",
+        note: patch.historyNote,
+      },
+      ...next.statusHistory,
+    ];
   }
 
   map.set(id, next);

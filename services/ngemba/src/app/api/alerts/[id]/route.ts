@@ -9,6 +9,8 @@ import {
 import { notifySessionUpdated } from "@/lib/ops/notify";
 import { roleHasPermission } from "@/lib/ops/roles";
 import { sessionVisibleToRole } from "@/lib/ops/visibility";
+import { applySlaEscalationIfNeeded } from "@/lib/ops/sla-engine";
+import { slaUiState } from "@/lib/ops/sla";
 import { resolveOpsContext } from "@/lib/partners/bind";
 import {
   buildRoutingMeta,
@@ -33,10 +35,13 @@ export async function GET(req: Request, ctx: Ctx) {
     if (!roleHasPermission(ctxAuth.role, "alerts.view")) {
       return NextResponse.json({ error: "forbidden" }, { status: 403 });
     }
+
+    const live = applySlaEscalationIfNeeded(session);
+
     if (
       !sessionVisibleToRole(
         ctxAuth.role,
-        session,
+        live,
         ctxAuth.partner?.id ?? null,
       )
     ) {
@@ -44,14 +49,14 @@ export async function GET(req: Request, ctx: Ctx) {
     }
 
     const routingMeta =
-      session.routingMeta ??
+      live.routingMeta ??
       buildRoutingMeta({
-        commune: session.commune,
-        locationLabel: session.locationLabel,
-        category: session.category,
+        commune: live.commune,
+        locationLabel: live.locationLabel,
+        category: live.category,
       });
     const suggestedPartners = partnersForSessionDisplay({
-      ...session,
+      ...live,
       routingMeta,
     }).map((p) => ({
       id: p.id,
@@ -61,7 +66,8 @@ export async function GET(req: Request, ctx: Ctx) {
     }));
 
     return NextResponse.json({
-      session: { ...session, routingMeta },
+      session: { ...live, routingMeta },
+      sla: slaUiState(live),
       role: ctxAuth.role,
       partner: ctxAuth.partner
         ? { id: ctxAuth.partner.id, name: ctxAuth.partner.name }
