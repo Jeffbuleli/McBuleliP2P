@@ -8,11 +8,17 @@
 | **Bloc B** (pilote JGL, legal, formation) | ✅ technique · signatures ⏳ |
 | **Phase 2** (medias, chat, compte citoyen) | ✅ v1 |
 | **Phase 3** (discret, vibration, PWA) | ✅ v1 web |
-| Phase 3b (Expo, secousse native) | ⏳ |
+| **Phase 3b** (Expo mobile v0.1) | ✅ scaffold |
+| Phase 3b.2 (EAS build, widget) | ⏳ |
 
 Live : https://ngemba.cyberalert-rdc.org
 
-## Phase 3 — livre (web v1)
+## Phase 3b - livre (Expo v0.1)
+
+- App mobile `services/ngemba-mobile/` - SOS, discret, haptics
+- Voir [16-PHASE-3B.md](./16-PHASE-3B.md)
+
+## Phase 3 - livre (web v1)
 
 - `/discrete` · triple-tap logo · vibration · PWA manifest
 - OpenAI hybrid + Whisper actifs sur VPS

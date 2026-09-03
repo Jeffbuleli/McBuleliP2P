@@ -1,0 +1,42 @@
+{
+  "expo": {
+    "name": "NGEMBA",
+    "slug": "ngemba",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "ngemba",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#06402b"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "org.mcbuleli.ngemba",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "NGEMBA utilise votre position pour orienter l'aide, jamais obligatoire."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#06402b"
+      },
+      "package": "org.mcbuleli.ngemba",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "VIBRATE"
+      ]
+    },
+    "plugins": ["expo-router", "expo-location"],
+    "extra": {
+      "router": {
+        "origin": false
+      }
+    }
+  }
+}
