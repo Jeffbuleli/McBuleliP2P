@@ -1,10 +1,10 @@
 # NGEMBA - Phase 4 (Ecole & Jeunesse)
 
-> **Statut :** v0.1 MVP web
+> **Statut :** v0.2 - role referent ecole + mobile + contenu enrichi
 
 ---
 
-## Livre (v0.1)
+## Livre (v0.2)
 
 | Module | Route | Detail |
 |--------|-------|--------|
@@ -12,6 +12,8 @@
 | **McBuleli Jeunesse** | `/jeunesse` | 10 scenarios interactifs IA |
 | **Scenarios** | `/jeunesse/[id]` | Chat educatif · redirect SOS si danger |
 | **Accueil** | `/` | Tuiles Ecole + Jeunesse |
+| **Ops school** | `/ops` | Role `school` · token `NGEMBA_OPS_TOKEN_SCHOOL` |
+| **Mobile** | Expo | Tuiles Ecole + Jeunesse + chat scenarios |
 | **i18n** | 6 langues | FR EN LN SW LU KG |
 
 ---
@@ -20,9 +22,9 @@
 
 - Source alerte : `school`
 - Contexte : type (harcelement, violence, abus, cyber, autre) + etablissement optionnel
-- Protocole mineur : badge ops **Safe School · mineur**
+- Protocole mineur : badge ops **Safe School - mineur**
 - File dediee : `school_referent` (separee des dossiers adultes)
-- Pas de melange automatique avec VBG adulte sans revue ops
+- Role ops **school** : voit uniquement file ecole / child_danger
 
 ### Parcours citoyen
 
@@ -48,7 +50,16 @@
 | 9 | abuse | Comportement inapproprie |
 | 10 | friend_sos | Ami en danger |
 
-API : `POST /api/youth/chat` - prompt NGEMBA Jeunesse (voir `03-PROMPTS-IA-DRAFT.md`).
+API : `POST /api/youth/chat`
+
+---
+
+## Contenu pedagogique
+
+Pages `/prevent` et `/resources` enrichies (FR/EN) :
+- Safe School / mineurs
+- Module Jeunesse
+- Prevention ecole + consentement / corruption
 
 ---
 
@@ -57,16 +68,16 @@ API : `POST /api/youth/chat` - prompt NGEMBA Jeunesse (voir `03-PROMPTS-IA-DRAFT
 - Email ops : ligne Safe School + etablissement si present
 - Dossier ops : badge + champs referent ecole
 - Role ONG : voit file `school_referent`
+- Role **school** : file dediee uniquement
 
 ---
 
-## Prochain (Phase 4.2)
+## Prochain (Phase 4.3 / Phase 5)
 
-1. Compte referent ecole dedie (role ops `school`)
-2. Contenu prevent enrichi pages `/prevent` et `/resources`
-3. Mobile Expo : tuiles Ecole + Jeunesse
-4. Partenariat ecole pilote Kinshasa
+1. Partenariat ecole pilote Kinshasa (humain)
+2. Heatmap / observatoire citoyen (Phase 5)
+3. EAS Build APK mobile
 
 ---
 
-*Document v0.1*
+*Document v0.2*

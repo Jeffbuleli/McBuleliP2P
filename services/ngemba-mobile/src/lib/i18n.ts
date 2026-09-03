@@ -59,6 +59,27 @@ type Copy = {
   trustedContactsSkip: string;
   trustedContactsError: string;
   trustedContactsLink: string;
+  school: string;
+  youth: string;
+  schoolTitle: string;
+  schoolSafety: string;
+  schoolConcernPick: string;
+  schoolConcernHarassment: string;
+  schoolConcernViolence: string;
+  schoolConcernAbuse: string;
+  schoolConcernCyber: string;
+  schoolConcernOther: string;
+  schoolEstablishmentPlaceholder: string;
+  schoolTell: string;
+  schoolAnonymousNote: string;
+  youthTitle: string;
+  youthSubtitle: string;
+  youthYourTurn: string;
+  youthPlaceholder: string;
+  youthSend: string;
+  youthSosHint: string;
+  youthBackToList: string;
+  youthDisclaimer: string;
 };
 
 const fr: Copy = {
@@ -105,6 +126,27 @@ const fr: Copy = {
   trustedContactsSkip: "Plus tard",
   trustedContactsError: "Ajoutez au moins un contact avec un nom et un téléphone.",
   trustedContactsLink: "Mes contacts de confiance",
+  school: "École",
+  youth: "Jeunesse",
+  schoolTitle: "Safe School - signalement protégé",
+  schoolSafety: "Ton identité est protégée. Ce signalement va au référent école, séparé des dossiers adultes.",
+  schoolConcernPick: "Type de situation",
+  schoolConcernHarassment: "Harcèlement",
+  schoolConcernViolence: "Violence",
+  schoolConcernAbuse: "Abus / comportement inapproprié",
+  schoolConcernCyber: "Cyberharcèlement",
+  schoolConcernOther: "Autre",
+  schoolEstablishmentPlaceholder: "Ex. Lycée X, commune Y",
+  schoolTell: "Raconte ce qui se passe",
+  schoolAnonymousNote: "Pas besoin de donner ton nom complet.",
+  youthTitle: "McBuleli Jeunesse",
+  youthSubtitle: "10 situations pour réfléchir - consentement, cyber, corruption, amitié. Pas de classement public.",
+  youthYourTurn: "Et toi, que ferais-tu ?",
+  youthPlaceholder: "Écris ta réponse...",
+  youthSend: "Envoyer",
+  youthSosHint: "Situation grave ? Utilise le bouton",
+  youthBackToList: "<- Tous les scénarios",
+  youthDisclaimer: "Guide éducatif - pas un avocat ni un médecin. En danger réel, utilise SOS NGEMBA.",
 };
 
 export const messages: Record<Locale, Copy> = {
@@ -154,6 +196,27 @@ export const messages: Record<Locale, Copy> = {
     trustedContactsSkip: "Later",
     trustedContactsError: "Add at least one contact with a name and a phone number.",
     trustedContactsLink: "My trusted contacts",
+    school: "School",
+    youth: "Youth",
+    schoolTitle: "Safe School - protected report",
+    schoolSafety: "Your identity is protected. This report goes to the school referent, separate from adult cases.",
+    schoolConcernPick: "Type of situation",
+    schoolConcernHarassment: "Harassment",
+    schoolConcernViolence: "Violence",
+    schoolConcernAbuse: "Abuse / inappropriate behavior",
+    schoolConcernCyber: "Cyberbullying",
+    schoolConcernOther: "Other",
+    schoolEstablishmentPlaceholder: "E.g. High school X, district Y",
+    schoolTell: "Tell us what is happening",
+    schoolAnonymousNote: "You do not need to give your full name.",
+    youthTitle: "McBuleli Youth",
+    youthSubtitle: "10 scenarios to reflect - consent, cyber, corruption, friendship. No public ranking.",
+    youthYourTurn: "What would you do?",
+    youthPlaceholder: "Write your answer...",
+    youthSend: "Send",
+    youthSosHint: "Serious situation? Use the",
+    youthBackToList: "<- All scenarios",
+    youthDisclaimer: "Educational guide - not a lawyer or doctor. In real danger, use SOS NGEMBA.",
   },
   ln: {
     ...fr,
@@ -200,6 +263,27 @@ export const messages: Record<Locale, Copy> = {
     trustedContactsSkip: "Na nsima",
     trustedContactsError: "Kokota bato moko na nkombo mpe telefone.",
     trustedContactsLink: "Bato na ngai ya motema",
+    school: "Ecole",
+    youth: "Bato ya sika",
+    schoolTitle: "Safe School - signalement ya kokanga",
+    schoolSafety: "Identite na yo ebatelami. Signalement ekoya na referent ecole.",
+    schoolConcernPick: "Lolenge ya likambo",
+    schoolConcernHarassment: "Kosimba",
+    schoolConcernViolence: "Libanga",
+    schoolConcernAbuse: "Abus",
+    schoolConcernCyber: "Cyberharcelement",
+    schoolConcernOther: "Mosusu",
+    schoolEstablishmentPlaceholder: "Ex. Lycee X, commune Y",
+    schoolTell: "Loba nini ezali",
+    schoolAnonymousNote: "Esengeli te kopesa nkombo mobimba.",
+    youthTitle: "McBuleli Jeunesse",
+    youthSubtitle: "Ba situations 10 mpo na kokanisa. Classement te.",
+    youthYourTurn: "Yo, okosala nini ?",
+    youthPlaceholder: "Koma eyano na yo...",
+    youthSend: "Tinda",
+    youthSosHint: "Likambo ya likama ? Salela bouton",
+    youthBackToList: "<- Ba scenarios nyonso",
+    youthDisclaimer: "Guide ya boyekoli - avocat te. Na likama, salela SOS NGEMBA.",
   },
   sw: {
     ...fr,
@@ -246,6 +330,27 @@ export const messages: Record<Locale, Copy> = {
     trustedContactsSkip: "Baadaye",
     trustedContactsError: "Ongeza angalau wasiliana mmoja mwenye jina na simu.",
     trustedContactsLink: "Wasiliana zangu wa kuaminika",
+    school: "Shule",
+    youth: "Vijana",
+    schoolTitle: "Safe School - ripoti iliyohifadhiwa",
+    schoolSafety: "Utambulisho wako unalindwa. Ripoti inaenda kwa msimamizi wa shule.",
+    schoolConcernPick: "Aina ya hali",
+    schoolConcernHarassment: "Unyanyasaji",
+    schoolConcernViolence: "Vurugu",
+    schoolConcernAbuse: "Unyanyasaji / tabia mbaya",
+    schoolConcernCyber: "Unyanyasaji mtandaoni",
+    schoolConcernOther: "Nyingine",
+    schoolEstablishmentPlaceholder: "Mf. Shule X, kata Y",
+    schoolTell: "Eleza kinachoendelea",
+    schoolAnonymousNote: "Huhitaji kutoa jina kamili.",
+    youthTitle: "McBuleli Youth",
+    youthSubtitle: "Hali 10 za kutafakari. Hakuna orodha ya umma.",
+    youthYourTurn: "Wewe ungeyafanya nini?",
+    youthPlaceholder: "Andika jibu lako...",
+    youthSend: "Tuma",
+    youthSosHint: "Hali mbaya? Tumia kitufe",
+    youthBackToList: "<- Hali zote",
+    youthDisclaimer: "Mwongozo wa elimu - si wakili. Hatari halisi: tumia SOS NGEMBA.",
   },
   lua: {
     ...fr,
@@ -292,6 +397,27 @@ export const messages: Record<Locale, Copy> = {
     trustedContactsSkip: "Na nsima",
     trustedContactsError: "Kokota bato moko na nkombo mpe telefone.",
     trustedContactsLink: "Bato na ngai ba motema",
+    school: "Ecole",
+    youth: "Bana ba sika",
+    schoolTitle: "Safe School - signalement ya kukanga",
+    schoolSafety: "Identite na nge ibatelami. Signalement ikuya na referent ecole.",
+    schoolConcernPick: "Mutindu wa dikama",
+    schoolConcernHarassment: "Kukata",
+    schoolConcernViolence: "Libanga",
+    schoolConcernAbuse: "Abus",
+    schoolConcernCyber: "Cyberharcelement",
+    schoolConcernOther: "Kunyima",
+    schoolEstablishmentPlaceholder: "Ex. Lycee X, commune Y",
+    schoolTell: "Amba chinyi chidi",
+    schoolAnonymousNote: "Kufunsha dijina dikulu kechi.",
+    youthTitle: "McBuleli Jeunesse",
+    youthSubtitle: "Ba situations 10 mpo na kukanisha. Classement kechi.",
+    youthYourTurn: "Wewe, udi ukusala nki?",
+    youthPlaceholder: "Soneka eyano...",
+    youthSend: "Tuma",
+    youthSosHint: "Dikama dikulu? Sadisha bouton",
+    youthBackToList: "<- Ba scenarios nyonso",
+    youthDisclaimer: "Guide ya boyekoli - avocat kechi. Mu dikama, sadisha SOS NGEMBA.",
   },
   kg: {
     ...fr,
@@ -338,6 +464,27 @@ export const messages: Record<Locale, Copy> = {
     trustedContactsSkip: "Na nsima",
     trustedContactsError: "Kokota bato moko na nkombo mpe telefone.",
     trustedContactsLink: "Bato na ngai ba motema",
+    school: "Ecole",
+    youth: "Bantu ya sika",
+    schoolTitle: "Safe School - signalement ya kukanga",
+    schoolSafety: "Identite na nge me batama. Signalement ke kwenda na referent ecole.",
+    schoolConcernPick: "Mutindu ya zingu",
+    schoolConcernHarassment: "Kukata",
+    schoolConcernViolence: "Libanga",
+    schoolConcernAbuse: "Abus",
+    schoolConcernCyber: "Cyberharcelement",
+    schoolConcernOther: "Ya nkaka",
+    schoolEstablishmentPlaceholder: "Ex. Lycee X, commune Y",
+    schoolTell: "Vova inki ke salama",
+    schoolAnonymousNote: "Ve mfunu ya kupesa nkombo ya nene.",
+    youthTitle: "McBuleli Jeunesse",
+    youthSubtitle: "Ba situations 10 mpo na kukanisa. Classement ve.",
+    youthYourTurn: "Nge, nge ta sala nki?",
+    youthPlaceholder: "Sonika eyano...",
+    youthSend: "Tinda",
+    youthSosHint: "Zingu ya nene? Sala bouton",
+    youthBackToList: "<- Ba scenarios nyonso",
+    youthDisclaimer: "Guide ya longuka - avocat ve. Na zingu, sala SOS NGEMBA.",
   },
 };
 

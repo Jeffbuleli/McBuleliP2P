@@ -26,7 +26,7 @@ function Tile({
   accent = "primary",
 }: {
   label: string;
-  href: "/sos" | "/witness" | "/discrete";
+  href: "/sos" | "/witness" | "/discrete" | "/school" | "/jeunesse";
   accent?: "primary" | "secondary";
 }) {
   const bg = accent === "secondary" ? colors.secondaryMuted : colors.primaryMuted;
@@ -103,9 +103,13 @@ export default function HomeScreen() {
           ))}
         </View>
 
-        <View style={styles.grid}>
+        <View style={[styles.grid, { marginTop: 28 }]}>
           <Tile label={t.sos} href="/sos" />
           <Tile label={t.witness} href="/witness" accent="secondary" />
+        </View>
+        <View style={styles.grid}>
+          <Tile label={t.school} href="/school" accent="secondary" />
+          <Tile label={t.youth} href="/jeunesse" />
         </View>
 
         <Link href="/sos" asChild>
@@ -181,7 +185,7 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: "row",
     gap: 12,
-    marginTop: 28,
+    marginTop: 12,
   },
   tile: {
     flex: 1,

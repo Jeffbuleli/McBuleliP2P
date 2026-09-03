@@ -13,6 +13,7 @@ export function opsTokenForRole(role: OpsRole): string | null {
     ngo: process.env.NGEMBA_OPS_TOKEN_NGO?.trim() || "",
     security: process.env.NGEMBA_OPS_TOKEN_SECURITY?.trim() || "",
     partner: process.env.NGEMBA_OPS_TOKEN_PARTNER?.trim() || "",
+    school: process.env.NGEMBA_OPS_TOKEN_SCHOOL?.trim() || "",
   };
   const t = map[role];
   return t || null;
@@ -31,7 +32,7 @@ export function resolveOpsRole(
   token: string | null | undefined,
 ): OpsRole | null {
   if (!token) return null;
-  const roles: OpsRole[] = ["admin", "ngo", "security", "partner"];
+  const roles: OpsRole[] = ["admin", "ngo", "security", "partner", "school"];
   for (const role of roles) {
     const expected = opsTokenForRole(role);
     if (expected && safeEqual(token, expected)) return role;

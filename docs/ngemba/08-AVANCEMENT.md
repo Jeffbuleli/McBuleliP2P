@@ -12,8 +12,16 @@
 | **Phase 3b.2** (i18n LN+, locale persist, EAS) | ✅ v0.2 |
 | **Phase 3b.3** (contacts confiance + secousse 5x) | ✅ v0.3 |
 | **Phase 4** (Safe School + Jeunesse 10 scenarios) | ✅ v0.1 web |
+| **Phase 4.2** (role school, mobile, contenu) | ✅ v0.2 |
 
 Live : https://ngemba.cyberalert-rdc.org
+
+## Phase 4.2 - livre
+
+- Role ops `school` + `NGEMBA_OPS_TOKEN_SCHOOL`
+- Contenu `/prevent` + `/resources` enrichi (ecole / jeunesse)
+- Mobile Expo : tuiles Ecole + Jeunesse + chat scenarios
+- Voir [17-PHASE-4.md](./17-PHASE-4.md)
 
 ## Phase 4 - livre (web v0.1)
 

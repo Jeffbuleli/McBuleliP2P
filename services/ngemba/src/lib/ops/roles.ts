@@ -1,6 +1,6 @@
 /** Roles ops NGEMBA - dashboards et accreditations separes. */
 
-export type OpsRole = "admin" | "ngo" | "security" | "partner";
+export type OpsRole = "admin" | "ngo" | "security" | "partner" | "school";
 
 export type OpsPermission =
   | "alerts.list"
@@ -14,6 +14,7 @@ export const OPS_ROLE_LABELS: Record<OpsRole, string> = {
   ngo: "ONG / operateur",
   security: "Service securite",
   partner: "Partenaire",
+  school: "Referent ecole",
 };
 
 const ROLE_PERMISSIONS: Record<OpsRole, OpsPermission[]> = {
@@ -27,6 +28,7 @@ const ROLE_PERMISSIONS: Record<OpsRole, OpsPermission[]> = {
   ngo: ["alerts.list", "alerts.view", "alerts.patch", "stream.subscribe"],
   security: ["alerts.list", "alerts.view", "alerts.patch", "stream.subscribe"],
   partner: ["alerts.list", "alerts.view", "stream.subscribe"],
+  school: ["alerts.list", "alerts.view", "alerts.patch", "stream.subscribe"],
 };
 
 export function roleHasPermission(
@@ -91,6 +93,15 @@ export function sessionVisibleToRole(
     );
   }
 
+  // school - uniquement file Safe School / category school
+  if (role === "school") {
+    return (
+      session.routingQueue === "school_referent" ||
+      session.category === "school" ||
+      session.category === "child_danger"
+    );
+  }
+
   return false;
 }
 
@@ -103,6 +114,9 @@ export function dashboardHint(role: OpsRole): string {
   }
   if (role === "security") {
     return "File urgence - situations critiques et securite.";
+  }
+  if (role === "school") {
+    return "File Safe School - signalements eleves et mineurs.";
   }
   return "Vue partenaire - signalements agrégés et prevention.";
 }

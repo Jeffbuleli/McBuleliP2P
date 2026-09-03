@@ -39,6 +39,22 @@ const RESOURCES: Record<Locale, PageCopy> = {
           "Ne restez pas seul si vous pouvez aller dans un lieu sûr.",
         ],
       },
+      {
+        title: "École et mineurs (Safe School)",
+        body: [
+          "Signalement protégé via le module École - identité protégée.",
+          "Le référent école reçoit la file dédiée, séparée des dossiers adultes.",
+          "Danger immédiat : appelez aussi les secours locaux.",
+        ],
+      },
+      {
+        title: "Jeunes - apprendre à se protéger",
+        body: [
+          "Module McBuleli Jeunesse : 10 situations pour réfléchir (consentement, cyber, corruption...).",
+          "Ce n'est pas un classement ni un jugement - un guide éducatif.",
+          "Situation réelle grave : utilisez SOS NGEMBA tout de suite.",
+        ],
+      },
     ],
   },
   en: {
@@ -67,6 +83,22 @@ const RESOURCES: Record<Locale, PageCopy> = {
           "If you are safe to talk, use SOS or Talk.",
           "Discreet mode: write few words; an operator will respond via message.",
           "Do not stay alone if you can go to a safe place.",
+        ],
+      },
+      {
+        title: "School and minors (Safe School)",
+        body: [
+          "Protected report via the School module - your identity is protected.",
+          "The school referent receives a dedicated queue, separate from adult cases.",
+          "Immediate danger: also call local emergency services.",
+        ],
+      },
+      {
+        title: "Youth - learn to stay safe",
+        body: [
+          "McBuleli Youth: 10 situations to reflect (consent, cyber, corruption...).",
+          "Not a ranking or judgment - an educational guide.",
+          "Real serious danger: use NGEMBA SOS immediately.",
         ],
       },
     ],
@@ -213,6 +245,22 @@ const PREVENT: Record<Locale, PageCopy> = {
           "À l'école ou au travail : parlez à un référent de confiance.",
         ],
       },
+      {
+        title: "À l'école",
+        body: [
+          "Harcèlement, violence ou abus : utilisez Safe School sans donner votre nom complet.",
+          "Un référent formé lit la file école - ce n'est pas un chat public.",
+          "Si un ami est en danger ce soir, orientez-le vers SOS ou un adulte sûr.",
+        ],
+      },
+      {
+        title: "Pour les jeunes",
+        body: [
+          "Explorez les scénarios McBuleli Jeunesse pour vous entraîner à dire non.",
+          "Consentement = choix libre, sans pression ni chantage.",
+          "Corruption scolaire : refusez et parlez à un adulte de confiance ou signalez.",
+        ],
+      },
     ],
   },
   en: {
@@ -232,6 +280,22 @@ const PREVENT: Record<Locale, PageCopy> = {
           "Do not share intimate photos under pressure.",
           "Block and report online harassment.",
           "At school or work: talk to a trusted reference.",
+        ],
+      },
+      {
+        title: "At school",
+        body: [
+          "Harassment, violence or abuse: use Safe School without giving your full name.",
+          "A trained referent reads the school queue - it is not a public chat.",
+          "If a friend is in danger tonight, guide them to SOS or a safe adult.",
+        ],
+      },
+      {
+        title: "For young people",
+        body: [
+          "Explore McBuleli Youth scenarios to practice saying no.",
+          "Consent means a free choice - no pressure or blackmail.",
+          "School corruption: refuse and talk to a trusted adult or report.",
         ],
       },
     ],

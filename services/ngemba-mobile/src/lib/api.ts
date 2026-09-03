@@ -15,7 +15,7 @@ export function apiBaseUrl(): string {
 export type CreateAlertInput = {
   message: string;
   locale: string;
-  source: "sos_button" | "witness" | "chat" | "shake";
+  source: "sos_button" | "witness" | "chat" | "shake" | "school";
   discrete?: boolean;
   shareLocation?: boolean;
   lat?: number | null;
@@ -27,6 +27,11 @@ export type CreateAlertInput = {
     phone?: string | null;
     email?: string | null;
   }>;
+  schoolContext?: {
+    concernType: string;
+    establishmentHint?: string | null;
+    isMinor?: boolean;
+  };
 };
 
 export type CreateAlertResult = {
@@ -54,6 +59,7 @@ export async function createAlert(
       provinceId: input.provinceId ?? null,
       cityId: input.cityId ?? null,
       trustedContacts: input.trustedContacts ?? [],
+      schoolContext: input.schoolContext ?? undefined,
     }),
   });
   const data = await res.json().catch(() => ({}));
