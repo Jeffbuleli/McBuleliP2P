@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# NGEMBA Bloc B smoke — alerte + prise en charge ops (à lancer sur le VPS).
+# NGEMBA Bloc B smoke - alerte + prise en charge ops (à lancer sur le VPS).
 #
 # Usage:
 #   bash /opt/ngemba/ops/vps/bloc-b-smoke.sh
@@ -37,7 +37,7 @@ echo "==> Create pilot alert (B1/B8)"
 CREATE=$(curl -sf -X POST "$BASE/api/alerts" \
   -H "Content-Type: application/json" \
   -d '{
-    "message": "[PILOTE BLOC B] Test McBuleli — verification flux alerte et prise en charge ops. Situation simulee VBG Kinshasa.",
+    "message": "[PILOTE BLOC B] Test McBuleli - verification flux alerte et prise en charge ops. Situation simulee VBG Kinshasa.",
     "locale": "fr",
     "source": "sos_button",
     "provinceId": "kinshasa",
@@ -67,8 +67,8 @@ PATCH=$(curl -sf -X PATCH "$BASE/api/alerts/$SESSION_ID" \
   -H "Content-Type: application/json" \
   -d '{
     "status": "oriented",
-    "assignedTo": "McBuleli — test pilote Bloc B",
-    "operatorNotes": "Alerte test Bloc B — prise en charge simulee. Email hi@mcbuleli.org a verifier."
+    "assignedTo": "McBuleli - test pilote Bloc B",
+    "operatorNotes": "Alerte test Bloc B - prise en charge simulee. Email hi@mcbuleli.org a verifier."
   }') || {
   echo "ERROR: patch failed" >&2
   exit 1
@@ -81,6 +81,6 @@ fi
 
 echo "==> Email log (last 5 lines)"
 docker compose -f "$COMPOSE_DIR/docker-compose.yml" logs web --tail 30 2>/dev/null \
-  | grep -E "ops email|resend" | tail -5 || echo "(no email log line — check RESEND_API_KEY)"
+  | grep -E "ops email|resend" | tail -5 || echo "(no email log line - check RESEND_API_KEY)"
 
-echo "OK — Bloc B smoke passed · session $SESSION_ID · status oriented"
+echo "OK - Bloc B smoke passed · session $SESSION_ID · status oriented"

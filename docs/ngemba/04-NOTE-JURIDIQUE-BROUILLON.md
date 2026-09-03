@@ -1,4 +1,4 @@
-# Note juridique — brouillon Phase 0 (NON VALIDÉ)
+# Note juridique - brouillon Phase 0 (NON VALIDÉ)
 
 > **Statut :** brouillon interne · à faire relire par un conseil juridique RDC  
 > **Produit :** NGEMBA · URL temporaire `ngemba.cyberalert-rdc.org`
@@ -13,7 +13,7 @@ Elle **ne remplace pas** la police, les pompiers, les services médicaux ni la j
 | Sujet | Position proposée |
 |-------|-------------------|
 | Délai de prise en charge | Afficher clairement si hors horaires ONG |
-| Dispatch automatique | **Non** en Phase 1 — humain dans la boucle |
+| Dispatch automatique | **Non** en Phase 1 - humain dans la boucle |
 | Preuves numériques | L’IA **ne certifie pas** ; conservation limitée |
 | Mineurs | Protocole Safe School séparé (Phase 4) |
 | Fausses alertes | Restrictions progressives · jamais de blocage d’urgence auto |
@@ -22,7 +22,7 @@ Elle **ne remplace pas** la police, les pompiers, les services médicaux ni la j
 
 - Consentement GPS explicite · jamais obligatoire pour l’aide
 - Minimisation · journalisation des accès opérateurs
-- Hébergement Phase 0–1 : VPS `153.75.235.176` (Cyber Alert)
+- Hébergement Phase 0-1 : VPS `153.75.235.176` (Cyber Alert)
 - Rétention proposée : alertes 24 mois · médias 12 mois
 
 ## 4. À obtenir avant Phase 1 prod

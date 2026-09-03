@@ -38,15 +38,15 @@ Live : https://ngemba.cyberalert-rdc.org
 - OpenAI hybrid + Whisper actifs sur VPS
 - Voir [15-PHASE-3.md](./15-PHASE-3.md)
 
-## Phase 2 — livre (v1)
+## Phase 2 - livre (v1)
 
 - Upload photo / audio / video sur session
 - Chat citoyen ↔ opérateur
-- `/me` — historique alertes (cookie appareil)
+- `/me` - historique alertes (cookie appareil)
 - Whisper optionnel si `OPENAI_API_KEY`
 - Voir [14-PHASE-2.md](./14-PHASE-2.md)
 
-## Bloc B — reste humain
+## Bloc B - reste humain
 
 1. Signer [12-ACCORD-PILOTE-JGL.md](./12-ACCORD-PILOTE-JGL.md)
 2. Relecture avocat RDC

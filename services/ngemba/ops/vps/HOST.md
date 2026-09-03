@@ -5,7 +5,7 @@
 - **Path:** `/opt/ngemba`
 - **Bind:** `127.0.0.1:3012`
 - **Data:** Docker volume `ngemba_data` → `/app/data/sessions.json`
-- **No dedicated Postgres** (RAM constrained) — file sessions for Phase 1
+- **No dedicated Postgres** (RAM constrained) - file sessions for Phase 1
 
 ## Deploy
 

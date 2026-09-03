@@ -5,7 +5,7 @@ import * as schema from "./schema";
 const url = process.env.DATABASE_URL;
 
 if (!url) {
-  console.warn("[ngemba] DATABASE_URL missing — DB client not initialized");
+  console.warn("[ngemba] DATABASE_URL missing - DB client not initialized");
 }
 
 const client = url ? postgres(url, { max: 5 }) : null;

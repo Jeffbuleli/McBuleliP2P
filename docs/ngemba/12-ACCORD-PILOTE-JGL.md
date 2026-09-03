@@ -1,4 +1,4 @@
-# Accord de pilote NGEMBA — Justicia Great Lakes (JGL AFRICA)
+# Accord de pilote NGEMBA - Justicia Great Lakes (JGL AFRICA)
 
 > **Statut :** modèle prêt à signature · **Version :** 1.0 · **Date :** septembre 2026
 
@@ -41,7 +41,7 @@ Mise à disposition de la plateforme **NGEMBA** à JGL AFRICA pour une phase pil
 
 ## 4. Engagements JGL AFRICA
 
-1. Désigner **au moins un opérateur** formé (30 min — voir `13-FORMATION-OPS-JGL.md`).
+1. Désigner **au moins un opérateur** formé (30 min - voir `13-FORMATION-OPS-JGL.md`).
 2. Respecter le **protocole opérateur** (`05-PROTOCOLE-OPERATEUR.md`).
 3. **Ne pas partager** le code opérateur en dehors de l’équipe accréditée JGL.
 4. Prise en charge des alertes selon SLA pilote :
@@ -55,8 +55,8 @@ Mise à disposition de la plateforme **NGEMBA** à JGL AFRICA pour une phase pil
 
 | Jour | Plage horaire opérateur JGL |
 |------|----------------------------|
-| Lun–Ven | ___ h – ___ h (heure Kinshasa) |
-| Sam–Dim | ___ / fermé (alertes enregistrées) |
+| Lun-Ven | ___ h - ___ h (heure Kinshasa) |
+| Sam-Dim | ___ / fermé (alertes enregistrées) |
 
 Hors horaires : alertes conservées ; numéros d’urgence RDC rappelés au citoyen.
 
@@ -93,4 +93,4 @@ Résiliation avec préavis de **15 jours** par email. Export des dossiers JGL su
 
 ---
 
-*Document interne McBuleli — à faire relire par conseil juridique RDC avant signature.*
+*Document interne McBuleli - à faire relire par conseil juridique RDC avant signature.*

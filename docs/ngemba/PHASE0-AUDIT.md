@@ -1,4 +1,4 @@
-# PHASE 0 — Audit VPS & démarrage NGEMBA
+# PHASE 0 - Audit VPS & démarrage NGEMBA
 
 > Date : **2 septembre 2026** · Domaine temporaire : **`ngemba.cyberalert-rdc.org`**  
 > Repo parent : McBuleliP2P · produit isolé prévu : `services/ngemba/`
@@ -7,7 +7,7 @@
 
 ## 1. Verdict hébergement
 
-**Africa Insight et Cyber Alert sont sur le même VPS** — ce n’est pas deux machines.
+**Africa Insight et Cyber Alert sont sur le même VPS** - ce n’est pas deux machines.
 
 | Critère | VPS CyberAlert / Africa Insight | VPS McBuleli |
 |---------|----------------------------------|--------------|
@@ -25,11 +25,11 @@
 | **Domaine** | `ngemba.cyberalert-rdc.org` | Même pattern que `patty.cyberalert-rdc.org` ; pas d’achat domaine propre pour l’instant |
 | **Hôte cible** | **`153.75.235.176`** (CyberAlert) | Cohérence produit « protection / alerte » ; DNS déjà sous `cyberalert-rdc.org` |
 | **Risque principal** | **RAM**, pas le disque | 1,6 GiB déjà partagé par 3 apps + 2 Postgres |
-| **Mitigation MVP** | DB **partagée** `cyberalert-db` (nouvelle DB `ngemba`) · pas de 2ᵉ Postgres · build hors-box ou prune cache avant deploy | Évite +150–300 MiB RAM |
+| **Mitigation MVP** | DB **partagée** `cyberalert-db` (nouvelle DB `ngemba`) · pas de 2ᵉ Postgres · build hors-box ou prune cache avant deploy | Évite +150-300 MiB RAM |
 | **Avant 1er deploy** | `docker builder prune -af` sur ce VPS | **~16 Go reclaimable** dans le build cache (mesuré) → libère largement le disque |
 | **Si RAM critique** | Upgrader à **≥ 4 GiB** ou déplacer Africa Insight / Patty | Documenté aussi dans `CyberAlert/ops/vps/VPS_ORGANIZATION.md` |
 
-**McBuleli VPS** a plus de marge (RAM + disque) mais mélange fintech / live / AVEC — à éviter pour des données d’alerte sensibles tant qu’on peut rester chez CyberAlert.
+**McBuleli VPS** a plus de marge (RAM + disque) mais mélange fintech / live / AVEC - à éviter pour des données d’alerte sensibles tant qu’on peut rester chez CyberAlert.
 
 ---
 
@@ -77,13 +77,13 @@ Volumes      ~161 Mo
 | Record | Type | Cible | Notes |
 |--------|------|-------|-------|
 | `ngemba.cyberalert-rdc.org` | **A** | `153.75.235.176` | Proxied Cloudflare (comme `patty`) |
-| — | — | — | Certbot après vhost nginx : `-d ngemba.cyberalert-rdc.org` |
+| - | - | - | Certbot après vhost nginx : `-d ngemba.cyberalert-rdc.org` |
 
 App bind proposé : **`127.0.0.1:3012`** (3002 Africa · 3010 Cyber · 3011 Patty · **3012 Ngemba**).
 
 ---
 
-## 4. Phase 0 — checklist
+## 4. Phase 0 - checklist
 
 | # | Livrable | Statut |
 |---|----------|--------|
@@ -101,7 +101,7 @@ App bind proposé : **`127.0.0.1:3012`** (3002 Africa · 3010 Cyber · 3011 Patt
 | 0.11 | Prune Docker build cache VPS (~16 Go) | ⏳ manuel |
 | 0.12 | Upgrade RAM VPS ≥ 4 GiB (recommandé avant charge) | ⏳ optionnel |
 
-**Critère de sortie Phase 0 :** scaffold local qui build · schéma v0 · docs ops/DNS · brouillon juridique + protocole · go design E0–E5.
+**Critère de sortie Phase 0 :** scaffold local qui build · schéma v0 · docs ops/DNS · brouillon juridique + protocole · go design E0-E5.
 
 ---
 
@@ -119,14 +119,14 @@ Internet → Cloudflare
 ```
 
 Isolation logique : **DB + secrets + code** séparés de Cyber Alert / Patty / Africa Insight.  
-Isolation physique : **même VPS** pour Phase 0–1 ; revoir si volume d’alertes ou conformité l’exige.
+Isolation physique : **même VPS** pour Phase 0-1 ; revoir si volume d’alertes ou conformité l’exige.
 
 ---
 
 ## 6. Actions ops recommandées (manuel, avant 1er deploy)
 
 ```bash
-# Sur 153.75.235.176 — libérer ~16 Go (safe : cache build seulement)
+# Sur 153.75.235.176 - libérer ~16 Go (safe : cache build seulement)
 docker builder prune -af
 df -h /
 
@@ -147,4 +147,4 @@ docker compose -f /opt/cyberalert/ops/vps/docker-compose.yml exec -T db \
 - CyberAlert VPS : `/Users/mac/Documents/CyberAlert/ops/vps/SERVER.md`
 - Africa Insight host : `/Users/mac/Documents/Afrika/ops/vps/HOST.md`
 
-*Document v1.0 — Phase 0 NGEMBA*
+*Document v1.0 - Phase 0 NGEMBA*

@@ -1,4 +1,4 @@
-# NGEMBA — Bloc B (go produit + pilote)
+# NGEMBA - Bloc B (go produit + pilote)
 
 ---
 
@@ -53,4 +53,4 @@ Verifie : alerte creee → email Resend → prise en charge admin → statut `or
 
 ---
 
-*Document v1.3 — Bloc B technique clos · signatures JGL en attente*
+*Document v1.3 - Bloc B technique clos · signatures JGL en attente*

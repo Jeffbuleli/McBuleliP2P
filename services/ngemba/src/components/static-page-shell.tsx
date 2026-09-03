@@ -42,15 +42,15 @@ export function StaticPageShell({
         ))}
       </div>
       <p className="mt-8 text-center text-xs text-ng-muted">
-        NGEMBA · McBuleli ·{" "}
+        NGEMBA - McBuleli  - {" "}
         <Link href="/legal/confidentialite" className="text-ng-primary">
           Confidentialité
         </Link>
-        {" · "}
+        {" - "}
         <Link href="/legal/cgu" className="text-ng-primary">
           CGU
         </Link>
-        {" · "}
+        {" - "}
         <Link href="/legal/charte-ong" className="text-ng-primary">
           Charte ONG
         </Link>

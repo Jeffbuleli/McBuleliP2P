@@ -1,4 +1,4 @@
-/** Roles ops NGEMBA — dashboards et accreditations separes. */
+/** Roles ops NGEMBA - dashboards et accreditations separes. */
 
 export type OpsRole = "admin" | "ngo" | "security" | "partner";
 
@@ -81,7 +81,7 @@ export function sessionVisibleToRole(
     );
   }
 
-  // partner — signalements non urgents / agrégés
+  // partner - signalements non urgents / agrégés
   if (role === "partner") {
     return (
       session.routingQueue === "aggregated_report" ||

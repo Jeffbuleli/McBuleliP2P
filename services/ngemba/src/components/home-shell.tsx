@@ -206,15 +206,15 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
           <Link href={href("/discrete")} className="underline">
             {t.discrete}
           </Link>
-          {" · "}
+          {" - "}
           <Link href={href("/me")} className="underline">
             {t.myAlerts}
           </Link>
-          {" · "}
+          {" - "}
           <Link href={href("/legal/confidentialite")} className="underline">
             {t.privacyLink}
           </Link>
-          {" · "}
+          {" - "}
           <Link href={href("/legal/cgu")} className="underline">
             {t.cguLink}
           </Link>

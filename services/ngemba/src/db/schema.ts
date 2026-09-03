@@ -1,5 +1,5 @@
 /**
- * NGEMBA schema v0 — Phase 0 draft.
+ * NGEMBA schema v0 - Phase 0 draft.
  * Full draft: docs/ngemba/02-SCHEMA-DB-DRAFT.md
  */
 import {

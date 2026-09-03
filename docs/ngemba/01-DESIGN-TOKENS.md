@@ -1,4 +1,4 @@
-# NGEMBA — Design tokens & composants
+# NGEMBA - Design tokens & composants
 
 > Complément de [PLAN-MAITRE.md](./PLAN-MAITRE.md) · Police **Poppins** · Base `#06402b` · Secondaire `#882364`
 
@@ -54,13 +54,13 @@
 
 ```css
 /* Échelle mobile-first */
---ng-text-xs:   0.75rem;   /* 12px — labels discrets */
---ng-text-sm:   0.875rem;  /* 14px — hints */
---ng-text-base: 1rem;      /* 16px — corps minimum */
---ng-text-lg:   1.125rem;  /* 18px — sous-titres */
---ng-text-xl:   1.25rem;   /* 20px — titres cartes */
---ng-text-2xl:  1.5rem;    /* 24px — titres écran */
---ng-text-3xl:  1.875rem;  /* 30px — hero rare */
+--ng-text-xs:   0.75rem;   /* 12px - labels discrets */
+--ng-text-sm:   0.875rem;  /* 14px - hints */
+--ng-text-base: 1rem;      /* 16px - corps minimum */
+--ng-text-lg:   1.125rem;  /* 18px - sous-titres */
+--ng-text-xl:   1.25rem;   /* 20px - titres cartes */
+--ng-text-2xl:  1.5rem;    /* 24px - titres écran */
+--ng-text-3xl:  1.875rem;  /* 30px - hero rare */
 
 --ng-leading-tight:  1.25;
 --ng-leading-normal: 1.5;
@@ -97,7 +97,7 @@
 
 ---
 
-## 4. Composants clés — specs visuelles
+## 4. Composants clés - specs visuelles
 
 ### Bouton SOS (`NgembaSosButton`)
 
@@ -143,7 +143,7 @@ Hauteur   : 48px fixed top
 
 ---
 
-## 5. Tailwind v4 — snippet `@theme`
+## 5. Tailwind v4 - snippet `@theme`
 
 ```css
 @theme inline {
@@ -177,9 +177,9 @@ min-h-ng-touch · size-ng-sos
 
 Quand le mode discret est **ON** :
 
-- Pas de rouge à l'écran — utiliser `--ng-secondary-muted` et vibrations
+- Pas de rouge à l'écran - utiliser `--ng-secondary-muted` et vibrations
 - Pas de son notification
-- Écran verrouillé sur une fausse page neutre (calculatrice / météo) — Phase 3
+- Écran verrouillé sur une fausse page neutre (calculatrice / météo) - Phase 3
 - Confirmation : double vibration courte
 
 ---
@@ -196,7 +196,7 @@ Quand le mode discret est **ON** :
 
 ---
 
-## 8. Inspiration Dribbble — checklist design review
+## 8. Inspiration Dribbble - checklist design review
 
 Lors de la création Figma, vérifier :
 

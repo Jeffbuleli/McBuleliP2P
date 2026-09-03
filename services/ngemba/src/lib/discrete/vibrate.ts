@@ -1,4 +1,4 @@
-/** Vibrations discrètes — Web Vibration API (Android / some browsers). */
+/** Vibrations discrètes - Web Vibration API (Android / some browsers). */
 
 export function vibrateDiscreteAlert() {
   try {

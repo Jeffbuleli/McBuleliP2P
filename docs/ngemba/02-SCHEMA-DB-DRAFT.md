@@ -1,4 +1,4 @@
-# NGEMBA — Schéma DB (brouillon Drizzle)
+# NGEMBA - Schéma DB (brouillon Drizzle)
 
 > Complément de [PLAN-MAITRE.md](./PLAN-MAITRE.md) · Phase 1 MVP
 
@@ -55,7 +55,7 @@ Colonne vertébrale du produit.
 | location_accuracy_m | int nullable | |
 | location_consent_at | timestamptz nullable | |
 | ai_summary | text nullable | |
-| ai_confidence | decimal nullable | 0–1 |
+| ai_confidence | decimal nullable | 0-1 |
 | ai_payload | jsonb nullable | structured output brut |
 | human_verified_at | timestamptz nullable | |
 | operator_notes | text nullable | interne ONG |
@@ -145,7 +145,7 @@ Colonne vertébrale du produit.
 
 ### `aggregated_incidents` (vue matérialisée)
 
-Refresh cron — **aucune PII**.
+Refresh cron - **aucune PII**.
 
 | Colonne | Type | Notes |
 |---------|------|-------|
@@ -181,7 +181,7 @@ Ordre :
 4. `alert_messages`, `alert_media`, `alert_routing`
 5. `audit_access_log`
 6. Indexes
-7. Vue `aggregated_incidents` (Phase 5 — stub vide OK)
+7. Vue `aggregated_incidents` (Phase 5 - stub vide OK)
 
 ---
 

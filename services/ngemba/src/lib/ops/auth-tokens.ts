@@ -3,7 +3,7 @@ import type { OpsRole } from "@/lib/ops/roles";
 export const OPS_COOKIE = "ngemba_ops";
 export const OPS_ROLE_COOKIE = "ngemba_ops_role";
 
-/** Edge-safe — process.env only (middleware). */
+/** Edge-safe - process.env only (middleware). */
 export function opsTokenForRole(role: OpsRole): string | null {
   const map: Record<OpsRole, string> = {
     admin:

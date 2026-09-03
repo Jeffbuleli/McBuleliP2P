@@ -1,20 +1,20 @@
-# Protocole opérateur ONG — brouillon Phase 0
+# Protocole opérateur ONG - brouillon Phase 0
 
 > À valider avec l’ONG pilote avant le MVP.
 
 ## 1. Principes
 
-1. **Croire d’abord** — une alerte urgente n’est jamais ignorée pour « historique douteux ».
-2. **Ne pas re-victimiser** — pas de jugement, pas d’interrogatoire agressif.
-3. **Sécurité d’abord** — si danger immédiat → numéros d’urgence + orientation, pas de long chat.
-4. **Discrétion** — ne jamais rappeler / SMS sans accord si risque agresseur.
+1. **Croire d’abord** - une alerte urgente n’est jamais ignorée pour « historique douteux ».
+2. **Ne pas re-victimiser** - pas de jugement, pas d’interrogatoire agressif.
+3. **Sécurité d’abord** - si danger immédiat → numéros d’urgence + orientation, pas de long chat.
+4. **Discrétion** - ne jamais rappeler / SMS sans accord si risque agresseur.
 
 ## 2. File d’attente
 
 | Badge | Action |
 |-------|--------|
 | 🔴 Critical | Prendre **immédiatement** (cible &lt; 5 min heures pilote) |
-| 🟠 High | Sous 15–30 min |
+| 🟠 High | Sous 15-30 min |
 | 🟢 Info | Ressources / clôture avec message |
 
 ## 3. Script d’ouverture (exemple)

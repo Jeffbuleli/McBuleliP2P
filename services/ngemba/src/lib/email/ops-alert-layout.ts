@@ -72,7 +72,7 @@ export function renderOpsAlertEmail(args: OpsAlertEmailArgs): {
                   </td>
                   <td style="vertical-align:middle;text-align:left;">
                     <p style="margin:0;font-size:20px;font-weight:800;color:${B.primary};letter-spacing:-0.02em;">NGEMBA</p>
-                    <p style="margin:2px 0 0;font-size:11px;color:${B.muted};">Sécurité · Paix citoyenne</p>
+                    <p style="margin:2px 0 0;font-size:11px;color:${B.muted};">Sécurité - Paix citoyenne</p>
                   </td>
                 </tr>
               </table>
@@ -136,11 +136,11 @@ export function renderOpsAlertEmail(args: OpsAlertEmailArgs): {
                   </td>
                 </tr>
               </table>
-              <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:${B.text};">NGEMBA · Cyber Alert RDC</p>
+              <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:${B.text};">NGEMBA - Cyber Alert RDC</p>
               <p style="margin:0 0 8px;font-size:12px;color:${B.muted};">
                 Support : <a href="mailto:${NGEMBA_EMAIL_ASSETS.supportEmail}" style="color:${B.primary};text-decoration:none;font-weight:600;">${NGEMBA_EMAIL_ASSETS.supportEmail}</a>
               </p>
-              <p style="margin:0;font-size:11px;color:${B.muted};">© ${year} McBuleli · Tous droits réservés.</p>
+              <p style="margin:0;font-size:11px;color:${B.muted};">© ${year} McBuleli - Tous droits réservés.</p>
             </td>
           </tr>
         </table>

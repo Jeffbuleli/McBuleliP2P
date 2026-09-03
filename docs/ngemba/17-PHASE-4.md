@@ -29,11 +29,11 @@
 1. Choisir le type de situation
 2. Etablissement optionnel
 3. Recit + voix
-4. Lieu (GPS ou province) — jamais obligatoire
+4. Lieu (GPS ou province) - jamais obligatoire
 
 ---
 
-## McBuleli Jeunesse — 10 scenarios
+## McBuleli Jeunesse - 10 scenarios
 
 | # | ID | Theme |
 |---|-----|-------|
@@ -48,7 +48,7 @@
 | 9 | abuse | Comportement inapproprie |
 | 10 | friend_sos | Ami en danger |
 
-API : `POST /api/youth/chat` — prompt NGEMBA Jeunesse (voir `03-PROMPTS-IA-DRAFT.md`).
+API : `POST /api/youth/chat` - prompt NGEMBA Jeunesse (voir `03-PROMPTS-IA-DRAFT.md`).
 
 ---
 

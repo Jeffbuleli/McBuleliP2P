@@ -57,15 +57,15 @@ export function StaticPageView({
         ))}
       </div>
       <p className="mt-8 text-center text-xs text-ng-muted">
-        NGEMBA · McBuleli ·{" "}
+        NGEMBA - McBuleli  - {" "}
         <Link href={href("/legal/confidentialite")} className="text-ng-primary">
           {t.privacyLink}
         </Link>
-        {" · "}
+        {" - "}
         <Link href={href("/legal/cgu")} className="text-ng-primary">
           {t.cguLink}
         </Link>
-        {" · "}
+        {" - "}
         <Link href={href("/legal/charte-ong")} className="text-ng-primary">
           {t.charterLink}
         </Link>

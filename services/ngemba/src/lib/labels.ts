@@ -138,7 +138,7 @@ export function providerLabelFr(provider: string): string {
   return provider;
 }
 
-/** Resume citoyen — sans codes techniques entre parentheses. */
+/** Resume citoyen - sans codes techniques entre parentheses. */
 export function citizenSummary(
   locale: Locale,
   category: TriageResult["category"],

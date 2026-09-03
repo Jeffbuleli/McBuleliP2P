@@ -1,9 +1,9 @@
-# NGEMBA — VPS stack (même hôte que Cyber Alert / Patty / Africa Insight)
+# NGEMBA - VPS stack (même hôte que Cyber Alert / Patty / Africa Insight)
 # Host: 153.75.235.176
 # Domain: ngemba.cyberalert-rdc.org
 # Port: 3012
 #
-# Pas de Postgres dédié (RAM 1.6 GiB) — sessions dans volume data/
+# Pas de Postgres dédié (RAM 1.6 GiB) - sessions dans volume data/
 #
 # Usage:
 #   cp .env.example .env

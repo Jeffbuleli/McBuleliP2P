@@ -1,4 +1,4 @@
-# Formation ops NGEMBA — JGL AFRICA (30 minutes)
+# Formation ops NGEMBA - JGL AFRICA (30 minutes)
 
 > **Public :** opérateurs Justicia Great Lakes · **Référent :** Me Arjoule Karinda  
 > **Support :** hi@mcbuleli.org
@@ -27,7 +27,7 @@
 
 1. Ouvrir `/ops/login` sur téléphone ou ordinateur.
 2. Saisir le **code opérateur ONG** (mot de passe).
-3. Dashboard ONG = **file filtrée** (VBG, enfant, orientation…) — pas toutes les alertes nationales.
+3. Dashboard ONG = **file filtrée** (VBG, enfant, orientation…) - pas toutes les alertes nationales.
 4. Badge urgence : 🔴 Critical · 🟠 High · 🟢 Info.
 
 **Exercice :** repérer une alerte test et ouvrir la fiche dossier.
@@ -40,15 +40,15 @@ Sur la fiche `/ops/[id]` :
 
 | Élément | Usage |
 |---------|--------|
-| Résumé IA | Aide à prioriser — **ne pas recopier tel quel** au citoyen |
+| Résumé IA | Aide à prioriser - **ne pas recopier tel quel** au citoyen |
 | Message citoyen | Mots exacts de la personne |
 | Lieu | Province/ville ou GPS si consenti |
 | Notes opérateur | Votre compte-rendu interne |
-| Assigné à | Ex. « JGL — Me Karinda » |
+| Assigné à | Ex. « JGL - Me Karinda » |
 
 ---
 
-## 4. Prise en charge — script (10 min)
+## 4. Prise en charge - script (10 min)
 
 ### Ouverture
 
@@ -78,11 +78,11 @@ Sur la fiche `/ops/[id]` :
 
 ## 5. Règles non négociables (5 min)
 
-1. **Croire d’abord** — urgence réelle jamais ignorée pour historique.
-2. **Pas de re-victimisation** — pas de jugement.
-3. **Discrétion** — pas de rappel/SMS sans accord si agresseur possible.
-4. **Fausses alertes** — rappel bienveillant ; jamais bloquer une nouvelle urgence critical.
-5. **Confidentialité** — ne pas exporter dossiers hors NGEMBA/JGL.
+1. **Croire d’abord** - urgence réelle jamais ignorée pour historique.
+2. **Pas de re-victimisation** - pas de jugement.
+3. **Discrétion** - pas de rappel/SMS sans accord si agresseur possible.
+4. **Fausses alertes** - rappel bienveillant ; jamais bloquer une nouvelle urgence critical.
+5. **Confidentialité** - ne pas exporter dossiers hors NGEMBA/JGL.
 
 Charte complète : https://ngemba.cyberalert-rdc.org/legal/charte-ong
 

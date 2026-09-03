@@ -1,4 +1,4 @@
-# NGEMBA — Plan maître
+# NGEMBA - Plan maître
 
 > **Plateforme intelligente de sécurité, protection et paix citoyenne** · RDC  
 > Évolution de la vision **McBuleli Protect / McBuleli IA** vers une infrastructure de vigilance citoyenne.  
@@ -13,7 +13,7 @@
 
 | Dimension | Description |
 |-----------|-------------|
-| **Nom** | **NGEMBA** — paix, sécurité, vigilance (lingala) |
+| **Nom** | **NGEMBA** - paix, sécurité, vigilance (lingala) |
 | **Nature** | Couche citoyenne entre la population et les acteurs compétents |
 | **Ce que NGEMBA n'est pas** | Remplacement de la police, des pompiers, des urgences médicales ou de la justice |
 | **Ce que NGEMBA est** | Canal rapide pour **faire remonter**, **comprendre** et **orienter** une situation vers le bon intervenant |
@@ -23,7 +23,7 @@
 ```
 McBuleli P2P / Academy / Wallet     →  écosystème existant (fintech + formation)
 NGEMBA                              →  produit distinct, domaine sensible, isolation technique
-McBuleli IA (assistant produit)     →  patterns réutilisables (OpenAI, SSE, RAG) — prompts différents
+McBuleli IA (assistant produit)     →  patterns réutilisables (OpenAI, SSE, RAG) - prompts différents
 ```
 
 **Décision d'architecture :** NGEMBA vit dans `services/ngemba/` (comme `services/immo-rdc/`), avec son propre schéma Postgres, ses clés API et sa politique de sécurité. Aucune FK vers `users` wallet/KYC sans consentement explicite.
@@ -40,20 +40,20 @@ McBuleli IA (assistant produit)     →  patterns réutilisables (OpenAI, SSE, R
 
 ## 2. Principes non négociables
 
-1. **Parcours minimal en urgence** — pas de formulaire à 15 questions ; objectif : *de la première alerte à l'orientation en quelques secondes*.
-2. **GPS jamais obligatoire** — localisation ponctuelle liée à l'alerte, avec consentement explicite.
-3. **IA = triage, pas verdict** — l'IA ne déclare jamais qu'un fichier est une « preuve authentifiée » ni qu'une personne est coupable.
-4. **Humain dans la boucle** — urgence élevée → opérateur humain obligatoire avant action irreversible.
-5. **Aucune fausse alerte ne bloque une future urgence** — restrictions progressives uniquement en cas d'abus répété et manifeste.
-6. **Minimisation des données** — chiffrement, journalisation des accès, conservation limitée, séparation stats / données personnelles.
-7. **Pas de carte des victimes** — cartographie uniquement **agrégée et anonymisée**.
-8. **Témoin ≠ héros** — messages clairs pour signaler **sans se mettre en danger**.
+1. **Parcours minimal en urgence** - pas de formulaire à 15 questions ; objectif : *de la première alerte à l'orientation en quelques secondes*.
+2. **GPS jamais obligatoire** - localisation ponctuelle liée à l'alerte, avec consentement explicite.
+3. **IA = triage, pas verdict** - l'IA ne déclare jamais qu'un fichier est une « preuve authentifiée » ni qu'une personne est coupable.
+4. **Humain dans la boucle** - urgence élevée → opérateur humain obligatoire avant action irreversible.
+5. **Aucune fausse alerte ne bloque une future urgence** - restrictions progressives uniquement en cas d'abus répété et manifeste.
+6. **Minimisation des données** - chiffrement, journalisation des accès, conservation limitée, séparation stats / données personnelles.
+7. **Pas de carte des victimes** - cartographie uniquement **agrégée et anonymisée**.
+8. **Témoin ≠ héros** - messages clairs pour signaler **sans se mettre en danger**.
 
 ---
 
 ## 3. Design system & inspiration UI
 
-> Références : [Dribbble — SOS emergency](https://dribbble.com/search/sos-emergency) · [UX Case Study SOS Help](https://www.mahith.art/ux-case-study-sos-mobile-app) · [Women Safety App Figma case study](https://medium.com/@maryamasif1091/designing-a-women-safety-mobile-app-in-figma-a-ui-ux-case-study-c7a6a504ef5c)
+> Références : [Dribbble - SOS emergency](https://dribbble.com/search/sos-emergency) · [UX Case Study SOS Help](https://www.mahith.art/ux-case-study-sos-mobile-app) · [Women Safety App Figma case study](https://medium.com/@maryamasif1091/designing-a-women-safety-mobile-app-in-figma-a-ui-ux-case-study-c7a6a504ef5c)
 
 ### 3.1 Typographie
 
@@ -69,22 +69,22 @@ McBuleli IA (assistant produit)     →  patterns réutilisables (OpenAI, SSE, R
 Couleur de base **vert profond** `#06402b` et secondaire **prune** `#882364`.
 
 ```css
-/* services/ngemba/src/app/globals.css — tokens proposés */
+/* services/ngemba/src/app/globals.css - tokens proposés */
 :root {
-  /* Primaire — vert NGEMBA */
+  /* Primaire - vert NGEMBA */
   --ng-primary:        #06402b;
   --ng-primary-light:  #0a5c3e;
   --ng-primary-dark:   #042818;
   --ng-primary-muted:  #e6f2ec;
   --ng-primary-glow:   rgba(6, 64, 43, 0.22);
 
-  /* Secondaire — prune */
+  /* Secondaire - prune */
   --ng-secondary:        #882364;
   --ng-secondary-light:  #a8327a;
   --ng-secondary-dark:   #5c1844;
   --ng-secondary-muted:  #f5eaf0;
 
-  /* Urgence (sémantique — pas la marque) */
+  /* Urgence (sémantique - pas la marque) */
   --ng-urgent:    #c41e3a;   /* rouge alerte */
   --ng-warning:   #d97706;   /* orange situation préoccupante */
   --ng-calm:      #059669;   /* vert info / prévention */
@@ -105,7 +105,7 @@ Couleur de base **vert profond** `#06402b` et secondaire **prune** `#882364`.
 |----------|---------|
 | Navigation, headers, confiance | Vert `#06402b` |
 | CTA secondaires, ONG, féminin / VBG (avec parcimonie) | Prune `#882364` |
-| Bouton SOS central | Rouge `#c41e3a` sur fond neutre clair — **toujours le même visuel** |
+| Bouton SOS central | Rouge `#c41e3a` sur fond neutre clair - **toujours le même visuel** |
 | Mode discret actif | Prune discret + vibration, pas de flash rouge |
 
 ### 3.3 Patterns UI (inspirés Dribbble / SOS apps)
@@ -157,7 +157,7 @@ Inspiré des apps SOS modernes : **bouton SOS circulaire central**, modules pér
 |---|-------|----------|----------|
 | E0 | Splash + choix langue | P1 | FR - EN - LN - SW - LU - KG |
 | E1 | Accueil Bento | P0 | SOS central rouge |
-| E2 | « Je suis en danger » — racontez | P0 | Micro + texte ; placeholder empathique |
+| E2 | « Je suis en danger » - racontez | P0 | Micro + texte ; placeholder empathique |
 | E3 | Consentement GPS | P0 | Deux gros boutons : Partager / Continuer sans |
 | E4 | Session alerte active | P0 | Statut, niveau urgence, ajouts optionnels |
 | E5 | « Je suis témoin » | P1 | Bandeau « Ne vous mettez pas en danger » |
@@ -170,13 +170,13 @@ Inspiré des apps SOS modernes : **bouton SOS circulaire central**, modules pér
 ### 3.4 Composants réutilisables
 
 ```
-<NgembaSosButton />      — 88px, pulse subtil, haptic
-<NgembaUrgencyBadge />   — 🔴 🟠 🟢
-<NgembaConsentGps />     — pattern réutilisable
-<NgembaSessionBar />     — timer + statut session
-<NgembaVoiceInput />     — Web Speech API + fallback
-<NgembaMediaAttach />    — photo/audio/vidéo optionnels
-<NgembaBentoGrid />      — layout accueil
+<NgembaSosButton />      - 88px, pulse subtil, haptic
+<NgembaUrgencyBadge />   - 🔴 🟠 🟢
+<NgembaConsentGps />     - pattern réutilisable
+<NgembaSessionBar />     - timer + statut session
+<NgembaVoiceInput />     - Web Speech API + fallback
+<NgembaMediaAttach />    - photo/audio/vidéo optionnels
+<NgembaBentoGrid />      - layout accueil
 ```
 
 ---
@@ -187,19 +187,19 @@ Inspiré des apps SOS modernes : **bouton SOS circulaire central**, modules pér
 
 | Persona | Besoin | Contrainte |
 |---------|--------|------------|
-| **Amina** — victime VBG | Alerter sans que l'agresseur le voie | Peut ne pas pouvoir parler/écrire |
-| **Jean** — témoin | Signaler un accident | Ne veut pas s'approcher |
-| **Prof. Mukendi** — école | Canal élève → référent | Mineurs, protocole légal |
-| **Marie ONG** — opérateur | Dossier structuré rapidement | Surcharge, pas le temps de relire |
+| **Amina** - victime VBG | Alerter sans que l'agresseur le voie | Peut ne pas pouvoir parler/écrire |
+| **Jean** - témoin | Signaler un accident | Ne veut pas s'approcher |
+| **Prof. Mukendi** - école | Canal élève → référent | Mineurs, protocole légal |
+| **Marie ONG** - opérateur | Dossier structuré rapidement | Surcharge, pas le temps de relire |
 | **Autorité locale** | Tendances par zone | Pas de données nominatives |
 
-### 4.2 Parcours critique — urgence (P0)
+### 4.2 Parcours critique - urgence (P0)
 
 ```mermaid
 flowchart TD
-  A[Tap SOS ou secousse] --> B[Session ouverte — UI minimale]
+  A[Tap SOS ou secousse] --> B[Session ouverte - UI minimale]
   B --> C{Voix ou texte?}
-  C --> D[NGEMBA IA — triage]
+  C --> D[NGEMBA IA - triage]
   D --> E{Niveau}
   E -->|🔴 Urgent| F[GPS consentement]
   E -->|🟠 Préoccupant| G[Orientation ONG]
@@ -242,7 +242,7 @@ Entrée (texte | audio | image | vidéo)
     ↓
 Normalisation locale (langue détectée)
     ↓
-OpenAI — structured output (JSON schema)
+OpenAI - structured output (JSON schema)
     ↓
 {
   "category": "vbg|accident|incendie|...",
@@ -252,7 +252,7 @@ OpenAI — structured output (JSON schema)
   "missing_info": ["..."],
   "routing_hint": "ong_vbg|medical|...",
   "confidence": 0.0-1.0,
-  "ai_disclaimer": "évaluation automatique — non vérifiée"
+  "ai_disclaimer": "évaluation automatique - non vérifiée"
 }
     ↓
 Règles métier (seuils, escalade)
@@ -334,7 +334,7 @@ alert_routing
 
 operators / ngo_orgs / ngo_members
 audit_access_log
-aggregated_incidents (vue matérialisée — pas de PII)
+aggregated_incidents (vue matérialisée - pas de PII)
 ```
 
 ### 6.4 Cycle de vie session (colonne vertébrale)
@@ -358,7 +358,7 @@ Capteurs (GPS, micro, caméra) **actifs uniquement** pendant `active`, arrêt au
 | Chiffrement transit | TLS 1.3 partout |
 | Chiffrement repos | Postgres + colonnes sensibles · S3 SSE |
 | Accès ONG | RBAC · MFA · IP allowlist optionnelle |
-| Audit | `audit_access_log` — qui a vu quel dossier, quand |
+| Audit | `audit_access_log` - qui a vu quel dossier, quand |
 | Consentement | Écrans explicites · preuve horodatée |
 | Rétention | Alertes : 24 mois max par défaut · médias : 12 mois · configurable par partenaire |
 | Anonymat | Token éphémère pour alertes sans compte |
@@ -377,7 +377,7 @@ Capteurs (GPS, micro, caméra) **actifs uniquement** pendant `active`, arrêt au
 | **Citoyen** | SOS, témoin, prévention, ses propres alertes |
 | **Opérateur ONG** | File alertes assignées, dossiers, notes internes |
 | **Admin ONG** | Équipe, stats org, protocoles |
-| **Référent école** | McBuleli Safe School — signalements élèves |
+| **Référent école** | McBuleli Safe School - signalements élèves |
 | **Analyste institution** | Cartes agrégées, exports anonymisés |
 | **Super admin NGEMBA** | Config routing, modération abus, audit |
 
@@ -426,13 +426,13 @@ Capteurs (GPS, micro, caméra) **actifs uniquement** pendant `active`, arrêt au
 
 > Estimations pour une **petite équipe** (2 dev + 1 design + 1 domaine/partenaires), en parallèle d'autres produits McBuleli.
 
-### Phase 0 — Fondations (4–6 semaines)
+### Phase 0 - Fondations (4-6 semaines)
 
 | Livrable | Détail |
 |----------|--------|
 | Décision go/no-go | Partenaire ONG pilote signé (ex. centre VBG Kinshasa) |
 | Juridique | Note responsabilité + politique confidentialité + mineurs |
-| Design | Figma : E0–E5 + design tokens NGEMBA |
+| Design | Figma : E0-E5 + design tokens NGEMBA |
 | Technique | Repo `services/ngemba/`, CI, `.env.example`, schéma DB v0 |
 | Protocole opérateur | Script prise d'appel, escalade, fausses alertes |
 
@@ -440,7 +440,7 @@ Capteurs (GPS, micro, caméra) **actifs uniquement** pendant `active`, arrêt au
 
 ---
 
-### Phase 1 — MVP « Protéger » (8–10 semaines)
+### Phase 1 - MVP « Protéger » (8-10 semaines)
 
 **Objectif :** une personne en danger peut alerter et être orientée par un humain ONG.
 
@@ -470,7 +470,7 @@ Capteurs (GPS, micro, caméra) **actifs uniquement** pendant `active`, arrêt au
 
 ---
 
-### Phase 2 — Médias & témoin (6–8 semaines)
+### Phase 2 - Médias & témoin (6-8 semaines)
 
 | Feature | Détail |
 |---------|--------|
@@ -482,7 +482,7 @@ Capteurs (GPS, micro, caméra) **actifs uniquement** pendant `active`, arrêt au
 
 ---
 
-### Phase 3 — Alerte discrète & mobile natif (8–12 semaines)
+### Phase 3 - Alerte discrète & mobile natif (8-12 semaines)
 
 | Feature | Détail |
 |---------|--------|
@@ -491,11 +491,11 @@ Capteurs (GPS, micro, caméra) **actifs uniquement** pendant `active`, arrêt au
 | Combinaisons boutons configurables | Alternative secousse |
 | Widget / raccourci écran verrou | Si OS le permet |
 
-**Contrainte réaliste :** iOS limite fortement le background — documenter clairement ce qui est possible par plateforme.
+**Contrainte réaliste :** iOS limite fortement le background - documenter clairement ce qui est possible par plateforme.
 
 ---
 
-### Phase 4 — École & Jeunesse (10–14 semaines)
+### Phase 4 - École & Jeunesse (10-14 semaines)
 
 - Safe School module + référents.
 - Jeunesse : 10 scénarios IA initiaux.
@@ -503,7 +503,7 @@ Capteurs (GPS, micro, caméra) **actifs uniquement** pendant `active`, arrêt au
 
 ---
 
-### Phase 5 — Ville & institutions (12+ semaines)
+### Phase 5 - Ville & institutions (12+ semaines)
 
 - Dashboard institution · heatmap agrégée.
 - API export anonymisé.
@@ -566,10 +566,10 @@ Capteurs (GPS, micro, caméra) **actifs uniquement** pendant `active`, arrêt au
 
 ## 14. Stack de livrables design (prochaine action)
 
-1. **Figma NGEMBA** — appliquer tokens §3.2, écrans E0–E5.
-2. **Prototype clic** — parcours SOS complet (< 5 écrans).
-3. **Design review** — tester avec 5 personnes (dont 2 profils stress simulé).
-4. **Export composants** — alignés Tailwind v4 dans `services/ngemba/`.
+1. **Figma NGEMBA** - appliquer tokens §3.2, écrans E0-E5.
+2. **Prototype clic** - parcours SOS complet (< 5 écrans).
+3. **Design review** - tester avec 5 personnes (dont 2 profils stress simulé).
+4. **Export composants** - alignés Tailwind v4 dans `services/ngemba/`.
 
 Références visuelles à consulter sur [Dribbble SOS emergency](https://dribbble.com/search/sos-emergency) :
 
@@ -585,8 +585,8 @@ Références visuelles à consulter sur [Dribbble SOS emergency](https://dribbbl
 
 | # | Question | Décision |
 |---|----------|----------|
-| D1 | Domaine | **`ngemba.cyberalert-rdc.org`** (temporaire) — domaine propre plus tard |
-| D1b | VPS | **`153.75.235.176`** (Cyber Alert + Africa Insight + Patty) — voir [PHASE0-AUDIT.md](./PHASE0-AUDIT.md) |
+| D1 | Domaine | **`ngemba.cyberalert-rdc.org`** (temporaire) - domaine propre plus tard |
+| D1b | VPS | **`153.75.235.176`** (Cyber Alert + Africa Insight + Patty) - voir [PHASE0-AUDIT.md](./PHASE0-AUDIT.md) |
 | D2 | Compte obligatoire ? | Non pour SOS · oui pour historique *(à confirmer)* |
 | D3 | Hébergement données | Même VPS CyberAlert · DB `ngemba` isolée · R2 sous `media.cyberalert-rdc.org` |
 | D4 | Opérateurs | ONG seule vs call center McBuleli *(ouvert)* |
@@ -598,9 +598,9 @@ Références visuelles à consulter sur [Dribbble SOS emergency](https://dribbbl
 
 **NGEMBA** transforme la vision McBuleli Protect en **infrastructure de sécurité citoyenne** en trois temps :
 
-1. **Maintenant (Phase 0–1)** — PWA SOS + IA + humain ONG : prouver la valeur en **30 secondes**.
-2. **Ensuite (Phase 2–3)** — Médias, témoin, alerte discrète : couvrir plus de situations réelles.
-3. **Plus tard (Phase 4–5)** — École, jeunesse, ville : prévention à l'échelle.
+1. **Maintenant (Phase 0-1)** - PWA SOS + IA + humain ONG : prouver la valeur en **30 secondes**.
+2. **Ensuite (Phase 2-3)** - Médias, témoin, alerte discrète : couvrir plus de situations réelles.
+3. **Plus tard (Phase 4-5)** - École, jeunesse, ville : prévention à l'échelle.
 
 Le succès ne se mesure pas au nombre de fonctionnalités, mais au temps gagné entre **« j'ai peur »** et **« quelqu'un m'aide »**.
 

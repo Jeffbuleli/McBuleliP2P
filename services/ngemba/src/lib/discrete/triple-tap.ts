@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
-/** Triple-tap dans une fenêtre courte — déclencheur discret (web). */
+/** Triple-tap dans une fenêtre courte - déclencheur discret (web). */
 export function useTripleTap(onTrigger: () => void, windowMs = 700) {
   const taps = useRef<number[]>([]);
 

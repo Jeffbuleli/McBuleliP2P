@@ -1,6 +1,6 @@
-# NGEMBA — Securite cyber (Phase 0-1)
+# NGEMBA - Securite cyber (Phase 0-1)
 
-> App a haute sensibilite — mesures en place et roadmap.
+> App a haute sensibilite - mesures en place et roadmap.
 
 ---
 
@@ -12,9 +12,9 @@
 | Rate limit | POST `/api/alerts` : 12/min/IP · login ops : 8/min/IP |
 | Headers | CSP, X-Frame-Options DENY, nosniff, Referrer-Policy, Permissions-Policy |
 | nginx | TLS, headers securite, geolocation=(self) |
-| Donnees | Minimisation — pas de compte citoyen obligatoire, UUID session |
-| IA | Triage local possible (0 API) — pas de fuite OpenAI si mode local |
-| Ops API | Liste/patch/stream proteges — pas d'enum publique |
+| Donnees | Minimisation - pas de compte citoyen obligatoire, UUID session |
+| IA | Triage local possible (0 API) - pas de fuite OpenAI si mode local |
+| Ops API | Liste/patch/stream proteges - pas d'enum publique |
 | Blocage | Chemins `/wp-admin`, `/.env`, `/api/admin` → 404 |
 
 ---
@@ -44,8 +44,8 @@
 ## Conformite
 
 - Note juridique : [04-NOTE-JURIDIQUE-BROUILLON.md](./04-NOTE-JURIDIQUE-BROUILLON.md)
-- Acces ops journalise (actor hash) — audit complet Phase 2
-- Pas de carte victimes — agrégats only (plan Phase 5)
+- Acces ops journalise (actor hash) - audit complet Phase 2
+- Pas de carte victimes - agrégats only (plan Phase 5)
 
 ---
 

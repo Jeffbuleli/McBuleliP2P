@@ -11,7 +11,7 @@ COMPOSE_DIR="$REPO_DIR/ops/vps"
 cd "$COMPOSE_DIR"
 
 if [[ ! -f .env ]]; then
-  echo "ERROR: missing $COMPOSE_DIR/.env — copy .env.example and fill values" >&2
+  echo "ERROR: missing $COMPOSE_DIR/.env - copy .env.example and fill values" >&2
   exit 1
 fi
 
@@ -23,4 +23,4 @@ docker compose up -d web
 
 echo "==> Status"
 docker compose ps
-echo "OK — http://127.0.0.1:3012/api/health"
+echo "OK - http://127.0.0.1:3012/api/health"

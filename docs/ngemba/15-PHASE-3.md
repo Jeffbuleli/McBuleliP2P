@@ -1,4 +1,4 @@
-# NGEMBA — Phase 3 (Alerte discrète & PWA)
+# NGEMBA - Phase 3 (Alerte discrète & PWA)
 
 > **Statut :** v1 web/PWA · app native Expo → Phase 3b
 
@@ -8,7 +8,7 @@
 
 | Feature | Détail |
 |---------|--------|
-| **Mode discret** | `/discrete` — écran sombre prune, pas de flash rouge |
+| **Mode discret** | `/discrete` - écran sombre prune, pas de flash rouge |
 | **Vibration** | Web Vibration API à l'envoi (Android / navigateurs compatibles) |
 | **Triple-tap logo** | Accès discret depuis l'accueil (3 taps rapides sur le logo) |
 | **PWA** | `manifest.webmanifest` · raccourci « Mode discret » · installable |
@@ -47,7 +47,7 @@ OPENAI_ASSISTANT_MODEL=gpt-4o-mini
 
 ## Phase 3b (prochaine)
 
-1. Expo / React Native — secousse réelle
+1. Expo / React Native - secousse réelle
 2. Widget écran verrou (Android)
 3. Combinaisons boutons volume (native)
 

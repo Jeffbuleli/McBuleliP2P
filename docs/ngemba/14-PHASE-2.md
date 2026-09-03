@@ -1,4 +1,4 @@
-# NGEMBA — Phase 2 (Médias & témoin)
+# NGEMBA - Phase 2 (Médias & témoin)
 
 > **Statut :** v1 déployée · fichiers locaux VPS · Whisper optionnel
 
@@ -20,9 +20,9 @@
 
 ## URLs
 
-- Session citoyen : `/session/[id]` — médias + chat
+- Session citoyen : `/session/[id]` - médias + chat
 - Mes alertes : `/me`
-- Ops dossier : `/ops/[id]` — médias + réponse chat
+- Ops dossier : `/ops/[id]` - médias + réponse chat
 
 ---
 

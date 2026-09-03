@@ -202,7 +202,7 @@ export function OpsDossierView({ id }: { id: string }) {
           ) : null}
           {session.source === "school" || session.schoolContext ? (
             <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-[11px] font-semibold text-indigo-700">
-              Safe School · mineur
+              Safe School - mineur
             </span>
           ) : null}
         </div>
@@ -277,7 +277,7 @@ export function OpsDossierView({ id }: { id: string }) {
           </h2>
           <p className="mt-2 text-sm text-ng-text">{session.aiSummary}</p>
           <p className="mt-2 text-xs text-ng-muted">
-            {providerLabelFr(session.provider)} · confiance{" "}
+            {providerLabelFr(session.provider)} - confiance{" "}
             {Math.round(session.aiConfidence * 100)}%
           </p>
           {session.aiPayload.follow_up_questions?.length ? (
@@ -358,9 +358,9 @@ export function OpsDossierView({ id }: { id: string }) {
                 <span className="font-semibold text-ng-primary">
                   {statusLabelFr(h.status)}
                 </span>
-                <span className="text-ng-muted"> · {fmt(h.at)}</span>
+                <span className="text-ng-muted"> - {fmt(h.at)}</span>
                 {h.actor ? (
-                  <span className="text-ng-muted"> · {h.actor}</span>
+                  <span className="text-ng-muted"> - {h.actor}</span>
                 ) : null}
                 {h.note ? (
                   <span className="block text-ng-muted">{h.note}</span>

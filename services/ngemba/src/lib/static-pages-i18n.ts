@@ -15,178 +15,178 @@ const RESOURCES: Record<Locale, PageCopy> = {
     title: "Aide et ressources",
     sections: [
       {
-        title: "Numeros d'urgence (RDC)",
+        title: "Numéros d'urgence (RDC)",
         body: [
           "Police : 112 ou commissariat le plus proche",
           "Pompiers : selon votre ville",
-          "Urgence medicale : hopital ou centre de sante le plus proche",
-          "En danger immediat : appelez d'abord les secours, puis NGEMBA si possible.",
+          "Urgence médicale : hôpital ou centre de santé le plus proche",
+          "En danger immédiat : appelez d'abord les secours, puis NGEMBA si possible.",
         ],
       },
       {
         title: "Orientation NGEMBA",
         body: [
-          "NGEMBA oriente vers un operateur humain - ce n'est pas un remplacement de la police ni des urgences medicales.",
-          "Heures pilote : reponse humaine visee en quelques minutes.",
-          "Hors horaires : alerte enregistree ; numeros d'urgence disponibles.",
+          "NGEMBA oriente vers un opérateur humain - ce n'est pas un remplacement de la police ni des urgences médicales.",
+          "Heures pilote : réponse humaine visée en quelques minutes.",
+          "Hors horaires : alerte enregistrée ; numéros d'urgence disponibles.",
         ],
       },
       {
-        title: "Violences basees sur le genre (VBG)",
+        title: "Violences basées sur le genre (VBG)",
         body: [
-          "Si vous etes en securite pour parler, utilisez SOS ou Parler.",
-          "Mode discret : ecrivez peu de mots ; un operateur repondra par message.",
-          "Ne restez pas seul si vous pouvez aller dans un lieu sur.",
+          "Si vous êtes en sécurité pour parler, utilisez SOS ou Parler.",
+          "Mode discret : écrivez peu de mots ; un opérateur répondra par message.",
+          "Ne restez pas seul si vous pouvez aller dans un lieu sûr.",
         ],
       },
     ],
   },
   en: {
-    title: "Help and resources",
+    title: "Help and Resources",
     sections: [
       {
-        title: "Emergency numbers (DRC)",
+        title: "Emergency Numbers (DRC)",
         body: [
-          "Police: 112 or nearest station",
-          "Fire: depends on your city",
-          "Medical emergency: nearest hospital or clinic",
-          "Immediate danger: call emergency services first, then NGEMBA if you can.",
+          "Police: 112 or nearest police station",
+          "Firefighters: depending on your city",
+          "Medical emergency: nearest hospital or health center",
+          "In immediate danger: call for help first, then NGEMBA if possible.",
         ],
       },
       {
-        title: "NGEMBA orientation",
+        title: "NGEMBA Guidance",
         body: [
-          "NGEMBA connects you to a human operator - not a replacement for police or medical emergency.",
-          "Pilot hours: human response targeted within minutes.",
-          "Off hours: alert is saved; emergency numbers remain available.",
+          "NGEMBA directs you to a human operator - it is not a replacement for police or medical emergencies.",
+          "Pilot hours: human response aimed within minutes.",
+          "Outside hours: recorded alert; emergency numbers available.",
         ],
       },
       {
-        title: "Gender-based violence (GBV)",
+        title: "Gender-Based Violence (GBV)",
         body: [
-          "If safe to speak, use SOS or Speak.",
-          "Discrete mode: few words; an operator may reply by message.",
-          "Do not stay alone if you can reach a safe place.",
+          "If you are safe to talk, use SOS or Talk.",
+          "Discreet mode: write few words; an operator will respond via message.",
+          "Do not stay alone if you can go to a safe place.",
         ],
       },
     ],
   },
   ln: {
-    title: "Lisalisi mpe makambo ya lisalisi",
+    title: "Bokoli na Bantu",
     sections: [
       {
-        title: "Ba numeros ya likama (RDC)",
+        title: "Mokolo ya Nganga (RDC)",
         body: [
-          "Police : 112 to commissariat ya pembeni",
-          "Bomoyi : na engumba na yo",
-          "Likama ya mongongo : hopital to centre ya bokono",
-          "Soki likama ya mbala moko : benga basungi liboso, sima NGEMBA soki okoki.",
+          "Polisi: 112 to komisi ya polisi ya liboso",
+          "Bokoli: ndenge na esika na yo",
+          "Mokolo ya nzoto: hopital to centre ya nzoto ya liboso",
+          "Na esika ya mpasi: yebisa liboso, nsima NGEMBA soki okoki.",
         ],
       },
       {
-        title: "Orientation NGEMBA",
+        title: "Mokano ya NGEMBA",
         body: [
-          "NGEMBA epesaka yo na moto ya lisalisi - ezali remplacement ya police to monganga te.",
-          "Ngonga ya pilote : eyano ya moto na ba minutes.",
-          "Na libanda ya ngonga : alerte ebombami ; ba numeros ya likama ezali.",
+          "NGEMBA ebandaka na mokonzi ya moto - ezali te lokola polisi to mokolo ya nzoto.",
+          "Sikoyo ya malamu: koyebisa moto na miniti.",
+          "Na nsima ya malamu: alerte ya kokoma; mokolo ya nganga ezali na esika.",
         ],
       },
       {
-        title: "Violence sur base ya genre (VBG)",
+        title: "Mokolo ya Bantu (VBG)",
         body: [
-          "Soki ozali na kimya mpo na koloba, salela SOS to Loba.",
-          "Mode ya bosembo : koma maloba moke ; moto akoyanola na message.",
-          "Kofanda yo moko te soki okoki kokende na esika ya kimya.",
+          "Soki ozali na esika ya koloba, yebisa SOS to Koloba.",
+          "Mokano ya kokanga: koloba makambo moke; mokonzi akokutana na yo na message.",
+          "Soki okoki, soki ozali na esika ya kokanga, soki okoki.",
         ],
       },
     ],
   },
   sw: {
-    title: "Msaada na rasilimali",
+    title: "Msaada na Rasilimali",
     sections: [
       {
-        title: "Nambari za dharura (DRC)",
+        title: "Nambari za Dharura (DRC)",
         body: [
-          "Polisi: 112 au kituo cha karibu",
-          "Zima moto: kulingana na jiji lako",
-          "Dharura ya afya: hospitali au kliniki ya karibu",
-          "Hatari ya papo hapo: piga huduma za dharura kwanza, kisha NGEMBA ikiwezekana.",
+          "Polisi: 112 au kituo cha polisi kilicho karibu",
+          "Wakaguzi wa moto: kulingana na jiji lako",
+          "Dharura ya matibabu: hospitali au kituo cha afya kilicho karibu",
+          "Katika hatari ya papo hapo: piga simu kwa msaada kwanza, kisha NGEMBA ikiwa inawezekana.",
         ],
       },
       {
-        title: "Uelekezo wa NGEMBA",
+        title: "Mwongozo wa NGEMBA",
         body: [
-          "NGEMBA inakuunganisha na mwendeshaji - si badala ya polisi au dharura ya afya.",
-          "Saa za majaribio: majibu ya binadamu ndani ya dakika chache.",
-          "Nje ya saa: tahadhari imehifadhiwa; nambari za dharura zinapatikana.",
+          "NGEMBA inakuongoza kwa opereta wa kibinadamu - si mbadala wa polisi au dharura za matibabu.",
+          "Saa za majaribio: jibu la kibinadamu linatarajiwa ndani ya dakika chache.",
+          "Nje ya saa: tahadhari iliyorekodiwa; nambari za dharura zinapatikana.",
         ],
       },
       {
-        title: "Ukatili wa kijinsia (GBV)",
+        title: "Vikosi vya Kijinsia (VBG)",
         body: [
-          "Ikiwa salama kuongea, tumia SOS au Ongea.",
-          "Hali ya siri: maneno machache; mwendeshaji anaweza kujibu kwa ujumbe.",
-          "Usikae peke yako ukiweza kwenda mahali salama.",
+          "Ikiwa uko salama kuzungumza, tumia SOS au Zungumza.",
+          "Njia ya siri: andika maneno machache; opereta atajibu kwa ujumbe.",
+          "Usikose kuwa peke yako ikiwa unaweza kwenda mahali salama.",
         ],
       },
     ],
   },
   lua: {
-    title: "Dishinda ne makambo",
+    title: "Bantu na Misa",
     sections: [
       {
-        title: "Ba numeros ya dikama (RDC)",
+        title: "Nambari za Dharura (RDC)",
         body: [
-          "Police : 112 to commissariat ya pembeni",
-          "Bomoyi : mu cishi na nge",
-          "Dikama ya bupole : hopital to centre ya bokono",
-          "Nangu dikama ya mbala moko : bikila basadishi liboso, sima NGEMBA nguwe udi.",
+          "Polisi: 112 au kituo cha polisi kilicho karibu",
+          "Wakaguzi wa moto: kulingana na jiji lako",
+          "Dharura ya matibabu: hospitali au kituo cha afya kilicho karibu",
+          "Katika hatari ya papo hapo: piga simu kwa msaada kwanza, kisha NGEMBA ikiwa inawezekana.",
         ],
       },
       {
-        title: "Orientation NGEMBA",
+        title: "Mwongozo wa NGEMBA",
         body: [
-          "NGEMBA ukupesha muntu wa dishinda - kechi remplacement ya police to monganga.",
-          "Ngonga ya pilote : eyano ya muntu mu ba minutes.",
-          "Na libanda ya ngonga : alerte ibombami ; ba numeros ya dikama diudi.",
+          "NGEMBA inakuongoza kwa opereta wa kibinadamu - si mbadala wa polisi au dharura za matibabu.",
+          "Saa za majaribio: jibu la kibinadamu linatarajiwa ndani ya dakika chache.",
+          "Nje ya saa: tahadhari iliyorekodiwa; nambari za dharura zinapatikana.",
         ],
       },
       {
-        title: "Violence sur base ya genre (VBG)",
+        title: "Vikosi vya Kijinsia (VBG)",
         body: [
-          "Nguwe udi mu mutende wa kuamba, sadisha SOS to Amba.",
-          "Mode ya bosembo : soneka maloba moke ; muntu ukomonanga na message.",
-          "Kukala wewe moko kechi nguwe udi kuenda mu kala ya mutende.",
+          "Ikiwa uko salama kuzungumza, tumia SOS au Zungumza.",
+          "Njia ya siri: andika maneno machache; opereta atajibu kwa ujumbe.",
+          "Usikose kuwa peke yako ikiwa unaweza kwenda mahali salama.",
         ],
       },
     ],
   },
   kg: {
-    title: "Lusadisu mpe makambo",
+    title: "Mokolo na Bantu",
     sections: [
       {
-        title: "Ba numeros ya zingu (RDC)",
+        title: "Nambari za Dharura (RDC)",
         body: [
-          "Police : 112 to commissariat ya pembeni",
-          "Bomoyi : na engumba na nge",
-          "Zingu ya bokono : hopital to centre ya bokono",
-          "Kana zingu ya mbala moko : binga basadisi liboso, sima NGEMBA soki okoki.",
+          "Polisi: 112 au kituo cha polisi kilicho karibu",
+          "Wakaguzi wa moto: kulingana na jiji lako",
+          "Dharura ya matibabu: hospitali au kituo cha afya kilicho karibu",
+          "Katika hatari ya papo hapo: piga simu kwa msaada kwanza, kisha NGEMBA ikiwa inawezekana.",
         ],
       },
       {
-        title: "Orientation NGEMBA",
+        title: "Mwongozo wa NGEMBA",
         body: [
-          "NGEMBA ke pesaka nge na muntu ya lusadisu - kele remplacement ya police to monganga ve.",
-          "Ngonga ya pilote : eyano ya muntu na ba minutes.",
-          "Na libanda ya ngonga : alerte me bumbama ; ba numeros ya zingu kele.",
+          "NGEMBA inakuongoza kwa opereta wa kibinadamu - si mbadala wa polisi au dharura za matibabu.",
+          "Saa za majaribio: jibu la kibinadamu linatarajiwa ndani ya dakika chache.",
+          "Nje ya saa: tahadhari iliyorekodiwa; nambari za dharura zinapatikana.",
         ],
       },
       {
-        title: "Violence sur base ya genre (VBG)",
+        title: "Vikosi vya Kijinsia (VBG)",
         body: [
-          "Soki kele na mutende ya kuvova, sala SOS to Vova.",
-          "Mode ya bosembo : sonika bangogo fioti ; muntu ta zabisa na message.",
-          "Kuvanda yo moko ve soki okoki kukwenda na kisika ya mutende.",
+          "Ikiwa uko salama kuzungumza, tumia SOS au Zungumza.",
+          "Njia ya siri: andika maneno machache; opereta atajibu kwa ujumbe.",
+          "Usikose kuwa peke yako ikiwa unaweza kwenda mahali salama.",
         ],
       },
     ],
@@ -195,29 +195,22 @@ const RESOURCES: Record<Locale, PageCopy> = {
 
 const PREVENT: Record<Locale, PageCopy> = {
   fr: {
-    title: "Prevenir",
+    title: "Prévenir",
     sections: [
       {
-        title: "Avant une situation",
+        title: "Avant qu'il soit trop tard",
         body: [
-          "Identifiez un contact de confiance.",
-          "Reperez les lieux surs pres de chez vous.",
-          "En zone a risque, deplacements accompagnes si possible.",
+          "Identifiez un contact de confiance à prévenir en cas de danger.",
+          "Mémorisez les numéros d'urgence locaux.",
+          "Parlez des situations inquiétantes tôt - ne restez pas isolé.",
         ],
       },
       {
-        title: "Si vous etes temoin",
+        title: "En ligne et hors ligne",
         body: [
-          "Ne vous mettez jamais en danger pour filmer ou intervenir.",
-          "Signalez via Temoin : lieu, type de situation, heure.",
-          "Appelez les urgences si une vie est en danger immediat.",
-        ],
-      },
-      {
-        title: "Fausses alertes",
-        body: [
-          "NGEMBA est un service de confiance.",
-          "Les fausses alertes repetees peuvent limiter l'acces.",
+          "Ne partagez pas de photos intimes sous la pression.",
+          "Bloquez et signalez le harcèlement en ligne.",
+          "À l'école ou au travail : parlez à un référent de confiance.",
         ],
       },
     ],
@@ -226,138 +219,103 @@ const PREVENT: Record<Locale, PageCopy> = {
     title: "Prevent",
     sections: [
       {
-        title: "Before a situation",
+        title: "Before It's Too Late",
         body: [
-          "Identify a trusted contact.",
-          "Note safe places near you.",
-          "In risky areas, travel with others when possible.",
+          "Identify a trusted contact to alert in case of danger.",
+          "Memorize local emergency numbers.",
+          "Talk about concerning situations early - do not stay isolated.",
         ],
       },
       {
-        title: "If you are a witness",
+        title: "Online and Offline",
         body: [
-          "Never put yourself in danger to film or intervene.",
-          "Report via Witness: place, situation type, time.",
-          "Call emergency services if a life is in immediate danger.",
-        ],
-      },
-      {
-        title: "False alerts",
-        body: [
-          "NGEMBA is a trust service.",
-          "Repeated false alerts may limit access.",
+          "Do not share intimate photos under pressure.",
+          "Block and report online harassment.",
+          "At school or work: talk to a trusted reference.",
         ],
       },
     ],
   },
   ln: {
-    title: "Kobatela",
+    title: "Kokisa",
     sections: [
       {
-        title: "Liboso ya likambo",
+        title: "Liboso ya kokisa",
         body: [
-          "Yeba moto oyo ozali kondima.",
-          "Yeba bisika ya kimya pembeni na yo.",
-          "Na esika ya likama, tambola na bato soki okoki.",
+          "Yebisa mokonzi ya motema ya kokisa soki ozali na mpasi.",
+          "Mémorisez les numéros d'urgence locaux.",
+          "Tanga na makambo ya mpasi na ntango ya liboso - soki okoki, soki okoki.",
         ],
       },
       {
-        title: "Soki ozali momonisi",
+        title: "Na Internet mpe na esika",
         body: [
-          "Kotia yo te na likama mpo na kofilmer to kosala.",
-          "Yebisa na Temoin : esika, likambo, ngonga.",
-          "Benga basungi soki bomoi ezali na likama.",
-        ],
-      },
-      {
-        title: "Ba fausses alertes",
-        body: [
-          "NGEMBA ezali service ya confiance.",
-          "Ba fausses alertes epekisi access.",
+          "Soki ozali na mpasi, soki okoki, soki okoki.",
+          "Kanga mpe yebisa makambo ya mpasi na Internet.",
+          "Na esika ya mosala to na esika ya masolo: yebisa mokonzi ya motema.",
         ],
       },
     ],
   },
   sw: {
-    title: "Zuia",
+    title: "Kuzuia",
     sections: [
       {
-        title: "Kabla ya hali",
+        title: "Kabla ya Kuchelewa",
         body: [
-          "Tambua mtu unayemwamini.",
-          "Jua maeneo salama karibu nawe.",
-          "Katika maeneo hatari, safiri na wengine ikiwezekana.",
+          "Tambua mtu wa kuaminika wa kumtaarifu endapo kuna hatari.",
+          "Kumbuka nambari za dharura za eneo lako.",
+          "Zungumza kuhusu hali zinazotia wasiwasi mapema - usijifungie.",
         ],
       },
       {
-        title: "Ukiwa shahidi",
+        title: "Mtandaoni na Nje ya Mtandao",
         body: [
-          "Usijihatarishe kupiga video au kuingilia.",
-          "Ripoti kupitia Shahidi: eneo, aina ya hali, muda.",
-          "Piga dharura ikiwa maisha yako hatarini.",
-        ],
-      },
-      {
-        title: "Tahadhari za uongo",
-        body: [
-          "NGEMBA ni huduma ya kuaminiana.",
-          "Tahadhari za uongo zinaweza kupunguza ufikiaji.",
+          "Usishiriki picha za faragha chini ya shinikizo.",
+          "Zuia na ripoti unyanyasaji mtandaoni.",
+          "Shuleni au kazini: zungumza na mtu wa kuaminika.",
         ],
       },
     ],
   },
   lua: {
-    title: "Lukengela",
+    title: "Kuzuia",
     sections: [
       {
-        title: "Liboso ya dikama",
+        title: "Kabla ya Kuchelewa",
         body: [
-          "Mona muntu udi ukengela.",
-          "Mona bisika ya mutende pembeni na nge.",
-          "Mu kala ya dikama, tamba ne bantu nguwe udi.",
+          "Tambua mtu wa kuaminika wa kumtaarifu endapo kuna hatari.",
+          "Kumbuka nambari za dharura za eneo lako.",
+          "Zungumza kuhusu hali zinazotia wasiwasi mapema - usijifungie.",
         ],
       },
       {
-        title: "Nguwe udi mumonishi",
+        title: "Mtandaoni na Nje ya Mtandao",
         body: [
-          "Ke ika wewe mu dikama mpo na kufilmer to kusala.",
-          "Ambila na Mumonishi : kala, dikama, ngonga.",
-          "Bikila basadishi nguwe bomoi budi mu dikama.",
-        ],
-      },
-      {
-        title: "Ba fausses alertes",
-        body: [
-          "NGEMBA kele service ya confiance.",
-          "Ba fausses alertes dipeki access.",
+          "Usishiriki picha za faragha chini ya shinikizo.",
+          "Zuia na ripoti unyanyasaji mtandaoni.",
+          "Shuleni au kazini: zungumza na mtu wa kuaminika.",
         ],
       },
     ],
   },
   kg: {
-    title: "Lunda",
+    title: "Kuzuia",
     sections: [
       {
-        title: "Liboso ya zingu",
+        title: "Kabla ya Kuchelewa",
         body: [
-          "Mona muntu oyo kele na kondima.",
-          "Yeba bisika ya mutende pembeni na nge.",
-          "Na kisika ya zingu, tamba ti bantu soki okoki.",
+          "Tambua mtu wa kuaminika wa kumtaarifu endapo kuna hatari.",
+          "Kumbuka nambari za dharura za eneo lako.",
+          "Zungumza kuhusu hali zinazotia wasiwasi mapema - usijifungie.",
         ],
       },
       {
-        title: "Soki kele nsungidi",
+        title: "Mtandaoni na Nje ya Mtandao",
         body: [
-          "Kutula nge ve na zingu mpo na kofilmer to kusala.",
-          "Zabisa na Nsungidi : kisika, zingu, ngonga.",
-          "Binga basadisi kana bomoi kele na zingu.",
-        ],
-      },
-      {
-        title: "Ba fausses alertes",
-        body: [
-          "NGEMBA kele service ya confiance.",
-          "Ba fausses alertes ke pesa limite na access.",
+          "Usishiriki picha za faragha chini ya shinikizo.",
+          "Zuia na ripoti unyanyasaji mtandaoni.",
+          "Shuleni au kazini: zungumza na mtu wa kuaminika.",
         ],
       },
     ],
@@ -390,7 +348,7 @@ const PAGES: Record<PageKey, Record<Locale, PageCopy>> = {
   privacy: Object.fromEntries(
     (["fr", "en", "ln", "sw", "lua", "kg"] as Locale[]).map((l) => [
       l,
-      legalPage(l, "Confidentialite (brouillon pilote)", PRIVACY_SECTIONS),
+      legalPage(l, "Confidentialité (brouillon pilote)", PRIVACY_SECTIONS),
     ]),
   ) as Record<Locale, PageCopy>,
   cgu: Object.fromEntries(
@@ -402,7 +360,7 @@ const PAGES: Record<PageKey, Record<Locale, PageCopy>> = {
   charter: Object.fromEntries(
     (["fr", "en", "ln", "sw", "lua", "kg"] as Locale[]).map((l) => [
       l,
-      legalPage(l, "Charte operateur ONG (brouillon)", CHARTE_ONG_SECTIONS),
+      legalPage(l, "Charte opérateur ONG (brouillon)", CHARTE_ONG_SECTIONS),
     ]),
   ) as Record<Locale, PageCopy>,
 };

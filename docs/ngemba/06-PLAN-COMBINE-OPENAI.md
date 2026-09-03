@@ -24,7 +24,7 @@ Règles UI :
 - Poppins · `#06402b` · `#882364` · SOS `#c41e3a`
 - **SVG uniquement** (pas d'emoji)
 - **Peu de texte**
-- Tirets **`-`** uniquement (pas `—` / `·`)
+- Tirets **`-`** uniquement (pas `-` / `·`)
 
 ---
 

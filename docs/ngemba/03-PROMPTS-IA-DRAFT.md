@@ -1,10 +1,10 @@
-# NGEMBA — Prompts IA & schéma triage (brouillon)
+# NGEMBA - Prompts IA & schéma triage (brouillon)
 
 > Complément de [PLAN-MAITRE.md](./PLAN-MAITRE.md) · **Ne pas déployer sans revue juridique et tests avec ONG pilote.**
 
 ---
 
-## 1. System prompt — triage alerte
+## 1. System prompt - triage alerte
 
 ```
 Tu es NGEMBA IA, assistant de triage pour une plateforme de protection citoyenne en République Démocratique du Congo.
@@ -38,7 +38,7 @@ Chaque réponse inclut ai_disclaimer rappelant que c'est une évaluation automat
 
 ---
 
-## 2. JSON Schema — structured output
+## 2. JSON Schema - structured output
 
 ```json
 {
@@ -128,7 +128,7 @@ Chaque réponse inclut ai_disclaimer rappelant que c'est une évaluation automat
       },
       "ai_disclaimer": {
         "type": "string",
-        "const": "Évaluation automatique NGEMBA — non vérifiée par un humain. Ne constitue pas une preuve judiciaire."
+        "const": "Évaluation automatique NGEMBA - non vérifiée par un humain. Ne constitue pas une preuve judiciaire."
       },
       "witness_safety_reminder": {
         "type": "string",
@@ -171,7 +171,7 @@ function applyTriageRules(triage: TriageResult, source: AlertSource): RoutingDec
 
 ---
 
-## 4. Prompt — analyse média (sans certification)
+## 4. Prompt - analyse média (sans certification)
 
 ```
 Analyse ce fichier dans le contexte d'une alerte NGEMBA.
@@ -187,12 +187,12 @@ Tu ne dois JAMAIS :
 - identifier nominativement une personne avec certitude
 - conclure sur la culpabilité
 
-Inclure toujours : "Analyse automatique — à vérifier par un humain."
+Inclure toujours : "Analyse automatique - à vérifier par un humain."
 ```
 
 ---
 
-## 5. Prompt — chat prévention (McBuleli Jeunesse)
+## 5. Prompt - chat prévention (McBuleli Jeunesse)
 
 ```
 Tu es NGEMBA Jeunesse, guide éducatif interactif pour jeunes en RDC.
@@ -214,7 +214,7 @@ Si `OPENAI_API_KEY` absent ou timeout :
 
 1. Mots-clés urgence FR/LN/SW (`danger`, `aide`, `mort`, `sang`, `viol`, `mbila`, `hatari`…)
 2. Urgence default `high` + `routing_hint: operator_required`
-3. Message utilisateur : *« Connexion limitée — votre alerte est enregistrée, un opérateur va vous répondre. »*
+3. Message utilisateur : *« Connexion limitée - votre alerte est enregistrée, un opérateur va vous répondre. »*
 
 ---
 
@@ -239,4 +239,4 @@ Si `OPENAI_API_KEY` absent ou timeout :
 | Whisper 1 min/audio | 500 fichiers | < 10 USD |
 | Vision gpt-4o | 200 images | < 20 USD |
 
-Budget IA pilote : **~50 USD/mois** — monitorer via logs tokens.
+Budget IA pilote : **~50 USD/mois** - monitorer via logs tokens.
