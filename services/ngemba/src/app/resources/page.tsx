@@ -1,8 +1,13 @@
-import { StaticPageShell } from "@/components/static-page-shell";
-import { RESOURCES_SECTIONS } from "@/lib/static-pages";
+import { Suspense } from "react";
+import { StaticPageView } from "@/components/static-page-view";
 
-export default function ResourcesPage() {
+type Props = { searchParams: Promise<{ lang?: string }> };
+
+export default async function ResourcesPage({ searchParams }: Props) {
+  const sp = await searchParams;
   return (
-    <StaticPageShell title="Aide et ressources" sections={RESOURCES_SECTIONS} />
+    <Suspense fallback={null}>
+      <StaticPageView page="resources" initialLocale={sp.lang} />
+    </Suspense>
   );
 }

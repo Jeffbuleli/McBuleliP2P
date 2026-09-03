@@ -9,7 +9,7 @@
 | **Phase 2** (medias, chat, compte citoyen) | ✅ v1 |
 | **Phase 3** (discret, vibration, PWA) | ✅ v1 web |
 | **Phase 3b** (Expo mobile v0.1) | ✅ scaffold |
-| Phase 3b.2 (EAS build, widget) | ⏳ |
+| **Phase 3b.2** (i18n LN+, locale persist, EAS) | ✅ v0.2 |
 
 Live : https://ngemba.cyberalert-rdc.org
 

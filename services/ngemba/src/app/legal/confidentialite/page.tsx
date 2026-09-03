@@ -1,11 +1,13 @@
-import { StaticPageShell } from "@/components/static-page-shell";
-import { PRIVACY_SECTIONS } from "@/lib/static-pages";
+import { Suspense } from "react";
+import { StaticPageView } from "@/components/static-page-view";
 
-export default function ConfidentialitePage() {
+type Props = { searchParams: Promise<{ lang?: string }> };
+
+export default async function ConfidentialitePage({ searchParams }: Props) {
+  const sp = await searchParams;
   return (
-    <StaticPageShell
-      title="Confidentialité (brouillon pilote)"
-      sections={PRIVACY_SECTIONS}
-    />
+    <Suspense fallback={null}>
+      <StaticPageView page="privacy" initialLocale={sp.lang} />
+    </Suspense>
   );
 }

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { SessionView } from "@/components/session-view";
 
 type Props = {
@@ -9,10 +10,12 @@ export default async function SessionPage({ params, searchParams }: Props) {
   const { id } = await params;
   const sp = await searchParams;
   return (
-    <SessionView
-      id={id}
-      initialLocale={sp.lang || "fr"}
-      discrete={sp.discrete === "1"}
-    />
+    <Suspense fallback={null}>
+      <SessionView
+        id={id}
+        initialLocale={sp.lang}
+        discrete={sp.discrete === "1"}
+      />
+    </Suspense>
   );
 }

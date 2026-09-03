@@ -1,11 +1,13 @@
-import { StaticPageShell } from "@/components/static-page-shell";
-import { CHARTE_ONG_SECTIONS } from "@/lib/static-pages";
+import { Suspense } from "react";
+import { StaticPageView } from "@/components/static-page-view";
 
-export default function CharteOngPage() {
+type Props = { searchParams: Promise<{ lang?: string }> };
+
+export default async function CharteOngPage({ searchParams }: Props) {
+  const sp = await searchParams;
   return (
-    <StaticPageShell
-      title="Charte opérateur ONG"
-      sections={CHARTE_ONG_SECTIONS}
-    />
+    <Suspense fallback={null}>
+      <StaticPageView page="charter" initialLocale={sp.lang} />
+    </Suspense>
   );
 }

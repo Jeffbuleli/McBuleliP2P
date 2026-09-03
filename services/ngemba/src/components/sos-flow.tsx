@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { IconShield } from "@/components/icons";
 import { VoiceButton } from "@/components/voice-button";
+import { useCitizenLocale } from "@/hooks/use-citizen-locale";
 import { vibrateDiscreteConfirm } from "@/lib/discrete/vibrate";
-import { isLocale, messages, type Locale } from "@/lib/i18n";
+import { messages } from "@/lib/i18n";
 import { citizenShellMaxWidth, useDeviceClass } from "@/lib/ui/device";
 
 type Step = "tell" | "place";
@@ -23,12 +24,12 @@ export function SosFlow({
   source = "sos_button",
   discrete = false,
 }: {
-  initialLocale: string;
+  initialLocale?: string;
   source?: Source;
   discrete?: boolean;
 }) {
   const router = useRouter();
-  const locale: Locale = isLocale(initialLocale) ? initialLocale : "fr";
+  const { locale, href } = useCitizenLocale(initialLocale);
   const t = messages[locale];
   const device = useDeviceClass();
   const isWitness = source === "witness";
@@ -97,7 +98,7 @@ export function SosFlow({
         return;
       }
       if (discrete) vibrateDiscreteConfirm();
-      router.push(`/session/${data.id}?lang=${locale}${discrete ? "&discrete=1" : ""}`);
+      router.push(`${href(`/session/${data.id}`)}${discrete ? "&discrete=1" : ""}`);
     } catch {
       setError(t.errorGeneric);
       setBusy(false);
@@ -151,7 +152,7 @@ export function SosFlow({
     >
       <header className="flex items-center justify-between gap-3">
         <Link
-          href={`/?lang=${locale}`}
+          href={href("/")}
           className={`text-sm font-medium ${discrete ? "ng-discrete-muted" : "text-ng-muted"}`}
         >
           {t.back}

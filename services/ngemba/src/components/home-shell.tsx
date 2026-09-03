@@ -3,7 +3,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import {
   IconBook,
   IconEye,
@@ -12,8 +11,8 @@ import {
   IconShield,
   IconSpark,
 } from "@/components/icons";
+import { useCitizenLocale } from "@/hooks/use-citizen-locale";
 import {
-  isLocale,
   localeLabels,
   locales,
   messages,
@@ -73,22 +72,15 @@ function Tile({
 
 export function HomeShell({ initialLocale }: { initialLocale?: string }) {
   const router = useRouter();
-  const [locale, setLocale] = useState<Locale>(
-    initialLocale && isLocale(initialLocale) ? initialLocale : "fr",
-  );
+  const { locale, setLocale, href } = useCitizenLocale(initialLocale);
   const t = messages[locale];
   const device = useDeviceClass();
   const onLogoTap = useTripleTap(() => {
-    router.push(`/discrete?lang=${locale}`);
+    router.push(href("/discrete"));
   });
-
-  useEffect(() => {
-    if (initialLocale && isLocale(initialLocale)) setLocale(initialLocale);
-  }, [initialLocale]);
 
   function changeLocale(code: Locale) {
     setLocale(code);
-    router.replace(`/?lang=${code}`, { scroll: false });
   }
 
   return (
@@ -158,29 +150,29 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
           <Tile
             icon={<IconMic className="size-5" />}
             label={t.speak}
-            href={`/sos?lang=${locale}`}
+            href={href("/sos")}
           />
           <Tile
             icon={<IconEye className="size-5" />}
             label={t.witness}
             accent="secondary"
-            href={`/witness?lang=${locale}`}
+            href={href("/witness")}
           />
           <Tile
             icon={<IconBook className="size-5" />}
             label={t.prevent}
-            href={`/prevent?lang=${locale}`}
+            href={href("/prevent")}
           />
           <Tile
             icon={<IconSpark className="size-5" />}
             label={t.resources}
-            href={`/resources?lang=${locale}`}
+            href={href("/resources")}
           />
         </div>
 
         <div className="ng-home-sos-row w-full flex justify-center">
         <Link
-          href={`/sos?lang=${locale}`}
+          href={href("/sos")}
           aria-label={`${t.sos} - ${t.sosHint}`}
           className={`ng-sos-pulse relative flex ${sosButtonSize(device)} flex-col items-center justify-center rounded-full bg-ng-urgent text-white`}
         >
@@ -198,20 +190,20 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
           {t.line}
         </p>
         <p className="text-center text-[11px] text-ng-muted">
-          <Link href={`/discrete?lang=${locale}`} className="underline">
+          <Link href={href("/discrete")} className="underline">
             {t.discrete}
           </Link>
           {" · "}
-          <Link href={`/me?lang=${locale}`} className="underline">
+          <Link href={href("/me")} className="underline">
             {t.myAlerts}
           </Link>
           {" · "}
-          <Link href={`/legal/confidentialite?lang=${locale}`} className="underline">
-            Confidentialité
+          <Link href={href("/legal/confidentialite")} className="underline">
+            {t.privacyLink}
           </Link>
           {" · "}
-          <Link href={`/legal/cgu?lang=${locale}`} className="underline">
-            CGU
+          <Link href={href("/legal/cgu")} className="underline">
+            {t.cguLink}
           </Link>
         </p>
       </section>

@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocale } from "../src/context/locale";
-import { localeLabels, messages, type Locale } from "../src/lib/i18n";
+import { localeLabels, locales, messages, type Locale } from "../src/lib/i18n";
 import { hapticTap } from "../src/lib/haptics";
 import { useTripleTap } from "../src/lib/triple-tap";
 import { brand, colors } from "../src/theme/colors";
@@ -64,7 +64,7 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.langRow}>
-          {(["fr", "en"] as Locale[]).map((code) => (
+          {locales.map((code) => (
             <Pressable
               key={code}
               onPress={() => setLocale(code)}

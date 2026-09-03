@@ -61,6 +61,13 @@ type Copy = {
   discreteSend: string;
   discreteSafety: string;
   discreteTap: string;
+  resourcesTitle: string;
+  preventTitle: string;
+  privacyLink: string;
+  cguLink: string;
+  charterLink: string;
+  legalDraftNotice: string;
+  myAlertsEmpty: string;
 };
 
 const baseFr: Copy = {
@@ -113,6 +120,14 @@ const baseFr: Copy = {
   discreteSend: "Envoyer discrètement",
   discreteSafety: "Si quelqu'un surveille votre écran, écrivez peu de mots.",
   discreteTap: "Triple-tap sur le logo NGEMBA ouvre le mode discret.",
+  resourcesTitle: "Aide et ressources",
+  preventTitle: "Prévenir",
+  privacyLink: "Confidentialité",
+  cguLink: "CGU",
+  charterLink: "Charte ONG",
+  legalDraftNotice: "",
+  myAlertsEmpty:
+    "Aucune alerte enregistrée sur cet appareil. Utilisez SOS pour créer une alerte - elle apparaîtra ici automatiquement.",
 };
 
 export const messages: Record<Locale, Copy> = {
@@ -167,6 +182,14 @@ export const messages: Record<Locale, Copy> = {
     discreteSend: "Send discreetly",
     discreteSafety: "If someone is watching your screen, use few words.",
     discreteTap: "Triple-tap the NGEMBA logo opens discrete mode.",
+    resourcesTitle: "Help and resources",
+    preventTitle: "Prevent",
+    privacyLink: "Privacy",
+    cguLink: "Terms",
+    charterLink: "NGO charter",
+    legalDraftNotice: "",
+    myAlertsEmpty:
+      "No alerts saved on this device. Use SOS to create one - it will appear here automatically.",
   },
   ln: {
     ...baseFr,
@@ -204,6 +227,27 @@ export const messages: Record<Locale, Copy> = {
     voice: "Loba",
     voiceListening: "Koyoka...",
     voiceUnsupported: "Mongongo ezali te",
+    myAlerts: "Ba alertes na ngai",
+    addMedia: "Bakisa foto to audio",
+    mediaHint: "Ezali na kopona - max 8 Mo",
+    mediaUploading: "Ezali kotinda fichier...",
+    chatTitle: "Lobela na operateur",
+    chatPlaceholder: "Message na yo...",
+    chatSend: "Tinda",
+    chatEmpty: "Moto akoyanola awa soki azali.",
+    discrete: "Mode ya bosembo",
+    discreteHint: "Ecran ya polele - vibration - flash ya moto te",
+    discreteSend: "Tinda na bosembo",
+    discreteSafety: "Soki moto azali kotala ecran na yo, koma maloba moke.",
+    discreteTap: "Tina logo NGEMBA mbala 3 mpo na mode ya bosembo.",
+    resourcesTitle: "Lisalisi mpe makambo ya lisalisi",
+    preventTitle: "Kobatela",
+    privacyLink: "Bosembo",
+    cguLink: "Mibeko",
+    charterLink: "Charte ONG",
+    legalDraftNotice: "Mokanda ya mibeko ezali na lifalans - ndimbola mobimba ezali koya.",
+    myAlertsEmpty:
+      "Alerte moko te na aparɛyi oyo. Salela SOS - alerte ekobima awa.",
   },
   sw: {
     ...baseFr,
@@ -241,6 +285,27 @@ export const messages: Record<Locale, Copy> = {
     voice: "Ongea",
     voiceListening: "Inasikiliza...",
     voiceUnsupported: "Sauti haipatikani",
+    myAlerts: "Tahadhari zangu",
+    addMedia: "Ongeza picha au sauti",
+    mediaHint: "Hiari - max 8 MB",
+    mediaUploading: "Inapakia...",
+    chatTitle: "Ongea na mwendeshaji",
+    chatPlaceholder: "Ujumbe wako...",
+    chatSend: "Tuma",
+    chatEmpty: "Mwendeshaji atajibu hapa akiwa anapatikana.",
+    discrete: "Hali ya siri",
+    discreteHint: "Skrini ya utulivu - mtetemo - hakuna mwanga mwekundu",
+    discreteSend: "Tuma kwa siri",
+    discreteSafety: "Ikiwa mtu anaangalia skrini yako, andika maneno machache.",
+    discreteTap: "Gusa logo ya NGEMBA mara 3 kwa hali ya siri.",
+    resourcesTitle: "Msaada na rasilimali",
+    preventTitle: "Zuia",
+    privacyLink: "Faragha",
+    cguLink: "Masharti",
+    charterLink: "Sera ya NGO",
+    legalDraftNotice: "Hati ya kisheria kwa Kifaransa - tafsiri kamili inakuja.",
+    myAlertsEmpty:
+      "Hakuna tahadhari kwenye kifaa hiki. Tumia SOS - itaonekana hapa.",
   },
   lua: {
     ...baseFr,
@@ -278,6 +343,26 @@ export const messages: Record<Locale, Copy> = {
     voice: "Amba",
     voiceListening: "Kuyuva...",
     voiceUnsupported: "Diwi dikeci",
+    myAlerts: "Ba alerte na ngai",
+    addMedia: "Bakisa foto to diwi",
+    mediaHint: "Di ku dikosola - max 8 Mo",
+    mediaUploading: "Kudi kutuma fichier...",
+    chatTitle: "Solola ne operateur",
+    chatPlaceholder: "Message na nge...",
+    chatSend: "Tuma",
+    chatEmpty: "Muntu ukomonanga awa nguwe udi.",
+    discrete: "Mode ya bosembo",
+    discreteHint: "Ecran ya polele - vibration - flash ya moto te",
+    discreteSend: "Tuma na bosembo",
+    discreteSafety: "Nguwe muntu udi kutala ecran na nge, soneka maloba moke.",
+    discreteTap: "Tina logo NGEMBA mbala 3 mpo na mode ya bosembo.",
+    resourcesTitle: "Dishinda ne makambo",
+    preventTitle: "Lukengela",
+    privacyLink: "Bosembo",
+    cguLink: "Mibeko",
+    charterLink: "Charte ONG",
+    legalDraftNotice: "Mokanda ya mibeko ezali na lifalans - ndimbola mobimba ezali koya.",
+    myAlertsEmpty: "Alerte moko te na aparɛyi oyo. Salela SOS.",
   },
   kg: {
     ...baseFr,
@@ -315,6 +400,26 @@ export const messages: Record<Locale, Copy> = {
     voice: "Vova",
     voiceListening: "Ke wa...",
     voiceUnsupported: "Ndinga kele ve",
+    myAlerts: "Ba alerte na ngai",
+    addMedia: "Bakisa foto to ndinga",
+    mediaHint: "Na kopona - max 8 Mo",
+    mediaUploading: "Ke tinda fichier...",
+    chatTitle: "Solola ti operateur",
+    chatPlaceholder: "Message na nge...",
+    chatSend: "Tinda",
+    chatEmpty: "Muntu ta zabisa awa soki kele.",
+    discrete: "Mode ya bosembo",
+    discreteHint: "Ecran ya polele - vibration - flash ya moto ve",
+    discreteSend: "Tinda na bosembo",
+    discreteSafety: "Soki muntu ke talaka ecran na nge, sonika bangogo fioti.",
+    discreteTap: "Tina logo NGEMBA mbala 3 mpo na mode ya bosembo.",
+    resourcesTitle: "Lusadisu mpe makambo",
+    preventTitle: "Lunda",
+    privacyLink: "Bosembo",
+    cguLink: "Mibeko",
+    charterLink: "Charte ONG",
+    legalDraftNotice: "Mokanda ya mibeko ezali na lifalans - ndimbola mobimba ke kwisa.",
+    myAlertsEmpty: "Alerte moko ve na aparɛyi oyo. Sala SOS.",
   },
 };
 

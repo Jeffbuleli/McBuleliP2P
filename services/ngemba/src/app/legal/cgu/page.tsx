@@ -1,11 +1,13 @@
-import { StaticPageShell } from "@/components/static-page-shell";
-import { CGU_SECTIONS } from "@/lib/static-pages";
+import { Suspense } from "react";
+import { StaticPageView } from "@/components/static-page-view";
 
-export default function CguPage() {
+type Props = { searchParams: Promise<{ lang?: string }> };
+
+export default async function CguPage({ searchParams }: Props) {
+  const sp = await searchParams;
   return (
-    <StaticPageShell
-      title="Conditions d'utilisation (brouillon pilote)"
-      sections={CGU_SECTIONS}
-    />
+    <Suspense fallback={null}>
+      <StaticPageView page="cgu" initialLocale={sp.lang} />
+    </Suspense>
   );
 }

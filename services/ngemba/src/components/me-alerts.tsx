@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { isLocale, messages, type Locale } from "@/lib/i18n";
+import { useCitizenLocale } from "@/hooks/use-citizen-locale";
+import { messages } from "@/lib/i18n";
 import { citizenShellMaxWidth, useDeviceClass } from "@/lib/ui/device";
 
 type Row = {
@@ -15,8 +16,7 @@ type Row = {
 };
 
 export function MeAlertsView({ initialLocale }: { initialLocale?: string }) {
-  const locale: Locale =
-    initialLocale && isLocale(initialLocale) ? initialLocale : "fr";
+  const { locale, href } = useCitizenLocale(initialLocale);
   const t = messages[locale];
   const device = useDeviceClass();
   const [rows, setRows] = useState<Row[]>([]);
@@ -37,23 +37,20 @@ export function MeAlertsView({ initialLocale }: { initialLocale?: string }) {
       className={`ng-shell mx-auto min-h-dvh py-6 ${citizenShellMaxWidth(device)}`}
     >
       <Link
-        href={`/?lang=${locale}`}
+        href={href("/")}
         className="text-sm font-semibold text-ng-primary"
       >
         ← {t.home}
       </Link>
       <h1 className="mt-4 text-2xl font-bold text-ng-text">{t.myAlerts}</h1>
       {!hasAccount || rows.length === 0 ? (
-        <p className="mt-6 text-sm text-ng-muted">
-          Aucune alerte enregistrée sur cet appareil. Utilisez SOS pour créer une
-          alerte - elle apparaîtra ici automatiquement.
-        </p>
+        <p className="mt-6 text-sm text-ng-muted">{t.myAlertsEmpty}</p>
       ) : (
         <ul className="mt-6 space-y-3">
           {rows.map((r) => (
             <li key={r.id}>
               <Link
-                href={`/session/${r.id}?lang=${locale}`}
+                href={href(`/session/${r.id}`)}
                 className="block rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-4"
               >
                 <div className="flex items-center justify-between gap-2">

@@ -1,8 +1,13 @@
-import { StaticPageShell } from "@/components/static-page-shell";
-import { PREVENT_SECTIONS } from "@/lib/static-pages";
+import { Suspense } from "react";
+import { StaticPageView } from "@/components/static-page-view";
 
-export default function PreventPage() {
+type Props = { searchParams: Promise<{ lang?: string }> };
+
+export default async function PreventPage({ searchParams }: Props) {
+  const sp = await searchParams;
   return (
-    <StaticPageShell title="Prévenir" sections={PREVENT_SECTIONS} />
+    <Suspense fallback={null}>
+      <StaticPageView page="prevent" initialLocale={sp.lang} />
+    </Suspense>
   );
 }

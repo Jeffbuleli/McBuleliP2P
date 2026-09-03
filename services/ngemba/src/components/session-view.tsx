@@ -8,7 +8,8 @@ import {
   SessionMediaUpload,
 } from "@/components/session-media";
 import { IconShield, IconSpark } from "@/components/icons";
-import { isLocale, messages, type Locale } from "@/lib/i18n";
+import { useCitizenLocale } from "@/hooks/use-citizen-locale";
+import { messages } from "@/lib/i18n";
 import { urgencyLabel } from "@/lib/labels";
 import { citizenShellMaxWidth, useDeviceClass } from "@/lib/ui/device";
 
@@ -50,10 +51,10 @@ export function SessionView({
   discrete = false,
 }: {
   id: string;
-  initialLocale: string;
+  initialLocale?: string;
   discrete?: boolean;
 }) {
-  const locale: Locale = isLocale(initialLocale) ? initialLocale : "fr";
+  const { locale, href } = useCitizenLocale(initialLocale);
   const t = messages[locale];
   const device = useDeviceClass();
   const [session, setSession] = useState<SessionPayload | null>(null);
@@ -96,7 +97,7 @@ export function SessionView({
       className={`ng-shell mx-auto flex min-h-dvh flex-col pb-8 pt-5 ${citizenShellMaxWidth(device)} ${discrete ? "ng-discrete-surface" : ""}`}
     >
       <header className="flex items-center justify-between">
-        <Link href={`/?lang=${locale}`} className="text-sm font-medium text-ng-muted">
+        <Link href={href("/")} className="text-sm font-medium text-ng-muted">
           {t.home}
         </Link>
         <div className="inline-flex items-center gap-1.5 text-ng-primary">
@@ -194,7 +195,7 @@ export function SessionView({
           />
 
           <Link
-            href={`/me?lang=${locale}`}
+            href={href("/me")}
             className="text-center text-sm font-semibold text-ng-primary underline"
           >
             {t.myAlerts}
