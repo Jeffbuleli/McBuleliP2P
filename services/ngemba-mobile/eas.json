@@ -1,17 +1,36 @@
 {
   "cli": {
     "version": ">= 12.0.0",
-    "appVersionSource": "remote"
+    "appVersionSource": "local"
   },
   "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_NGEMBA_API_URL": "https://ngemba.cyberalert-rdc.org"
+      }
+    },
     "preview": {
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_NGEMBA_API_URL": "https://ngemba.cyberalert-rdc.org"
       }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_NGEMBA_API_URL": "https://ngemba.cyberalert-rdc.org"
+      }
     }
   },
   "submit": {

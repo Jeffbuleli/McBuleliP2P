@@ -1,16 +1,19 @@
+# Dependencies & local
 node_modules/
 .expo/
 dist/
-web-build/
 *.jks
 *.p8
 *.p12
 *.key
 *.mobileprovision
 *.orig.*
+web-build/
+
+# Env
 .env
 .env.local
 
-# Keep Expo icons (repo root ignores *.png)
-!assets/
-!assets/**
+# Native (si prebuild local)
+android/
+ios/

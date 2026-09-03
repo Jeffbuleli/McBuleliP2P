@@ -11,12 +11,19 @@
 | **Phase 3b** (Expo mobile v0.1) | ✅ scaffold |
 | **Phase 3b.2** (i18n LN+, locale persist, EAS) | ✅ v0.2 |
 | **Phase 3b.3** (contacts confiance + secousse 5x) | ✅ v0.3 |
+| **Phase 3b.4** (EAS APK preview) | ✅ config · build apres `eas login` |
 | **Phase 4** (Safe School + Jeunesse 10 scenarios) | ✅ v0.1 web |
 | **Phase 4.2** (role school, mobile, contenu) | ✅ v0.2 |
 | **Phase 5** (observatoire / heatmap k-anonyme) | ✅ v0.1 |
 | **Phase 5.2** (carte OSM + filtres province/categorie) | ✅ v0.2 |
 
 Live : https://ngemba.cyberalert-rdc.org
+
+## Phase 3b.4 - EAS APK
+
+- Profile `preview` → APK Android (`npm run eas:apk`)
+- Doc : [22-EAS-BUILD.md](./22-EAS-BUILD.md)
+- **Action humaine :** `npx eas-cli login` puis lancer le build (compte Expo requis)
 
 ## Phase 5.2 - livre
 

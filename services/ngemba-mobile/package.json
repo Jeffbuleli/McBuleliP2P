@@ -1,13 +1,17 @@
 {
   "name": "ngemba-mobile",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "private": true,
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "eas:login": "eas login",
+    "eas:apk": "eas build -p android --profile preview",
+    "eas:aab": "eas build -p android --profile production",
+    "eas:ios": "eas build -p ios --profile preview"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "1.23.1",
@@ -16,6 +20,7 @@
     "expo-haptics": "~14.0.1",
     "expo-linking": "~7.0.5",
     "expo-location": "~18.0.10",
+    "expo-router": "~4.0.21",
     "expo-sensors": "~14.0.2",
     "expo-status-bar": "~2.0.1",
     "react": "18.3.1",
@@ -25,6 +30,7 @@
   },
   "devDependencies": {
     "@types/react": "~18.3.12",
+    "eas-cli": "^16.0.0",
     "typescript": "~5.3.3"
   }
 }

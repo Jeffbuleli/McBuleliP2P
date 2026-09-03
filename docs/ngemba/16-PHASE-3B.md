@@ -1,22 +1,34 @@
 # NGEMBA - Phase 3b (App mobile Expo)
 
-> **Statut :** v0.2 · contacts de confiance + secousse 5x
+> **Statut :** v0.3 · EAS APK pret (build cloud apres `eas login`)
 
 ---
 
-## Livre (v0.2)
+## Livre
 
 | Feature | Detail |
 |---------|--------|
 | **Expo app** | `services/ngemba-mobile/` |
 | **SOS / temoin** | API prod `/api/alerts` |
-| **Mode discret** | Ecran sombre + haptics triple impact |
-| **Triple-tap logo** | Navigation vers `/discrete` |
-| **Secousse 5x** | `expo-sensors` → mode discret (`source: shake`) |
-| **Contacts de confiance** | 1-3 contacts · dossier ops · actions manuelles |
-| **GPS** | `expo-location` (permission foreground) |
-| **Session** | Recap urgence + resume IA |
+| **Mode discret** | Ecran sombre + haptics |
+| **Secousse 5x** | `expo-sensors` → mode discret |
+| **Contacts de confiance** | 1-3 · ressource dossier ops (pas notify auto) |
+| **EAS** | Profile `preview` → **APK** · voir [22-EAS-BUILD.md](./22-EAS-BUILD.md) |
 | **i18n** | FR / EN / LN / SW / LU / KG |
+
+---
+
+## Build APK (resume)
+
+```bash
+cd services/ngemba-mobile
+npm install
+npx eas-cli login
+npx eas-cli init          # 1re fois seulement
+npm run eas:apk
+```
+
+Details : [22-EAS-BUILD.md](./22-EAS-BUILD.md)
 
 ---
 
@@ -25,24 +37,14 @@
 1. Onboarding au premier lancement (skippable) + ecran dedie
 2. Champs : nom, lien, telephone, email, adresse/quartier
 3. Stockage local AsyncStorage + envoi avec chaque alerte
-4. **Pas de notify auto** a la creation (philosophie proches = ressource dossier)
-5. Ops : bloc proches sur `/ops/[id]` avec Appeler / WhatsApp (`wa.me/243…`) / Email
-6. API citoyen : `trustedContacts` masques hors session ops
+4. **Pas de notify auto** a la creation
+5. Ops : Appeler / WhatsApp / Email manuels
 
 Voir [19-PHILO-ORIENTATION-PROCHES.md](./19-PHILO-ORIENTATION-PROCHES.md)
 
 ---
 
-## Secousse 5x
-
-- Detecteur accelerometre global (`app/_layout.tsx`)
-- Cooldown 15 s entre declenchements
-- Ouvre `/discrete?from=shake` avec haptics discrets
-- iOS : foreground uniquement (limite Apple)
-
----
-
-## Lancer
+## Lancer (Expo Go)
 
 ```bash
 cd services/ngemba-mobile
@@ -55,22 +57,13 @@ npm start
 
 ---
 
-## Plateformes
+## Prochain
 
-| OS | Secousse | Arriere-plan |
-|----|----------|--------------|
-| **Android** | Accelerometre + haptics | Limite - widget 3b.3 |
-| **iOS** | Accelerometre foreground | Pas de secousse background |
-
----
-
-## 3b.3 (prochain)
-
-1. EAS Build (APK/AAB + TestFlight)
-2. Widget Android / Live Activity iOS si faisable
-3. Volume key combo (native module)
-4. USSD / SMS fallback citoyen sans smartphone
+1. Widget Android / Live Activity iOS
+2. Volume key combo
+3. USSD / SMS fallback citoyen
+4. TestFlight / Play Internal (apres APK valide)
 
 ---
 
-*Document v0.2*
+*Document v0.3*

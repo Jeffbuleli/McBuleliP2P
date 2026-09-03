@@ -1,11 +1,11 @@
 # NGEMBA Mobile (Phase 3b)
 
-App **Expo / React Native** pour secousse native, mode discret et alertes via l'API prod.
+App **Expo / React Native** - SOS, mode discret, secousse, contacts de confiance.
 
 - **API :** https://ngemba.cyberalert-rdc.org
-- **Assets :** https://media.cyberalert-rdc.org/ngemba/brand/
+- **Version :** 0.3.0
 
-## Demarrage
+## Demarrage (Expo Go)
 
 ```bash
 cd services/ngemba-mobile
@@ -14,29 +14,24 @@ npm install
 npm start
 ```
 
-Puis scanner le QR avec **Expo Go** (Android/iOS) ou lancer un simulateur :
+## Build APK (EAS)
 
 ```bash
-npm run android
-npm run ios
+npx eas-cli login
+npx eas-cli init    # 1re fois
+npm run eas:apk
 ```
 
-## v0.1 livre
+Guide complet : [docs/ngemba/22-EAS-BUILD.md](../../docs/ngemba/22-EAS-BUILD.md)
+
+## Livre
 
 | Feature | Detail |
 |---------|--------|
-| SOS + temoin | Flow message + GPS optionnel |
-| Mode discret | Ecran sombre + triple secousse haptique |
-| Triple-tap logo | Acces discret depuis l'accueil |
-| Haptics | `expo-haptics` a l'envoi |
-| Session | Confirmation + resume IA |
-| i18n | FR / EN |
-
-## Prochain (3b.2)
-
-- Widget Android / raccourci ecran verrou
-- Combinaisons boutons volume
-- Historique `/me` (cookie citoyen)
-- Build EAS TestFlight / Play Internal
+| SOS + temoin + ecole | Flows + GPS optionnel |
+| Mode discret | Triple-tap logo + secousse 5x |
+| Contacts confiance | Ressource dossier (pas notify auto) |
+| Jeunesse | 10 scenarios |
+| EAS preview | APK Android interne |
 
 Voir [docs/ngemba/16-PHASE-3B.md](../../docs/ngemba/16-PHASE-3B.md).
