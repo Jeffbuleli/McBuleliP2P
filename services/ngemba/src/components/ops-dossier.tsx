@@ -14,6 +14,7 @@ import {
   urgencyLabelFr,
 } from "@/lib/labels";
 import type { StatusHistoryEntry } from "@/lib/sessions/store";
+import { shellMaxWidth, useDeviceClass } from "@/lib/ui/device";
 
 type Session = {
   id: string;
@@ -80,16 +81,24 @@ export function OpsDossierView({ id }: { id: string }) {
   const [notes, setNotes] = useState("");
   const [assignedTo, setAssignedTo] = useState("");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<"not_found" | "forbidden" | "network" | null>(
+    null,
+  );
   const [canPatch, setCanPatch] = useState(true);
+  const device = useDeviceClass();
 
   const load = useCallback(async () => {
-    const res = await fetch(`/api/alerts/${id}`);
-    const data = await res.json();
-    if (!res.ok || !data.session) {
-      setError(true);
+    const res = await fetch(`/api/alerts/${id}`, { credentials: "include" });
+    const data = await res.json().catch(() => ({}));
+    if (res.status === 403) {
+      setError("forbidden");
       return;
     }
+    if (!res.ok || !data.session) {
+      setError(res.status === 404 ? "not_found" : "network");
+      return;
+    }
+    setError(null);
     setSession(data.session);
     setNotes(data.session.operatorNotes ?? "");
     setAssignedTo(data.session.assignedTo ?? "");
@@ -126,8 +135,23 @@ export function OpsDossierView({ id }: { id: string }) {
 
   if (error) {
     return (
-      <main className="mx-auto max-w-3xl px-4 py-10 text-sm text-ng-urgent">
-        Dossier introuvable.
+      <main className="mx-auto max-w-3xl px-4 py-10 text-sm">
+        <Link href="/ops" className="text-ng-muted">
+          ← File ops
+        </Link>
+        <p className="mt-4 font-medium text-ng-urgent">
+          {error === "forbidden"
+            ? "Acces refuse pour ce dossier. Utilisez un code operateur admin ou reconnectez-vous."
+            : error === "not_found"
+              ? "Dossier introuvable. Verifiez le lien recu par email ou consultez la file ops."
+              : "Impossible de charger le dossier. Reessayez."}
+        </p>
+        <Link
+          href={`/ops/login?next=${encodeURIComponent(`/ops/${id}`)}`}
+          className="mt-4 inline-block text-ng-primary underline"
+        >
+          Se reconnecter
+        </Link>
       </main>
     );
   }
@@ -143,7 +167,9 @@ export function OpsDossierView({ id }: { id: string }) {
   const place = session.locationLabel || session.commune || "Sans lieu";
 
   return (
-    <main className="mx-auto min-h-dvh max-w-3xl px-4 py-6 pb-16">
+    <main
+      className={`ng-shell mx-auto min-h-dvh py-6 pb-16 ${shellMaxWidth(device)}`}
+    >
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <Link href="/ops" className="text-sm text-ng-muted">
@@ -171,7 +197,7 @@ export function OpsDossierView({ id }: { id: string }) {
         </div>
       </header>
 
-      <section className="mt-6 grid gap-4">
+      <section className="mt-6 ng-ops-dossier-grid">
         <article className="rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-4">
           <h2 className="text-xs font-semibold uppercase tracking-wide text-ng-muted">
             Message citoyen

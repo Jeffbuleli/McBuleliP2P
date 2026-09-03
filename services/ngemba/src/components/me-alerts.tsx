@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { isLocale, messages, type Locale } from "@/lib/i18n";
+import { citizenShellMaxWidth, useDeviceClass } from "@/lib/ui/device";
 
 type Row = {
   id: string;
@@ -17,6 +18,7 @@ export function MeAlertsView({ initialLocale }: { initialLocale?: string }) {
   const locale: Locale =
     initialLocale && isLocale(initialLocale) ? initialLocale : "fr";
   const t = messages[locale];
+  const device = useDeviceClass();
   const [rows, setRows] = useState<Row[]>([]);
   const [hasAccount, setHasAccount] = useState(false);
 
@@ -31,7 +33,9 @@ export function MeAlertsView({ initialLocale }: { initialLocale?: string }) {
   }, []);
 
   return (
-    <main className="mx-auto min-h-dvh max-w-md px-4 py-6">
+    <main
+      className={`ng-shell mx-auto min-h-dvh py-6 ${citizenShellMaxWidth(device)}`}
+    >
       <Link
         href={`/?lang=${locale}`}
         className="text-sm font-semibold text-ng-primary"
@@ -42,7 +46,7 @@ export function MeAlertsView({ initialLocale }: { initialLocale?: string }) {
       {!hasAccount || rows.length === 0 ? (
         <p className="mt-6 text-sm text-ng-muted">
           Aucune alerte enregistrée sur cet appareil. Utilisez SOS pour créer une
-          alerte — elle apparaîtra ici automatiquement.
+          alerte - elle apparaîtra ici automatiquement.
         </p>
       ) : (
         <ul className="mt-6 space-y-3">

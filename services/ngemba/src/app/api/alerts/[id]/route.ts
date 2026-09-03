@@ -8,7 +8,7 @@ import {
   resolveOpsRole,
 } from "@/lib/ops/auth";
 import { notifySessionUpdated } from "@/lib/ops/notify";
-import { sessionVisibleToRole } from "@/lib/ops/roles";
+import { roleHasPermission } from "@/lib/ops/roles";
 import { getSession, updateSession } from "@/lib/sessions/store";
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -23,8 +23,10 @@ export async function GET(req: Request, ctx: Ctx) {
   const bearer = readOpsTokenFromRequest(req);
   const cookieToken = await readOpsTokenFromCookie();
   const role = resolveOpsRole(bearer || cookieToken);
-  if (role && !sessionVisibleToRole(role, session)) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  if (role) {
+    if (!roleHasPermission(role, "alerts.view")) {
+      return NextResponse.json({ error: "forbidden" }, { status: 403 });
+    }
   }
 
   return NextResponse.json({ session });
@@ -47,9 +49,6 @@ export async function PATCH(req: Request, ctx: Ctx) {
   const existing = getSession(id);
   if (!existing) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
-  }
-  if (!sessionVisibleToRole(auth.role, existing)) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
   let json: unknown;

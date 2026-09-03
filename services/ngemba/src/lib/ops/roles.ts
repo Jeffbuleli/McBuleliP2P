@@ -93,13 +93,13 @@ export function sessionVisibleToRole(
 
 export function dashboardHint(role: OpsRole): string {
   if (role === "admin") {
-    return "Vue d'ensemble — toutes les alertes et files.";
+    return "Vue d'ensemble - toutes les alertes et files.";
   }
   if (role === "ngo") {
-    return "File ONG — alertes citoyennes a orienter.";
+    return "File ONG - alertes citoyennes a orienter.";
   }
   if (role === "security") {
-    return "File urgence — situations critiques et securite.";
+    return "File urgence - situations critiques et securite.";
   }
-  return "Vue partenaire — signalements agrégés et prevention.";
+  return "Vue partenaire - signalements agrégés et prevention.";
 }

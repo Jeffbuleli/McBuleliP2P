@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { readCitizenToken } from "@/lib/citizen/token";
-import { readMediaFile } from "@/lib/media/store";
+import { getNgembaObject } from "@/lib/media/r2";
+import { mediaPublicUrl, readMediaFile } from "@/lib/media/store";
 import { getSession } from "@/lib/sessions/store";
 import { requireOpsAuth } from "@/lib/ops/auth";
 
@@ -27,7 +28,15 @@ export async function GET(req: Request, ctx: Ctx) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
-  const buf = readMediaFile(id, attachment);
+  const publicUrl = mediaPublicUrl(attachment);
+  if (publicUrl) {
+    return NextResponse.redirect(publicUrl, 302);
+  }
+
+  let buf = readMediaFile(id, attachment);
+  if (!buf && attachment.storageKey) {
+    buf = (await getNgembaObject(attachment.storageKey)) ?? null;
+  }
   if (!buf) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }

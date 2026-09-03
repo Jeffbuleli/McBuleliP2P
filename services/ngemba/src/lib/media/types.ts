@@ -8,6 +8,8 @@ export type MediaAttachment = {
   sizeBytes: number;
   createdAt: string;
   transcription: string | null;
+  storageKey?: string | null;
+  publicUrl?: string | null;
 };
 
 export const MEDIA_MAX_BYTES = 8 * 1024 * 1024;

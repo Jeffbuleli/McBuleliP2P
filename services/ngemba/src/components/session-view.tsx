@@ -10,6 +10,7 @@ import {
 import { IconShield, IconSpark } from "@/components/icons";
 import { isLocale, messages, type Locale } from "@/lib/i18n";
 import { urgencyLabel } from "@/lib/labels";
+import { citizenShellMaxWidth, useDeviceClass } from "@/lib/ui/device";
 
 type SessionPayload = {
   id: string;
@@ -54,6 +55,7 @@ export function SessionView({
 }) {
   const locale: Locale = isLocale(initialLocale) ? initialLocale : "fr";
   const t = messages[locale];
+  const device = useDeviceClass();
   const [session, setSession] = useState<SessionPayload | null>(null);
   const [media, setMedia] = useState<SessionPayload["media"]>([]);
   const [error, setError] = useState(false);
@@ -91,7 +93,7 @@ export function SessionView({
 
   return (
     <main
-      className={`mx-auto flex min-h-dvh max-w-md flex-col px-4 pb-8 pt-5 ${discrete ? "ng-discrete-surface" : ""}`}
+      className={`ng-shell mx-auto flex min-h-dvh flex-col pb-8 pt-5 ${citizenShellMaxWidth(device)} ${discrete ? "ng-discrete-surface" : ""}`}
     >
       <header className="flex items-center justify-between">
         <Link href={`/?lang=${locale}`} className="text-sm font-medium text-ng-muted">

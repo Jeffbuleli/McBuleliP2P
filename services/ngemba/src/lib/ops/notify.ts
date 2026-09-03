@@ -51,7 +51,7 @@ function pilotPartnerLine(): string | undefined {
   const name = readEnvKey("NGEMBA_OPS_PARTNER_NAME");
   const contact = readEnvKey("NGEMBA_OPS_PARTNER_CONTACT");
   if (!name) return undefined;
-  const referent = contact ? ` — ${contact}` : "";
+  const referent = contact ? ` - ${contact}` : "";
   if (pilotVerified()) {
     return `Partenaire ONG pilote : ${name}${referent}.`;
   }
@@ -100,7 +100,7 @@ async function sendOpsWebhook(session: AlertSessionRecord) {
         message: session.message.slice(0, 500),
         locationLabel: session.locationLabel,
         summary: session.aiSummary,
-        opsUrl: `${appUrl()}/ops/${session.id}`,
+        opsUrl: `${appUrl()}/ops/login?next=${encodeURIComponent(`/ops/${session.id}`)}`,
         createdAt: session.createdAt,
       }),
     });
@@ -115,7 +115,7 @@ async function sendOpsEmail(session: AlertSessionRecord) {
   const bcc = opsBccEmails();
   if (!apiKey || to.length === 0) {
     console.warn(
-      "[ngemba] ops email skipped — missing RESEND_API_KEY or NGEMBA_OPS_EMAIL",
+      "[ngemba] ops email skipped - missing RESEND_API_KEY or NGEMBA_OPS_EMAIL",
     );
     return;
   }
@@ -124,18 +124,18 @@ async function sendOpsEmail(session: AlertSessionRecord) {
   const replyTo =
     readEnvKey("NGEMBA_OPS_EMAIL_REPLY_TO") ||
     NGEMBA_EMAIL_ASSETS.supportEmail;
-  const link = `${appUrl()}/ops/${session.id}`;
+  const link = `${appUrl()}/ops/login?next=${encodeURIComponent(`/ops/${session.id}`)}`;
   const place = session.locationLabel || session.commune || "Sans lieu";
   const urgency = urgencyLabelFr(session.urgency);
   const category = categoryLabelFr(session.category);
   const source = sourceLabelFr(session.source);
   const message = session.message.slice(0, 800);
 
-  const subject = `NGEMBA — nouvelle alerte (${urgency})`;
+  const subject = `NGEMBA - nouvelle alerte (${urgency})`;
 
   const { html, text } = renderOpsAlertEmail({
     title: "Nouvelle alerte citoyenne",
-    preheader: `${urgency} — ${category} — ${place}`,
+    preheader: `${urgency} - ${category} - ${place}`,
     greeting: "Bonjour,",
     body:
       "Une personne a signalé une situation via NGEMBA. " +

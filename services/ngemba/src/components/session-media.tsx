@@ -7,6 +7,7 @@ type MediaItem = {
   kind: string;
   fileName: string;
   transcription: string | null;
+  publicUrl?: string | null;
 };
 
 export function SessionMediaUpload({
@@ -87,26 +88,38 @@ export function SessionMediaList({
   if (!items.length) return null;
   return (
     <ul className="space-y-2">
-      {items.map((m) => (
+      {items.map((m) => {
+        const href =
+          m.publicUrl || `/api/alerts/${sessionId}/media/${m.id}`;
+        return (
         <li
           key={m.id}
           className="rounded-xl border border-[var(--ng-border)] bg-ng-surface px-3 py-2 text-sm"
         >
+          {m.kind === "photo" && m.publicUrl ? (
+            <a href={href} target="_blank" rel="noopener noreferrer">
+              <img
+                src={m.publicUrl}
+                alt={m.fileName}
+                className="mb-2 max-h-48 w-full rounded-lg object-cover"
+              />
+            </a>
+          ) : null}
           <a
-            href={`/api/alerts/${sessionId}/media/${m.id}`}
+            href={href}
             target="_blank"
             rel="noopener noreferrer"
             className="font-semibold text-ng-primary underline"
           >
-            {m.kind === "photo" ? "Photo" : m.kind === "audio" ? "Audio" : "Vidéo"}
-            {" — "}
+            {m.kind === "photo" ? "Photo" : m.kind === "audio" ? "Audio" : "Video"}
+            {" - "}
             {m.fileName}
           </a>
           {m.transcription ? (
             <p className="mt-1 text-xs text-ng-muted">{m.transcription}</p>
           ) : null}
         </li>
-      ))}
+      )})}
     </ul>
   );
 }

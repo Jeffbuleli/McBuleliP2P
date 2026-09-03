@@ -1,11 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 
 function LoginForm() {
-  const router = useRouter();
   const params = useSearchParams();
   const next = params.get("next") || "/ops";
   const [token, setToken] = useState("");
@@ -27,7 +26,7 @@ function LoginForm() {
         setBusy(false);
         return;
       }
-      router.replace(next);
+      window.location.assign(next);
     } catch {
       setError("Erreur reseau");
       setBusy(false);

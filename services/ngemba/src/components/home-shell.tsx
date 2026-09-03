@@ -20,6 +20,11 @@ import {
   type Locale,
 } from "@/lib/i18n";
 import { useTripleTap } from "@/lib/discrete/triple-tap";
+import {
+  citizenShellMaxWidth,
+  sosButtonSize,
+  useDeviceClass,
+} from "@/lib/ui/device";
 
 function Tile({
   icon,
@@ -72,6 +77,7 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
     initialLocale && isLocale(initialLocale) ? initialLocale : "fr",
   );
   const t = messages[locale];
+  const device = useDeviceClass();
   const onLogoTap = useTripleTap(() => {
     router.push(`/discrete?lang=${locale}`);
   });
@@ -86,7 +92,9 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
   }
 
   return (
-    <main className="relative mx-auto flex min-h-dvh max-w-md flex-col px-4 pb-8 pt-5">
+    <main
+      className={`ng-shell relative mx-auto flex min-h-dvh flex-col pb-8 pt-5 ${citizenShellMaxWidth(device)}`}
+    >
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-[radial-gradient(ellipse_at_top,_rgba(136,35,100,0.08),_transparent_60%)]"
         aria-hidden
@@ -146,7 +154,7 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
       </div>
 
       <section className="relative z-10 mt-8 flex flex-1 flex-col items-center justify-center gap-7">
-        <div className="grid w-full grid-cols-2 gap-3">
+        <div className="ng-home-grid w-full">
           <Tile
             icon={<IconMic className="size-5" />}
             label={t.speak}
@@ -158,23 +166,6 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
             accent="secondary"
             href={`/witness?lang=${locale}`}
           />
-        </div>
-
-        <Link
-          href={`/sos?lang=${locale}`}
-          aria-label={`${t.sos} - ${t.sosHint}`}
-          className="ng-sos-pulse relative flex size-[var(--ng-sos-size)] flex-col items-center justify-center rounded-full bg-ng-urgent text-white"
-        >
-          <IconShield className="mb-1 size-5 text-white/90" />
-          <span className="text-base font-bold leading-none tracking-wide">
-            {t.sos}
-          </span>
-          <span className="mt-1 text-[10px] font-medium opacity-90">
-            {t.sosHint}
-          </span>
-        </Link>
-
-        <div className="grid w-full grid-cols-2 gap-3">
           <Tile
             icon={<IconBook className="size-5" />}
             label={t.prevent}
@@ -187,7 +178,23 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
           />
         </div>
 
-        <p className="max-w-[16rem] text-center text-sm font-medium leading-snug text-ng-primary">
+        <div className="ng-home-sos-row w-full flex justify-center">
+        <Link
+          href={`/sos?lang=${locale}`}
+          aria-label={`${t.sos} - ${t.sosHint}`}
+          className={`ng-sos-pulse relative flex ${sosButtonSize(device)} flex-col items-center justify-center rounded-full bg-ng-urgent text-white`}
+        >
+          <IconShield className="mb-1 size-5 text-white/90" />
+          <span className="text-base font-bold leading-none tracking-wide">
+            {t.sos}
+          </span>
+          <span className="mt-1 text-[10px] font-medium opacity-90">
+            {t.sosHint}
+          </span>
+        </Link>
+        </div>
+
+        <p className="max-w-[16rem] text-center text-sm font-medium leading-snug text-ng-primary md:max-w-md lg:max-w-lg">
           {t.line}
         </p>
         <p className="text-center text-[11px] text-ng-muted">

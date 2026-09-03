@@ -146,36 +146,36 @@ export function citizenSummary(
     if (!matched) {
       return "Alert received. A human will review your situation.";
     }
-    return `Alert received — ${categoryLabelEn(category)}. A human will review.`;
+    return `Alert received - ${categoryLabelEn(category)}. A human will review.`;
   }
   if (locale === "sw") {
     if (!matched) {
       return "Tahadhari imepokelewa. Mtu ataangalia hali yako.";
     }
-    return `Tahadhari imepokelewa — ${categoryLabelEn(category)}. Mtu ataangalia.`;
+    return `Tahadhari imepokelewa - ${categoryLabelEn(category)}. Mtu ataangalia.`;
   }
   if (locale === "ln") {
     if (!matched) {
       return "Alerte ezwami. Moto akokengela situation na yo.";
     }
-    return `Alerte ezwami — ${categoryLabelFr(category)}. Moto akokengela.`;
+    return `Alerte ezwami - ${categoryLabelFr(category)}. Moto akokengela.`;
   }
   if (locale === "lua") {
     if (!matched) {
       return "Alerte yapokwa. Muntu ukemonanga situation.";
     }
-    return `Alerte yapokwa — ${categoryLabelFr(category)}. Muntu ukemonanga.`;
+    return `Alerte yapokwa - ${categoryLabelFr(category)}. Muntu ukemonanga.`;
   }
   if (locale === "kg") {
     if (!matched) {
       return "Alerte me bakama. Muntu ta tala situation na nge.";
     }
-    return `Alerte me bakama — ${categoryLabelFr(category)}. Muntu ta tala.`;
+    return `Alerte me bakama - ${categoryLabelFr(category)}. Muntu ta tala.`;
   }
   if (!matched) {
     return "Alerte enregistrée. Un humain va vérifier votre situation.";
   }
-  return `Signalement reçu — ${categoryLabelFr(category)} (${urgencyLabelFr(urgency)}). Un humain va vérifier.`;
+  return `Signalement reçu - ${categoryLabelFr(category)} (${urgencyLabelFr(urgency)}). Un humain va vérifier.`;
 }
 
 function categoryLabelEn(category: TriageResult["category"]): string {
@@ -202,5 +202,5 @@ export function opsSummaryFr(
   category: TriageResult["category"],
   urgency: TriageResult["urgency"],
 ): string {
-  return `${categoryLabelFr(category)} — urgence ${urgencyLabelFr(urgency)}. À vérifier par un opérateur.`;
+  return `${categoryLabelFr(category)} - urgence ${urgencyLabelFr(urgency)}. À vérifier par un opérateur.`;
 }

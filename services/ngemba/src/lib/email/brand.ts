@@ -22,14 +22,29 @@ function assetBase(): string {
   );
 }
 
+function r2PublicBase(): string {
+  const raw =
+    process.env.NGEMBA_R2_PUBLIC_BASE_URL?.trim() ||
+    process.env.SAFEFIND_R2_PUBLIC_BASE_URL?.trim() ||
+    "https://media.cyberalert-rdc.org";
+  const trimmed = raw.replace(/\/$/, "");
+  return trimmed.startsWith("http") ? trimmed : `https://${trimmed}`;
+}
+
 export function ngembaLogoUrl(): string {
+  if (
+    process.env.NGEMBA_R2_PUBLIC_BASE_URL?.trim() ||
+    process.env.SAFEFIND_R2_PUBLIC_BASE_URL?.trim()
+  ) {
+    return `${r2PublicBase()}/ngemba/brand/ngemba-logo.png`;
+  }
   return `${assetBase()}/brand/ngemba-logo.png`;
 }
 
 export const NGEMBA_EMAIL_ASSETS = {
   logo: ngembaLogoUrl(),
-  mcbuleliLogo: "https://mcbuleli.org/brand/logo-256.png",
-  illustration: "https://mcbuleli.org/email/email-security.png",
+  mcbuleliLogo: `${r2PublicBase()}/ngemba/brand/mcbuleli-logo-256.png`,
+  illustration: `${r2PublicBase()}/ngemba/email/email-security.png`,
   site: "https://ngemba.cyberalert-rdc.org",
   supportEmail: "hi@mcbuleli.org",
 } as const;

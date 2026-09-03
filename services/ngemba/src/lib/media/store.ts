@@ -2,6 +2,11 @@ import { randomUUID } from "crypto";
 import fs from "fs";
 import path from "path";
 import {
+  ngembaMediaKey,
+  ngembaPublicUrl,
+  putNgembaObject,
+} from "@/lib/media/r2";
+import {
   ALLOWED_MEDIA,
   MEDIA_MAX_BYTES,
   type MediaAttachment,
@@ -48,9 +53,19 @@ export async function saveMedia(params: {
   const buf = Buffer.from(await params.file.arrayBuffer());
   const mediaId = randomUUID();
   const ext = extFromMime(mime);
-  const dir = path.join(MEDIA_ROOT, params.sessionId);
-  fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(mediaFilePath(params.sessionId, mediaId, ext), buf);
+  const storageKey = ngembaMediaKey(params.sessionId, mediaId, ext);
+  let publicUrl = await putNgembaObject({
+    objectKey: storageKey,
+    body: new Uint8Array(buf),
+    mimeType: mime,
+  });
+
+  if (!publicUrl) {
+    const dir = path.join(MEDIA_ROOT, params.sessionId);
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(mediaFilePath(params.sessionId, mediaId, ext), buf);
+    publicUrl = null;
+  }
 
   return {
     id: mediaId,
@@ -60,6 +75,8 @@ export async function saveMedia(params: {
     sizeBytes: buf.length,
     createdAt: new Date().toISOString(),
     transcription: null,
+    storageKey: publicUrl ? storageKey : null,
+    publicUrl,
   };
 }
 
@@ -77,5 +94,11 @@ export function readMediaFile(
     extFromMime(attachment.mimeType),
   );
   if (fs.existsSync(fallback)) return fs.readFileSync(fallback);
+  return null;
+}
+
+export function mediaPublicUrl(attachment: MediaAttachment): string | null {
+  if (attachment.publicUrl) return attachment.publicUrl;
+  if (attachment.storageKey) return ngembaPublicUrl(attachment.storageKey);
   return null;
 }

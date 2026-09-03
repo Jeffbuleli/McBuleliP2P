@@ -12,6 +12,7 @@ import {
 } from "@/lib/labels";
 import type { OpsRole } from "@/lib/ops/roles";
 import { dashboardHint } from "@/lib/ops/roles";
+import { shellMaxWidth, useDeviceClass } from "@/lib/ui/device";
 
 type Row = {
   id: string;
@@ -55,6 +56,7 @@ export default function OpsPage() {
   } | null>(null);
 
   const canPatch = role !== "partner";
+  const device = useDeviceClass();
 
   const load = useCallback(async () => {
     const res = await fetch("/api/alerts");
@@ -115,7 +117,9 @@ export default function OpsPage() {
   );
 
   return (
-    <main className="mx-auto min-h-dvh max-w-3xl px-4 py-6">
+    <main
+      className={`ng-shell mx-auto min-h-dvh py-6 ${shellMaxWidth(device)}`}
+    >
       <header className="flex items-center justify-between gap-3">
         <div>
           <p className="text-[11px] font-semibold tracking-[0.16em] text-ng-primary uppercase">
@@ -145,7 +149,7 @@ export default function OpsPage() {
       </header>
 
       {stats ? (
-        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="mt-4 ng-ops-stats">
           <div className="rounded-xl border border-[var(--ng-border)] bg-ng-surface px-3 py-2">
             <p className="text-[10px] font-semibold uppercase text-ng-muted">Ouvertes</p>
             <p className="text-lg font-bold text-ng-primary">{stats.open}</p>

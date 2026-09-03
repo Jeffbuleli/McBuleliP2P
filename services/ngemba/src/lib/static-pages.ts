@@ -17,7 +17,7 @@ export const RESOURCES_SECTIONS: StaticSection[] = [
   {
     title: "Orientation NGEMBA",
     body: [
-      "NGEMBA oriente vers un opérateur humain partenaire — ce n'est pas un remplacement de la police ni des urgences médicales.",
+      "NGEMBA oriente vers un opérateur humain partenaire - ce n'est pas un remplacement de la police ni des urgences médicales.",
       "Heures pilote : une réponse humaine est visée en quelques minutes pendant les heures d'ouverture du partenaire.",
       "Hors horaires : votre alerte est enregistrée ; les numéros d'urgence restent disponibles.",
     ],

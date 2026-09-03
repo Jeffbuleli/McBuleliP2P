@@ -1,7 +1,7 @@
 {
-  "name": "NGEMBA — Sécurité et paix",
+  "name": "NGEMBA - Securite et paix",
   "short_name": "NGEMBA",
-  "description": "Alertez — orientation humaine — RDC",
+  "description": "Alertez - orientation humaine - RDC",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

@@ -7,6 +7,7 @@ import { IconShield } from "@/components/icons";
 import { VoiceButton } from "@/components/voice-button";
 import { vibrateDiscreteConfirm } from "@/lib/discrete/vibrate";
 import { isLocale, messages, type Locale } from "@/lib/i18n";
+import { citizenShellMaxWidth, useDeviceClass } from "@/lib/ui/device";
 
 type Step = "tell" | "place";
 type Source = "sos_button" | "witness";
@@ -29,6 +30,7 @@ export function SosFlow({
   const router = useRouter();
   const locale: Locale = isLocale(initialLocale) ? initialLocale : "fr";
   const t = messages[locale];
+  const device = useDeviceClass();
   const isWitness = source === "witness";
 
   const [step, setStep] = useState<Step>("tell");
@@ -145,7 +147,7 @@ export function SosFlow({
 
   return (
     <main
-      className={`mx-auto flex min-h-dvh max-w-md flex-col px-4 pb-8 pt-5 ${discrete ? "ng-discrete-surface" : ""}`}
+      className={`ng-shell mx-auto flex min-h-dvh flex-col pb-8 pt-5 ${citizenShellMaxWidth(device)} ${discrete ? "ng-discrete-surface" : ""}`}
     >
       <header className="flex items-center justify-between gap-3">
         <Link
