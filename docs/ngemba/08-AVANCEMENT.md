@@ -16,14 +16,29 @@
 | **Phase 4.2** (role school, mobile, contenu) | ✅ v0.2 |
 | **Phase 5** (observatoire / heatmap k-anonyme) | ✅ v0.1 |
 | **Phase 5.2** (carte OSM + filtres province/categorie) | ✅ v0.2 |
+| **UI audit** (McBuleli IA centre, polish, charts, PWA install) | ✅ v0.3 |
 
 Live : https://ngemba.cyberalert-rdc.org
+
+## UI audit - livre
+
+- Home SOS-first + McBuleli IA central (sans tuile Parler)
+- Clarifier OpenAI (`POST /api/ai/polish`) sur parcours alerte
+- Charts SVG ops + observatoire
+- Pages Aide / Prevenir en icones ; jeunesse grille SVG
+- PWA : bouton Installer (Chrome) + hint iOS ; manifest McBuleli IA
 
 ## Phase 3b.4 - EAS APK
 
 - Profile `preview` → APK Android (`npm run eas:apk`)
 - Doc : [22-EAS-BUILD.md](./22-EAS-BUILD.md)
 - **Action humaine :** `npx eas-cli login` puis lancer le build (compte Expo requis)
+
+## Prochain (technique)
+
+1. Build EAS APK preview + distribution pilote
+2. Widget Android / volume keys (native)
+3. Bloc B : signatures JGL + relecture avocat
 
 ## Phase 5.2 - livre
 

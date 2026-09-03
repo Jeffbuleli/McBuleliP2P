@@ -12,6 +12,7 @@ import {
   IconSpark,
   IconUsers,
 } from "@/components/icons";
+import { PwaInstallButton } from "@/components/pwa-install";
 import { useCitizenLocale } from "@/hooks/use-citizen-locale";
 import {
   localeLabels,
@@ -174,6 +175,8 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
             {t.discrete}
           </Link>
         </p>
+
+        <PwaInstallButton label={t.installApp} iosHint={t.installIos} />
 
         <p className="text-center text-[10px] text-ng-muted">
           <Link href={href("/legal/confidentialite")} className="underline">

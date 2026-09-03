@@ -268,3 +268,24 @@ export function IconCheck({ title, className = "size-6", ...rest }: IconProps) {
     </svg>
   );
 }
+
+export function IconDownload({ title, className = "size-6", ...rest }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden={title ? undefined : true}
+      className={className}
+      {...rest}
+    >
+      {title ? <title>{title}</title> : null}
+      <path
+        d="M12 4v10M8.5 10.5 12 14l3.5-3.5M5 18.5h14"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}

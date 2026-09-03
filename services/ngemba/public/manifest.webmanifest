@@ -1,7 +1,7 @@
 {
-  "name": "NGEMBA - Securite et paix",
+  "name": "NGEMBA - Sécurité et paix",
   "short_name": "NGEMBA",
-  "description": "Alertez - orientation humaine - RDC",
+  "description": "Racontez - McBuleli IA comprend - orientation humaine - RDC",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -14,19 +14,25 @@
       "src": "/brand/ngemba-logo.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/brand/ngemba-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "shortcuts": [
     {
-      "name": "Mode discret",
-      "url": "/discrete",
-      "description": "Alerte sans écran voyant"
-    },
-    {
       "name": "SOS",
       "url": "/sos",
-      "description": "Urgence"
+      "description": "Danger - alerte urgente"
+    },
+    {
+      "name": "Mode discret",
+      "url": "/discrete",
+      "description": "Alerte sans ecran voyant"
     }
   ]
 }

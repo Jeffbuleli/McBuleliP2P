@@ -25,6 +25,8 @@ type Copy = {
   polish: string;
   polishing: string;
   language: string;
+  installApp: string;
+  installIos: string;
   back: string;
   tell: string;
   witnessTell: string;
@@ -111,6 +113,8 @@ const baseFr: Copy = {
   polish: "Clarifier",
   polishing: "Clarification...",
   language: "Langue",
+  installApp: "Installer",
+  installIos: "Sur iPhone : Partager - Sur l'écran d'accueil",
   back: "Retour",
   tell: "Que se passe-t-il ?",
   witnessTell: "Que voyez-vous ?",
@@ -200,6 +204,8 @@ export const messages: Record<Locale, Copy> = {
     polish: "Clarify",
     polishing: "Clarifying...",
     language: "Language",
+    installApp: "Install",
+    installIos: "On iPhone: Share - Add to Home Screen",
     back: "Back",
     tell: "What is happening?",
     witnessTell: "What do you see?",
@@ -286,6 +292,8 @@ export const messages: Record<Locale, Copy> = {
     polish: "Kobongisa",
     polishing: "Kobongisa...",
     language: "Monoko",
+    installApp: "Kotya",
+    installIos: "Na iPhone: Partager - Sur l'ecran d'accueil",
     back: "Koma",
     tell: "Nani ezali kosalema?",
     witnessTell: "Nani oyebaka?",
@@ -372,6 +380,8 @@ export const messages: Record<Locale, Copy> = {
     polish: "Fafanua",
     polishing: "Inafafanua...",
     language: "Lugha",
+    installApp: "Sakinisha",
+    installIos: "Kwenye iPhone: Share - Add to Home Screen",
     back: "Rudi",
     tell: "Nini kinaendelea?",
     witnessTell: "Unaona nini?",

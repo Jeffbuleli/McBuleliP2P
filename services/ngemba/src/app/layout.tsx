@@ -19,6 +19,9 @@ export const metadata: Metadata = {
     title: "NGEMBA",
     statusBarStyle: "black-translucent",
   },
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
 };
 
 export const viewport: Viewport = {
