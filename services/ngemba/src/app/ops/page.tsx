@@ -135,6 +135,12 @@ export default function OpsPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <Link
+            href="/ops/observatory"
+            className="text-sm font-semibold text-ng-primary"
+          >
+            Observatoire
+          </Link>
           <Link href="/" className="text-sm text-ng-muted">
             App
           </Link>

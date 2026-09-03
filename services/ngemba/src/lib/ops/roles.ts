@@ -7,7 +7,9 @@ export type OpsPermission =
   | "alerts.view"
   | "alerts.patch"
   | "alerts.stats"
-  | "stream.subscribe";
+  | "stream.subscribe"
+  | "observatory.view"
+  | "observatory.export";
 
 export const OPS_ROLE_LABELS: Record<OpsRole, string> = {
   admin: "Administrateur",
@@ -24,10 +26,30 @@ const ROLE_PERMISSIONS: Record<OpsRole, OpsPermission[]> = {
     "alerts.patch",
     "alerts.stats",
     "stream.subscribe",
+    "observatory.view",
+    "observatory.export",
   ],
-  ngo: ["alerts.list", "alerts.view", "alerts.patch", "stream.subscribe"],
-  security: ["alerts.list", "alerts.view", "alerts.patch", "stream.subscribe"],
-  partner: ["alerts.list", "alerts.view", "stream.subscribe"],
+  ngo: [
+    "alerts.list",
+    "alerts.view",
+    "alerts.patch",
+    "stream.subscribe",
+    "observatory.view",
+  ],
+  security: [
+    "alerts.list",
+    "alerts.view",
+    "alerts.patch",
+    "stream.subscribe",
+    "observatory.view",
+  ],
+  partner: [
+    "alerts.list",
+    "alerts.view",
+    "stream.subscribe",
+    "observatory.view",
+    "observatory.export",
+  ],
   school: ["alerts.list", "alerts.view", "alerts.patch", "stream.subscribe"],
 };
 

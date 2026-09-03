@@ -13,8 +13,16 @@
 | **Phase 3b.3** (contacts confiance + secousse 5x) | ✅ v0.3 |
 | **Phase 4** (Safe School + Jeunesse 10 scenarios) | ✅ v0.1 web |
 | **Phase 4.2** (role school, mobile, contenu) | ✅ v0.2 |
+| **Phase 5** (observatoire / heatmap k-anonyme) | ✅ v0.1 |
 
 Live : https://ngemba.cyberalert-rdc.org
+
+## Phase 5 - livre (v0.1)
+
+- `/ops/observatory` - heatmap agrégée par zone
+- API `/api/observatory/heatmap` + export CSV/JSON anonymise
+- k-anonymity via `NGEMBA_K_ANONYMITY` (defaut 5)
+- Voir [18-PHASE-5.md](./18-PHASE-5.md)
 
 ## Phase 4.2 - livre
 

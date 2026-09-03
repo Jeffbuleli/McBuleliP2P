@@ -11,17 +11,17 @@
 | **admin** | Vue d'ensemble + stats | `NGEMBA_OPS_TOKEN_ADMIN` (ou `NGEMBA_OPS_TOKEN`) | Tout |
 | **ngo** | File ONG - orientation citoyens | `NGEMBA_OPS_TOKEN_NGO` | Voir + prendre en charge |
 | **security** | File urgence - situations critiques | `NGEMBA_OPS_TOKEN_SECURITY` | Voir + prendre en charge |
-| **partner** | Signalements agregés (lecture) | `NGEMBA_OPS_TOKEN_PARTNER` | Lecture seule |
+| **partner** | Signalements agregés (lecture) + observatoire | `NGEMBA_OPS_TOKEN_PARTNER` | Lecture + export anonymise |
 | **school** | File Safe School - eleves / mineurs | `NGEMBA_OPS_TOKEN_SCHOOL` | Voir + prendre en charge |
 
 ---
 
 ## Filtres par role (implementes)
 
-- **admin** : toutes les alertes + KPI (ouvertes, critiques, elevees)
-- **ngo** : VBG, enfant, operateur standard/urgent, school_referent, unknown
-- **security** : urgence critical/high, agression, incendie, etc.
-- **partner** : infrastructure, info, aggregated_report
+- **admin** : toutes les alertes + KPI (ouvertes, critiques, elevees) + observatoire
+- **ngo** : VBG, enfant, operateur standard/urgent, school_referent, unknown + observatoire (lecture)
+- **security** : urgence critical/high, agression, incendie, etc. + observatoire (lecture)
+- **partner** : infrastructure, info, aggregated_report + observatoire/export
 - **school** : `school_referent`, category `school`, `child_danger`
 
 ---
