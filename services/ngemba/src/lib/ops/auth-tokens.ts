@@ -19,6 +19,11 @@ export function opsTokenForRole(role: OpsRole): string | null {
   return t || null;
 }
 
+/** Tokens partenaires dedies (edge-safe). */
+const PARTNER_TOKEN_ROLES: Array<{ env: string; role: OpsRole }> = [
+  { env: "NGEMBA_OPS_TOKEN_NGO_JGL", role: "ngo" },
+];
+
 function safeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
   let diff = 0;
@@ -36,6 +41,10 @@ export function resolveOpsRole(
   for (const role of roles) {
     const expected = opsTokenForRole(role);
     if (expected && safeEqual(token, expected)) return role;
+  }
+  for (const row of PARTNER_TOKEN_ROLES) {
+    const expected = process.env[row.env]?.trim();
+    if (expected && safeEqual(token, expected)) return row.role;
   }
   return null;
 }

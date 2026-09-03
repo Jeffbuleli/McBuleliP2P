@@ -74,7 +74,8 @@ Live : https://ngemba.cyberalert-rdc.org
 - Service competent **proche** de la victime (pas diffusion nationale aveugle)
 - Proches de confiance = **aide dossier** (wa.me / email), pas notify auto systematique
 - **v1 aligne** : champs enrichis, bloc ops, notify auto retire
-- Voir [19-PHILO-ORIENTATION-PROCHES.md](./19-PHILO-ORIENTATION-PROCHES.md)
+- **v2 aligne** : annuaire partenaires par zone + file filtree + fallback national
+- Voir [19-PHILO-ORIENTATION-PROCHES.md](./19-PHILO-ORIENTATION-PROCHES.md) · [20-PARTENAIRES-ZONES.md](./20-PARTENAIRES-ZONES.md)
 
 ## Bloc B - reste humain
 

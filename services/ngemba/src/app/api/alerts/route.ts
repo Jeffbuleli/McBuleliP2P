@@ -17,7 +17,8 @@ import {
 import { opsSummaryFr } from "@/lib/labels";
 import { notifyNewAlert } from "@/lib/ops/notify";
 import { requireOpsAuth } from "@/lib/ops/auth";
-import { sessionVisibleToRole } from "@/lib/ops/roles";
+import { sessionVisibleToRole } from "@/lib/ops/visibility";
+import { buildRoutingMeta } from "@/lib/partners/match";
 import { clientIp, rateLimit, rateLimitResponse } from "@/lib/security/rate-limit";
 import { createSession, getSession, listSessions } from "@/lib/sessions/store";
 import { normalizeTrustedContacts } from "@/lib/trusted-contacts/types";
@@ -141,6 +142,12 @@ export async function POST(req: Request) {
   let citizenToken = jar.get(CITIZEN_COOKIE)?.value ?? null;
   if (!citizenToken) citizenToken = newCitizenToken();
 
+  const routingMeta = buildRoutingMeta({
+    commune,
+    locationLabel,
+    category: triageForSession.category,
+  });
+
   const session = createSession({
     source: body.source,
     locale,
@@ -169,6 +176,7 @@ export async function POST(req: Request) {
     discreteMode: Boolean(body.discrete),
     trustedContacts,
     schoolContext,
+    routingMeta,
   });
 
   await notifyNewAlert(session);
@@ -207,8 +215,9 @@ export async function GET(req: Request) {
   const auth = await requireOpsAuth(req, { permission: "alerts.list" });
   if (auth instanceof NextResponse) return auth;
 
+  const boundId = auth.partner?.id ?? null;
   const sessions = listSessions(80).filter((s) =>
-    sessionVisibleToRole(auth.role, s),
+    sessionVisibleToRole(auth.role, s, boundId),
   );
 
   const stats =
@@ -223,5 +232,12 @@ export async function GET(req: Request) {
         }
       : undefined;
 
-  return NextResponse.json({ sessions: sessions.slice(0, 40), stats, role: auth.role });
+  return NextResponse.json({
+    sessions: sessions.slice(0, 40),
+    stats,
+    role: auth.role,
+    partner: auth.partner
+      ? { id: auth.partner.id, name: auth.partner.name }
+      : null,
+  });
 }

@@ -38,8 +38,8 @@ Ne pas confondre : les proches **ne remplacent pas** le service competent.
 
 | Etape | Contenu |
 |-------|---------|
-| **Maintenant** | File unique / roles (admin, partner, ngo, school) + lieu sur dossier |
-| **Prochaine** | Annuaire partenaires par zone (`coverage_zones`) + filtrage file ops |
+| **Fait** | File unique / roles + lieu sur dossier |
+| **Fait (v2)** | Annuaire partenaires par zone + filtrage file ops |
 | **Puis** | SLA local + escalation si pas de prise en charge |
 
 ---

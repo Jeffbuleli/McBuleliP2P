@@ -18,11 +18,13 @@
 
 ## Filtres par role (implementes)
 
-- **admin** : toutes les alertes + KPI (ouvertes, critiques, elevees) + observatoire
-- **ngo** : VBG, enfant, operateur standard/urgent, school_referent, unknown + observatoire (lecture)
-- **security** : urgence critical/high, agression, incendie, etc. + observatoire (lecture)
-- **partner** : infrastructure, info, aggregated_report + observatoire/export
-- **school** : `school_referent`, category `school`, `child_danger`
+- **admin** : toutes les alertes + KPI + observatoire + annuaire partenaires
+- **ngo** : mandat VBG/enfant/... **et** couverture zone (ou fallback national)
+- **security** : urgence / categories securite **et** couverture
+- **partner** : infrastructure / agreges **et** couverture
+- **school** : Safe School **et** zone (pilote Kinshasa)
+
+Orientation : [20-PARTENAIRES-ZONES.md](./20-PARTENAIRES-ZONES.md)
 
 ---
 

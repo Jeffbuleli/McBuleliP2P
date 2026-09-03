@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { SessionChat } from "@/components/session-chat";
 import { SessionMediaList } from "@/components/session-media";
+import { OpsRoutingPanel } from "@/components/ops-routing-panel";
 import { OpsTrustedContacts } from "@/components/ops-trusted-contacts";
 import {
   categoryLabelFr,
@@ -52,6 +53,14 @@ type Session = {
   closedAt: string | null;
   discreteMode?: boolean;
   trustedContacts?: TrustedContact[];
+  routingMeta?: {
+    provinceId: string | null;
+    provinceName: string | null;
+    commune: string | null;
+    matchedPartnerIds: string[];
+    scope: "local" | "national_fallback" | "unassigned";
+    note: string;
+  } | null;
   schoolContext?: {
     concernType: string;
     establishmentHint: string | null;
@@ -87,6 +96,14 @@ function fmt(iso: string) {
 
 export function OpsDossierView({ id }: { id: string }) {
   const [session, setSession] = useState<Session | null>(null);
+  const [suggestedPartners, setSuggestedPartners] = useState<
+    Array<{
+      id: string;
+      name: string;
+      contactHint: string | null;
+      nationalFallback: boolean;
+    }>
+  >([]);
   const [notes, setNotes] = useState("");
   const [assignedTo, setAssignedTo] = useState("");
   const [busy, setBusy] = useState(false);
@@ -109,6 +126,7 @@ export function OpsDossierView({ id }: { id: string }) {
     }
     setError(null);
     setSession(data.session);
+    setSuggestedPartners(data.suggestedPartners ?? []);
     setNotes(data.session.operatorNotes ?? "");
     setAssignedTo(data.session.assignedTo ?? "");
   }, [id]);
@@ -291,6 +309,11 @@ export function OpsDossierView({ id }: { id: string }) {
             </ul>
           ) : null}
         </article>
+
+        <OpsRoutingPanel
+          routingMeta={session.routingMeta ?? null}
+          suggestedPartners={suggestedPartners}
+        />
 
         <OpsTrustedContacts contacts={session.trustedContacts ?? []} />
 

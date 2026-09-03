@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { OPS_COOKIE, OPS_ROLE_COOKIE, resolveOpsRole } from "@/lib/ops/auth-tokens";
+import {
+  OPS_COOKIE,
+  OPS_ROLE_COOKIE,
+  resolveOpsRole,
+} from "@/lib/ops/auth-tokens";
 import { clientIp, rateLimit, rateLimitResponse } from "@/lib/security/rate-limit";
 
 const BLOCKED_PREFIXES = [

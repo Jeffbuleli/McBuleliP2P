@@ -6,9 +6,9 @@ import {
   opsActorLabel,
   opsCookieOptions,
   readOpsSession,
-  resolveOpsRole,
 } from "@/lib/ops/auth";
 import { OPS_ROLE_LABELS } from "@/lib/ops/roles";
+import { resolveOpsContext } from "@/lib/partners/bind";
 import { clientIp, rateLimit, rateLimitResponse } from "@/lib/security/rate-limit";
 
 const bodySchema = z.object({
@@ -32,8 +32,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "invalid_body" }, { status: 400 });
   }
 
-  const role = resolveOpsRole(parsed.data.token);
-  if (!role) {
+  const ctx = resolveOpsContext(parsed.data.token);
+  if (!ctx.role) {
     return NextResponse.json({ error: "invalid_token" }, { status: 401 });
   }
 
@@ -41,12 +41,15 @@ export async function POST(req: Request) {
     process.env.NODE_ENV === "production" || req.url.startsWith("https://");
   const res = NextResponse.json({
     ok: true,
-    role,
-    roleLabel: OPS_ROLE_LABELS[role],
+    role: ctx.role,
+    roleLabel: OPS_ROLE_LABELS[ctx.role],
+    partner: ctx.partner
+      ? { id: ctx.partner.id, name: ctx.partner.name, slug: ctx.partner.slug }
+      : null,
     actor: opsActorLabel(parsed.data.token),
   });
   res.cookies.set(OPS_COOKIE, parsed.data.token, opsCookieOptions(secure));
-  res.cookies.set(OPS_ROLE_COOKIE, role, opsCookieOptions(secure));
+  res.cookies.set(OPS_ROLE_COOKIE, ctx.role, opsCookieOptions(secure));
   return res;
 }
 
@@ -59,12 +62,15 @@ export async function DELETE() {
 }
 
 export async function GET() {
-  const { role } = await readOpsSession();
+  const { role, partner } = await readOpsSession();
   if (!role) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   return NextResponse.json({
     role,
     roleLabel: OPS_ROLE_LABELS[role],
+    partner: partner
+      ? { id: partner.id, name: partner.name, slug: partner.slug }
+      : null,
   });
 }

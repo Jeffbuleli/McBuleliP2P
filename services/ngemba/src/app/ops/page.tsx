@@ -29,6 +29,10 @@ type Row = {
   createdAt: string;
   source: string;
   discreteMode?: boolean;
+  routingMeta?: {
+    scope: "local" | "national_fallback" | "unassigned";
+    provinceName: string | null;
+  } | null;
 };
 
 function badge(u: string) {
@@ -135,6 +139,14 @@ export default function OpsPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          {role === "admin" ? (
+            <Link
+              href="/ops/partners"
+              className="text-sm font-semibold text-ng-primary"
+            >
+              Partenaires
+            </Link>
+          ) : null}
           <Link
             href="/ops/observatory"
             className="text-sm font-semibold text-ng-primary"
@@ -204,6 +216,16 @@ export default function OpsPage() {
                 {r.discreteMode ? (
                   <span className="rounded-full bg-[#2a1524] px-2.5 py-0.5 text-[11px] font-semibold text-[#c9a0bc]">
                     Discret
+                  </span>
+                ) : null}
+                {r.routingMeta?.scope === "national_fallback" ? (
+                  <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-semibold text-amber-800">
+                    Hors zone
+                  </span>
+                ) : null}
+                {r.routingMeta?.scope === "local" ? (
+                  <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-800">
+                    Local
                   </span>
                 ) : null}
               </div>

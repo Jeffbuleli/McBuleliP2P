@@ -5,10 +5,15 @@ import {
   readOpsTokenFromCookie,
   readOpsTokenFromRequest,
   requireOpsAuth,
-  resolveOpsRole,
 } from "@/lib/ops/auth";
 import { notifySessionUpdated } from "@/lib/ops/notify";
 import { roleHasPermission } from "@/lib/ops/roles";
+import { sessionVisibleToRole } from "@/lib/ops/visibility";
+import { resolveOpsContext } from "@/lib/partners/bind";
+import {
+  buildRoutingMeta,
+  partnersForSessionDisplay,
+} from "@/lib/partners/match";
 import { getSession, updateSession } from "@/lib/sessions/store";
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -22,19 +27,57 @@ export async function GET(req: Request, ctx: Ctx) {
 
   const bearer = readOpsTokenFromRequest(req);
   const cookieToken = await readOpsTokenFromCookie();
-  const role = resolveOpsRole(bearer || cookieToken);
-  if (role) {
-    if (!roleHasPermission(role, "alerts.view")) {
+  const ctxAuth = resolveOpsContext(bearer || cookieToken);
+
+  if (ctxAuth.role) {
+    if (!roleHasPermission(ctxAuth.role, "alerts.view")) {
       return NextResponse.json({ error: "forbidden" }, { status: 403 });
     }
-    // Ops : dossier complet (proches inclus pour actions manuelles)
-    return NextResponse.json({ session, role });
+    if (
+      !sessionVisibleToRole(
+        ctxAuth.role,
+        session,
+        ctxAuth.partner?.id ?? null,
+      )
+    ) {
+      return NextResponse.json({ error: "forbidden" }, { status: 403 });
+    }
+
+    const routingMeta =
+      session.routingMeta ??
+      buildRoutingMeta({
+        commune: session.commune,
+        locationLabel: session.locationLabel,
+        category: session.category,
+      });
+    const suggestedPartners = partnersForSessionDisplay({
+      ...session,
+      routingMeta,
+    }).map((p) => ({
+      id: p.id,
+      name: p.name,
+      contactHint: p.contactHint ?? null,
+      nationalFallback: p.nationalFallback,
+    }));
+
+    return NextResponse.json({
+      session: { ...session, routingMeta },
+      role: ctxAuth.role,
+      partner: ctxAuth.partner
+        ? { id: ctxAuth.partner.id, name: ctxAuth.partner.name }
+        : null,
+      suggestedPartners,
+    });
   }
 
-  // Citoyen / public : jamais exposer les proches de confiance
-  const { trustedContacts: _hidden, ...publicSession } = session;
+  const { trustedContacts: _hidden, routingMeta: _rm, ...publicSession } =
+    session;
   return NextResponse.json({
-    session: { ...publicSession, trustedContacts: [] },
+    session: {
+      ...publicSession,
+      trustedContacts: [],
+      routingMeta: null,
+    },
   });
 }
 
@@ -57,6 +100,12 @@ export async function PATCH(req: Request, ctx: Ctx) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
+  if (
+    !sessionVisibleToRole(auth.role, existing, auth.partner?.id ?? null)
+  ) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
+
   let json: unknown;
   try {
     json = await req.json();
@@ -68,12 +117,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
     return NextResponse.json({ error: "invalid_body" }, { status: 400 });
   }
 
-  const cookieToken = await readOpsTokenFromCookie();
-  const bearer = readOpsTokenFromRequest(req);
-  const token = bearer || cookieToken;
-  const actor =
-    parsed.data.actorLabel ||
-    (token && resolveOpsRole(token) ? opsActorLabel(token) : "ops");
+  const actor = parsed.data.actorLabel || opsActorLabel(auth.token);
 
   const session = updateSession(
     id,

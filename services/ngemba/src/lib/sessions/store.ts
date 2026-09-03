@@ -5,6 +5,7 @@ import type { TriageResult, RoutingQueue } from "@/lib/ai/triage-schema";
 import type { MediaAttachment } from "@/lib/media/types";
 import type { ChatMessage } from "@/lib/sessions/chat";
 import type { SchoolContext } from "@/lib/school/types";
+import type { SessionRoutingMeta } from "@/lib/partners/types";
 import type { TrustedContact } from "@/lib/trusted-contacts/types";
 
 export type { ChatMessage };
@@ -48,6 +49,7 @@ export type AlertSessionRecord = {
   discreteMode: boolean;
   trustedContacts: TrustedContact[];
   schoolContext: SchoolContext | null;
+  routingMeta: SessionRoutingMeta | null;
   media: MediaAttachment[];
   chatMessages: ChatMessage[];
 };
@@ -67,6 +69,7 @@ function normalizeRecord(row: AlertSessionRecord): AlertSessionRecord {
     discreteMode: row.discreteMode ?? false,
     trustedContacts: row.trustedContacts ?? [],
     schoolContext: row.schoolContext ?? null,
+    routingMeta: row.routingMeta ?? null,
     media: row.media ?? [],
     chatMessages: row.chatMessages ?? [],
   };
@@ -133,12 +136,14 @@ export function createSession(
     | "discreteMode"
     | "trustedContacts"
     | "schoolContext"
+    | "routingMeta"
   > & {
     status?: AlertSessionRecord["status"];
     citizenToken?: string | null;
     discreteMode?: boolean;
     trustedContacts?: TrustedContact[];
     schoolContext?: SchoolContext | null;
+    routingMeta?: SessionRoutingMeta | null;
     media?: MediaAttachment[];
     chatMessages?: ChatMessage[];
   },
@@ -162,6 +167,7 @@ export function createSession(
     discreteMode: input.discreteMode ?? false,
     trustedContacts: input.trustedContacts ?? [],
     schoolContext: input.schoolContext ?? null,
+    routingMeta: input.routingMeta ?? null,
     media: input.media ?? [],
     chatMessages: input.chatMessages ?? [],
   };

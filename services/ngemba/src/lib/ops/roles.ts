@@ -60,8 +60,8 @@ export function roleHasPermission(
   return ROLE_PERMISSIONS[role].includes(permission);
 }
 
-/** Filtre file selon le role (meme store, vues differentes). */
-export function sessionVisibleToRole(
+/** Filtre mandat (categorie / file) - sans geo (safe client). */
+export function sessionMatchesRoleMandate(
   role: OpsRole,
   session: {
     urgency: string;
@@ -105,17 +105,16 @@ export function sessionVisibleToRole(
     );
   }
 
-  // partner - signalements non urgents / agrégés
   if (role === "partner") {
     return (
       session.routingQueue === "aggregated_report" ||
       session.urgency === "low" ||
       session.urgency === "info" ||
-      session.category === "infrastructure"
+      session.category === "infrastructure" ||
+      session.category === "lighting"
     );
   }
 
-  // school - uniquement file Safe School / category school
   if (role === "school") {
     return (
       session.routingQueue === "school_referent" ||
@@ -129,16 +128,16 @@ export function sessionVisibleToRole(
 
 export function dashboardHint(role: OpsRole): string {
   if (role === "admin") {
-    return "Vue d'ensemble - toutes les alertes et files.";
+    return "Vue d'ensemble - toutes les alertes et files. Orientation par proximite active.";
   }
   if (role === "ngo") {
-    return "File ONG - alertes citoyennes a orienter.";
+    return "File ONG - alertes de votre bassin (zone + mandat). Hors zone = fallback national.";
   }
   if (role === "security") {
-    return "File urgence - situations critiques et securite.";
+    return "File urgence - situations critiques dans votre couverture.";
   }
   if (role === "school") {
-    return "File Safe School - signalements eleves et mineurs.";
+    return "File Safe School - signalements eleves dans votre zone.";
   }
-  return "Vue partenaire - signalements agrégés et prevention.";
+  return "Vue partenaire - signalements agreges de votre bassin.";
 }
