@@ -1,0 +1,10 @@
+android/
+ios/
+.expo/
+node_modules/
+.env
+.env.*
+credentials/
+credentials.json
+*.jks
+*.p12

@@ -63,3 +63,14 @@ npx eas-cli build -p android --profile preview --non-interactive
 | Mauvaise API | Verifier `eas.json` → `EXPO_PUBLIC_NGEMBA_API_URL` |
 
 Voir aussi [16-PHASE-3B.md](./16-PHASE-3B.md).
+
+## Repo dedie (recommande pour EAS)
+
+Build stable depuis le repo separe :
+
+- GitHub : https://github.com/Jeffbuleli/ngemba-mobile
+- Local : `/Users/mac/Documents/ngemba-mobile`
+- Cause typique monorepo : git root = McBuleliP2P → Prebuild EAS opaque
+
+Le dossier `services/ngemba-mobile/` dans McBuleliP2P reste le miroir produit.
+
