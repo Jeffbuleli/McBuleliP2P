@@ -21,6 +21,10 @@ type Copy = {
   sosHint: string;
   line: string;
   powered: string;
+  aiListening: string;
+  polish: string;
+  polishing: string;
+  language: string;
   back: string;
   tell: string;
   witnessTell: string;
@@ -103,6 +107,10 @@ const baseFr: Copy = {
   sosHint: "Danger",
   line: "Racontez - McBuleli IA comprend",
   powered: "McBuleli IA",
+  aiListening: "McBuleli IA écoute",
+  polish: "Clarifier",
+  polishing: "Clarification...",
+  language: "Langue",
   back: "Retour",
   tell: "Que se passe-t-il ?",
   witnessTell: "Que voyez-vous ?",
@@ -188,6 +196,10 @@ export const messages: Record<Locale, Copy> = {
     sosHint: "Danger",
     line: "Tell - McBuleli AI understands",
     powered: "McBuleli AI",
+    aiListening: "McBuleli AI is listening",
+    polish: "Clarify",
+    polishing: "Clarifying...",
+    language: "Language",
     back: "Back",
     tell: "What is happening?",
     witnessTell: "What do you see?",
@@ -270,6 +282,10 @@ export const messages: Record<Locale, Copy> = {
     sosHint: "Bango",
     line: "Lobela - McBuleli IA ayokaka",
     powered: "McBuleli IA",
+    aiListening: "McBuleli IA ayokaka",
+    polish: "Kobongisa",
+    polishing: "Kobongisa...",
+    language: "Monoko",
     back: "Koma",
     tell: "Nani ezali kosalema?",
     witnessTell: "Nani oyebaka?",
@@ -352,6 +368,10 @@ export const messages: Record<Locale, Copy> = {
     sosHint: "Hatari",
     line: "Sema - McBuleli IA inaelewa",
     powered: "McBuleli IA",
+    aiListening: "McBuleli IA inasikiliza",
+    polish: "Fafanua",
+    polishing: "Inafafanua...",
+    language: "Lugha",
     back: "Rudi",
     tell: "Nini kinaendelea?",
     witnessTell: "Unaona nini?",

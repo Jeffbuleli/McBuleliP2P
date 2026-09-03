@@ -6,7 +6,7 @@ import {
   type StaticSection,
 } from "@/lib/static-pages";
 
-type PageKey = "resources" | "prevent" | "privacy" | "cgu" | "charter";
+export type PageKey = "resources" | "prevent" | "privacy" | "cgu" | "charter";
 
 type PageCopy = { title: string; sections: StaticSection[] };
 
@@ -34,7 +34,7 @@ const RESOURCES: Record<Locale, PageCopy> = {
       {
         title: "Violences basées sur le genre (VBG)",
         body: [
-          "Si vous êtes en sécurité pour parler, utilisez SOS ou Parler.",
+          "Si vous êtes en sécurité pour parler, utilisez SOS.",
           "Mode discret : écrivez peu de mots ; un opérateur répondra par message.",
           "Ne restez pas seul si vous pouvez aller dans un lieu sûr.",
         ],
@@ -433,5 +433,3 @@ export function getStaticPage(page: PageKey, locale: Locale): PageCopy {
   const bucket = PAGES[page];
   return bucket[locale] ?? bucket.fr;
 }
-
-export type { PageKey };

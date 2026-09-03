@@ -175,3 +175,96 @@ export function IconUsers({ title, className = "size-6", ...rest }: IconProps) {
     </svg>
   );
 }
+
+export function IconPhone({ title, className = "size-6", ...rest }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden={title ? undefined : true}
+      className={className}
+      {...rest}
+    >
+      {title ? <title>{title}</title> : null}
+      <path
+        d="M8 3.5h8A2.5 2.5 0 0 1 18.5 6v12a2.5 2.5 0 0 1-2.5 2.5H8A2.5 2.5 0 0 1 5.5 18V6A2.5 2.5 0 0 1 8 3.5Z"
+        stroke="currentColor"
+        strokeWidth="1.75"
+      />
+      <path
+        d="M10 17.5h4"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+export function IconHeart({ title, className = "size-6", ...rest }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden={title ? undefined : true}
+      className={className}
+      {...rest}
+    >
+      {title ? <title>{title}</title> : null}
+      <path
+        d="M12 19.5s-6.5-4.1-8.4-7.6C1.8 8.9 3.4 5.5 6.8 5.5c1.8 0 3.2 1 4 2.3.8-1.3 2.2-2.3 4-2.3 3.4 0 5 3.4 3.2 6.4C18.5 15.4 12 19.5 12 19.5Z"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function IconAlert({ title, className = "size-6", ...rest }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden={title ? undefined : true}
+      className={className}
+      {...rest}
+    >
+      {title ? <title>{title}</title> : null}
+      <path
+        d="M12 4 3.5 19h17L12 4Z"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M12 10v4M12 16.5v.5"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+export function IconCheck({ title, className = "size-6", ...rest }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden={title ? undefined : true}
+      className={className}
+      {...rest}
+    >
+      {title ? <title>{title}</title> : null}
+      <circle cx="12" cy="12" r="8.25" stroke="currentColor" strokeWidth="1.75" />
+      <path
+        d="M8.5 12.2 10.8 14.5 15.5 9.5"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}

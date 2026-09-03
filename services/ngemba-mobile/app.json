@@ -33,7 +33,9 @@
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
         "VIBRATE",
-        "android.permission.HIGH_SAMPLING_RATE_SENSORS"
+        "android.permission.HIGH_SAMPLING_RATE_SENSORS",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
       ]
     },
     "plugins": [
@@ -49,7 +51,11 @@
       "router": {
         "origin": false
       },
-      "ngembaApiUrl": "https://ngemba.cyberalert-rdc.org"
-    }
+      "ngembaApiUrl": "https://ngemba.cyberalert-rdc.org",
+      "eas": {
+        "projectId": "42bb1cda-6899-4c01-bd95-5f55c60f9428"
+      }
+    },
+    "owner": "mcbuleli-inc"
   }
 }

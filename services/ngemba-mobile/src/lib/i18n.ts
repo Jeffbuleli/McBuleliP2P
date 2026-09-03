@@ -23,6 +23,10 @@ type Copy = {
   discrete: string;
   line: string;
   powered: string;
+  aiListening: string;
+  polish: string;
+  polishing: string;
+  language: string;
   back: string;
   tell: string;
   witnessTell: string;
@@ -92,6 +96,10 @@ const fr: Copy = {
   discrete: "Mode discret",
   line: "Racontez - McBuleli IA comprend",
   powered: "McBuleli IA",
+  aiListening: "McBuleli IA écoute",
+  polish: "Clarifier",
+  polishing: "Clarification...",
+  language: "Langue",
   back: "Retour",
   tell: "Que se passe-t-il ?",
   witnessTell: "Que voyez-vous ?",
@@ -118,18 +126,18 @@ const fr: Copy = {
   prevent: "Prévenir",
   trustedContactsTitle: "Contacts de confiance",
   trustedContactsSubtitle:
-    "1 a 3 proches pour aider les services si vous n'etes plus joignable. Pas d'alerte automatique a chaque fois.",
+    "1 à 3 proches pour aider les services si vous n'êtes plus joignable. Pas d'alerte automatique à chaque fois.",
   trustedContactLabel: "Contact",
-  trustedContactName: "Prenom ou surnom",
-  trustedContactRelation: "Lien (mere, ami, voisin...)",
-  trustedContactPhone: "Telephone (+243...)",
+  trustedContactName: "Prénom ou surnom",
+  trustedContactRelation: "Lien (mère, ami, voisin...)",
+  trustedContactPhone: "Téléphone (+243...)",
   trustedContactEmail: "Email (optionnel)",
   trustedContactAddress: "Adresse / quartier (optionnel)",
   trustedContactRemove: "Retirer",
   trustedContactAdd: "Ajouter un contact",
   trustedContactsSave: "Enregistrer",
   trustedContactsSkip: "Plus tard",
-  trustedContactsError: "Ajoutez au moins un contact avec un nom et un telephone ou email.",
+  trustedContactsError: "Ajoutez au moins un contact avec un nom et un téléphone ou email.",
   trustedContactsLink: "Mes contacts de confiance",
   school: "École",
   youth: "Jeunesse",
@@ -165,6 +173,10 @@ export const messages: Record<Locale, Copy> = {
     discrete: "Discrete mode",
     line: "Tell - McBuleli AI understands",
     powered: "McBuleli AI",
+    aiListening: "McBuleli AI is listening",
+    polish: "Clarify",
+    polishing: "Clarifying...",
+    language: "Language",
     back: "Back",
     tell: "What is happening?",
     witnessTell: "What do you see?",

@@ -1,5 +1,5 @@
 import { Link, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, type ReactNode } from "react";
 import {
   Image,
   Pressable,
@@ -9,6 +9,13 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  IconEye,
+  IconGraduation,
+  IconShield,
+  IconSpark,
+  IconUsers,
+} from "../src/components/icons";
 import { useLocale } from "../src/context/locale";
 import { localeLabels, locales, messages, type Locale } from "../src/lib/i18n";
 import { hapticTap } from "../src/lib/haptics";
@@ -20,13 +27,15 @@ import {
 } from "../src/lib/trusted-contacts-prefs";
 import { brand, colors } from "../src/theme/colors";
 
-function Tile({
+function IconAction({
   label,
   href,
+  icon,
   accent = "primary",
 }: {
   label: string;
-  href: "/sos" | "/witness" | "/discrete" | "/school" | "/jeunesse";
+  href: "/witness" | "/school" | "/jeunesse";
+  icon: ReactNode;
   accent?: "primary" | "secondary";
 }) {
   const bg = accent === "secondary" ? colors.secondaryMuted : colors.primaryMuted;
@@ -36,14 +45,12 @@ function Tile({
       <Pressable
         onPress={() => void hapticTap()}
         style={({ pressed }) => [
-          styles.tile,
+          styles.iconAction,
           pressed && { opacity: 0.88 },
         ]}
       >
-        <View style={[styles.tileIcon, { backgroundColor: bg }]}>
-          <Text style={[styles.tileIconText, { color: fg }]}>●</Text>
-        </View>
-        <Text style={styles.tileLabel}>{label}</Text>
+        <View style={[styles.iconBubble, { backgroundColor: bg }]}>{icon}</View>
+        <Text style={[styles.iconLabel, { color: fg }]}>{label}</Text>
       </Pressable>
     </Link>
   );
@@ -78,68 +85,91 @@ export default function HomeScreen() {
             <Text style={styles.brand}>NGEMBA</Text>
             <Text style={styles.tagline}>{t.tagline}</Text>
           </View>
-          <Text style={styles.powered}>{t.powered}</Text>
+          <View style={styles.langWrap}>
+            <Text style={styles.langHint}>{t.language}</Text>
+            <View style={styles.langRow}>
+              {locales.map((code: Locale) => (
+                <Pressable
+                  key={code}
+                  onPress={() => setLocale(code)}
+                  style={[
+                    styles.langBtn,
+                    locale === code && styles.langBtnActive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.langBtnText,
+                      locale === code && styles.langBtnTextActive,
+                    ]}
+                  >
+                    {localeLabels[code]}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
         </View>
 
-        <View style={styles.langRow}>
-          {locales.map((code) => (
+        <View style={styles.hero}>
+          <View style={styles.aiRow}>
+            <IconSpark size={18} color={colors.primary} />
+            <Text style={styles.powered}>{t.powered}</Text>
+          </View>
+          <Text style={styles.line}>{t.line}</Text>
+
+          <Link href="/sos" asChild>
             <Pressable
-              key={code}
-              onPress={() => setLocale(code)}
-              style={[
-                styles.langBtn,
-                locale === code && styles.langBtnActive,
+              onPress={() => void hapticTap()}
+              style={({ pressed }) => [
+                styles.sosBtn,
+                pressed && { transform: [{ scale: 0.98 }] },
               ]}
+              accessibilityLabel={`${t.sos} - ${t.sosHint}`}
             >
-              <Text
-                style={[
-                  styles.langBtnText,
-                  locale === code && styles.langBtnTextActive,
-                ]}
-              >
-                {localeLabels[code]}
+              <IconShield size={22} color="#fff" />
+              <Text style={styles.sosBtnTitle}>{t.sos}</Text>
+              <Text style={styles.sosBtnHint}>{t.sosHint}</Text>
+            </Pressable>
+          </Link>
+        </View>
+
+        <View style={styles.actions}>
+          <IconAction
+            label={t.witness}
+            href="/witness"
+            accent="secondary"
+            icon={<IconEye size={20} color={colors.secondary} />}
+          />
+          <IconAction
+            label={t.school}
+            href="/school"
+            accent="secondary"
+            icon={<IconGraduation size={20} color={colors.secondary} />}
+          />
+          <IconAction
+            label={t.youth}
+            href="/jeunesse"
+            icon={<IconUsers size={20} color={colors.primary} />}
+          />
+        </View>
+
+        <View style={styles.footerLinks}>
+          <Link href="/discrete" asChild>
+            <Pressable>
+              <Text style={styles.footerLink}>{t.discrete}</Text>
+            </Pressable>
+          </Link>
+          <Link href="/trusted-contacts" asChild>
+            <Pressable>
+              <Text style={[styles.footerLink, { color: colors.primary }]}>
+                {t.trustedContactsLink}
               </Text>
             </Pressable>
-          ))}
+          </Link>
         </View>
-
-        <View style={[styles.grid, { marginTop: 28 }]}>
-          <Tile label={t.sos} href="/sos" />
-          <Tile label={t.witness} href="/witness" accent="secondary" />
-        </View>
-        <View style={styles.grid}>
-          <Tile label={t.school} href="/school" accent="secondary" />
-          <Tile label={t.youth} href="/jeunesse" />
-        </View>
-
-        <Link href="/sos" asChild>
-          <Pressable
-            onPress={() => void hapticTap()}
-            style={({ pressed }) => [
-              styles.sosBtn,
-              pressed && { transform: [{ scale: 0.98 }] },
-            ]}
-          >
-            <Text style={styles.sosBtnTitle}>{t.sos}</Text>
-            <Text style={styles.sosBtnHint}>{t.sosHint}</Text>
-          </Pressable>
-        </Link>
-
-        <Text style={styles.line}>{t.line}</Text>
-
-        <Link href="/discrete" asChild>
-          <Pressable style={styles.discreteLink}>
-            <Text style={styles.discreteLinkText}>{t.discrete}</Text>
-          </Pressable>
-        </Link>
         <Text style={styles.discreteHint}>{t.discreteTap}</Text>
         <Text style={styles.discreteHint}>{t.discreteShake}</Text>
-
-        <Link href="/trusted-contacts" asChild>
-          <Pressable style={styles.trustedLink}>
-            <Text style={styles.trustedLinkText}>{t.trustedContactsLink}</Text>
-          </Pressable>
-        </Link>
       </ScrollView>
     </SafeAreaView>
   );
@@ -156,7 +186,7 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: 12,
     marginTop: 8,
   },
@@ -169,47 +199,35 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   tagline: { fontSize: 14, color: colors.muted, marginTop: 2 },
-  powered: { fontSize: 11, fontWeight: "600", color: colors.primary },
-  langRow: { flexDirection: "row", gap: 8, marginTop: 20 },
+  langWrap: { alignItems: "flex-end", maxWidth: 140 },
+  langHint: { fontSize: 10, color: colors.muted, marginBottom: 4 },
+  langRow: { flexDirection: "row", flexWrap: "wrap", gap: 4, justifyContent: "flex-end" },
   langBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     borderRadius: 999,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface,
   },
   langBtnActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  langBtnText: { fontSize: 12, fontWeight: "600", color: colors.muted },
+  langBtnText: { fontSize: 10, fontWeight: "600", color: colors.muted },
   langBtnTextActive: { color: "#fff" },
-  grid: {
-    flexDirection: "row",
-    gap: 12,
-    marginTop: 12,
+  hero: { marginTop: 36, alignItems: "center", gap: 12 },
+  aiRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  powered: { fontSize: 14, fontWeight: "700", color: colors.primary },
+  line: {
+    textAlign: "center",
+    fontSize: 14,
+    fontWeight: "500",
+    color: colors.muted,
+    lineHeight: 20,
+    maxWidth: 260,
   },
-  tile: {
-    flex: 1,
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    minHeight: 88,
-  },
-  tileIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  tileIconText: { fontSize: 16, fontWeight: "700" },
-  tileLabel: { marginTop: 10, fontSize: 14, fontWeight: "600", color: colors.text },
   sosBtn: {
-    alignSelf: "center",
-    marginTop: 28,
-    width: 112,
-    height: 112,
+    marginTop: 12,
+    width: 120,
+    height: 120,
     borderRadius: 999,
     backgroundColor: colors.urgent,
     alignItems: "center",
@@ -219,18 +237,30 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     elevation: 6,
   },
-  sosBtnTitle: { color: "#fff", fontSize: 22, fontWeight: "800" },
-  sosBtnHint: { color: "rgba(255,255,255,0.9)", fontSize: 10, marginTop: 4 },
-  line: {
-    marginTop: 24,
-    textAlign: "center",
-    fontSize: 14,
-    fontWeight: "600",
-    color: colors.primary,
-    lineHeight: 20,
+  sosBtnTitle: { color: "#fff", fontSize: 20, fontWeight: "800", marginTop: 4 },
+  sosBtnHint: { color: "rgba(255,255,255,0.9)", fontSize: 10, marginTop: 2 },
+  actions: {
+    marginTop: 28,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 8,
   },
-  discreteLink: { alignSelf: "center", marginTop: 20 },
-  discreteLinkText: {
+  iconAction: { flex: 1, alignItems: "center", gap: 8, paddingVertical: 8 },
+  iconBubble: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  iconLabel: { fontSize: 12, fontWeight: "600" },
+  footerLinks: {
+    marginTop: 28,
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 16,
+  },
+  footerLink: {
     fontSize: 12,
     color: colors.muted,
     textDecorationLine: "underline",
@@ -241,12 +271,5 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: colors.muted,
     paddingHorizontal: 16,
-  },
-  trustedLink: { alignSelf: "center", marginTop: 20 },
-  trustedLinkText: {
-    fontSize: 12,
-    color: colors.primary,
-    fontWeight: "600",
-    textDecorationLine: "underline",
   },
 });

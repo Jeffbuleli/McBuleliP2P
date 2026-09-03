@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { IconShield } from "@/components/icons";
+import { IconShield, IconSpark } from "@/components/icons";
+import { PolishButton } from "@/components/polish-button";
 import { TrustedContactsEditor } from "@/components/trusted-contacts-editor";
 import { VoiceButton } from "@/components/voice-button";
 import { useCitizenLocale } from "@/hooks/use-citizen-locale";
@@ -161,13 +162,21 @@ export function SosFlow({
         >
           {t.back}
         </Link>
-        <div
-          className={`inline-flex items-center gap-1.5 ${discrete ? "text-[#c9a0bc]" : "text-ng-urgent"}`}
-        >
-          <IconShield className="size-4" />
-          <span className="text-xs font-bold tracking-wide">
-            {discrete ? t.discrete : isWitness ? t.witness : t.sos}
-          </span>
+        <div className="flex flex-col items-end gap-0.5">
+          <div
+            className={`inline-flex items-center gap-1.5 ${discrete ? "text-[#c9a0bc]" : "text-ng-primary"}`}
+          >
+            <IconSpark className="size-3.5" />
+            <span className="text-[11px] font-semibold">{t.aiListening}</span>
+          </div>
+          <div
+            className={`inline-flex items-center gap-1.5 ${discrete ? "text-[#c9a0bc]" : "text-ng-urgent"}`}
+          >
+            <IconShield className="size-3.5" />
+            <span className="text-[10px] font-bold tracking-wide">
+              {discrete ? t.discrete : isWitness ? t.witness : t.sos}
+            </span>
+          </div>
         </div>
       </header>
 
@@ -202,15 +211,26 @@ export function SosFlow({
             }`}
             autoFocus
           />
-          <VoiceButton
-            locale={locale}
-            label={t.voice}
-            listeningLabel={t.voiceListening}
-            unsupportedLabel={t.voiceUnsupported}
-            onText={(text) =>
-              setMessage((prev) => (prev ? `${prev} ${text}` : text))
-            }
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            <VoiceButton
+              locale={locale}
+              label={t.voice}
+              listeningLabel={t.voiceListening}
+              unsupportedLabel={t.voiceUnsupported}
+              onText={(text) =>
+                setMessage((prev) => (prev ? `${prev} ${text}` : text))
+              }
+            />
+            <PolishButton
+              text={message}
+              locale={locale}
+              label={t.polish}
+              busyLabel={t.polishing}
+              discrete={discrete}
+              disabled={busy}
+              onPolished={setMessage}
+            />
+          </div>
           {error ? (
             <p className="text-sm font-medium text-ng-urgent">{error}</p>
           ) : null}

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { SlaBar, UrgencyDonut } from "@/components/charts/ops-charts";
 import {
   categoryLabelFr,
   providerLabelFr,
@@ -128,6 +129,25 @@ export default function OpsPage() {
     (r) => r.status === "closed" || r.status === "cancelled",
   );
 
+  const urgencySlices = useMemo(() => {
+    const counts = { critical: 0, high: 0, medium: 0, low: 0 };
+    for (const r of open) {
+      if (r.urgency === "critical") counts.critical += 1;
+      else if (r.urgency === "high") counts.high += 1;
+      else if (r.urgency === "medium") counts.medium += 1;
+      else counts.low += 1;
+    }
+    return [
+      { id: "critical", label: "Critiques", value: counts.critical, color: "#c41e3a" },
+      { id: "high", label: "Élevées", value: counts.high, color: "#d97706" },
+      { id: "medium", label: "Moyennes", value: counts.medium, color: "#882364" },
+      { id: "low", label: "Basses", value: counts.low, color: "#06402b" },
+    ];
+  }, [open]);
+
+  const slaBreached = stats?.slaBreached ?? 0;
+  const slaOk = Math.max((stats?.open ?? open.length) - slaBreached, 0);
+
   return (
     <main
       className={`ng-shell mx-auto min-h-dvh py-6 ${shellMaxWidth(device)}`}
@@ -138,12 +158,12 @@ export default function OpsPage() {
             NGEMBA OPS
           </p>
           <h1 className="text-lg font-semibold text-ng-text">
-            File - {open.length} active
+            File active
           </h1>
           <p className="text-xs font-medium text-ng-primary">{roleLabel}</p>
           <p className="text-xs text-ng-muted">{dashboardHint(role)}</p>
           <p className="text-xs text-ng-muted">
-            {live ? "Temps reel actif" : "Temps reel inactif"}
+            {live ? "Temps réel actif" : "Temps réel inactif"}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -174,36 +194,39 @@ export default function OpsPage() {
         </div>
       </header>
 
-      {stats ? (
-        <div className="mt-4 ng-ops-stats">
-          <div className="rounded-xl border border-[var(--ng-border)] bg-ng-surface px-3 py-2">
-            <p className="text-[10px] font-semibold uppercase text-ng-muted">Ouvertes</p>
-            <p className="text-lg font-bold text-ng-primary">{stats.open}</p>
-          </div>
-          <div className="rounded-xl border border-[var(--ng-border)] bg-ng-surface px-3 py-2">
-            <p className="text-[10px] font-semibold uppercase text-ng-muted">Critiques</p>
-            <p className="text-lg font-bold text-ng-urgent">{stats.critical}</p>
-          </div>
-          <div className="rounded-xl border border-[var(--ng-border)] bg-ng-surface px-3 py-2">
-            <p className="text-[10px] font-semibold uppercase text-ng-muted">Elevees</p>
-            <p className="text-lg font-bold text-ng-warning">{stats.high}</p>
-          </div>
-          <div className="rounded-xl border border-[var(--ng-border)] bg-ng-surface px-3 py-2">
-            <p className="text-[10px] font-semibold uppercase text-ng-muted">Visibles</p>
-            <p className="text-lg font-bold text-ng-text">{stats.total}</p>
-          </div>
-          {typeof stats.slaBreached === "number" ? (
-            <div className="rounded-xl border border-[var(--ng-border)] bg-ng-surface px-3 py-2">
+      <section className="mt-5 grid gap-4 rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-4 md:grid-cols-2">
+        <UrgencyDonut
+          slices={urgencySlices}
+          centerLabel="Ouvertes"
+          centerValue={stats?.open ?? open.length}
+        />
+        <div className="flex flex-col justify-center gap-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
               <p className="text-[10px] font-semibold uppercase text-ng-muted">
-                SLA / escalade
+                Visibles
               </p>
-              <p className="text-lg font-bold text-ng-urgent">
-                {stats.slaBreached}
+              <p className="text-lg font-bold text-ng-text">
+                {stats?.total ?? rows.length}
               </p>
             </div>
-          ) : null}
+            <div>
+              <p className="text-[10px] font-semibold uppercase text-ng-muted">
+                Critiques
+              </p>
+              <p className="text-lg font-bold text-ng-urgent">
+                {stats?.critical ?? urgencySlices[0]?.value ?? 0}
+              </p>
+            </div>
+          </div>
+          <SlaBar
+            ok={slaOk}
+            breached={slaBreached}
+            okLabel="SLA OK"
+            breachedLabel="Dépassés"
+          />
         </div>
-      ) : null}
+      </section>
 
       <ul className="mt-6 space-y-3">
         {open.length === 0 ? (
@@ -252,7 +275,7 @@ export default function OpsPage() {
                   </span>
                 ) : r.sla?.breached ? (
                   <span className="rounded-full bg-ng-urgent/15 px-2.5 py-0.5 text-[11px] font-semibold text-ng-urgent">
-                    SLA depasse
+                    SLA dépassé
                   </span>
                 ) : r.sla?.label ? (
                   <span className="rounded-full bg-ng-primary-muted px-2.5 py-0.5 text-[11px] font-semibold text-ng-primary">
@@ -296,7 +319,7 @@ export default function OpsPage() {
                       onClick={() => void patch(r.id, { status: "closed" })}
                       className="rounded-lg border border-[var(--ng-border)] px-3 py-1.5 text-xs font-semibold text-ng-muted disabled:opacity-50"
                     >
-                      Cloturer
+                      Clôturer
                     </button>
                   </>
                 ) : null}
@@ -308,7 +331,7 @@ export default function OpsPage() {
 
       {closed.length > 0 ? (
         <section className="mt-10">
-          <h2 className="text-sm font-semibold text-ng-muted">Cloturees</h2>
+          <h2 className="text-sm font-semibold text-ng-muted">Clôturées</h2>
           <ul className="mt-3 space-y-2">
             {closed.slice(0, 10).map((r) => (
               <li key={r.id}>

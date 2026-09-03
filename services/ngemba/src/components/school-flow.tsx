@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { IconShield } from "@/components/icons";
+import { IconShield, IconSpark } from "@/components/icons";
+import { PolishButton } from "@/components/polish-button";
 import { TrustedContactsEditor } from "@/components/trusted-contacts-editor";
 import { VoiceButton } from "@/components/voice-button";
 import { useCitizenLocale } from "@/hooks/use-citizen-locale";
@@ -146,9 +147,15 @@ export function SchoolFlow({ initialLocale }: { initialLocale?: string }) {
         <Link href={href("/")} className="text-sm font-medium text-ng-muted">
           {t.back}
         </Link>
-        <div className="inline-flex items-center gap-1.5 text-ng-primary">
-          <IconShield className="size-4" />
-          <span className="text-xs font-bold tracking-wide">{t.school}</span>
+        <div className="flex flex-col items-end gap-0.5">
+          <div className="inline-flex items-center gap-1.5 text-ng-primary">
+            <IconSpark className="size-3.5" />
+            <span className="text-[11px] font-semibold">{t.aiListening}</span>
+          </div>
+          <div className="inline-flex items-center gap-1.5 text-ng-primary">
+            <IconShield className="size-3.5" />
+            <span className="text-[10px] font-bold tracking-wide">{t.school}</span>
+          </div>
         </div>
       </header>
 
@@ -207,15 +214,25 @@ export function SchoolFlow({ initialLocale }: { initialLocale?: string }) {
             className="w-full resize-none rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-4 text-base leading-relaxed text-ng-text outline-none focus:ring-2 ring-ng-primary"
             autoFocus
           />
-          <VoiceButton
-            locale={locale}
-            label={t.voice}
-            listeningLabel={t.voiceListening}
-            unsupportedLabel={t.voiceUnsupported}
-            onText={(text) =>
-              setMessage((prev) => (prev ? `${prev} ${text}` : text))
-            }
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            <VoiceButton
+              locale={locale}
+              label={t.voice}
+              listeningLabel={t.voiceListening}
+              unsupportedLabel={t.voiceUnsupported}
+              onText={(text) =>
+                setMessage((prev) => (prev ? `${prev} ${text}` : text))
+              }
+            />
+            <PolishButton
+              text={message}
+              locale={locale}
+              label={t.polish}
+              busyLabel={t.polishing}
+              disabled={busy}
+              onPolished={setMessage}
+            />
+          </div>
           {error ? (
             <p className="text-sm font-medium text-ng-urgent">{error}</p>
           ) : null}

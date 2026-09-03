@@ -98,3 +98,19 @@ export async function fetchProvinces(): Promise<ProvinceOption[]> {
   const data = await res.json().catch(() => ({}));
   return data.provinces ?? [];
 }
+
+export async function polishText(
+  text: string,
+  locale: string,
+): Promise<string> {
+  const res = await fetch(`${apiBaseUrl()}/api/ai/polish`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text, locale }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || typeof data.text !== "string") {
+    return text;
+  }
+  return data.text as string;
+}

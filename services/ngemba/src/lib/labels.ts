@@ -3,7 +3,7 @@ import type { TriageResult } from "@/lib/ai/triage-schema";
 import type { RoutingQueue } from "@/lib/ai/triage-schema";
 
 const CATEGORY_FR: Record<TriageResult["category"], string> = {
-  vbg: "Violence basee sur le genre",
+  vbg: "Violence basée sur le genre",
   sexual_violence: "Violence sexuelle",
   domestic_violence: "Violence conjugale",
   child_danger: "Enfant en danger",

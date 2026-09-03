@@ -141,6 +141,10 @@ export function SessionView({
           </div>
 
           <div className="rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-4">
+            <div className="mb-2 inline-flex items-center gap-1.5 text-ng-primary">
+              <IconSpark className="size-3.5" />
+              <span className="text-[11px] font-semibold">{t.powered}</span>
+            </div>
             <p className="text-sm leading-relaxed text-ng-text">
               {session.aiPayload.summary_user_locale || session.aiSummary}
             </p>

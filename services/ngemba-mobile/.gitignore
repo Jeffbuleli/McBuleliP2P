@@ -17,3 +17,6 @@ web-build/
 # Native (si prebuild local)
 android/
 ios/
+
+credentials/
+credentials.json

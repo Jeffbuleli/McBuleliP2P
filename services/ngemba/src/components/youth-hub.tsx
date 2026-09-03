@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { IconSpark, IconUsers } from "@/components/icons";
 import { useCitizenLocale } from "@/hooks/use-citizen-locale";
 import { messages } from "@/lib/i18n";
 import { YOUTH_SCENARIOS } from "@/lib/youth/scenarios";
@@ -19,32 +20,43 @@ export function YouthHub({ initialLocale }: { initialLocale?: string }) {
         {t.back}
       </Link>
 
-      <h1 className="mt-6 text-xl font-semibold text-ng-primary">{t.youthTitle}</h1>
-      <p className="mt-2 text-sm leading-relaxed text-ng-muted">{t.youthSubtitle}</p>
-      <p className="mt-3 rounded-xl bg-ng-secondary-muted px-3 py-2 text-xs font-medium text-ng-secondary">
-        {t.youthDisclaimer}
-      </p>
+      <div className="mt-6 flex items-center gap-3">
+        <span className="inline-flex size-11 items-center justify-center rounded-2xl bg-ng-primary-muted text-ng-primary">
+          <IconUsers className="size-5" />
+        </span>
+        <div>
+          <h1 className="text-xl font-semibold text-ng-primary">{t.youthTitle}</h1>
+          <p className="text-xs text-ng-muted">{t.youthDisclaimer}</p>
+        </div>
+      </div>
 
-      <ul className="mt-6 flex flex-col gap-3">
+      <ul className="mt-6 grid grid-cols-2 gap-3">
         {YOUTH_SCENARIOS.map((scenario, index) => (
           <li key={scenario.id}>
             <Link
               href={href(`/jeunesse/${scenario.id}`)}
-              className="block rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-4 shadow-sm transition hover:border-ng-primary/30"
+              className="flex h-full flex-col gap-2 rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-3 transition hover:border-ng-primary/30"
             >
-              <span className="text-[11px] font-bold text-ng-muted">
+              <span className="inline-flex size-8 items-center justify-center rounded-xl bg-ng-secondary-muted text-ng-secondary">
+                <IconSpark className="size-4" />
+              </span>
+              <span className="text-[10px] font-bold text-ng-muted">
                 {index + 1}/10
               </span>
-              <p className="mt-1 text-sm font-semibold text-ng-text">
+              <p className="text-xs font-semibold leading-snug text-ng-text">
                 {scenario.title[locale]}
-              </p>
-              <p className="mt-1 text-xs leading-relaxed text-ng-muted line-clamp-2">
-                {scenario.intro[locale]}
               </p>
             </Link>
           </li>
         ))}
       </ul>
+
+      <p className="mt-6 text-center text-[11px] text-ng-muted">
+        {t.youthSosHint}{" "}
+        <Link href={href("/sos")} className="font-semibold text-ng-urgent">
+          {t.sos}
+        </Link>
+      </p>
     </main>
   );
 }

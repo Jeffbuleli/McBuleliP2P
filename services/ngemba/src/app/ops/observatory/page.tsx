@@ -3,6 +3,10 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  CategoryBars,
+  DaySparkline,
+} from "@/components/charts/ops-charts";
 import { urgencyLabelFr } from "@/lib/labels";
 import { shellMaxWidth, useDeviceClass } from "@/lib/ui/device";
 
@@ -57,23 +61,23 @@ type Snapshot = {
 type ProvinceOpt = { id: string; name: string };
 
 const CATEGORY_OPTIONS: Array<{ id: string; label: string }> = [
-  { id: "", label: "Toutes categories" },
+  { id: "", label: "Toutes catégories" },
   { id: "vbg", label: "VBG" },
   { id: "sexual_violence", label: "Violence sexuelle" },
   { id: "domestic_violence", label: "Violence conjugale" },
   { id: "child_danger", label: "Enfant en danger" },
-  { id: "school", label: "Ecole / mineur" },
+  { id: "school", label: "École / mineur" },
   { id: "assault", label: "Agression" },
   { id: "robbery", label: "Vol / braquage" },
-  { id: "harassment", label: "Harcelement" },
+  { id: "harassment", label: "Harcèlement" },
   { id: "accident", label: "Accident" },
-  { id: "medical", label: "Medical" },
+  { id: "medical", label: "Médical" },
   { id: "fire", label: "Incendie" },
   { id: "flood", label: "Inondation" },
-  { id: "cyber_threat", label: "Menace numerique" },
+  { id: "cyber_threat", label: "Menace numérique" },
   { id: "scam", label: "Arnaque" },
   { id: "other", label: "Autre" },
-  { id: "unknown", label: "A clarifier" },
+  { id: "unknown", label: "À clarifier" },
 ];
 
 function intensityClass(count: number, max: number): string {
@@ -111,7 +115,7 @@ export default function ObservatoryPage() {
     if (!res.ok) {
       setError(
         res.status === 403
-          ? "Acces refuse pour l'observatoire."
+          ? "Accès refusé pour l'observatoire."
           : "Impossible de charger l'observatoire.",
       );
       setSnapshot(null);
@@ -152,7 +156,7 @@ export default function ObservatoryPage() {
             Observatoire citoyen
           </h1>
           <p className="mt-1 text-xs text-ng-muted">
-            Carte OSM + heatmap - centroides uniquement - k-anonymity
+            Carte OSM + heatmap - centroïdes uniquement - k-anonymity
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -198,7 +202,7 @@ export default function ObservatoryPage() {
           </select>
         </label>
         <label className="block text-xs font-semibold text-ng-muted">
-          Categorie
+          Catégorie
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
@@ -223,19 +227,18 @@ export default function ObservatoryPage() {
 
       {snapshot ? (
         <>
-          <section className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+          <section className="mt-6 grid grid-cols-3 gap-3">
             <Stat
-              label="Alertes (fenetre)"
+              label="Alertes"
               value={String(snapshot.totalSessionsInWindow)}
             />
             <Stat
-              label="Zones publiees"
+              label="Zones publiées"
               value={String(snapshot.publishedZones.length)}
             />
-            <Stat label="Seuil k" value={String(snapshot.k)} />
             <Stat
-              label="Zones masquees"
-              value={`${snapshot.suppressedZones} (${snapshot.suppressedCount})`}
+              label="Masquées"
+              value={`${snapshot.suppressedZones}`}
             />
           </section>
 
@@ -245,12 +248,12 @@ export default function ObservatoryPage() {
 
           <section className="mt-8">
             <h2 className="mb-3 text-sm font-semibold text-ng-text">
-              Carte (centroides)
+              Carte (centroïdes)
             </h2>
             {mapPoints.length === 0 ? (
               <p className="rounded-xl border border-[var(--ng-border)] bg-ng-surface p-4 text-sm text-ng-muted">
-                Aucun centroide a afficher pour ce filtre (seuil k ou zone hors
-                referentiel RDC).
+                Aucun centroïde à afficher pour ce filtre (seuil k ou zone hors
+                référentiel RDC).
               </p>
             ) : (
               <ObservatoryMap points={mapPoints} />
@@ -259,14 +262,14 @@ export default function ObservatoryPage() {
 
           <section className="mt-8">
             <h2 className="text-sm font-semibold text-ng-text">
-              Intensite par zone
+              Intensité par zone
             </h2>
             {snapshot.publishedZones.length === 0 ? (
               <p className="mt-3 rounded-xl border border-[var(--ng-border)] bg-ng-surface p-4 text-sm text-ng-muted">
                 Aucune zone n&apos;atteint encore le seuil k={snapshot.k}. Les
-                petits volumes restent masques pour proteger les personnes.
+                petits volumes restent masqués pour protéger les personnes.
                 {snapshot.suppressedCount > 0
-                  ? ` (${snapshot.suppressedCount} signalements agreges hors affichage)`
+                  ? ` (${snapshot.suppressedCount} signalements agrégés hors affichage)`
                   : ""}
               </p>
             ) : (
@@ -284,7 +287,7 @@ export default function ObservatoryPage() {
                         ) : null}
                       </span>
                       <span className="text-ng-muted">
-                        {z.count} · max {urgencyLabelFr(z.urgencyMax)}
+                        {z.count} - max {urgencyLabelFr(z.urgencyMax)}
                       </span>
                     </div>
                     <div className="h-3 overflow-hidden rounded-full bg-ng-primary-muted">
@@ -302,43 +305,19 @@ export default function ObservatoryPage() {
           </section>
 
           <section className="mt-10 grid gap-6 md:grid-cols-2">
-            <div>
-              <h2 className="text-sm font-semibold text-ng-text">Par type</h2>
-              <ul className="mt-3 space-y-2">
-                {snapshot.byCategory.slice(0, 10).map((c) => (
-                  <li
-                    key={c.category}
-                    className="flex items-center justify-between rounded-xl border border-[var(--ng-border)] bg-ng-surface px-3 py-2 text-sm"
-                  >
-                    <span>{c.label}</span>
-                    <span className="font-semibold text-ng-primary">
-                      {c.count}
-                    </span>
-                  </li>
-                ))}
-                {snapshot.byCategory.length === 0 ? (
-                  <li className="text-sm text-ng-muted">Pas encore de donnees.</li>
-                ) : null}
-              </ul>
+            <div className="rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-4">
+              <h2 className="mb-3 text-sm font-semibold text-ng-text">Par type</h2>
+              <CategoryBars
+                items={snapshot.byCategory.map((c) => ({
+                  id: c.category,
+                  label: c.label,
+                  count: c.count,
+                }))}
+              />
             </div>
-            <div>
-              <h2 className="text-sm font-semibold text-ng-text">Par jour</h2>
-              <ul className="mt-3 max-h-72 space-y-2 overflow-y-auto">
-                {[...snapshot.byDay].reverse().slice(0, 14).map((d) => (
-                  <li
-                    key={d.day}
-                    className="flex items-center justify-between rounded-xl border border-[var(--ng-border)] bg-ng-surface px-3 py-2 text-sm"
-                  >
-                    <span className="font-mono text-xs">{d.day}</span>
-                    <span className="font-semibold text-ng-primary">
-                      {d.count}
-                    </span>
-                  </li>
-                ))}
-                {snapshot.byDay.length === 0 ? (
-                  <li className="text-sm text-ng-muted">Pas encore de donnees.</li>
-                ) : null}
-              </ul>
+            <div className="rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-4">
+              <h2 className="mb-3 text-sm font-semibold text-ng-text">Par jour</h2>
+              <DaySparkline days={snapshot.byDay} />
             </div>
           </section>
         </>

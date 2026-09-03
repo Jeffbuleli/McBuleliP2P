@@ -8,7 +8,6 @@ import {
   IconEye,
   IconGlobe,
   IconGraduation,
-  IconMic,
   IconShield,
   IconSpark,
   IconUsers,
@@ -27,48 +26,25 @@ import {
   useDeviceClass,
 } from "@/lib/ui/device";
 
-function Tile({
+function IconLink({
   icon,
   label,
-  accent = "primary",
   href,
 }: {
   icon: ReactNode;
   label: string;
-  accent?: "primary" | "secondary";
-  href?: string;
+  href: string;
 }) {
-  const tone =
-    accent === "secondary"
-      ? "text-ng-secondary bg-ng-secondary-muted/60"
-      : "text-ng-primary bg-ng-primary-muted";
-
-  const className =
-    "flex min-h-[var(--ng-touch-min)] flex-col items-start gap-3 rounded-2xl border border-[var(--ng-border)] bg-ng-surface/90 p-4 text-left shadow-[0_8px_30px_rgba(6,64,43,0.06)] backdrop-blur-sm disabled:opacity-60";
-
-  const inner = (
-    <>
-      <span
-        className={`inline-flex size-10 items-center justify-center rounded-xl ${tone}`}
-      >
+  return (
+    <Link
+      href={href}
+      className="flex min-w-[4.5rem] flex-1 flex-col items-center gap-1.5 rounded-xl px-2 py-2 text-ng-primary transition hover:bg-ng-primary-muted/60"
+    >
+      <span className="inline-flex size-10 items-center justify-center rounded-xl bg-ng-primary-muted text-ng-primary">
         {icon}
       </span>
-      <span className="text-sm font-semibold tracking-tight">{label}</span>
-    </>
-  );
-
-  if (href) {
-    return (
-      <Link href={href} className={className}>
-        {inner}
-      </Link>
-    );
-  }
-
-  return (
-    <button type="button" disabled className={className}>
-      {inner}
-    </button>
+      <span className="text-[11px] font-semibold tracking-tight">{label}</span>
+    </Link>
   );
 }
 
@@ -94,7 +70,7 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
         aria-hidden
       />
 
-      <header className="relative z-10 flex items-start justify-between gap-3">
+      <header className="relative z-10 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -118,72 +94,35 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
             <p className="mt-0.5 text-sm font-medium text-ng-muted">{t.tagline}</p>
           </div>
         </div>
-        <div className="inline-flex items-center gap-1.5 rounded-full border border-[var(--ng-border)] bg-ng-surface px-2.5 py-1.5 text-ng-primary">
-          <IconSpark className="size-3.5" />
-          <span className="text-[11px] font-semibold">{t.powered}</span>
-        </div>
+        <label className="relative inline-flex items-center gap-1.5">
+          <IconGlobe className="size-4 shrink-0 text-ng-muted" aria-hidden />
+          <span className="sr-only">{t.language}</span>
+          <select
+            value={locale}
+            onChange={(e) => changeLocale(e.target.value as Locale)}
+            aria-label={t.language}
+            className="min-h-9 appearance-none rounded-full border border-[var(--ng-border)] bg-ng-surface py-1.5 pl-3 pr-8 text-xs font-semibold text-ng-primary outline-none focus-visible:ring-2 focus-visible:ring-ng-primary"
+          >
+            {locales.map((code) => (
+              <option key={code} value={code}>
+                {localeLabels[code]}
+              </option>
+            ))}
+          </select>
+        </label>
       </header>
 
-      <div className="relative z-10 mt-5 flex items-center gap-2 overflow-x-auto pb-1">
-        <IconGlobe className="size-4 shrink-0 text-ng-muted" aria-hidden />
-        {locales.map((code) => {
-          const active = code === locale;
-          return (
-            <button
-              key={code}
-              type="button"
-              onClick={() => changeLocale(code)}
-              aria-pressed={active}
-              aria-label={code}
-              className={`min-h-9 shrink-0 rounded-full px-3 text-xs font-semibold transition ${
-                active
-                  ? "bg-ng-primary text-white"
-                  : "bg-ng-surface text-ng-muted ring-1 ring-[var(--ng-border)]"
-              }`}
-            >
-              {localeLabels[code]}
-            </button>
-          );
-        })}
-      </div>
-
-      <section className="relative z-10 mt-8 flex flex-1 flex-col items-center justify-center gap-7">
-        <div className="ng-home-grid w-full">
-          <Tile
-            icon={<IconMic className="size-5" />}
-            label={t.speak}
-            href={href("/sos")}
-          />
-          <Tile
-            icon={<IconEye className="size-5" />}
-            label={t.witness}
-            accent="secondary"
-            href={href("/witness")}
-          />
-          <Tile
-            icon={<IconBook className="size-5" />}
-            label={t.prevent}
-            href={href("/prevent")}
-          />
-          <Tile
-            icon={<IconSpark className="size-5" />}
-            label={t.resources}
-            href={href("/resources")}
-          />
-          <Tile
-            icon={<IconGraduation className="size-5" />}
-            label={t.school}
-            accent="secondary"
-            href={href("/school")}
-          />
-          <Tile
-            icon={<IconUsers className="size-5" />}
-            label={t.youth}
-            href={href("/jeunesse")}
-          />
+      <section className="relative z-10 mt-10 flex flex-1 flex-col items-center justify-center gap-8">
+        <div className="flex max-w-sm flex-col items-center gap-2 text-center">
+          <div className="inline-flex items-center gap-2 text-ng-primary">
+            <IconSpark className="size-5" />
+            <span className="text-sm font-bold tracking-tight">{t.powered}</span>
+          </div>
+          <p className="text-sm font-medium leading-snug text-ng-muted">
+            {t.line}
+          </p>
         </div>
 
-        <div className="ng-home-sos-row w-full flex justify-center">
         <Link
           href={href("/sos")}
           aria-label={`${t.sos} - ${t.sosHint}`}
@@ -197,20 +136,46 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
             {t.sosHint}
           </span>
         </Link>
-        </div>
 
-        <p className="max-w-[16rem] text-center text-sm font-medium leading-snug text-ng-primary md:max-w-md lg:max-w-lg">
-          {t.line}
-        </p>
-        <p className="text-center text-[11px] text-ng-muted">
-          <Link href={href("/discrete")} className="underline">
-            {t.discrete}
+        <nav
+          className="flex w-full max-w-md items-start justify-center gap-1"
+          aria-label="Actions"
+        >
+          <IconLink
+            icon={<IconEye className="size-5" />}
+            label={t.witness}
+            href={href("/witness")}
+          />
+          <IconLink
+            icon={<IconGraduation className="size-5" />}
+            label={t.school}
+            href={href("/school")}
+          />
+          <IconLink
+            icon={<IconUsers className="size-5" />}
+            label={t.youth}
+            href={href("/jeunesse")}
+          />
+        </nav>
+
+        <p className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center text-[11px] text-ng-muted">
+          <Link href={href("/resources")} className="inline-flex items-center gap-1 hover:text-ng-primary">
+            <IconSpark className="size-3" />
+            {t.resources}
           </Link>
-          {" - "}
-          <Link href={href("/me")} className="underline">
+          <Link href={href("/prevent")} className="inline-flex items-center gap-1 hover:text-ng-primary">
+            <IconBook className="size-3" />
+            {t.prevent}
+          </Link>
+          <Link href={href("/me")} className="hover:text-ng-primary">
             {t.myAlerts}
           </Link>
-          {" - "}
+          <Link href={href("/discrete")} className="hover:text-ng-primary">
+            {t.discrete}
+          </Link>
+        </p>
+
+        <p className="text-center text-[10px] text-ng-muted">
           <Link href={href("/legal/confidentialite")} className="underline">
             {t.privacyLink}
           </Link>

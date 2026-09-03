@@ -25,7 +25,7 @@ export const RESOURCES_SECTIONS: StaticSection[] = [
   {
     title: "Violences basées sur le genre (VBG)",
     body: [
-      "Si vous êtes en sécurité pour parler, utilisez SOS ou Parler.",
+      "Si vous êtes en sécurité pour parler, utilisez SOS.",
       "Mode discret : écrivez peu de mots ; un opérateur vous répondra par message si disponible.",
       "Ne restez pas seul·e si vous pouvez vous rendre dans un lieu sûr (famille, voisin·e de confiance).",
     ],

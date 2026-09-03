@@ -15,6 +15,7 @@ import { useLocale } from "../context/locale";
 import {
   createAlert,
   fetchProvinces,
+  polishText,
   type ProvinceOption,
 } from "../lib/api";
 import {
@@ -24,6 +25,7 @@ import {
 import { messages } from "../lib/i18n";
 import { readTrustedContacts } from "../lib/trusted-contacts-prefs";
 import { colors } from "../theme/colors";
+import { IconSpark } from "./icons";
 
 type Step = "tell" | "place";
 
@@ -48,6 +50,7 @@ export function AlertFlow({
   const [provinceId, setProvinceId] = useState("");
   const [cityId, setCityId] = useState("");
   const [hint, setHint] = useState<string | null>(null);
+  const [polishing, setPolishing] = useState(false);
 
   const cities = useMemo(() => {
     return provinces.find((p) => p.id === provinceId)?.cities ?? [];
@@ -116,12 +119,31 @@ export function AlertFlow({
     });
   }
 
+  async function clarify() {
+    if (polishing || message.trim().length < 3) return;
+    setPolishing(true);
+    try {
+      const next = await polishText(message, locale);
+      setMessage(next);
+    } finally {
+      setPolishing(false);
+    }
+  }
+
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.bg }]}>
       <ScrollView contentContainerStyle={styles.scroll}>
-        <Pressable onPress={() => router.back()}>
-          <Text style={[styles.back, { color: theme.muted }]}>{t.back}</Text>
-        </Pressable>
+        <View style={styles.topRow}>
+          <Pressable onPress={() => router.back()}>
+            <Text style={[styles.back, { color: theme.muted }]}>{t.back}</Text>
+          </Pressable>
+          <View style={styles.aiBadge}>
+            <IconSpark size={14} color={theme.accent} />
+            <Text style={[styles.aiBadgeText, { color: theme.accent }]}>
+              {t.aiListening}
+            </Text>
+          </View>
+        </View>
 
         {step === "tell" ? (
           <View style={styles.body}>
@@ -157,6 +179,28 @@ export function AlertFlow({
                 },
               ]}
             />
+            <Pressable
+              disabled={polishing || message.trim().length < 3}
+              onPress={() => void clarify()}
+              style={({ pressed }) => [
+                styles.polishBtn,
+                {
+                  borderColor: theme.border,
+                  backgroundColor: theme.inputBg,
+                  opacity:
+                    polishing || message.trim().length < 3
+                      ? 0.5
+                      : pressed
+                        ? 0.9
+                        : 1,
+                },
+              ]}
+            >
+              <IconSpark size={14} color={theme.accent} />
+              <Text style={[styles.polishBtnText, { color: theme.accent }]}>
+                {polishing ? t.polishing : t.polish}
+              </Text>
+            </Pressable>
             <Pressable
               disabled={!canSend || busy}
               onPress={() =>
@@ -309,7 +353,16 @@ const styles = StyleSheet.create({
     width: "100%",
     alignSelf: "center",
   },
-  back: { fontSize: 14, fontWeight: "600", marginTop: 8 },
+  back: { fontSize: 14, fontWeight: "600" },
+  topRow: {
+    marginTop: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  aiBadge: { flexDirection: "row", alignItems: "center", gap: 6 },
+  aiBadgeText: { fontSize: 11, fontWeight: "700" },
   body: { marginTop: 20 },
   title: { fontSize: 20, fontWeight: "700" },
   safety: { marginTop: 8, fontSize: 13, lineHeight: 18 },
@@ -322,6 +375,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlignVertical: "top",
   },
+  polishBtn: {
+    marginTop: 12,
+    minHeight: 40,
+    borderRadius: 12,
+    borderWidth: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingHorizontal: 12,
+  },
+  polishBtnText: { fontSize: 12, fontWeight: "700" },
   primaryBtn: {
     marginTop: 16,
     minHeight: 48,
