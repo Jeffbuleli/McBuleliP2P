@@ -21,6 +21,18 @@ const LEGACY_HOSTS = new Set([
 
 export function middleware(request: NextRequest) {
   const host = request.headers.get("host")?.split(":")[0]?.toLowerCase() ?? "";
+  const rawPathname = request.nextUrl.pathname;
+
+  // Related Origin Requests: browsers fetch this on the RP ID host (mcbuleli.org).
+  // Must not redirect to .com or passkey reuse across domains breaks.
+  if (
+    rawPathname === "/.well-known/webauthn" ||
+    rawPathname === "/.well-known/webauthn/"
+  ) {
+    const passthrough = NextResponse.next();
+    applySecurityHeaders(passthrough.headers);
+    return passthrough;
+  }
 
   if (LEGACY_HOSTS.has(host)) {
     const url = request.nextUrl.clone();
@@ -29,7 +41,6 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url, 308);
   }
 
-  const rawPathname = request.nextUrl.pathname;
   let pathname = rawPathname;
   try {
     pathname = decodeURIComponent(rawPathname);
