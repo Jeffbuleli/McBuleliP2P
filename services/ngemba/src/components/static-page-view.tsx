@@ -21,7 +21,6 @@ import {
   type PageKey,
 } from "@/lib/static-pages-i18n";
 import { citizenPagePad, citizenShellMaxWidth, useDeviceClass } from "@/lib/ui/device";
-import { PoweredByMcbuleli } from "@/components/powered-by-mcbuleli";
 
 function sectionIcon(page: PageKey, index: number): ReactNode {
   if (page === "resources") {
@@ -172,7 +171,6 @@ export function StaticPageView({
           {t.charterLink}
         </Link>
       </p>
-      <PoweredByMcbuleli />
     </main>
   );
 }

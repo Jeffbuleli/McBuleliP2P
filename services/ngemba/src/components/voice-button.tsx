@@ -329,7 +329,7 @@ export function VoiceButton({
     : "bg-ng-primary-muted text-ng-primary";
 
   return (
-    <div className={`flex min-w-0 items-center ${className}`}>
+    <div className={`flex min-w-0 flex-col gap-2 ${className}`}>
       <audio
         ref={audioElRef}
         preload="auto"
@@ -343,18 +343,6 @@ export function VoiceButton({
         }}
       />
 
-      {!recording && !audioUrl ? (
-        <button
-          type="button"
-          onClick={() => void startRecording()}
-          className={`inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold ${btnBase}`}
-          aria-label={label}
-          title={label}
-        >
-          <IconMic className="size-5" />
-        </button>
-      ) : null}
-
       {recording ? (
         <button
           type="button"
@@ -366,7 +354,17 @@ export function VoiceButton({
           <span className="tabular-nums text-xs">{formatSec(leftSec)}</span>
           <IconStop className="size-4" />
         </button>
-      ) : null}
+      ) : (
+        <button
+          type="button"
+          onClick={() => void startRecording()}
+          className={`inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold ${btnBase}`}
+          aria-label={label}
+        >
+          <IconMic className="size-5 shrink-0" />
+          <span>{label}</span>
+        </button>
+      )}
 
       {audioUrl && !recording ? (
         <div

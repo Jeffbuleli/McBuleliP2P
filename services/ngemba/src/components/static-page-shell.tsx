@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { PoweredByMcbuleli } from "@/components/powered-by-mcbuleli";
 import type { StaticSection } from "@/lib/static-pages";
 
 export function StaticPageShell({
@@ -55,7 +54,6 @@ export function StaticPageShell({
           Charte ONG
         </Link>
       </p>
-      <PoweredByMcbuleli />
     </main>
   );
 }

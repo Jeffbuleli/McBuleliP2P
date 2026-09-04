@@ -6,7 +6,6 @@ import { useEffect, useMemo, useState } from "react";
 import { ComposePhotos } from "@/components/compose-photos";
 import { IconShield, IconSpark } from "@/components/icons";
 import { PolishButton } from "@/components/polish-button";
-import { PoweredByMcbuleli } from "@/components/powered-by-mcbuleli";
 import { TrustedContactsEditor } from "@/components/trusted-contacts-editor";
 import { VoiceButton } from "@/components/voice-button";
 import { useCitizenLocale } from "@/hooks/use-citizen-locale";
@@ -247,7 +246,7 @@ export function SchoolFlow({ initialLocale }: { initialLocale?: string }) {
             </span>
           </div>
           <div className="flex flex-col gap-3">
-            <div className="flex items-stretch gap-2">
+            <div className="flex w-full items-start gap-2">
               <VoiceButton
                 locale={locale}
                 label={t.voice}
@@ -260,7 +259,7 @@ export function SchoolFlow({ initialLocale }: { initialLocale?: string }) {
                   })
                 }
                 onAudioChange={setAudioBlob}
-                className="w-[80%] min-w-0"
+                className="min-w-0 flex-[4]"
               />
               <PolishButton
                 text={message}
@@ -269,7 +268,7 @@ export function SchoolFlow({ initialLocale }: { initialLocale?: string }) {
                 busyLabel={t.polishing}
                 disabled={busy}
                 compact
-                className="w-[20%] shrink-0"
+                className="min-w-0 flex-[1] self-start"
                 onPolished={(text) =>
                   setMessage(text.slice(0, COMPOSE_MAX_CHARS))
                 }
@@ -376,7 +375,6 @@ export function SchoolFlow({ initialLocale }: { initialLocale?: string }) {
           </div>
         </section>
       )}
-      <PoweredByMcbuleli />
     </main>
   );
 }
