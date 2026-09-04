@@ -4,10 +4,11 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  IconBook,
+  IconCheck,
   IconDownload,
   IconEye,
   IconGraduation,
+  IconHeart,
   IconShield,
   IconUsers,
 } from "@/components/icons";
@@ -198,14 +199,14 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
             href={href("/resources")}
             className="inline-flex items-center gap-1 hover:text-ng-primary"
           >
-            <IconBook className="size-3" />
+            <IconHeart className="size-3" />
             {t.resources}
           </Link>
           <Link
             href={href("/prevent")}
             className="inline-flex items-center gap-1 hover:text-ng-primary"
           >
-            <IconBook className="size-3" />
+            <IconCheck className="size-3" />
             {t.prevent}
           </Link>
           <Link href={href("/me")} className="hover:text-ng-primary">
