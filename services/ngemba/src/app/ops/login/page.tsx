@@ -41,7 +41,7 @@ function LoginForm() {
           alt="NGEMBA"
           width={72}
           height={72}
-          className="size-[72px] rounded-2xl object-contain"
+          className="size-[72px] rounded-full bg-white object-contain p-2 shadow-[0_8px_22px_-12px_rgba(11,16,32,0.45)] ring-1 ring-[rgba(15,35,70,0.18)]"
         />
         <p className="text-[11px] font-semibold tracking-[0.16em] text-ng-primary uppercase">
           NGEMBA OPS

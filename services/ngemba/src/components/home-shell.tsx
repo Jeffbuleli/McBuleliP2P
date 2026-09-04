@@ -80,13 +80,6 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
     setLocale(code);
   }
 
-  const logoSize =
-    device === "desktop"
-      ? "size-14"
-      : device === "tablet"
-        ? "size-[3.25rem]"
-        : "size-12";
-
   return (
     <main
       className={`ng-shell relative mx-auto flex min-h-dvh flex-col ${citizenPagePad(device)} ${citizenShellMaxWidth(device)}`}
@@ -101,16 +94,21 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
           <button
             type="button"
             onClick={onLogoTap}
-            className="rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-ng-primary"
+            className="inline-flex items-center justify-center overflow-hidden rounded-full bg-white shadow-[0_8px_22px_-12px_rgba(11,16,32,0.45)] ring-1 ring-[rgba(15,35,70,0.18)] focus:outline-none focus-visible:ring-2 focus-visible:ring-ng-primary"
+            style={{
+              width: device === "desktop" ? 56 : device === "tablet" ? 52 : 48,
+              height: device === "desktop" ? 56 : device === "tablet" ? 52 : 48,
+            }}
             aria-label={t.discrete}
             title={t.discreteTap}
           >
             <img
               src="/brand/ngemba-logo.png"
               alt="Ngemba RDC"
-              width={56}
-              height={56}
-              className={`${logoSize} rounded-xl object-contain`}
+              width={40}
+              height={40}
+              className="size-[70%] object-contain"
+              draggable={false}
             />
           </button>
           <div>
