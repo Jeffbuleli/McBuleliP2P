@@ -267,23 +267,19 @@ export function OpsDossierView({ id }: { id: string }) {
   }
 
   const place = session.locationLabel || session.commune || "Sans lieu";
+  const open =
+    session.status !== "closed" && session.status !== "cancelled";
 
   return (
     <main
-      className={`ng-shell mx-auto min-h-dvh py-6 pb-16 ${shellMaxWidth(device)}`}
+      className={`ng-shell mx-auto min-h-dvh space-y-5 py-6 pb-20 ${shellMaxWidth(device)}`}
     >
-      <header className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <Link href="/ops" className="text-sm text-ng-muted">
-            ← File ops
-          </Link>
-          <h1 className="mt-2 text-lg font-semibold text-ng-text">
-            Dossier alerte
-          </h1>
-          <p className="mt-1 font-mono text-xs text-ng-muted">{session.id}</p>
-          <WorkflowBar status={session.status} />
-        </div>
-        <div className="flex gap-2">
+      <header>
+        <Link href="/ops" className="text-sm text-ng-muted">
+          ← File ops
+        </Link>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <h1 className="text-lg font-semibold text-ng-text">Dossier</h1>
           <span
             className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${badge(session.urgency)}`}
           >
@@ -294,393 +290,282 @@ export function OpsDossierView({ id }: { id: string }) {
           </span>
           {session.discreteMode ? (
             <span className="rounded-full bg-[#2a1524] px-2.5 py-0.5 text-[11px] font-semibold text-[#c9a0bc]">
-              Mode discret
+              Discret
             </span>
           ) : null}
           {session.source === "school" || session.schoolContext ? (
             <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-[11px] font-semibold text-indigo-700">
-              Safe School - mineur
+              Safe School
             </span>
           ) : null}
-          {sla?.escalated ? (
+          {sla?.escalated || sla?.breached ? (
             <span className="rounded-full bg-ng-urgent/15 px-2.5 py-0.5 text-[11px] font-semibold text-ng-urgent">
-              Escalade SLA
-            </span>
-          ) : sla?.breached ? (
-            <span className="rounded-full bg-ng-urgent/15 px-2.5 py-0.5 text-[11px] font-semibold text-ng-urgent">
-              SLA depasse
-            </span>
-          ) : sla ? (
-            <span className="rounded-full bg-ng-primary-muted px-2.5 py-0.5 text-[11px] font-semibold text-ng-primary">
-              {sla.label}
+              {sla.escalated ? "Escalade" : "SLA dépassé"}
             </span>
           ) : null}
         </div>
+        <WorkflowBar status={session.status} />
       </header>
 
+      {session.immediateDanger ? (
+        <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-ng-urgent">
+          Danger immédiat signalé — prioriser la sécurité et les numéros
+          d&apos;urgence locaux.
+        </p>
+      ) : null}
       {session.escalation ? (
-        <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+        <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
           {session.escalation.reason}
         </p>
       ) : null}
 
-      {session.immediateDanger ? (
-        <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-ng-urgent">
-          Danger immediat signale - prioriser securite et numeros d&apos;urgence locaux.
+      {/* 1. Situation */}
+      <section className="rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-4">
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-ng-muted">
+          1. Situation
+        </h2>
+        <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-ng-text">
+          {session.message === "·"
+            ? "(Message vocal ou photo sans texte)"
+            : session.message}
         </p>
-      ) : null}
-
-      {sla ? (
-        <p
-          className={`mt-3 rounded-xl px-3 py-2 text-xs font-medium ${
-            sla.breached || sla.escalated
-              ? "bg-ng-urgent/10 text-ng-urgent"
-              : "bg-ng-primary-muted text-ng-primary"
-          }`}
-        >
-          SLA : {sla.label}
-          {sla.dueAt ? ` · echeance ${fmt(sla.dueAt)}` : ""}
+        <p className="mt-3 text-xs text-ng-muted">
+          {categoryLabelFr(session.category)} · {sourceLabelFr(session.source)} ·{" "}
+          {place}
+          {session.lat != null && session.lng != null
+            ? ` · GPS ${session.lat.toFixed(4)}, ${session.lng.toFixed(4)}`
+            : ""}
+          {session.locationSource
+            ? ` (${locationSourceLabelFr(session.locationSource)})`
+            : ""}
         </p>
-      ) : null}
-
-      <section className="mt-6 ng-ops-dossier-grid">
-        <article className="rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-4 md:col-span-2">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-ng-muted">
-            Qui a alerte
-          </h2>
-          <p className="mt-2 text-sm text-ng-text">
-            Source : <strong>{sourceLabelFr(session.source)}</strong>
-            {" · "}
-            {fmt(session.createdAt)}
-            {" · "}
-            Langue {session.locale.toUpperCase()}
-          </p>
-          <p className="mt-2 text-xs leading-relaxed text-ng-muted">
-            L&apos;identité citoyenne n&apos;est pas demandée à ce stade. Le
-            dossier reste anonyme ; l&apos;IP (et l&apos;appareil) sont
-            attachés uniquement pour une investigation approfondie si
-            nécessaire.
-          </p>
-          <dl className="mt-3 grid gap-2 text-xs text-ng-muted sm:grid-cols-2">
-            <div>
-              <dt className="font-semibold text-ng-text">IP du dossier</dt>
-              <dd className="mt-0.5 font-mono text-[11px]">
-                {session.clientIp || "Non capturée"}
-              </dd>
-            </div>
-            <div>
-              <dt className="font-semibold text-ng-text">Appareil (UA)</dt>
-              <dd className="mt-0.5 line-clamp-2 break-all text-[11px]">
-                {session.userAgent || "Non capturé"}
-              </dd>
-            </div>
-          </dl>
-          {relatedAlerts.length > 0 ? (
-            <div className="mt-3 rounded-xl bg-ng-primary-muted/50 px-3 py-2">
-              <p className="text-xs font-semibold text-ng-primary">
-                {relatedAlerts.length} autre(s) alerte(s) du même appareil /
-                session anonyme
-              </p>
-              <ul className="mt-1.5 space-y-1">
-                {relatedAlerts.slice(0, 5).map((r) => (
-                  <li key={r.id}>
-                    <Link
-                      href={`/ops/${r.id}`}
-                      className="text-xs text-ng-primary underline"
-                    >
-                      {urgencyLabelFr(r.urgency)} · {statusLabelFr(r.status)} ·{" "}
-                      {fmt(r.createdAt)}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : (
-            <p className="mt-3 text-xs text-ng-muted">
-              Première alerte connue pour cette session anonyme.
-            </p>
-          )}
-        </article>
-
-        <article className="rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-4">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-ng-muted">
-            Message citoyen
-          </h2>
-          <p className="mt-2 text-sm leading-relaxed text-ng-text whitespace-pre-wrap">
-            {session.message === "·"
-              ? "(Message vocal ou photo sans texte)"
-              : session.message}
-          </p>
-          <dl className="mt-4 grid grid-cols-2 gap-3 text-xs text-ng-muted">
-            <div>
-              <dt className="font-semibold">Source</dt>
-              <dd>{sourceLabelFr(session.source)}</dd>
-            </div>
-            <div>
-              <dt className="font-semibold">Langue</dt>
-              <dd>{session.locale.toUpperCase()}</dd>
-            </div>
-            <div>
-              <dt className="font-semibold">Type</dt>
-              <dd>{categoryLabelFr(session.category)}</dd>
-            </div>
-            <div>
-              <dt className="font-semibold">File</dt>
-              <dd>{routingLabelFr(session.routingQueue)}</dd>
-            </div>
-            {session.schoolContext ? (
-              <>
-                <div>
-                  <dt className="font-semibold">Safe School</dt>
-                  <dd>
-                    {SCHOOL_CONCERN_LABELS_FR[
-                      session.schoolContext.concernType as keyof typeof SCHOOL_CONCERN_LABELS_FR
-                    ] ?? session.schoolContext.concernType}
-                  </dd>
-                </div>
-                {session.schoolContext.establishmentHint ? (
-                  <div>
-                    <dt className="font-semibold">Établissement</dt>
-                    <dd>{session.schoolContext.establishmentHint}</dd>
-                  </div>
-                ) : null}
-              </>
-            ) : null}
-            <div className="col-span-2">
-              <dt className="font-semibold">Lieu</dt>
-              <dd>
-                {place}
-                {session.locationSource
-                  ? ` (${locationSourceLabelFr(session.locationSource)})`
-                  : ""}
-              </dd>
-            </div>
-            {session.lat != null && session.lng != null ? (
-              <div className="col-span-2">
-                <dt className="font-semibold">GPS</dt>
-                <dd>
-                  {session.lat.toFixed(5)}, {session.lng.toFixed(5)}
-                </dd>
-              </div>
-            ) : null}
-          </dl>
-        </article>
-
-        <article className="rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-4">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-ng-muted">
-            Triage IA
-          </h2>
-          <p className="mt-2 text-sm text-ng-text">{session.aiSummary}</p>
+        {session.schoolContext ? (
           <p className="mt-2 text-xs text-ng-muted">
-            {providerLabelFr(session.provider)} - confiance{" "}
-            {Math.round(session.aiConfidence * 100)}%
+            Safe School :{" "}
+            {SCHOOL_CONCERN_LABELS_FR[
+              session.schoolContext.concernType as keyof typeof SCHOOL_CONCERN_LABELS_FR
+            ] ?? session.schoolContext.concernType}
+            {session.schoolContext.establishmentHint
+              ? ` · ${session.schoolContext.establishmentHint}`
+              : ""}
           </p>
-          {session.aiPayload.follow_up_questions?.length ? (
-            <ul className="mt-3 space-y-1 text-sm text-ng-primary">
-              {session.aiPayload.follow_up_questions.map((q) => (
-                <li key={q}>- {q}</li>
-              ))}
-            </ul>
-          ) : null}
-        </article>
-
-        <OpsRoutingPanel
-          routingMeta={session.routingMeta ?? null}
-          suggestedPartners={suggestedPartners}
-        />
-
-        <OpsTrustedContacts contacts={session.trustedContacts ?? []} />
-
-        <article className="rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-4">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-ng-muted">
-            Notes operateur
-          </h2>
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            rows={4}
-            className="mt-2 w-full resize-none rounded-xl border border-[var(--ng-border)] bg-ng-surface p-3 text-sm text-ng-text"
-            placeholder="Actions, contacts, orientation..."
-          />
-          <label className="mt-3 block text-xs font-semibold text-ng-muted">
-            Assigne a
-            <input
-              value={assignedTo}
-              onChange={(e) => setAssignedTo(e.target.value)}
-              className="mt-1 min-h-10 w-full rounded-xl border border-[var(--ng-border)] px-3 text-sm text-ng-text"
-              placeholder="Nom operateur"
-            />
-          </label>
-          <button
-            type="button"
-            disabled={busy || !canPatch}
-            onClick={() =>
-              void patch({
-                operatorNotes: notes || null,
-                assignedTo: assignedTo || null,
-              })
-            }
-            className="mt-3 rounded-lg bg-ng-primary px-4 py-2 text-xs font-semibold text-white disabled:opacity-50"
-          >
-            Enregistrer notes
-          </button>
-        </article>
-
-        {session.media?.length ? (
-          <article className="rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-4 md:col-span-2">
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-ng-muted">
-              Médias citoyen
-            </h2>
-            <div className="mt-3">
-              <SessionMediaList
-                sessionId={session.id}
-                items={session.media}
-                dense
-              />
-            </div>
-          </article>
         ) : null}
-
-        <div className="md:col-span-2">
-          <SessionChat
-            sessionId={session.id}
-            viewerRole="operator"
-            labels={{
-              chatTitle: "Échange avec le citoyen",
-              chatPlaceholder: "Répondre au citoyen...",
-              chatSend: "Envoyer",
-              chatEmpty:
-                "Aucun message pour l'instant. Écrivez pour orienter la personne.",
-            }}
-          />
-        </div>
-
-        <article className="rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-4 md:col-span-2">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-ng-muted">
-            Chronologie du dossier
-          </h2>
-          <p className="mt-1 text-[11px] text-ng-muted">
-            De la réception à la clôture — qui a agi, et quand.
+        <div className="mt-3 rounded-xl bg-ng-primary-muted/60 px-3 py-2">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-ng-primary">
+            Triage IA
           </p>
-          <ul className="mt-3 space-y-2">
-            {session.statusHistory.map((h, i) => (
-              <li
-                key={`${h.at}-${h.status}-${i}`}
-                className="flex gap-3 rounded-lg bg-ng-primary-muted/50 px-3 py-2 text-xs"
-              >
-                <span className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-ng-primary" />
-                <div>
-                  <span className="font-semibold text-ng-primary">
-                    {statusLabelFr(h.status)}
-                  </span>
-                  <span className="text-ng-muted"> · {fmt(h.at)}</span>
-                  {h.actor ? (
-                    <span className="text-ng-muted"> · {h.actor}</span>
-                  ) : (
-                    <span className="text-ng-muted"> · système / citoyen</span>
-                  )}
-                  {h.note ? (
-                    <span className="mt-0.5 block text-ng-muted">{h.note}</span>
-                  ) : null}
-                </div>
+          <p className="mt-1 text-sm text-ng-text">{session.aiSummary}</p>
+          <p className="mt-1 text-[11px] text-ng-muted">
+            {providerLabelFr(session.provider)} ·{" "}
+            {Math.round(session.aiConfidence * 100)}% ·{" "}
+            {routingLabelFr(session.routingQueue)}
+          </p>
+        </div>
+      </section>
+
+      {/* 2. Qui */}
+      <section className="rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-4">
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-ng-muted">
+          2. Qui a alerté
+        </h2>
+        <p className="mt-2 text-sm text-ng-text">
+          <strong>{sourceLabelFr(session.source)}</strong> ·{" "}
+          {fmt(session.createdAt)} · {session.locale.toUpperCase()}
+        </p>
+        <p className="mt-2 text-xs leading-relaxed text-ng-muted">
+          Identité citoyenne non demandée. Dossier anonyme — IP / appareil
+          réservés à une investigation si besoin.
+        </p>
+        <p className="mt-2 font-mono text-[11px] text-ng-muted">
+          IP {session.clientIp || "—"}
+          {session.userAgent
+            ? ` · ${session.userAgent.slice(0, 80)}${session.userAgent.length > 80 ? "…" : ""}`
+            : ""}
+        </p>
+        {relatedAlerts.length > 0 ? (
+          <ul className="mt-2 space-y-1">
+            {relatedAlerts.slice(0, 4).map((r) => (
+              <li key={r.id}>
+                <Link
+                  href={`/ops/${r.id}`}
+                  className="text-xs text-ng-primary underline"
+                >
+                  Autre alerte · {statusLabelFr(r.status)} · {fmt(r.createdAt)}
+                </Link>
               </li>
             ))}
           </ul>
-        </article>
+        ) : null}
       </section>
 
-      {actionError ? (
-        <p className="mt-4 text-sm font-medium text-ng-urgent">{actionError}</p>
+      {/* 3. Actions */}
+      <section className="rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-4">
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-ng-muted">
+          3. Actions OPS
+        </h2>
+        <textarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          rows={3}
+          className="mt-2 w-full resize-none rounded-xl border border-[var(--ng-border)] bg-ng-surface p-3 text-sm text-ng-text"
+          placeholder="Note obligatoire pour clôturer ou annuler…"
+        />
+        <input
+          value={assignedTo}
+          onChange={(e) => setAssignedTo(e.target.value)}
+          className="mt-2 min-h-10 w-full rounded-xl border border-[var(--ng-border)] px-3 text-sm text-ng-text"
+          placeholder="Assigné à (nom opérateur)"
+        />
+        {actionError ? (
+          <p className="mt-2 text-sm font-medium text-ng-urgent">{actionError}</p>
+        ) : null}
+        <div className="mt-3 flex flex-wrap gap-2">
+          {canPatch ? (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() =>
+                void patch({
+                  operatorNotes: notes || null,
+                  assignedTo: assignedTo || null,
+                })
+              }
+              className="rounded-lg border border-[var(--ng-border)] px-3 py-2 text-xs font-semibold text-ng-muted disabled:opacity-50"
+            >
+              Sauver notes
+            </button>
+          ) : null}
+          {canPatch && open && session.status !== "oriented" ? (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() =>
+                void patch({
+                  status: "oriented",
+                  assignedTo: assignedTo.trim() || "ops",
+                  operatorNotes: notes || null,
+                })
+              }
+              className="rounded-lg bg-ng-primary px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
+            >
+              Prendre en charge
+            </button>
+          ) : null}
+          {canPatch && open ? (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() =>
+                void patch({
+                  status: "closed",
+                  operatorNotes: notes || null,
+                  historyNote: "Dossier clôturé",
+                })
+              }
+              className="rounded-lg border border-[var(--ng-border)] px-3 py-2 text-xs font-semibold text-ng-muted disabled:opacity-50"
+            >
+              Clôturer
+            </button>
+          ) : null}
+          {canPatch && open ? (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() =>
+                void patch({
+                  status: "cancelled",
+                  operatorNotes: notes || null,
+                  historyNote: "Alerte annulée / fausse alerte",
+                })
+              }
+              className="rounded-lg border border-amber-300 px-3 py-2 text-xs font-semibold text-amber-800 disabled:opacity-50"
+            >
+              Annuler
+            </button>
+          ) : null}
+          {canPatch && !open ? (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() =>
+                void patch({
+                  status: "active",
+                  operatorNotes: notes || null,
+                  historyNote: "Dossier rouvert",
+                })
+              }
+              className="rounded-lg border border-[var(--ng-border)] px-3 py-2 text-xs font-semibold text-ng-primary disabled:opacity-50"
+            >
+              Rouvrir
+            </button>
+          ) : null}
+        </div>
+      </section>
+
+      <OpsRoutingPanel
+        routingMeta={session.routingMeta ?? null}
+        suggestedPartners={suggestedPartners}
+      />
+      <OpsTrustedContacts contacts={session.trustedContacts ?? []} />
+
+      {session.media?.length ? (
+        <section className="rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-4">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-ng-muted">
+            Médias
+          </h2>
+          <div className="mt-3">
+            <SessionMediaList
+              sessionId={session.id}
+              items={session.media}
+              dense
+            />
+          </div>
+        </section>
       ) : null}
 
-      <p className="mt-6 text-[11px] leading-relaxed text-ng-muted">
-        Parcours OPS : réception → prise en charge → chat / orientation →
-        clôture ou annulation (note obligatoire). L&apos;identité personnelle
-        citoyenne n&apos;est pas demandée ; l&apos;IP est réservée à
-        l&apos;investigation approfondie.
-      </p>
+      <SessionChat
+        sessionId={session.id}
+        viewerRole="operator"
+        labels={{
+          chatTitle: "Chat citoyen",
+          chatPlaceholder: "Répondre…",
+          chatSend: "Envoyer",
+          chatEmpty: "Aucun message. Écrivez pour orienter.",
+        }}
+      />
 
-      <div className="mt-3 flex flex-wrap gap-2">
-        {canPatch &&
-        session.status !== "oriented" &&
-        session.status !== "closed" &&
-        session.status !== "cancelled" ? (
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() =>
-              void patch({
-                status: "oriented",
-                assignedTo: assignedTo.trim() || "ops",
-                operatorNotes: notes || null,
-              })
-            }
-            className="rounded-lg bg-ng-primary px-4 py-2 text-xs font-semibold text-white disabled:opacity-50"
-          >
-            Prendre en charge
-          </button>
-        ) : null}
-        {canPatch &&
-        session.status !== "closed" &&
-        session.status !== "cancelled" ? (
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() =>
-              void patch({
-                status: "closed",
-                operatorNotes: notes || null,
-                historyNote: "Dossier clôturé",
-              })
-            }
-            className="rounded-lg border border-[var(--ng-border)] px-4 py-2 text-xs font-semibold text-ng-muted disabled:opacity-50"
-          >
-            Clôturer (note requise)
-          </button>
-        ) : null}
-        {canPatch &&
-        session.status !== "closed" &&
-        session.status !== "cancelled" ? (
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() =>
-              void patch({
-                status: "cancelled",
-                operatorNotes: notes || null,
-                historyNote: "Alerte annulée / fausse alerte",
-              })
-            }
-            className="rounded-lg border border-amber-300 px-4 py-2 text-xs font-semibold text-amber-800 disabled:opacity-50"
-          >
-            Annuler / fausse alerte
-          </button>
-        ) : null}
-        {canPatch &&
-        (session.status === "closed" || session.status === "cancelled") ? (
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() =>
-              void patch({
-                status: "active",
-                operatorNotes: notes || null,
-                historyNote: "Dossier rouvert",
-              })
-            }
-            className="rounded-lg border border-[var(--ng-border)] px-4 py-2 text-xs font-semibold text-ng-primary disabled:opacity-50"
-          >
-            Rouvrir
-          </button>
-        ) : null}
-        <button
-          type="button"
-          onClick={() => void logout()}
-          className="ml-auto rounded-lg px-4 py-2 text-xs font-semibold text-ng-muted"
-        >
-          Deconnexion
-        </button>
-      </div>
+      <section className="rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-4">
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-ng-muted">
+          Chronologie
+        </h2>
+        <ul className="mt-3 space-y-2">
+          {session.statusHistory.map((h, i) => (
+            <li
+              key={`${h.at}-${h.status}-${i}`}
+              className="rounded-lg bg-ng-primary-muted/50 px-3 py-2 text-xs"
+            >
+              <span className="font-semibold text-ng-primary">
+                {statusLabelFr(h.status)}
+              </span>
+              <span className="text-ng-muted">
+                {" "}
+                · {fmt(h.at)} · {h.actor || "système"}
+              </span>
+              {h.note ? (
+                <span className="mt-0.5 block text-ng-muted">{h.note}</span>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <button
+        type="button"
+        onClick={() => void logout()}
+        className="text-xs font-semibold text-ng-muted"
+      >
+        Déconnexion
+      </button>
     </main>
   );
 }

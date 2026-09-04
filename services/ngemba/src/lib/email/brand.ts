@@ -42,8 +42,8 @@ export function ngembaLogoUrl(): string {
 }
 
 export const NGEMBA_EMAIL_ASSETS = {
-  logo: ngembaLogoUrl(),
-  mcbuleliLogo: `${r2PublicBase()}/ngemba/brand/mcbuleli-logo-256.png`,
+  logo: "https://ngemba-rdc.org/brand/ngemba-logo.png",
+  mcbuleliLogo: "https://mcbuleli.org/brand/logo-256.png",
   illustration: `${r2PublicBase()}/ngemba/email/email-security.png`,
   site: "https://ngemba-rdc.org",
   supportEmail: "hi@mcbuleli.org",

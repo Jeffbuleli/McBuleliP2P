@@ -28,28 +28,29 @@ function LoginForm() {
       }
       window.location.assign(next);
     } catch {
-      setError("Erreur reseau");
+      setError("Erreur réseau");
       setBusy(false);
     }
   }
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-4 py-10">
-      <div className="mb-6 flex flex-col items-center gap-3">
+      <div className="mb-8 flex flex-col items-center text-center">
         <img
           src="/brand/ngemba-logo.png"
           alt="NGEMBA"
-          width={72}
-          height={72}
-          className="size-[72px] rounded-full bg-white object-contain p-2 shadow-[0_8px_22px_-12px_rgba(11,16,32,0.45)] ring-1 ring-[rgba(15,35,70,0.18)]"
+          width={88}
+          height={88}
+          className="size-[88px] rounded-2xl bg-white object-contain p-2 shadow-sm ring-1 ring-[var(--ng-border)]"
         />
-        <p className="text-[11px] font-semibold tracking-[0.16em] text-ng-primary uppercase">
+        <p className="mt-4 text-[11px] font-semibold tracking-[0.16em] text-ng-primary uppercase">
           NGEMBA OPS
         </p>
+        <p className="mt-1 text-xs text-ng-muted">Paix · Sécurité citoyenne</p>
       </div>
       <h1 className="text-xl font-semibold text-ng-text">Connexion</h1>
       <p className="mt-2 text-sm text-ng-muted">
-        Accès réservé aux opérateurs ONG accrédités.
+        Accès réservé aux opérateurs et partenaires accrédités.
       </p>
 
       <form onSubmit={submit} className="mt-8 space-y-4">

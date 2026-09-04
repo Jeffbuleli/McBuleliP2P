@@ -1,0 +1,20 @@
+{
+  "slug": "ngemba-hackathon-launch-fr",
+  "name": "NGEMBA · lancement post-Hackathon (FR)",
+  "subject": "NGEMBA · Paix en Kikongo · solution née du McBuleli Hackathon",
+  "html": "ngemba-hackathon-launch-fr.html",
+  "text": "ngemba-hackathon-launch-fr.txt",
+  "locale": "fr",
+  "audience": [
+    "hackathon_participants",
+    "hackathon_partners",
+    "hackathon_non_participants",
+    "ong",
+    "services",
+    "entreprises",
+    "population"
+  ],
+  "cta": "https://ngemba-rdc.org/",
+  "fromHint": "NGEMBA <noreply@mcbuleli.org>",
+  "replyTo": "hi@mcbuleli.org"
+}

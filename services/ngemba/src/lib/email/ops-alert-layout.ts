@@ -17,14 +17,14 @@ function renderDetailsTable(rows: OpsEmailDetailRow[]): string {
   const cells = rows
     .map((row, i) => {
       const border =
-        i < rows.length - 1 ? `border-bottom:1px solid ${B.border};` : "";
+        i < rows.length - 1 ? `border-bottom:1px solid #d6d3d1;` : "";
       return `<tr>
-      <td style="padding:11px 0;${border}font-size:11px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:${B.muted};vertical-align:top;width:38%;">${esc(row.label)}</td>
-      <td style="padding:11px 0;${border}font-size:14px;color:${B.text};font-weight:700;line-height:1.35;word-break:break-word;">${esc(row.value)}</td>
+      <td style="padding:10px 0;${border}font-size:11px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:${B.muted};vertical-align:top;width:34%;">${esc(row.label)}</td>
+      <td style="padding:10px 0;${border}font-size:14px;color:${B.text};font-weight:700;line-height:1.4;word-break:break-word;">${esc(row.value)}</td>
     </tr>`;
     })
     .join("");
-  return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 auto;max-width:380px;">${cells}</table>`;
+  return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0">${cells}</table>`;
 }
 
 export type OpsAlertEmailArgs = {
@@ -40,13 +40,14 @@ export type OpsAlertEmailArgs = {
   partnerLine?: string;
 };
 
+/** Layout alerte OPS — style McBuleli (carte 560px, header logo, blocs mint). */
 export function renderOpsAlertEmail(args: OpsAlertEmailArgs): {
   html: string;
   text: string;
 } {
   const year = new Date().getFullYear();
   const partnerBlock = args.partnerLine
-    ? `<p style="margin:0 0 8px;font-size:12px;color:${B.muted};">${esc(args.partnerLine)}</p>`
+    ? `<p style="margin:0 0 10px;font-size:12px;line-height:1.45;color:${B.muted};">${esc(args.partnerLine)}</p>`
     : "";
 
   const html = `<!DOCTYPE html>
@@ -57,53 +58,47 @@ export function renderOpsAlertEmail(args: OpsAlertEmailArgs): {
   <meta name="color-scheme" content="light" />
   <title>${esc(args.title)}</title>
 </head>
-<body style="margin:0;padding:0;background:${B.mint};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+<body style="margin:0;padding:0;background:#e6f2ec;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${esc(args.preheader)}</div>
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:${B.mint};padding:32px 16px;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#e6f2ec;padding:28px 16px;">
     <tr>
       <td align="center">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:480px;background:${B.white};border-radius:20px;overflow:hidden;border:1px solid ${B.border};">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border-radius:16px;border:1px solid #d6d3d1;overflow:hidden;">
           <tr>
-            <td style="padding:24px 28px 8px;text-align:center;">
-              <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 auto;">
+            <td style="padding:20px 26px 12px;border-bottom:1px solid #d6d3d1;">
+              <table role="presentation" cellspacing="0" cellpadding="0" width="100%">
                 <tr>
-                  <td style="vertical-align:middle;padding-right:10px;">
-                    <img src="${NGEMBA_EMAIL_ASSETS.logo}" width="56" height="56" alt="NGEMBA" style="display:block;border:0;border-radius:12px;" />
+                  <td style="vertical-align:middle;padding-right:12px;width:52px;">
+                    <img src="${NGEMBA_EMAIL_ASSETS.logo}" width="48" height="48" alt="NGEMBA" style="display:block;border:0;border-radius:12px;background:#fff;" />
                   </td>
-                  <td style="vertical-align:middle;text-align:left;">
-                    <p style="margin:0;font-size:20px;font-weight:800;color:${B.primary};letter-spacing:-0.02em;">NGEMBA</p>
-                    <p style="margin:2px 0 0;font-size:11px;color:${B.muted};">Sécurité - Paix citoyenne</p>
+                  <td style="vertical-align:middle;">
+                    <p style="margin:0;font-size:17px;font-weight:800;color:${B.primary};letter-spacing:-0.02em;">NGEMBA OPS</p>
+                    <p style="margin:2px 0 0;font-size:12px;color:#57534e;">Alerte citoyenne · McBuleli IA</p>
+                  </td>
+                  <td style="vertical-align:middle;text-align:right;">
+                    <img src="${NGEMBA_EMAIL_ASSETS.mcbuleliLogo}" width="32" height="32" alt="McBuleli" style="display:inline-block;border:0;border-radius:50%;" />
                   </td>
                 </tr>
               </table>
             </td>
           </tr>
           <tr>
-            <td style="padding:8px 28px 0;text-align:center;">
-              <img src="${NGEMBA_EMAIL_ASSETS.illustration}" width="200" height="200" alt="" style="display:block;margin:0 auto;border:0;max-width:200px;height:auto;" />
+            <td style="padding:22px 26px 8px;">
+              <p style="margin:0 0 10px;font-size:15px;line-height:1.5;color:${B.text};font-weight:600;">${esc(args.greeting)}</p>
+              <h1 style="margin:0 0 10px;font-size:22px;line-height:1.25;font-weight:800;color:${B.text};">${esc(args.title)}</h1>
+              <p style="margin:0;font-size:15px;line-height:1.55;color:#57534e;">${esc(args.body)}</p>
             </td>
           </tr>
           <tr>
-            <td style="padding:16px 32px 8px;text-align:center;">
-              <h1 style="margin:0;font-size:22px;line-height:1.25;font-weight:700;color:${B.text};">${esc(args.title)}</h1>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:0 32px 8px;text-align:center;">
-              <p style="margin:0 0 8px;font-size:15px;line-height:1.5;color:${B.text};font-weight:600;">${esc(args.greeting)}</p>
-              <p style="margin:0;font-size:15px;line-height:1.5;color:${B.muted};">${esc(args.body)}</p>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:8px 24px 12px;">
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:${B.white};border:1px solid ${B.border};border-radius:16px;overflow:hidden;">
+            <td style="padding:10px 26px 8px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#e6f2ec;border:1px solid #d6d3d1;border-radius:14px;overflow:hidden;">
                 <tr>
-                  <td style="padding:14px 18px 6px;background:${B.mint};border-bottom:1px solid ${B.border};">
+                  <td style="padding:14px 18px 6px;">
                     <p style="margin:0;font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:${B.primary};">Détails de l'alerte</p>
                   </td>
                 </tr>
                 <tr>
-                  <td style="padding:4px 18px 8px;background:${B.white};">
+                  <td style="padding:4px 18px 12px;">
                     ${renderDetailsTable(args.detailRows)}
                   </td>
                 </tr>
@@ -111,36 +106,29 @@ export function renderOpsAlertEmail(args: OpsAlertEmailArgs): {
             </td>
           </tr>
           <tr>
-            <td style="padding:4px 32px 8px;text-align:left;">
+            <td style="padding:8px 26px 8px;">
               <p style="margin:0 0 6px;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:${B.muted};">Message citoyen</p>
-              <p style="margin:0;font-size:14px;line-height:1.55;color:${B.text};background:${B.mint};padding:14px 16px;border-radius:12px;border:1px solid ${B.border};">${esc(args.messageExcerpt).replace(/\n/g, "<br>")}</p>
-              <p style="margin:12px 0 0;font-size:13px;line-height:1.45;color:${B.muted};">${esc(args.summary)}</p>
+              <p style="margin:0;font-size:14px;line-height:1.55;color:${B.text};background:#ffffff;padding:14px 16px;border-radius:12px;border:1px solid #d6d3d1;">${esc(args.messageExcerpt).replace(/\n/g, "<br>")}</p>
+              ${
+                args.summary
+                  ? `<p style="margin:12px 0 0;font-size:13px;line-height:1.5;color:#57534e;"><strong style="color:${B.primary};">Triage IA :</strong> ${esc(args.summary)}</p>`
+                  : ""
+              }
             </td>
           </tr>
           <tr>
-            <td style="padding:16px 32px 24px;text-align:center;">
-              <a href="${esc(args.actionUrl)}" style="display:inline-block;background:${B.primary};color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;padding:14px 28px;border-radius:12px;">${esc(args.cta)}</a>
+            <td style="padding:16px 26px 22px;text-align:center;">
+              <a href="${esc(args.actionUrl)}" style="display:inline-block;background:${B.primary};color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;padding:14px 26px;border-radius:12px;">${esc(args.cta)}</a>
             </td>
           </tr>
           <tr>
-            <td style="padding:20px 32px 28px;border-top:1px solid ${B.border};text-align:center;">
+            <td style="padding:16px 26px 22px;border-top:1px solid #d6d3d1;background:#e6f2ec;">
               ${partnerBlock}
-              <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 auto 14px;">
-                <tr>
-                  <td style="vertical-align:middle;padding-right:8px;font-size:12px;color:${B.muted};">Powered by</td>
-                  <td style="vertical-align:middle;padding-right:6px;">
-                    <img src="${NGEMBA_EMAIL_ASSETS.logo}" width="22" height="22" alt="" style="display:block;border:0;border-radius:50%;" />
-                  </td>
-                  <td style="vertical-align:middle;">
-                    <span style="font-size:13px;font-weight:800;color:${B.primary};">McBuleli IA</span>
-                  </td>
-                </tr>
-              </table>
-              <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:${B.text};">NGEMBA - Cyber Alert RDC</p>
-              <p style="margin:0 0 8px;font-size:12px;color:${B.muted};">
-                Support : <a href="mailto:${NGEMBA_EMAIL_ASSETS.supportEmail}" style="color:${B.primary};text-decoration:none;font-weight:600;">${NGEMBA_EMAIL_ASSETS.supportEmail}</a>
+              <p style="margin:0 0 8px;font-size:12px;line-height:1.5;color:#57534e;">
+                Powered by <strong style="color:${B.primary};">McBuleli IA</strong>
+                · Support <a href="mailto:${NGEMBA_EMAIL_ASSETS.supportEmail}" style="color:#305f33;text-decoration:none;font-weight:600;">${NGEMBA_EMAIL_ASSETS.supportEmail}</a>
               </p>
-              <p style="margin:0;font-size:11px;color:${B.muted};">© ${year} McBuleli - Tous droits réservés.</p>
+              <p style="margin:0;font-size:11px;color:#57534e;">© ${year} McBuleli · NGEMBA · Cyber Alert RDC</p>
             </td>
           </tr>
         </table>
@@ -151,7 +139,7 @@ export function renderOpsAlertEmail(args: OpsAlertEmailArgs): {
 </html>`;
 
   const text = [
-    "NGEMBA",
+    "NGEMBA OPS",
     args.title,
     "",
     args.greeting,
@@ -162,7 +150,7 @@ export function renderOpsAlertEmail(args: OpsAlertEmailArgs): {
     "Message citoyen:",
     args.messageExcerpt,
     "",
-    args.summary,
+    args.summary ? `Triage IA: ${args.summary}` : "",
     "",
     `${args.cta}: ${args.actionUrl}`,
     args.partnerLine ?? "",
