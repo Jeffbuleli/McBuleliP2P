@@ -486,6 +486,198 @@ const PREVENT: Record<Locale, PageCopy> = {
   },
 };
 
+const PRIVACY: Record<Locale, PageCopy> = {
+  fr: {
+    title: "Confidentialité",
+    sections: PRIVACY_SECTIONS,
+  },
+  en: {
+    title: "Privacy",
+    sections: [
+      {
+        title: "Nature of the service",
+        body: [
+          "NGEMBA is a citizen alert and guidance platform operated by McBuleli.",
+          "It does not replace the police, fire services, medical services, or the justice system.",
+        ],
+      },
+      {
+        title: "Data collected",
+        body: [
+          "Message or voice you choose to send.",
+          "GPS location only if you explicitly accept.",
+          "Province and city if you select them.",
+          "No mandatory account in the pilot phase.",
+        ],
+      },
+      {
+        title: "Use",
+        body: [
+          "Automatic triage (local or hybrid AI) to guide urgency.",
+          "Handoff to an accredited human partner operator.",
+          "AI does not certify judicial evidence.",
+        ],
+      },
+      {
+        title: "Retention",
+        body: [
+          "Alerts: limited duration (pilot target 24 months, to be confirmed legally).",
+          "Operator access is logged.",
+          "Contact: info@ngemba-rdc.org",
+        ],
+      },
+    ],
+  },
+  ln: {
+    title: "Libomba ya makambo",
+    sections: [
+      {
+        title: "Nini ezali NGEMBA",
+        body: [
+          "NGEMBA ezali esika ya kosala alerte mpe koyangela bato, oyo McBuleli ezali kosala.",
+          "Ezali te kobongisa police, pompiers, biloko ya nganga to justice.",
+        ],
+      },
+      {
+        title: "Makambo oyo bakamata",
+        body: [
+          "Message to mongongo oyo opesaka.",
+          "Esika GPS kaka soki ondimi na ntina.",
+          "Province mpe engumba soki opomoni yango.",
+          "Compte ezali te obligatoire na ntango ya pilote.",
+        ],
+      },
+      {
+        title: "Ndengé bakosalela",
+        body: [
+          "Triage automatique (IA locale to hybride) mpo na koyeba urgence.",
+          "Kopesa makambo na opérateur humain partenaire oyo azali na ndingisa.",
+          "IA ezali te koyeba preuve ya tribunal.",
+        ],
+      },
+      {
+        title: "Bokanga makambo",
+        body: [
+          "Ba alerte : ntango ya limitye (pilote : 24 mois, bakokufa na mibeko).",
+          "Ba opérateurs bakokota na journal.",
+          "Contact : info@ngemba-rdc.org",
+        ],
+      },
+    ],
+  },
+  sw: {
+    title: "Faragha",
+    sections: [
+      {
+        title: "Asili ya huduma",
+        body: [
+          "NGEMBA ni jukwaa la tahadhari na mwongozo wa raia linaloendeshwa na McBuleli.",
+          "Hailipi polisi, zimamoto, huduma za matibabu wala mahakama.",
+        ],
+      },
+      {
+        title: "Data zinazokusanywa",
+        body: [
+          "Ujumbe au sauti unayochagua kutuma.",
+          "Mahali pa GPS tu ukikubali wazi.",
+          "Mkoa na jiji ukichagua.",
+          "Hakuna akaunti ya lazima katika awamu ya majaribio.",
+        ],
+      },
+      {
+        title: "Matumizi",
+        body: [
+          "Upangaji wa haraka (AI ya ndani au mchanganyiko) kuongoza dharura.",
+          "Uhamishaji kwa opereta binadamu mshirika aliyeidhinishwa.",
+          "AI haithibitishi ushahidi wa mahakama.",
+        ],
+      },
+      {
+        title: "Uhifadhi",
+        body: [
+          "Tahadhari: muda mdogo (lengo la majaribio miezi 24, kuthibitishwa kisheria).",
+          "Ufikiaji wa waendeshaji unaandikwa.",
+          "Mawasiliano: info@ngemba-rdc.org",
+        ],
+      },
+    ],
+  },
+  lua: {
+    title: "Kubomba makambo",
+    sections: [
+      {
+        title: "Ninyi NGEMBA",
+        body: [
+          "NGEMBA i di esika ya alerte ne koyangela bantu, McBuleli udi kusala.",
+          "Ke di te kubadika police, pompiers, biloko ya nganga to justice.",
+        ],
+      },
+      {
+        title: "Makambo bakamata",
+        body: [
+          "Message to mongongo wewe usonga.",
+          "Esika GPS kaka soki undima na ntina.",
+          "Province ne engumba soki usonga.",
+          "Compte ke di te obligatoire mu pilote.",
+        ],
+      },
+      {
+        title: "Ndenge bakusalela",
+        body: [
+          "Triage automatique (IA) kudi koyeba urgence.",
+          "Kupesa makambo ku opérateur humain partenaire.",
+          "IA ke di te koyeba preuve ya tribunal.",
+        ],
+      },
+      {
+        title: "Kubomba",
+        body: [
+          "Ba alerte : ntango ya limitye (pilote 24 mois).",
+          "Ba opérateurs bakokota na journal.",
+          "Contact : info@ngemba-rdc.org",
+        ],
+      },
+    ],
+  },
+  kg: {
+    title: "Kubomba mambu",
+    sections: [
+      {
+        title: "Nki i NGEMBA",
+        body: [
+          "NGEMBA i esika ya alerte ye koyangela bantu, McBuleli udi kusala.",
+          "Ke di te kubadika police, pompiers, biloko ya nganga to justice.",
+        ],
+      },
+      {
+        title: "Mambu bakamata",
+        body: [
+          "Message to mongongo nge usonga.",
+          "Esika GPS kaka soki undima na ntina.",
+          "Province ye engumba soki usonga.",
+          "Compte ke di te obligatoire mu pilote.",
+        ],
+      },
+      {
+        title: "Ndenge bakusalela",
+        body: [
+          "Triage automatique (IA) kudi koyeba urgence.",
+          "Kupesa mambu ku opérateur humain partenaire.",
+          "IA ke di te koyeba preuve ya tribunal.",
+        ],
+      },
+      {
+        title: "Kubomba",
+        body: [
+          "Ba alerte : ntango ya limitye (pilote 24 mois).",
+          "Ba opérateurs bakokota na journal.",
+          "Contact : info@ngemba-rdc.org",
+        ],
+      },
+    ],
+  },
+};
+
 function legalPage(
   locale: Locale,
   titleFr: string,
@@ -509,12 +701,7 @@ function legalPage(
 const PAGES: Record<PageKey, Record<Locale, PageCopy>> = {
   resources: RESOURCES,
   prevent: PREVENT,
-  privacy: Object.fromEntries(
-    (["fr", "en", "ln", "sw", "lua", "kg"] as Locale[]).map((l) => [
-      l,
-      legalPage(l, "Confidentialité (brouillon pilote)", PRIVACY_SECTIONS),
-    ]),
-  ) as Record<Locale, PageCopy>,
+  privacy: PRIVACY,
   cgu: Object.fromEntries(
     (["fr", "en", "ln", "sw", "lua", "kg"] as Locale[]).map((l) => [
       l,
