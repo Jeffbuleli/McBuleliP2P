@@ -1,5 +1,5 @@
-/** Canonical production origin (apex). Set NEXT_PUBLIC_APP_URL=https://mcbuleli.org on Render. */
-export const CANONICAL_PRODUCTION_ORIGIN = "https://mcbuleli.org";
+/** Canonical production origin (apex). Set NEXT_PUBLIC_APP_URL=https://mcbuleli.com on VPS. */
+export const CANONICAL_PRODUCTION_ORIGIN = "https://mcbuleli.com";
 
 /**
  * Public site origin for invite links, OG metadata, avatars, webhooks docs.
@@ -19,7 +19,7 @@ export function getAppOrigin(): string {
   return "";
 }
 
-/** OG / Twitter / favicon absolute URLs — prefer canonical domain in production. */
+/** OG / Twitter / favicon absolute URLs - prefer canonical domain in production. */
 export function getMetadataOrigin(): string {
   const fromEnv = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, "");
   if (fromEnv) return fromEnv;
@@ -35,7 +35,7 @@ export function getMetadataOrigin(): string {
 }
 
 export function getAppAbsoluteUrl(path: string): string {
-  // Never emit path-only URLs — email clients resolve them as http:///path
+  // Never emit path-only URLs - email clients resolve them as http:///path
   const origin = getAppOrigin() || CANONICAL_PRODUCTION_ORIGIN;
   const p = path.startsWith("/") ? path : `/${path}`;
   return `${origin}${p}`;

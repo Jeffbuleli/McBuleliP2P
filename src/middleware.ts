@@ -14,7 +14,9 @@ const CANONICAL_HOST = new URL(CANONICAL_PRODUCTION_ORIGIN).hostname;
 const LEGACY_HOSTS = new Set([
   "mcbuleli.online",
   "www.mcbuleli.online",
+  "mcbuleli.org",
   "www.mcbuleli.org",
+  "www.mcbuleli.com",
 ]);
 
 export function middleware(request: NextRequest) {

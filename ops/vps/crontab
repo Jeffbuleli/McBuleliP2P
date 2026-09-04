@@ -4,7 +4,7 @@
 # Env file: /opt/mcbuleli/ops/vps/cron.env
 #
 #   CRON_SECRET=...
-#   MCBULELI_API_URL=https://mcbuleli.org
+#   MCBULELI_API_URL=https://mcbuleli.com
 #
 # Install:
 #   sudo crontab -u mcbuleli /opt/mcbuleli/ops/vps/crontab

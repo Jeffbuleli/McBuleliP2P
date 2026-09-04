@@ -4,7 +4,7 @@ COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
-ARG NEXT_PUBLIC_APP_URL=https://mcbuleli.org
+ARG NEXT_PUBLIC_APP_URL=https://mcbuleli.com
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 # NEXT_PUBLIC_* must be present at build time (inlined into the client bundle)
 ARG NEXT_PUBLIC_TURNSTILE_SITE_KEY=

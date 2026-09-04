@@ -89,19 +89,31 @@ const nextConfig: NextConfig = {
       {
         source: "/:path*",
         has: [{ type: "host", value: "mcbuleli.online" }],
-        destination: "https://mcbuleli.org/:path*",
+        destination: "https://mcbuleli.com/:path*",
         permanent: true,
       },
       {
         source: "/:path*",
         has: [{ type: "host", value: "www.mcbuleli.online" }],
-        destination: "https://mcbuleli.org/:path*",
+        destination: "https://mcbuleli.com/:path*",
+        permanent: true,
+      },
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "mcbuleli.org" }],
+        destination: "https://mcbuleli.com/:path*",
         permanent: true,
       },
       {
         source: "/:path*",
         has: [{ type: "host", value: "www.mcbuleli.org" }],
-        destination: "https://mcbuleli.org/:path*",
+        destination: "https://mcbuleli.com/:path*",
+        permanent: true,
+      },
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.mcbuleli.com" }],
+        destination: "https://mcbuleli.com/:path*",
         permanent: true,
       },
     ];

@@ -21,6 +21,6 @@ echo "Name: CRON_SECRET"
 echo "Value: ${CRON_SECRET:?CRON_SECRET empty in cron.env}"
 echo
 echo "Name: MCBULELI_API_URL"
-echo "Value: ${MCBULELI_API_URL:-https://mcbuleli.org}"
+echo "Value: ${MCBULELI_API_URL:-https://mcbuleli.com}"
 echo
 echo "Then: Actions → Cron scheduled → Run workflow → all-15m"

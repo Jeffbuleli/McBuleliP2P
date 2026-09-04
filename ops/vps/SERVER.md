@@ -4,7 +4,7 @@
 |------|--------|
 | **VPS principal** | `162.35.181.98` |
 | **Ancien live only** | `162.35.160.30` (à décommissionner après cutover) |
-| Domaines | `mcbuleli.org` + `www` + `live.mcbuleli.org` + **`e-avec.org`** |
+| Domaines | **`mcbuleli.com`** (canonique) + `www` · legacy redirect `mcbuleli.org` · `live.mcbuleli.org` · **`e-avec.org`** |
 
 Tout (Next.js, Postgres, crons haute fréquence, ai-relay, **Jitsi Live**) tourne sur **162.35.181.98**.
 
@@ -12,10 +12,10 @@ Tout (Next.js, Postgres, crons haute fréquence, ai-relay, **Jitsi Live**) tourn
 
 | Record | Type | Cible après cutover | Notes |
 |--------|------|---------------------|--------|
-| `mcbuleli.org` | A / CNAME | via Cloudflare → origin `162.35.181.98` | Aujourd’hui proxy CF (IPs `104.21` / `172.67`) — mettre l’**origin** A/AAAA (DNS only ou proxied) vers le nouveau VPS |
+| `mcbuleli.org` | A / CNAME | via Cloudflare → origin `162.35.181.98` | Aujourd’hui proxy CF (IPs `104.21` / `172.67`) - mettre l’**origin** A/AAAA (DNS only ou proxied) vers le nouveau VPS |
 | `www` | CNAME/A | idem | |
 | `e-avec.org` / `www` | A / CNAME | même origin `162.35.181.98` | App AVEC autonome (port `3001`). Nginx : `ops/vps/nginx-e-avec.conf` dans le repo [avec](https://github.com/Jeffbuleli/avec). Même Postgres. |
-| `live.mcbuleli.org` | **A** | `162.35.181.98` | Aujourd’hui = `162.35.160.30` — **à basculer en dernier** pour le live |
+| `live.mcbuleli.org` | **A** | `162.35.181.98` | Aujourd’hui = `162.35.160.30` - **à basculer en dernier** pour le live |
 
 Vérif :
 
@@ -30,7 +30,7 @@ dig +short mcbuleli.org A        # CF ou → 162.35.181.98
 2. Dump Render → restore Postgres (app encore sur Render OK pendant ce temps)
 3. Migrer **Jitsi** depuis 162.35.160.30 (voir `ops/vps/migrate-live-from-old.sh`)
 4. Staging app : `http://162.35.181.98:3000` / hostname test
-5. DNS `live` → nouveau IP (fenêtre courte ; garder ancien allumé 24–48 h)
+5. DNS `live` → nouveau IP (fenêtre courte ; garder ancien allumé 24-48 h)
 6. Origin `mcbuleli.org` → nouveau IP ; suspendre Render web+DB après validation
 7. Désactiver crons Render ; activer crontab + GHA
 

@@ -14,7 +14,7 @@ export function webAuthnRpId(): string {
       return fromEnv;
     }
   }
-  const base = process.env.NEXT_PUBLIC_APP_URL?.trim() ?? "https://mcbuleli.org";
+  const base = process.env.NEXT_PUBLIC_APP_URL?.trim() ?? "https://mcbuleli.com";
   try {
     return new URL(base).hostname;
   } catch {
