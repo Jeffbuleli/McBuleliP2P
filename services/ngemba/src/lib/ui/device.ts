@@ -28,18 +28,39 @@ export function useDeviceClass(): DeviceClass {
 
 export function shellMaxWidth(device: DeviceClass): string {
   if (device === "desktop") return "max-w-5xl";
-  if (device === "tablet") return "max-w-2xl";
+  if (device === "tablet") return "max-w-3xl";
   return "max-w-md";
 }
 
+/** Citizen flows: readable column that scales desk → tablet → mobile. */
 export function citizenShellMaxWidth(device: DeviceClass): string {
-  if (device === "desktop") return "max-w-xl";
-  if (device === "tablet") return "max-w-lg";
+  if (device === "desktop") return "max-w-2xl";
+  if (device === "tablet") return "max-w-xl";
   return "max-w-md";
 }
 
+/** Home SOS — larger, centered hero. */
 export function sosButtonSize(device: DeviceClass): string {
-  if (device === "desktop") return "size-[112px]";
-  if (device === "tablet") return "size-[104px]";
-  return "size-[var(--ng-sos-size)]";
+  if (device === "desktop") return "size-[168px]";
+  if (device === "tablet") return "size-[148px]";
+  return "size-[128px]";
+}
+
+export function sosIconSize(device: DeviceClass): string {
+  if (device === "desktop") return "size-7";
+  if (device === "tablet") return "size-6";
+  return "size-5";
+}
+
+export function sosLabelClass(device: DeviceClass): string {
+  if (device === "desktop") return "text-xl";
+  if (device === "tablet") return "text-lg";
+  return "text-base";
+}
+
+/** Vertical page padding scales with viewport. */
+export function citizenPagePad(device: DeviceClass): string {
+  if (device === "desktop") return "pb-10 pt-7";
+  if (device === "tablet") return "pb-9 pt-6";
+  return "pb-8 pt-5";
 }

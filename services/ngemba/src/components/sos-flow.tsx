@@ -15,7 +15,11 @@ import { uploadPendingMedia } from "@/lib/compose/upload-pending";
 import { vibrateDiscreteConfirm } from "@/lib/discrete/vibrate";
 import { messages } from "@/lib/i18n";
 import { readLocalTrustedContacts } from "@/lib/trusted-contacts/client-store";
-import { citizenShellMaxWidth, useDeviceClass } from "@/lib/ui/device";
+import {
+  citizenPagePad,
+  citizenShellMaxWidth,
+  useDeviceClass,
+} from "@/lib/ui/device";
 
 type Step = "tell" | "place";
 type Source = "sos_button" | "witness";
@@ -184,43 +188,55 @@ export function SosFlow({
 
   return (
     <main
-      className={`ng-shell mx-auto flex min-h-dvh flex-col pb-8 pt-5 ${citizenShellMaxWidth(device)} ${discrete ? "ng-discrete-surface" : ""}`}
+      className={`ng-shell mx-auto flex min-h-dvh flex-col ${citizenPagePad(device)} ${citizenShellMaxWidth(device)} ${discrete ? "ng-discrete-surface" : ""}`}
     >
-      <header className="flex items-center justify-between gap-3">
+      <header className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
         <Link
           href={href("/")}
-          className={`text-sm font-medium ${discrete ? "ng-discrete-muted" : "text-ng-muted"}`}
+          className={`justify-self-start text-sm font-medium ${discrete ? "ng-discrete-muted" : "text-ng-muted"}`}
         >
           {t.back}
         </Link>
-        <div className="flex flex-col items-end gap-0.5">
-          <div
-            className={`inline-flex items-center gap-1.5 ${discrete ? "text-[#c9a0bc]" : "text-ng-primary"}`}
+        <div
+          className={`inline-flex items-center gap-2 rounded-full px-3.5 py-2 ${
+            discrete
+              ? "bg-white/10 text-[#e8d4e3]"
+              : "bg-ng-urgent/10 text-ng-urgent"
+          }`}
+        >
+          <IconShield
+            className={device === "desktop" ? "size-5" : "size-4"}
+          />
+          <span
+            className={`font-bold tracking-wide ${
+              device === "desktop" ? "text-sm" : "text-xs"
+            }`}
           >
-            <IconSpark className="size-3.5" />
-            <span className="text-[11px] font-semibold">{t.aiListening}</span>
-          </div>
-          <div
-            className={`inline-flex items-center gap-1.5 ${discrete ? "text-[#c9a0bc]" : "text-ng-urgent"}`}
-          >
-            <IconShield className="size-3.5" />
-            <span className="text-[10px] font-bold tracking-wide">
-              {discrete ? t.discrete : isWitness ? t.witness : t.sos}
-            </span>
-          </div>
+            {discrete ? t.discrete : isWitness ? t.witness : t.sos}
+          </span>
+        </div>
+        <div
+          className={`inline-flex items-center justify-self-end gap-1.5 ${discrete ? "text-[#c9a0bc]" : "text-ng-primary"}`}
+        >
+          <IconSpark className="size-3.5" />
+          <span className="text-[11px] font-semibold md:text-xs">
+            {t.aiListening}
+          </span>
         </div>
       </header>
 
       {isWitness && !discrete ? (
-        <p className="mt-4 rounded-xl bg-ng-secondary-muted px-3 py-2 text-xs font-medium leading-relaxed text-ng-secondary">
+        <p className="mt-4 rounded-xl bg-ng-secondary-muted px-3 py-2 text-xs font-medium leading-relaxed text-ng-secondary md:text-sm">
           {t.witnessSafety}
         </p>
       ) : null}
 
       {step === "tell" ? (
-        <section className="mt-6 flex flex-1 flex-col gap-3">
+        <section className="mt-6 flex flex-1 flex-col gap-3 md:gap-4">
           <h1
-            className={`text-xl font-semibold ${discrete ? "text-[#e8d4e3]" : "text-ng-primary"}`}
+            className={`font-semibold ${
+              device === "desktop" ? "text-2xl" : "text-xl"
+            } ${discrete ? "text-[#e8d4e3]" : "text-ng-primary"}`}
           >
             {discrete ? t.discrete : isWitness ? t.witnessTell : t.tell}
           </h1>

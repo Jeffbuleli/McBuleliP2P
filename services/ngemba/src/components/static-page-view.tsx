@@ -20,7 +20,7 @@ import {
   getStaticPage,
   type PageKey,
 } from "@/lib/static-pages-i18n";
-import { citizenShellMaxWidth, useDeviceClass } from "@/lib/ui/device";
+import { citizenPagePad, citizenShellMaxWidth, useDeviceClass } from "@/lib/ui/device";
 import { PoweredByMcbuleli } from "@/components/powered-by-mcbuleli";
 
 function sectionIcon(page: PageKey, index: number): ReactNode {
@@ -110,7 +110,7 @@ export function StaticPageView({
 
   return (
     <main
-      className={`ng-shell mx-auto min-h-dvh py-6 ${citizenShellMaxWidth(device)}`}
+      className={`ng-shell mx-auto min-h-dvh ${citizenPagePad(device)} ${citizenShellMaxWidth(device)}`}
     >
       <Link
         href={href("/")}

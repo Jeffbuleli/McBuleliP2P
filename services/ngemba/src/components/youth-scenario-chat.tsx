@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useCitizenLocale } from "@/hooks/use-citizen-locale";
 import { messages } from "@/lib/i18n";
 import { getYouthScenario } from "@/lib/youth/scenarios";
-import { citizenShellMaxWidth, useDeviceClass } from "@/lib/ui/device";
+import { citizenPagePad, citizenShellMaxWidth, useDeviceClass } from "@/lib/ui/device";
 
 type Turn = { role: "user" | "assistant"; content: string };
 
@@ -85,7 +85,7 @@ export function YouthScenarioChat({
 
   return (
     <main
-      className={`ng-shell mx-auto flex min-h-dvh flex-col pb-4 pt-5 ${citizenShellMaxWidth(device)}`}
+      className={`ng-shell mx-auto flex min-h-dvh flex-col ${citizenPagePad(device)} ${citizenShellMaxWidth(device)}`}
     >
       <header className="flex items-center justify-between gap-3">
         <Link href={href("/jeunesse")} className="text-sm font-medium text-ng-muted">

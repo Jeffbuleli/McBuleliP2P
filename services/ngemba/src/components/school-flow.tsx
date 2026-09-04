@@ -15,7 +15,7 @@ import { uploadPendingMedia } from "@/lib/compose/upload-pending";
 import { messages } from "@/lib/i18n";
 import type { SchoolConcernType } from "@/lib/school/types";
 import { readLocalTrustedContacts } from "@/lib/trusted-contacts/client-store";
-import { citizenShellMaxWidth, useDeviceClass } from "@/lib/ui/device";
+import { citizenPagePad, citizenShellMaxWidth, useDeviceClass } from "@/lib/ui/device";
 
 type Step = "concern" | "tell" | "place";
 
@@ -156,21 +156,30 @@ export function SchoolFlow({ initialLocale }: { initialLocale?: string }) {
 
   return (
     <main
-      className={`ng-shell mx-auto flex min-h-dvh flex-col pb-8 pt-5 ${citizenShellMaxWidth(device)}`}
+      className={`ng-shell mx-auto flex min-h-dvh flex-col ${citizenPagePad(device)} ${citizenShellMaxWidth(device)}`}
     >
-      <header className="flex items-center justify-between gap-3">
-        <Link href={href("/")} className="text-sm font-medium text-ng-muted">
+      <header className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+        <Link
+          href={href("/")}
+          className="justify-self-start text-sm font-medium text-ng-muted"
+        >
           {t.back}
         </Link>
-        <div className="flex flex-col items-end gap-0.5">
-          <div className="inline-flex items-center gap-1.5 text-ng-primary">
-            <IconSpark className="size-3.5" />
-            <span className="text-[11px] font-semibold">{t.aiListening}</span>
-          </div>
-          <div className="inline-flex items-center gap-1.5 text-ng-primary">
-            <IconShield className="size-3.5" />
-            <span className="text-[10px] font-bold tracking-wide">{t.school}</span>
-          </div>
+        <div className="inline-flex items-center gap-2 rounded-full bg-ng-primary-muted px-3.5 py-2 text-ng-primary">
+          <IconShield className={device === "desktop" ? "size-5" : "size-4"} />
+          <span
+            className={`font-bold tracking-wide ${
+              device === "desktop" ? "text-sm" : "text-xs"
+            }`}
+          >
+            {t.school}
+          </span>
+        </div>
+        <div className="inline-flex items-center justify-self-end gap-1.5 text-ng-primary">
+          <IconSpark className="size-3.5" />
+          <span className="text-[11px] font-semibold md:text-xs">
+            {t.aiListening}
+          </span>
         </div>
       </header>
 

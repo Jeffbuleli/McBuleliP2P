@@ -5,7 +5,7 @@ import { IconSpark, IconUsers } from "@/components/icons";
 import { useCitizenLocale } from "@/hooks/use-citizen-locale";
 import { messages } from "@/lib/i18n";
 import { YOUTH_SCENARIOS } from "@/lib/youth/scenarios";
-import { citizenShellMaxWidth, useDeviceClass } from "@/lib/ui/device";
+import { citizenPagePad, citizenShellMaxWidth, useDeviceClass } from "@/lib/ui/device";
 
 export function YouthHub({ initialLocale }: { initialLocale?: string }) {
   const { locale, href } = useCitizenLocale(initialLocale);
@@ -14,7 +14,7 @@ export function YouthHub({ initialLocale }: { initialLocale?: string }) {
 
   return (
     <main
-      className={`ng-shell mx-auto flex min-h-dvh flex-col pb-8 pt-5 ${citizenShellMaxWidth(device)}`}
+      className={`ng-shell mx-auto flex min-h-dvh flex-col ${citizenPagePad(device)} ${citizenShellMaxWidth(device)}`}
     >
       <Link href={href("/")} className="text-sm font-medium text-ng-muted">
         {t.back}

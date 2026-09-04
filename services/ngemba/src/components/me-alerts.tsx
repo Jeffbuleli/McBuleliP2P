@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useCitizenLocale } from "@/hooks/use-citizen-locale";
 import { messages } from "@/lib/i18n";
-import { citizenShellMaxWidth, useDeviceClass } from "@/lib/ui/device";
+import { citizenPagePad, citizenShellMaxWidth, useDeviceClass } from "@/lib/ui/device";
 
 type Row = {
   id: string;
@@ -34,7 +34,7 @@ export function MeAlertsView({ initialLocale }: { initialLocale?: string }) {
 
   return (
     <main
-      className={`ng-shell mx-auto min-h-dvh py-6 ${citizenShellMaxWidth(device)}`}
+      className={`ng-shell mx-auto min-h-dvh ${citizenPagePad(device)} ${citizenShellMaxWidth(device)}`}
     >
       <Link
         href={href("/")}

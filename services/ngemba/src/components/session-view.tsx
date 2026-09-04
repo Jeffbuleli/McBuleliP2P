@@ -12,7 +12,7 @@ import { PoweredByMcbuleli } from "@/components/powered-by-mcbuleli";
 import { useCitizenLocale } from "@/hooks/use-citizen-locale";
 import { messages } from "@/lib/i18n";
 import { urgencyLabel } from "@/lib/labels";
-import { citizenShellMaxWidth, useDeviceClass } from "@/lib/ui/device";
+import { citizenPagePad, citizenShellMaxWidth, useDeviceClass } from "@/lib/ui/device";
 
 type SessionPayload = {
   id: string;
@@ -95,7 +95,7 @@ export function SessionView({
 
   return (
     <main
-      className={`ng-shell mx-auto flex min-h-dvh flex-col pb-8 pt-5 ${citizenShellMaxWidth(device)} ${discrete ? "ng-discrete-surface" : ""}`}
+      className={`ng-shell mx-auto flex min-h-dvh flex-col ${citizenPagePad(device)} ${citizenShellMaxWidth(device)} ${discrete ? "ng-discrete-surface" : ""}`}
     >
       <header className="flex items-center justify-between">
         <Link href={href("/")} className="text-sm font-medium text-ng-muted">

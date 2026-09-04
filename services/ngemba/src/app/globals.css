@@ -14,22 +14,22 @@
   --ng-text: #0c1a14;
   --ng-muted: #5c6b63;
   --ng-border: rgba(6, 64, 43, 0.12);
-  --ng-sos-size: 96px;
+  --ng-sos-size: 128px;
   --ng-touch-min: 48px;
   --ng-shell-px: 1rem;
 }
 
 @media (min-width: 768px) {
   :root {
-    --ng-sos-size: 104px;
-    --ng-shell-px: 1.25rem;
+    --ng-sos-size: 148px;
+    --ng-shell-px: 1.5rem;
   }
 }
 
 @media (min-width: 1024px) {
   :root {
-    --ng-sos-size: 112px;
-    --ng-shell-px: 1.5rem;
+    --ng-sos-size: 168px;
+    --ng-shell-px: 2rem;
   }
 }
 
