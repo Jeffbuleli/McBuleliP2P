@@ -46,13 +46,14 @@ export function PwaInstallBanner() {
   const navCount = useRef(0);
 
   useEffect(() => {
-    if (isStandaloneDisplay()) return;
-
+    // Always bounce legacy hosts (including old .org home-screen PWAs) to .com first.
     const redirect = shouldRedirectToCanonical();
     if (redirect) {
       window.location.replace(redirect);
       return;
     }
+
+    if (isStandaloneDisplay()) return;
 
     setIos(isIosDevice());
     setIosSafari(isIosSafari());

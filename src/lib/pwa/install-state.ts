@@ -1,9 +1,19 @@
+import { CANONICAL_PRODUCTION_ORIGIN, canonicalAppHostname } from "@/lib/app-url";
+
 const STORAGE_UNTIL = "mb_pwa_install_dismiss_until";
 const SESSION_PROMPTED = "mb_pwa_prompted_session";
 /** Soft dismiss - user can see the banner again after this. */
 export const PWA_DISMISS_MS = 4 * 60 * 60 * 1000;
 /** iOS users often need a few tries (Share sheet) - re-prompt sooner. */
 export const PWA_IOS_DISMISS_MS = 45 * 60 * 1000;
+
+const LEGACY_PWA_HOSTS = new Set([
+  "mcbuleli.org",
+  "www.mcbuleli.org",
+  "mcbuleli.online",
+  "www.mcbuleli.online",
+  "www.mcbuleli.com",
+]);
 
 export function isStandaloneDisplay(): boolean {
   if (typeof window === "undefined") return false;
@@ -110,11 +120,19 @@ export async function hasInstalledRelatedWebApp(): Promise<boolean> {
   }
 }
 
+/**
+ * Send legacy hosts (and old .org home-screen PWAs) to the canonical .com origin.
+ * Returns null when already on canonical / preview / local.
+ */
 export function shouldRedirectToCanonical(): string | null {
   if (typeof window === "undefined") return null;
   const host = window.location.hostname.toLowerCase();
-  const canonical = "mcbuleli.org";
-  if (host === canonical || host === `www.${canonical}`) return null;
-  if (host.endsWith(".onrender.com") || host === "localhost") return null;
-  return `https://${canonical}${window.location.pathname}${window.location.search}`;
+  const canonical = canonicalAppHostname();
+  if (host === canonical) return null;
+  if (host.endsWith(".onrender.com") || host === "localhost" || host.endsWith(".localhost")) {
+    return null;
+  }
+  if (!LEGACY_PWA_HOSTS.has(host)) return null;
+  const { pathname, search, hash } = window.location;
+  return `${CANONICAL_PRODUCTION_ORIGIN}${pathname}${search}${hash}`;
 }
