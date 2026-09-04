@@ -18,7 +18,7 @@
 | **Phase 5.2** (carte OSM + filtres province/categorie) | ✅ v0.2 |
 | **UI audit** (McBuleli IA centre, polish, charts, PWA install) | ✅ v0.3 |
 | **Repo mobile dedie** (`Jeffbuleli/ngemba-mobile`) | ✅ pour EAS stable |
-| **Domaine propre** (`ngemba-rdc.org`) | ⏳ cutover DNS/TLS/Resend |
+| **Domaine propre** (`ngemba-rdc.org`) | ✅ HTTPS live (certbot + nginx) |
 
 Live : https://ngemba-rdc.org · email `info@ngemba-rdc.org`  
 Cutover : [24-DOMAINE-NGEMBA-RDC.md](./24-DOMAINE-NGEMBA-RDC.md) (DNS / TLS / Resend / APK)

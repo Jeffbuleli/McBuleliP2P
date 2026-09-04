@@ -2,33 +2,18 @@
 
 > Separation de Cyber Alert (`ngemba.cyberalert-rdc.org` devient legacy / redirect).
 
-## Diagnostic (4 sept 2026)
+## Diagnostic (4 sept 2026) - resolu
 
-**Probleme :** `https://ngemba-rdc.org` ouvre **Africa Insight** (301 → `www.africa-insight.org`).
+**Cause reelle :** Cloudflare Full SSL parlait HTTPS a l'origine, mais nginx n'avait **pas** de vhost TLS `ngemba-rdc.org` → fallback SSL = Africa Insight (`301`).
 
-| Check | Resultat |
-|--|--|
-| DNS A `ngemba-rdc.org` | Cloudflare proxy (`104.21…` / `172.67…`) - **pas** `153.75.235.176` |
-| Header HTTP | `server: cloudflare` · `Location: https://www.africa-insight.org/` |
-| VPS nginx Ngemba | OK sur `ngemba.cyberalert-rdc.org` → port `3012` |
-| Cache navigateur | Secondaire - la redirect est cote Cloudflare, pas un vieux HTML |
+**Fix :** certbot `ngemba-rdc.org` + `www` · vhost HTTPS nginx · legacy `ngemba.cyberalert-rdc.org` → 301 vers apex.
 
-**Cause :** zone Cloudflare `ngemba-rdc.org` mal cablee (Page Rule / Bulk Redirect / mauvais origin), pas un bug app Ngemba.
+HTTP-only (cadenas « Not Secure ») marchait deja ; le navigateur prive montrait donc Ngemba en HTTP.
 
-**UI app installee ≠ web :** la PWA a ete installee depuis `ngemba-rdc.org` → c'est **Africa Insight**. Desinstaller cette icone ; reinstaller depuis https://ngemba.cyberalert-rdc.org jusqu'au cutover.
+### Email (Cloudflare Email Routing)
 
-### Fix Cloudflare (a faire dans le dashboard)
-
-1. Ouvrir la zone **ngemba-rdc.org** (pas africa-insight).
-2. **Rules → Redirects / Page Rules** : supprimer toute regle vers `africa-insight.org`.
-3. **DNS** :
-   - `A @` → `153.75.235.176` (proxy orange OK apres cert, ou gris le temps du certbot)
-   - `A www` → `153.75.235.176`
-4. **SSL/TLS** : Full (Strict) apres certbot.
-5. **Caching** → Purge Everything (apres correction).
-6. Verifier : `curl -sSI https://ngemba-rdc.org/` ne doit plus avoir `Location: africa-insight`.
-
-Puis certbot sur le VPS (voir section 3).
+Dans DNS, bouton **Add missing records** pour MX + SPF + DKIM Cloudflare = OK pour `info@ngemba-rdc.org`.  
+Resend (envoi transactionnel) reste a verifier a part si utilise.
 
 ---
 
@@ -50,9 +35,9 @@ A     @     153.75.235.176
 A     www   153.75.235.176
 ```
 
-**Ne pas** rediriger vers Africa Insight. Proxy Cloudflare : ON · SSL **Full (Strict)** apres certbot.
+Proxy orange OK · SSL Cloudflare **Full (Strict)**.
 
-Garder temporairement `ngemba.cyberalert-rdc.org` pointe vers la meme IP.
+Garder `ngemba.cyberalert-rdc.org` (sous-domaine cyberalert) pour le 301 legacy.
 
 ---
 
