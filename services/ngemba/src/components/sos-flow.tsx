@@ -264,32 +264,37 @@ export function SosFlow({
               {message.length}/{COMPOSE_MAX_CHARS}
             </span>
           </div>
-          <div className="flex flex-col gap-2">
-            <VoiceButton
-              locale={locale}
-              label={t.voice}
-              listeningLabel={t.voiceListening}
-              unsupportedLabel={t.voiceUnsupported}
-              onText={appendVoiceText}
-              onAudioChange={setAudioBlob}
-              discrete={discrete}
-            />
+          <div className="flex flex-col gap-3">
+            <div className="flex items-stretch gap-2">
+              <VoiceButton
+                locale={locale}
+                label={t.voice}
+                listeningLabel={t.voiceListening}
+                unsupportedLabel={t.voiceUnsupported}
+                onText={appendVoiceText}
+                onAudioChange={setAudioBlob}
+                discrete={discrete}
+                className="w-[80%] min-w-0"
+              />
+              <PolishButton
+                text={message}
+                locale={locale}
+                label={t.polish}
+                busyLabel={t.polishing}
+                discrete={discrete}
+                disabled={busy}
+                compact
+                className="w-[20%] shrink-0"
+                onPolished={(text) =>
+                  setMessage(text.slice(0, COMPOSE_MAX_CHARS))
+                }
+              />
+            </div>
             <ComposePhotos
               photos={photos}
               onChange={setPhotos}
               label={t.addMedia}
               discrete={discrete}
-            />
-            <PolishButton
-              text={message}
-              locale={locale}
-              label={t.polish}
-              busyLabel={t.polishing}
-              discrete={discrete}
-              disabled={busy}
-              onPolished={(text) =>
-                setMessage(text.slice(0, COMPOSE_MAX_CHARS))
-              }
             />
           </div>
           {error ? (

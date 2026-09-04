@@ -11,6 +11,9 @@ export function PolishButton({
   onPolished,
   discrete = false,
   disabled = false,
+  /** Icon-only (SVG) — for 20% toolbar slot. */
+  compact = false,
+  className = "",
 }: {
   text: string;
   locale: string;
@@ -19,6 +22,8 @@ export function PolishButton({
   onPolished: (next: string) => void;
   discrete?: boolean;
   disabled?: boolean;
+  compact?: boolean;
+  className?: string;
 }) {
   const [busy, setBusy] = useState(false);
 
@@ -47,14 +52,18 @@ export function PolishButton({
       type="button"
       disabled={busy || disabled || text.trim().length < 3}
       onClick={() => void run()}
-      className={`inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl px-3 text-xs font-semibold disabled:opacity-50 ${
+      title={busy ? busyLabel : label}
+      aria-label={busy ? busyLabel : label}
+      className={`inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl disabled:opacity-50 ${
+        compact ? "w-full px-2" : "px-3 text-xs font-semibold"
+      } ${
         discrete
           ? "border border-white/15 bg-white/5 text-[#e8d4e3]"
           : "border border-[var(--ng-border)] bg-ng-primary-muted text-ng-primary"
-      }`}
+      } ${className}`}
     >
-      <IconSpark className="size-3.5" />
-      {busy ? busyLabel : label}
+      <IconSpark className={busy ? "size-5 animate-pulse" : "size-5"} />
+      {compact ? null : busy ? busyLabel : label}
     </button>
   );
 }

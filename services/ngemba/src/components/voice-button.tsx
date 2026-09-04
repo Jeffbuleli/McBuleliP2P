@@ -16,11 +16,11 @@ type Props = {
   label: string;
   listeningLabel: string;
   unsupportedLabel: string;
-  /** Live / final STT text → parent textarea. */
   onText: (text: string) => void;
-  /** Recorded audio blob for upload; null when deleted. */
   onAudioChange?: (blob: Blob | null) => void;
   discrete?: boolean;
+  /** Stretch to fill parent (e.g. 80% row). */
+  className?: string;
 };
 
 type Rec = {
@@ -61,14 +61,17 @@ function getSpeechRecognition(): (new () => Rec) | null {
   return w.SpeechRecognition || w.webkitSpeechRecognition || null;
 }
 
+/** Prefer mp4/aac when available — Safari cannot play webm playback. */
 function pickMime(): string {
   if (typeof MediaRecorder === "undefined") return "";
-  for (const m of [
+  const order = [
+    "audio/mp4",
+    "audio/aac",
     "audio/webm;codecs=opus",
     "audio/webm",
-    "audio/mp4",
     "audio/ogg",
-  ]) {
+  ];
+  for (const m of order) {
     if (MediaRecorder.isTypeSupported(m)) return m;
   }
   return "";
@@ -89,13 +92,14 @@ export function VoiceButton({
   onText,
   onAudioChange,
   discrete = false,
+  className = "",
 }: Props) {
   const [recSupported, setRecSupported] = useState(false);
   const [recording, setRecording] = useState(false);
   const [leftSec, setLeftSec] = useState(COMPOSE_VOICE_MAX_SEC);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [playing, setPlaying] = useState(false);
-  const [sttOk, setSttOk] = useState(true);
+  const [playError, setPlayError] = useState(false);
 
   const mediaRecRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
@@ -103,6 +107,7 @@ export function VoiceButton({
   const speechRef = useRef<Rec | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioElRef = useRef<HTMLAudioElement | null>(null);
+  const audioUrlRef = useRef<string | null>(null);
   const startedAtRef = useRef(0);
 
   useEffect(() => {
@@ -116,10 +121,25 @@ export function VoiceButton({
   useEffect(() => {
     return () => {
       stopAll(true);
-      if (audioUrl) URL.revokeObjectURL(audioUrl);
+      if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Keep <audio> element in sync with blob URL (fixes stale / non-playing play).
+  useEffect(() => {
+    const el = audioElRef.current;
+    if (!el) return;
+    setPlaying(false);
+    setPlayError(false);
+    if (!audioUrl) {
+      el.removeAttribute("src");
+      el.load();
+      return;
+    }
+    el.src = audioUrl;
+    el.load();
+  }, [audioUrl]);
 
   function clearTimer() {
     if (timerRef.current) {
@@ -159,13 +179,13 @@ export function VoiceButton({
   }
 
   function revokePreview() {
-    if (audioUrl) URL.revokeObjectURL(audioUrl);
+    if (audioUrlRef.current) {
+      URL.revokeObjectURL(audioUrlRef.current);
+      audioUrlRef.current = null;
+    }
     setAudioUrl(null);
     setPlaying(false);
-    if (audioElRef.current) {
-      audioElRef.current.pause();
-      audioElRef.current = null;
-    }
+    setPlayError(false);
   }
 
   function deleteAudio() {
@@ -179,7 +199,6 @@ export function VoiceButton({
     if (recording) return;
     revokePreview();
     onAudioChange?.(null);
-    setSttOk(true);
     chunksRef.current = [];
 
     let stream: MediaStream;
@@ -205,6 +224,7 @@ export function VoiceButton({
       chunksRef.current = [];
       if (blob.size > 0) {
         const url = URL.createObjectURL(blob);
+        audioUrlRef.current = url;
         setAudioUrl(url);
         onAudioChange?.(blob);
       }
@@ -218,7 +238,6 @@ export function VoiceButton({
     setLeftSec(COMPOSE_VOICE_MAX_SEC);
     setRecording(true);
 
-    // Parallel browser STT → textarea (best effort; audio is source of truth).
     const SR = getSpeechRecognition();
     if (SR) {
       const speech = new SR();
@@ -229,34 +248,23 @@ export function VoiceButton({
       speech.maxAlternatives = 1;
       let lastFinal = "";
       speech.onresult = (event) => {
-        let piece = "";
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const r = event.results[i];
           const t = r?.[0]?.transcript?.trim();
-          if (!t) continue;
-          if (r.isFinal) {
-            if (t !== lastFinal) {
-              lastFinal = t;
-              onText(t);
-            }
-          } else {
-            piece = t;
+          if (!t || !r.isFinal) continue;
+          if (t !== lastFinal) {
+            lastFinal = t;
+            onText(t);
           }
         }
-        // interim ignored for textarea stability — finals only
-        void piece;
       };
-      speech.onerror = () => setSttOk(false);
-      speech.onend = () => {
-        // Keep recording even if STT ends early.
-      };
+      speech.onerror = () => {};
+      speech.onend = () => {};
       try {
         speech.start();
       } catch {
-        setSttOk(false);
+        // STT optional
       }
-    } else {
-      setSttOk(false);
     }
 
     clearTimer();
@@ -274,6 +282,13 @@ export function VoiceButton({
     const rec = mediaRecRef.current;
     if (rec && rec.state !== "inactive") {
       try {
+        if (rec.state === "recording") {
+          try {
+            rec.requestData();
+          } catch {
+            // optional
+          }
+        }
         rec.stop();
       } catch {
         setRecording(false);
@@ -285,23 +300,28 @@ export function VoiceButton({
     }
   }
 
-  function togglePlay() {
-    if (!audioUrl) return;
-    if (!audioElRef.current) {
-      audioElRef.current = new Audio(audioUrl);
-      audioElRef.current.onended = () => setPlaying(false);
-    }
+  async function togglePlay() {
     const el = audioElRef.current;
+    if (!el || !audioUrl) return;
     if (playing) {
       el.pause();
       setPlaying(false);
       return;
     }
-    void el.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
+    setPlayError(false);
+    try {
+      await el.play();
+      setPlaying(true);
+    } catch {
+      setPlaying(false);
+      setPlayError(true);
+    }
   }
 
   if (!recSupported) {
-    return <p className="text-xs text-ng-muted">{unsupportedLabel}</p>;
+    return (
+      <p className={`text-xs text-ng-muted ${className}`}>{unsupportedLabel}</p>
+    );
   }
 
   const btnBase = discrete
@@ -309,66 +329,77 @@ export function VoiceButton({
     : "bg-ng-primary-muted text-ng-primary";
 
   return (
-    <div className="flex w-full flex-col gap-2">
-      <div className="flex flex-wrap items-center gap-2">
-        {!recording && !audioUrl ? (
+    <div className={`flex min-w-0 items-center ${className}`}>
+      <audio
+        ref={audioElRef}
+        preload="auto"
+        className="hidden"
+        onEnded={() => setPlaying(false)}
+        onPause={() => setPlaying(false)}
+        onPlay={() => setPlaying(true)}
+        onError={() => {
+          setPlaying(false);
+          setPlayError(true);
+        }}
+      />
+
+      {!recording && !audioUrl ? (
+        <button
+          type="button"
+          onClick={() => void startRecording()}
+          className={`inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold ${btnBase}`}
+          aria-label={label}
+          title={label}
+        >
+          <IconMic className="size-5" />
+        </button>
+      ) : null}
+
+      {recording ? (
+        <button
+          type="button"
+          onClick={stopRecording}
+          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-ng-urgent px-3 text-sm font-semibold text-white"
+          aria-label={listeningLabel}
+        >
+          <IconWaveform active className="h-5 w-12 text-white" />
+          <span className="tabular-nums text-xs">{formatSec(leftSec)}</span>
+          <IconStop className="size-4" />
+        </button>
+      ) : null}
+
+      {audioUrl && !recording ? (
+        <div
+          className={`inline-flex min-h-11 w-full items-center gap-1 rounded-xl px-1 ${
+            discrete ? "bg-white/10" : "bg-ng-primary-muted"
+          } ${playError ? "ring-1 ring-ng-urgent/40" : ""}`}
+        >
           <button
             type="button"
-            onClick={() => void startRecording()}
-            className={`inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-semibold ${btnBase}`}
-          >
-            <IconMic className="size-4" />
-            {label}
-          </button>
-        ) : null}
-
-        {recording ? (
-          <button
-            type="button"
-            onClick={stopRecording}
-            className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-ng-urgent px-3 text-sm font-semibold text-white"
-            aria-label={listeningLabel}
-          >
-            <IconWaveform active className="h-5 w-10 text-white" />
-            <span className="tabular-nums">{formatSec(leftSec)}</span>
-            <IconStop className="size-4" />
-          </button>
-        ) : null}
-
-        {audioUrl && !recording ? (
-          <div
-            className={`inline-flex min-h-11 items-center gap-1 rounded-xl px-1 ${
-              discrete ? "bg-white/10" : "bg-ng-primary-muted"
+            onClick={() => void togglePlay()}
+            className={`inline-flex size-10 shrink-0 items-center justify-center rounded-lg ${
+              discrete ? "text-[#e8d4e3]" : "text-ng-primary"
             }`}
+            aria-label={playing ? "Pause" : "Play"}
           >
-            <button
-              type="button"
-              onClick={togglePlay}
-              className={`inline-flex size-10 items-center justify-center rounded-lg ${
-                discrete ? "text-[#e8d4e3]" : "text-ng-primary"
-              }`}
-              aria-label={playing ? "Pause" : "Play"}
-            >
-              {playing ? (
-                <IconPause className="size-5" />
-              ) : (
-                <IconPlay className="size-5" />
-              )}
-            </button>
-            <IconWaveform className={`h-5 w-10 ${discrete ? "text-[#c9a0bc]" : "text-ng-primary"}`} />
-            <button
-              type="button"
-              onClick={deleteAudio}
-              className="inline-flex size-10 items-center justify-center rounded-lg text-ng-urgent"
-              aria-label="Delete"
-            >
-              <IconTrash className="size-4" />
-            </button>
-          </div>
-        ) : null}
-      </div>
-      {!sttOk && audioUrl ? (
-        <p className="text-[10px] text-ng-muted">Audio · photo · texte</p>
+            {playing ? (
+              <IconPause className="size-5" />
+            ) : (
+              <IconPlay className="size-5" />
+            )}
+          </button>
+          <IconWaveform
+            className={`h-5 min-w-0 flex-1 ${discrete ? "text-[#c9a0bc]" : "text-ng-primary"}`}
+          />
+          <button
+            type="button"
+            onClick={deleteAudio}
+            className="inline-flex size-10 shrink-0 items-center justify-center rounded-lg text-ng-urgent"
+            aria-label="Delete"
+          >
+            <IconTrash className="size-4" />
+          </button>
+        </div>
       ) : null}
     </div>
   );

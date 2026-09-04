@@ -399,6 +399,26 @@ export function IconStop({ title, className = "size-6", ...rest }: IconProps) {
   );
 }
 
+export function IconClose({ title, className = "size-6", ...rest }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden={title ? undefined : true}
+      className={className}
+      {...rest}
+    >
+      {title ? <title>{title}</title> : null}
+      <path
+        d="M7 7l10 10M17 7 7 17"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 /** Animated waveform bars while recording (WAV-style visual). */
 export function IconWaveform({
   title,
