@@ -41,9 +41,9 @@ export function citizenShellMaxWidth(device: DeviceClass): string {
 
 /** Home SOS — larger, centered hero. */
 export function sosButtonSize(device: DeviceClass): string {
-  if (device === "desktop") return "size-[168px]";
-  if (device === "tablet") return "size-[148px]";
-  return "size-[128px]";
+  if (device === "desktop") return "size-[200px]";
+  if (device === "tablet") return "size-[176px]";
+  return "size-[152px]";
 }
 
 export function sosIconSize(device: DeviceClass): string {
