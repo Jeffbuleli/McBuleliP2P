@@ -284,7 +284,7 @@ export const messages: Record<Locale, Copy> = {
     youthDisclaimer: "Educational guide - not a lawyer or doctor. In real danger, use SOS NGEMBA.",
   },
   ln: {
-    tagline: "Bokebi - Kimya",
+    tagline: "Bokebi - Kimia",
     speak: "Lobela",
     witness: "Momonisi",
     prevent: "Kobatela",
@@ -462,7 +462,7 @@ export const messages: Record<Locale, Copy> = {
     youthDisclaimer: "Mwongozo wa elimu - si wakili wala daktari. Katika hatari halisi, tumia SOS NGEMBA.",
   },
   lua: {
-    tagline: "Usalama - Kimya",
+    tagline: "Bokebuka - Mpeve",
     speak: "Lobela",
     witness: "Mumonishi",
     prevent: "Kubikila",
@@ -551,7 +551,7 @@ export const messages: Record<Locale, Copy> = {
     youthDisclaimer: "Mokanda ya koyekola - te avocat to médecin. Na mabe ya solo, tinda SOS NGEMBA.",
   },
   kg: {
-    tagline: "Usalama - Kimya",
+    tagline: "Lunda - Ngemba",
     speak: "Lobela",
     witness: "Momonisi",
     prevent: "Kubikila",
