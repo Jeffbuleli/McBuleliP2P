@@ -14,6 +14,6 @@ ops/jitsi
 .env.*
 !.env.example
 mcbuleli_backup.dump
-services/mcbuleli-ai-trading/.venv
+services
 **/__pycache__
 *.tsbuildinfo
