@@ -17,6 +17,7 @@
 | **Phase 5** (observatoire / heatmap k-anonyme) | ✅ v0.1 |
 | **Phase 5.2** (carte OSM + filtres province/categorie) | ✅ v0.2 |
 | **UI audit** (McBuleli IA centre, polish, charts, PWA install) | ✅ v0.3 |
+| **Repo mobile dedie** (`Jeffbuleli/ngemba-mobile`) | ✅ pour EAS stable |
 
 Live : https://ngemba.cyberalert-rdc.org
 
@@ -30,13 +31,15 @@ Live : https://ngemba.cyberalert-rdc.org
 
 ## Phase 3b.4 - EAS APK
 
-- Profile `preview` → APK Android (`npm run eas:apk`)
+- Profile `preview` → APK Android
+- **Repo dedie :** https://github.com/Jeffbuleli/ngemba-mobile (local `/Users/mac/Documents/ngemba-mobile`)
+- Miroir : `services/ngemba-mobile/` dans McBuleliP2P
 - Doc : [22-EAS-BUILD.md](./22-EAS-BUILD.md)
-- **Action humaine :** `npx eas-cli login` puis lancer le build (compte Expo requis)
+- Fix prebuild : `newArchEnabled: false` · `expo-system-ui` · `.easignore`
 
 ## Prochain (technique)
 
-1. Build EAS APK preview + distribution pilote
+1. Distribuer APK pilote (lien EAS)
 2. Widget Android / volume keys (native)
 3. Bloc B : signatures JGL + relecture avocat
 

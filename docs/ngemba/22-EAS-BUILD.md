@@ -2,41 +2,44 @@
 
 > Profile **preview** = APK installable hors Play Store (pilote terrain).
 
+## Repo dedie (source de verite EAS)
+
+| | |
+|--|--|
+| **GitHub** | https://github.com/Jeffbuleli/ngemba-mobile |
+| **Local** | `/Users/mac/Documents/ngemba-mobile` |
+| **Expo** | `@mcbuleli-inc/ngemba` |
+| **Miroir monorepo** | `McBuleliP2P/services/ngemba-mobile/` |
+
+Ne plus lancer EAS depuis le monorepo (git root parent → Prebuild opaque).
+
 ## Prerequisites
 
-1. Compte Expo : https://expo.dev/signup
-2. Dans `services/ngemba-mobile` :
-
 ```bash
+cd /Users/mac/Documents/ngemba-mobile
 npm install
-npx eas-cli login
+# EXPO_TOKEN dans env, ou : npx eas-cli login
 ```
 
-## Lier le projet (1re fois)
-
-```bash
-cd services/ngemba-mobile
-npx eas-cli init
-```
-
-Cela ecrit `extra.eas.projectId` dans `app.json`. Committer ensuite.
+Credentials Android locales (gitignore) : `credentials.json` + `credentials/android/keystore.p12`.
 
 ## Build APK (preview)
 
 ```bash
-npm run eas:apk
-# equivalent : npx eas-cli build -p android --profile preview
+cd /Users/mac/Documents/ngemba-mobile
+npx eas-cli build -p android --profile preview --non-interactive
+# ou : npm run eas:apk
 ```
 
 - Build cloud Expo (~10-20 min)
-- Lien de telechargement APK a la fin + page expo.dev
-- API embarquee : `https://ngemba.cyberalert-rdc.org` (`eas.json` → env)
+- Lien APK en fin de build + page expo.dev
+- API : `https://ngemba.cyberalert-rdc.org` (`eas.json` → env)
 
 ## Installer sur Android
 
 1. Telecharger le `.apk` depuis le lien EAS
 2. Autoriser installation depuis sources inconnues
-3. Ouvrir NGEMBA → tester SOS / discrets / contacts
+3. Tester SOS / discret / contacts
 
 ## Autres profiles
 
@@ -44,33 +47,18 @@ npm run eas:apk
 |----------|--------|
 | `npm run eas:apk` | APK interne (preview) |
 | `npm run eas:aab` | AAB Play Store (production) |
-| `npm run eas:ios` | Build iOS (besoin Apple Developer) |
-
-## Token CI (optionnel)
-
-```bash
-export EXPO_TOKEN=...   # https://expo.dev/settings/access-tokens
-npx eas-cli build -p android --profile preview --non-interactive
-```
+| `npm run eas:ios` | Build iOS (Apple Developer) |
 
 ## Depannage
 
 | Probleme | Action |
 |----------|--------|
-| Not logged in | `npx eas-cli login` |
+| Not logged in | `EXPO_TOKEN` ou `npx eas-cli login` |
+| Prebuild fail monorepo | Build depuis `ngemba-mobile` repo dedie |
 | Missing projectId | `npx eas-cli init` |
 | Assets manquants | Verifier `assets/icon.png` |
-| Mauvaise API | Verifier `eas.json` → `EXPO_PUBLIC_NGEMBA_API_URL` |
+| Mauvaise API | `eas.json` → `EXPO_PUBLIC_NGEMBA_API_URL` |
+
+Fix prebuild appliques : `newArchEnabled: false`, `expo-system-ui`, `.easignore`.
 
 Voir aussi [16-PHASE-3B.md](./16-PHASE-3B.md).
-
-## Repo dedie (recommande pour EAS)
-
-Build stable depuis le repo separe :
-
-- GitHub : https://github.com/Jeffbuleli/ngemba-mobile
-- Local : `/Users/mac/Documents/ngemba-mobile`
-- Cause typique monorepo : git root = McBuleliP2P → Prebuild EAS opaque
-
-Le dossier `services/ngemba-mobile/` dans McBuleliP2P reste le miroir produit.
-
