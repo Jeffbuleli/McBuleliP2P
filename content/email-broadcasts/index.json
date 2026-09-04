@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-31T00:53:04.585Z",
+  "generatedAt": "2026-09-04T20:40:04.840283Z",
   "broadcasts": [
     {
       "slug": "mcbuleli-welcome-fr",
@@ -204,6 +204,18 @@
       "name": "McBuleli · hackathon_thank_you_gallery (FR)",
       "subject": "Merci · galerie photos HD · McBuleli Hackathon Kinshasa",
       "html": "mcbuleli-hackathon_thank_you_gallery-fr.html"
+    },
+    {
+      "slug": "mcbuleli-ngemba_hackathon_launch-fr",
+      "name": "NGEMBA · lancement post-Hackathon (FR)",
+      "subject": "NGEMBA · Paix en Kikongo · solution née du Hackathon",
+      "html": "mcbuleli-ngemba_hackathon_launch-fr.html"
+    },
+    {
+      "slug": "ngemba-hackathon-launch-fr",
+      "name": "NGEMBA · lancement post-Hackathon (FR)",
+      "subject": "NGEMBA · Paix en Kikongo · solution née du Hackathon",
+      "html": "ngemba-hackathon-launch-fr.html"
     }
   ]
 }

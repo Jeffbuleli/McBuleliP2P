@@ -40,6 +40,8 @@ function parseArgs(argv) {
     else if (a === "--kind" && argv[i + 1]) out.kind = argv[++i];
     else if (a.startsWith("--locale=")) out.locale = a.slice("--locale=".length);
     else if (a === "--locale" && argv[i + 1]) out.locale = argv[++i];
+    else if (a.startsWith("--slug=")) out.slug = a.slice("--slug=".length);
+    else if (a === "--slug" && argv[i + 1]) out.slug = argv[++i];
     else if (a.startsWith("--segment=")) out.segment = a.slice("--segment=".length);
     else if (a === "--segment" && argv[i + 1]) out.segment = argv[++i];
     else if (a.startsWith("--sync-post-id=")) out.syncPostId = a.slice("--sync-post-id=".length);
@@ -73,7 +75,7 @@ async function resolveSegmentId(explicit) {
   }
   const json = JSON.parse(listed.body);
   const first = json?.data?.[0];
-  if (!first?.id) throw new Error("No Resend segment found — create one in dashboard");
+  if (!first?.id) throw new Error("No Resend segment found - create one in dashboard");
   console.log(`Using segment: ${first.name} (${first.id})`);
   return first.id;
 }
@@ -90,13 +92,13 @@ async function main() {
   const kind = args.kind ?? "formation_crypto_reminder";
   const locale = args.locale ?? "fr";
 
-  const slug = `mcbuleli-${kind}-${locale}`;
+  const slug = args.slug?.trim() || `mcbuleli-${kind}-${locale}`;
   const htmlPath = resolve(root, `content/email-broadcasts/${slug}.html`);
   const metaPath = resolve(root, `content/email-broadcasts/${slug}.json`);
   const txtPath = resolve(root, `content/email-broadcasts/${slug}.txt`);
 
   if (!existsSync(htmlPath) || !existsSync(metaPath)) {
-    console.error(`Missing ${slug} — run: npm run resend:export-broadcasts`);
+    console.error(`Missing ${slug} - run: npm run resend:export-broadcasts`);
     process.exit(1);
   }
 
@@ -104,7 +106,15 @@ async function main() {
   const text = existsSync(txtPath) ? readFileSync(txtPath, "utf8") : undefined;
   const meta = JSON.parse(readFileSync(metaPath, "utf8"));
 
-  const from = process.env.RESEND_BROADCAST_FROM?.trim() || "McBuleli <noreply@mcbuleli.org>";
+  if (!html.includes("{{{RESEND_UNSUBSCRIBE_URL}}}")) {
+    console.error(`Missing {{{RESEND_UNSUBSCRIBE_URL}}} in ${slug}.html - Resend requires unsubscribe.`);
+    process.exit(1);
+  }
+
+  const from =
+    process.env.RESEND_BROADCAST_FROM?.trim() ||
+    meta.fromHint?.trim() ||
+    "McBuleli <noreply@mcbuleli.org>";
   const segmentId = await resolveSegmentId(args.segment);
 
   if (args.syncPostId) {
@@ -113,7 +123,7 @@ async function main() {
     const recipients = await fetchFormationPostRecipients(args.syncPostId);
     console.log(`Syncing ${recipients.length} enrolled contact(s) to segment…`);
     if (!recipients.length) {
-      console.error("No enrolled recipients found for post — aborting.");
+      console.error("No enrolled recipients found for post - aborting.");
       process.exit(1);
     }
     const key = process.env.RESEND_API_KEY?.trim();
@@ -124,7 +134,7 @@ async function main() {
     });
     console.log(`Contacts synced: ${sync.synced} ok, ${sync.failed} failed`);
     if (sync.synced === 0) {
-      console.error("No contacts synced to Resend — aborting broadcast.");
+      console.error("No contacts synced to Resend - aborting broadcast.");
       process.exit(1);
     }
   }
@@ -140,7 +150,7 @@ async function main() {
   }
 
   if (args.send && !canSend()) {
-    console.error("Send blocked — set RESEND_ALLOW_SEND=true in .env (local) or run in production.");
+    console.error("Send blocked - set RESEND_ALLOW_SEND=true in .env (local) or run in production.");
     process.exit(1);
   }
 
