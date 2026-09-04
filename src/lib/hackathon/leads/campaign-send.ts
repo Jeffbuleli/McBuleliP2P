@@ -1,6 +1,6 @@
 /**
  * Progressive Resend send for hackathon lead campaigns.
- * Daily batch default: 60 @ 09h Africa/Kinshasa (Resend mcbuleli.org).
+ * Daily batch default: 60 @ 08h30 Africa/Kinshasa (Resend mcbuleli.org).
  * Phase A: Gmail + iCloud → Phase B: corporate not yet contacted.
  */
 
@@ -108,7 +108,7 @@ export async function approveEditionCampaigns(args: {
       type: "APPROVED",
       meta: {
         dryRun: args.dryRun ?? false,
-        note: "Approved for progressive daily send (60/day Kinshasa 09h · Gmail/iCloud then corporate)",
+        note: "Approved for progressive daily send (60/day Kinshasa 08h30 · Gmail/iCloud then corporate)",
       },
     });
   }

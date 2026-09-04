@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * GitHub Actions cron - POST /api/internal/hackathon/campaign-daily-send
- * 09h00 Africa/Kinshasa = 08:00 UTC → send up to 60 partnership emails.
+ * 08h30 Africa/Kinshasa = 07:30 UTC → send up to 60 lead emails (NGEMBA / partnership).
  * Phase: Gmail/iCloud first, then corporate not yet contacted.
  * Infrequent email job → GHA (.github/workflows/cron-scheduled.yml), not VPS crontab.
  */

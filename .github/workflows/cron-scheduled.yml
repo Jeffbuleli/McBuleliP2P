@@ -2,20 +2,20 @@ name: Cron scheduled (infrequent)
 
 # Calls McBuleli /api/internal/* with x-cron-secret.
 # Required Actions secrets (Settings → Secrets → Actions):
-#   CRON_SECRET       — same as ops/vps/.env / cron.env on the VPS
-#   MCBULELI_API_URL  — https://mcbuleli.org
+#   CRON_SECRET       - same as ops/vps/.env / cron.env on the VPS
+#   MCBULELI_API_URL  - https://mcbuleli.org
 #
 # High-frequency money/bots stay on VPS (ops/vps/crontab).
 
 on:
   schedule:
     - cron: "*/15 * * * *"
-    # journey-nudge daily disabled — burns Resend free transactional quota (~1k/day).
+    # journey-nudge daily disabled - burns Resend free transactional quota (~1k/day).
     # Marketing blasts → Resend Broadcasts. Re-enable only with ACADEMY_JOURNEY_NUDGE_EMAIL=true on API.
     - cron: "0 1 * * 0"
-    # Hackathon lead partnership emails — 60/day at 09h00 Africa/Kinshasa (08:00 UTC)
+    # Hackathon lead partnership / NGEMBA emails - 60/day at 08h30 Africa/Kinshasa (07:30 UTC)
     # Gmail/iCloud first, then corporate not yet contacted
-    - cron: "0 8 * * *"
+    - cron: "30 7 * * *"
   workflow_dispatch:
     inputs:
       job:
@@ -89,7 +89,7 @@ jobs:
           || inputs.job == matrix.id
         run: node "${{ matrix.script }}"
 
-  # Manual only (nudge). Daily 09:00 UTC removed — Resend free quota is for transactional.
+  # Manual only (nudge). Daily 09:00 UTC removed - Resend free quota is for transactional.
   journey-nudge:
     if: github.event_name == 'workflow_dispatch' && inputs.job == 'nudge'
     runs-on: ubuntu-latest
@@ -136,10 +136,10 @@ jobs:
       - name: Top trader weekly payout
         run: node scripts/cron-top-trader-payout.mjs
 
-  # Daily partnership lead emails (Resend) — requires admin APPROVED + dryRun=false
+  # Daily lead emails (Resend) - NGEMBA / partnership · 08h30 Africa/Kinshasa · requires APPROVED + dryRun=false
   hackathon-lead-campaign:
     if: >
-      (github.event_name == 'schedule' && github.event.schedule == '0 8 * * *')
+      (github.event_name == 'schedule' && github.event.schedule == '30 7 * * *')
       || (github.event_name == 'workflow_dispatch' && inputs.job == 'hackathon-lead-campaign')
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -158,5 +158,5 @@ jobs:
             echo "::error::Missing MCBULELI_API_URL. Use https://mcbuleli.org"
             exit 1
           fi
-      - name: Hackathon lead campaign daily batch (60)
+      - name: Hackathon lead campaign daily batch (60 @ 08h30 Kinshasa)
         run: node scripts/cron-hackathon-lead-campaign.mjs

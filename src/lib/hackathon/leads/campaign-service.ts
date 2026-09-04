@@ -20,6 +20,10 @@ import {
   personalizeLeadEmail,
 } from "./lead-personalize";
 import {
+  NGEMBA_LAUNCH_TEMPLATE_KEY,
+  personalizeNgembaLaunchEmail,
+} from "./ngemba-launch-personalize";
+import {
   loadOutreachExclusionSet,
   outreachSkipReason,
   companyOutreachKey,
@@ -188,12 +192,16 @@ export async function createCampaign(args: {
   createdByUserId?: string | null;
   scheduledAt?: Date | null;
   dryRun?: boolean;
+  subjectTemplate?: string;
+  bodyTemplate?: string;
 }): Promise<{ id: string }> {
   const db = getDb();
   const segment = args.segment || "mixed";
   const subjectTemplate =
+    args.subjectTemplate ??
     "{{firstName}}, HACKATHON AI KINSHASA - invitation personnalisée";
   const bodyTemplate =
+    args.bodyTemplate ??
     "Template généré par segment (developers / ai_data / design_product / entrepreneurs / general).";
 
   const [row] = await db
@@ -249,6 +257,11 @@ export async function generateCampaignRecipients(args: {
   claimedCompanyKeys?: Set<string>;
   /** Shared edition-wide emails already queued or contacted (mutated). */
   claimedEmails?: Set<string>;
+  /**
+   * Allow re-contact of leads already emailed on this edition
+   * (follow-up campaigns like NGEMBA launch). Claims stay campaign-local.
+   */
+  recontactMode?: boolean;
 }): Promise<GenerateCampaignResult> {
   const db = getDb();
   const campaign = await getCampaign(args.campaignId);
@@ -261,6 +274,10 @@ export async function generateCampaignRecipients(args: {
     throw new Error("campaign_locked");
   }
 
+  const isNgemba =
+    campaign.bodyTemplate === NGEMBA_LAUNCH_TEMPLATE_KEY ||
+    args.recontactMode === true;
+
   if (args.regenerate) {
     await clearCampaignPendingRecipients(args.campaignId);
   }
@@ -270,7 +287,7 @@ export async function generateCampaignRecipients(args: {
     .from(hackathonLeads)
     .where(eq(hackathonLeads.editionId, campaign.editionId))
     .orderBy(desc(hackathonLeads.score))
-    .limit(3000);
+    .limit(isNgemba ? 8000 : 3000);
 
   const suppressed = await db
     .select({ emailCanonical: hackathonSuppressionList.emailCanonical })
@@ -280,10 +297,17 @@ export async function generateCampaignRecipients(args: {
 
   const claimed =
     args.claimedCompanyKeys ??
-    (await loadEditionClaimedCompanyKeys(campaign.editionId, args.campaignId));
+    (isNgemba
+      ? new Set<string>()
+      : await loadEditionClaimedCompanyKeys(
+          campaign.editionId,
+          args.campaignId,
+        ));
   const claimedEmails =
     args.claimedEmails ??
-    (await loadEditionClaimedEmails(campaign.editionId, args.campaignId));
+    (isNgemba
+      ? new Set<string>()
+      : await loadEditionClaimedEmails(campaign.editionId, args.campaignId));
 
   const base = partnershipPublicBaseUrl();
   let queued = 0;
@@ -332,15 +356,19 @@ export async function generateCampaignRecipients(args: {
       status = "SKIPPED";
       skipReason = "already_registered";
     } else if (
-      (lead.contactCount ?? 0) > 0 ||
-      lead.lastContactedAt != null ||
-      claimedEmails.has(emailKey)
+      !isNgemba &&
+      ((lead.contactCount ?? 0) > 0 ||
+        lead.lastContactedAt != null ||
+        claimedEmails.has(emailKey))
     ) {
       status = "SKIPPED";
       skipReason =
         (lead.contactCount ?? 0) > 0 || lead.lastContactedAt != null
           ? "already_contacted"
           : "duplicate_email";
+    } else if (isNgemba && claimedEmails.has(emailKey)) {
+      status = "SKIPPED";
+      skipReason = "duplicate_email";
     } else if (companyKey && claimed.has(companyKey)) {
       status = "SKIPPED";
       skipReason = "duplicate_company";
@@ -353,23 +381,30 @@ export async function generateCampaignRecipients(args: {
       clickToken,
     });
 
-    const personalized = personalizeLeadEmail({
-      lead: {
-        firstName: lead.firstName,
-        lastName: lead.lastName,
-        email: lead.email,
-        jobTitle: lead.jobTitle,
-        company: lead.company,
-        location: lead.location,
-        skills: lead.skills ?? [],
-        segment: lead.segment as HackathonLeadSegment,
-        recommendedProfile: lead.recommendedProfile,
-        notes: lead.notes,
-      },
-      unsubscribeUrl: unsubUrl,
-      ctaUrl,
-      campaignName: campaign.name,
-    });
+    const personalized =
+      campaign.bodyTemplate === NGEMBA_LAUNCH_TEMPLATE_KEY
+        ? personalizeNgembaLaunchEmail({
+            firstName: lead.firstName,
+            unsubscribeUrl: unsubUrl,
+            company: lead.company,
+          })
+        : personalizeLeadEmail({
+            lead: {
+              firstName: lead.firstName,
+              lastName: lead.lastName,
+              email: lead.email,
+              jobTitle: lead.jobTitle,
+              company: lead.company,
+              location: lead.location,
+              skills: lead.skills ?? [],
+              segment: lead.segment as HackathonLeadSegment,
+              recommendedProfile: lead.recommendedProfile,
+              notes: lead.notes,
+            },
+            unsubscribeUrl: unsubUrl,
+            ctaUrl,
+            campaignName: campaign.name,
+          });
 
     try {
       await db.insert(hackathonCampaignRecipients).values({
@@ -536,6 +571,120 @@ export async function prepareJul31CampaignPack(args: {
   }
 
   return { campaigns, scheduledAt: scheduledAt.toISOString() };
+}
+
+/** Pause live campaigns so a follow-up pack (e.g. NGEMBA) owns the daily quota. */
+export async function pauseActiveEditionCampaigns(
+  editionId: string,
+): Promise<{ paused: number }> {
+  const db = getDb();
+  const now = new Date();
+  const updated = await db
+    .update(hackathonEmailCampaigns)
+    .set({
+      status: "PAUSED",
+      updatedAt: now,
+    })
+    .where(
+      and(
+        eq(hackathonEmailCampaigns.editionId, editionId),
+        inArray(hackathonEmailCampaigns.status, [
+          "DRAFT",
+          "READY_FOR_REVIEW",
+          "APPROVED",
+          "SENDING",
+        ]),
+      ),
+    )
+    .returning({ id: hackathonEmailCampaigns.id });
+
+  for (const row of updated) {
+    await db.insert(hackathonCampaignEvents).values({
+      campaignId: row.id,
+      type: "PAUSED",
+      meta: { note: "Paused for NGEMBA launch follow-up campaign" },
+    });
+  }
+  return { paused: updated.length };
+}
+
+/**
+ * One mixed campaign: NGEMBA launch HTML for annuaire leads.
+ * Re-contacts prior partnership outreach; 60/day via cron @ 08h30 Kinshasa.
+ */
+export async function prepareNgembaLaunchCampaignPack(args: {
+  editionId: string;
+  createdByUserId?: string | null;
+  minCategory?: HackathonLeadCategory;
+  /** Approve live (dryRun=false) after generate */
+  approveLive?: boolean;
+}): Promise<{
+  paused: number;
+  campaignId: string;
+  name: string;
+  generate: GenerateCampaignResult;
+  approved: boolean;
+}> {
+  const { paused } = await pauseActiveEditionCampaigns(args.editionId);
+  const name = "NGEMBA launch · annuaire leads (60/j · 08h30 Kinshasa)";
+  const { id } = await createCampaign({
+    editionId: args.editionId,
+    name,
+    segment: "mixed",
+    minCategory: args.minCategory ?? "C_LOW",
+    createdByUserId: args.createdByUserId,
+    scheduledAt: new Date(),
+    dryRun: !(args.approveLive ?? false),
+    subjectTemplate: "NGEMBA · Paix en Kikongo · solution née du Hackathon",
+    bodyTemplate: NGEMBA_LAUNCH_TEMPLATE_KEY,
+  });
+
+  const generate = await generateCampaignRecipients({
+    campaignId: id,
+    regenerate: true,
+    recontactMode: true,
+    claimedCompanyKeys: new Set(),
+    claimedEmails: new Set(),
+  });
+
+  await scheduleCampaign({
+    campaignId: id,
+    scheduledAt: new Date(),
+    dryRun: !(args.approveLive ?? false),
+    markReady: true,
+  });
+
+  let approved = false;
+  if (args.approveLive) {
+    const db = getDb();
+    const now = new Date();
+    await db
+      .update(hackathonEmailCampaigns)
+      .set({
+        status: "APPROVED",
+        dryRun: false,
+        approvedAt: now,
+        updatedAt: now,
+      })
+      .where(eq(hackathonEmailCampaigns.id, id));
+    await db.insert(hackathonCampaignEvents).values({
+      campaignId: id,
+      type: "APPROVED",
+      meta: {
+        dryRun: false,
+        note: "NGEMBA launch · progressive 60/day · 08h30 Africa/Kinshasa",
+      },
+    });
+    approved = true;
+  }
+
+  return {
+    paused,
+    campaignId: id,
+    name,
+    generate,
+    approved,
+  };
 }
 
 export async function listCampaignRecipients(args: {
