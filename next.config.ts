@@ -98,18 +98,8 @@ const nextConfig: NextConfig = {
         destination: "https://mcbuleli.com/:path*",
         permanent: true,
       },
-      {
-        source: "/:path*",
-        has: [{ type: "host", value: "mcbuleli.org" }],
-        destination: "https://mcbuleli.com/:path*",
-        permanent: true,
-      },
-      {
-        source: "/:path*",
-        has: [{ type: "host", value: "www.mcbuleli.org" }],
-        destination: "https://mcbuleli.com/:path*",
-        permanent: true,
-      },
+      // mcbuleli.org / www.mcbuleli.org → .com is handled by nginx (+ middleware),
+      // except /.well-known/webauthn which must stay on the RP ID host for passkeys.
       {
         source: "/:path*",
         has: [{ type: "host", value: "www.mcbuleli.com" }],
