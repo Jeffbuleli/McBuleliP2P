@@ -3,12 +3,12 @@ export const locales = ["fr", "en", "ln", "sw", "lua", "kg"] as const;
 export type Locale = (typeof locales)[number];
 
 export const localeLabels: Record<Locale, string> = {
-  fr: "FR",
-  en: "EN",
-  ln: "LN",
-  sw: "SW",
-  lua: "LU",
-  kg: "KG",
+  fr: "Français",
+  en: "Anglais",
+  ln: "Lingala",
+  sw: "Kiswahili",
+  lua: "Tshiluba",
+  kg: "Kikongo",
 };
 
 type Copy = {
