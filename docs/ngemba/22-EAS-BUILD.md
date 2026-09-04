@@ -58,7 +58,9 @@ npx eas-cli build -p android --profile preview --non-interactive
 | Missing projectId | `npx eas-cli init` |
 | Assets manquants | Verifier `assets/icon.png` |
 | Mauvaise API | `eas.json` → `EXPO_PUBLIC_NGEMBA_API_URL` |
+| Bundle JS: `expo-asset` missing | Ajouter deps explicites `expo-asset`, `expo-font`, `expo-file-system` puis `npm install` |
 
 Fix prebuild appliques : `newArchEnabled: false`, `expo-system-ui`, `.easignore`.
+Fix bundle JS : deps Expo hoistées dans `package.json` (SDK 52).
 
 Voir aussi [16-PHASE-3B.md](./16-PHASE-3B.md).

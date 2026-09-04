@@ -11,7 +11,7 @@
 | **Phase 3b** (Expo mobile v0.1) | ✅ scaffold |
 | **Phase 3b.2** (i18n LN+, locale persist, EAS) | ✅ v0.2 |
 | **Phase 3b.3** (contacts confiance + secousse 5x) | ✅ v0.3 |
-| **Phase 3b.4** (EAS APK preview) | ✅ config · build apres `eas login` |
+| **Phase 3b.4** (EAS APK preview) | ✅ APK dispo (build `888f6f3e`) |
 | **Phase 4** (Safe School + Jeunesse 10 scenarios) | ✅ v0.1 web |
 | **Phase 4.2** (role school, mobile, contenu) | ✅ v0.2 |
 | **Phase 5** (observatoire / heatmap k-anonyme) | ✅ v0.1 |
@@ -36,10 +36,13 @@ Live : https://ngemba.cyberalert-rdc.org
 - Miroir : `services/ngemba-mobile/` dans McBuleliP2P
 - Doc : [22-EAS-BUILD.md](./22-EAS-BUILD.md)
 - Fix prebuild : `newArchEnabled: false` · `expo-system-ui` · `.easignore`
+- Fix bundle JS : deps `expo-asset` · `expo-font` · `expo-file-system` (repo dedie `97939c4`)
+- **APK :** https://expo.dev/artifacts/eas/ewCQpWoxhAGKji1l1rlIJqLq_zvFTPfUFY0Rj-IbsII.apk
+- Page build : https://expo.dev/accounts/mcbuleli-inc/projects/ngemba/builds/888f6f3e-43d3-469c-8356-9f1b8313aac6
 
 ## Prochain (technique)
 
-1. Distribuer APK pilote (lien EAS)
+1. Distribuer APK pilote (lien ci-dessus) aux testeurs terrain
 2. Widget Android / volume keys (native)
 3. Bloc B : signatures JGL + relecture avocat
 
