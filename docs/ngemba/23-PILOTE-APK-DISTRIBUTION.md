@@ -1,6 +1,6 @@
 # NGEMBA - Distribution APK pilote
 
-> Build preview EAS `888f6f3e` · hors Play Store · testeurs internes / JGL
+> Build preview EAS `2487d515` · v0.3.3 (versionCode 6) · hors Play Store · testeurs internes / JGL
 
 ---
 
@@ -8,8 +8,8 @@
 
 | | |
 |--|--|
-| **APK direct** | (build `51529f24` en cours - page Expo) https://expo.dev/accounts/mcbuleli-inc/projects/ngemba/builds/51529f24-d969-46aa-bef6-40ba5863c479 |
-| **Page build** | https://expo.dev/accounts/mcbuleli-inc/projects/ngemba/builds/51529f24-d969-46aa-bef6-40ba5863c479 |
+| **APK direct** | (build `2487d515` en cours - page Expo) https://expo.dev/accounts/mcbuleli-inc/projects/ngemba/builds/2487d515-ffa0-48f2-89ce-26afe344b673 |
+| **Page build** | https://expo.dev/accounts/mcbuleli-inc/projects/ngemba/builds/2487d515-ffa0-48f2-89ce-26afe344b673 |
 | **Web / PWA** | https://ngemba-rdc.org |
 | **Lien APK sur le site** | Home → « APK Android » |
 | **Repo mobile** | https://github.com/Jeffbuleli/ngemba-mobile |
