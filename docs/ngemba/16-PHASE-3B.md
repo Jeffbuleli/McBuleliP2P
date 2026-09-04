@@ -1,6 +1,6 @@
 # NGEMBA - Phase 3b (App mobile Expo)
 
-> **Statut :** v0.3 · EAS APK pret (build cloud apres `eas login`)
+> **Statut :** v0.3 · EAS APK `888f6f3e` pret · distribution [23-PILOTE-APK-DISTRIBUTION.md](./23-PILOTE-APK-DISTRIBUTION.md)
 
 ---
 

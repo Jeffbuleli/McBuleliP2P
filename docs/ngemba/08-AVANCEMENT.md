@@ -40,9 +40,14 @@ Live : https://ngemba.cyberalert-rdc.org
 - **APK :** https://expo.dev/artifacts/eas/ewCQpWoxhAGKji1l1rlIJqLq_zvFTPfUFY0Rj-IbsII.apk
 - Page build : https://expo.dev/accounts/mcbuleli-inc/projects/ngemba/builds/888f6f3e-43d3-469c-8356-9f1b8313aac6
 
+## Distribution pilote APK
+
+- Pack pret : [23-PILOTE-APK-DISTRIBUTION.md](./23-PILOTE-APK-DISTRIBUTION.md)
+  (lien APK · checklist 15 min · message WhatsApp/email)
+
 ## Prochain (technique)
 
-1. Distribuer APK pilote (lien ci-dessus) aux testeurs terrain
+1. Envoyer pack APK aux testeurs · remonter retours
 2. Widget Android / volume keys (native)
 3. Bloc B : signatures JGL + relecture avocat
 

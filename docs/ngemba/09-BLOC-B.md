@@ -29,6 +29,7 @@ Apres validation : `NGEMBA_OPS_PILOT_VERIFIED=true` + email JGL + code ONG.
 | B7 | Securite cyber renforcee | ✅ v1 |
 | B9 | Pages Ressources + Prevenir + legal | ✅ |
 | B8 | 1 alerte test prise en charge (ops) | ✅ smoke automatise · alerte reelle JGL ⏳ |
+| B10 | Distribution APK pilote terrain | 📄 [23-PILOTE-APK-DISTRIBUTION.md](./23-PILOTE-APK-DISTRIBUTION.md) · envoi testeurs ⏳ |
 
 **Bloc B technique : termine.** Reste humain : signature accord (B2), relecture avocat (B3), premiere alerte citoyenne reelle (B8).
 
