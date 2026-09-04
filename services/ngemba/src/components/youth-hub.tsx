@@ -1,11 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { IconSpark, IconUsers } from "@/components/icons";
+import { IconUsers } from "@/components/icons";
+import { YOUTH_SCENARIO_ICONS } from "@/components/youth-scenario-icons";
 import { useCitizenLocale } from "@/hooks/use-citizen-locale";
 import { messages } from "@/lib/i18n";
 import { YOUTH_SCENARIOS } from "@/lib/youth/scenarios";
-import { citizenPagePad, citizenShellMaxWidth, useDeviceClass } from "@/lib/ui/device";
+import {
+  citizenPagePad,
+  citizenShellMaxWidth,
+  useDeviceClass,
+} from "@/lib/ui/device";
 
 export function YouthHub({ initialLocale }: { initialLocale?: string }) {
   const { locale, href } = useCitizenLocale(initialLocale);
@@ -31,24 +36,29 @@ export function YouthHub({ initialLocale }: { initialLocale?: string }) {
       </div>
 
       <ul className="mt-6 grid grid-cols-2 gap-3">
-        {YOUTH_SCENARIOS.map((scenario, index) => (
-          <li key={scenario.id}>
-            <Link
-              href={href(`/jeunesse/${scenario.id}`)}
-              className="flex h-full flex-col gap-2 rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-3 transition hover:border-ng-primary/30"
-            >
-              <span className="inline-flex size-8 items-center justify-center rounded-xl bg-ng-secondary-muted text-ng-secondary">
-                <IconSpark className="size-4" />
-              </span>
-              <span className="text-[10px] font-bold text-ng-muted">
-                {index + 1}/10
-              </span>
-              <p className="text-xs font-semibold leading-snug text-ng-text">
-                {scenario.title[locale]}
-              </p>
-            </Link>
-          </li>
-        ))}
+        {YOUTH_SCENARIOS.map((scenario, index) => {
+          const Icon = YOUTH_SCENARIO_ICONS[scenario.id];
+          return (
+            <li key={scenario.id}>
+              <Link
+                href={href(`/jeunesse/${scenario.id}`)}
+                className="flex h-full flex-col gap-2.5 rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-3 transition hover:border-ng-primary/30"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="inline-flex size-9 items-center justify-center rounded-xl bg-ng-secondary-muted text-ng-secondary">
+                    <Icon className="size-5" />
+                  </span>
+                  <span className="tabular-nums text-[10px] font-bold text-ng-muted">
+                    {index + 1}/10
+                  </span>
+                </div>
+                <p className="text-xs font-semibold leading-snug text-ng-text">
+                  {scenario.title[locale]}
+                </p>
+              </Link>
+            </li>
+          );
+        })}
       </ul>
 
       <p className="mt-6 text-center text-[11px] text-ng-muted">
