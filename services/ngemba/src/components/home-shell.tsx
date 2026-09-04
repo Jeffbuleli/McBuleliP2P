@@ -7,7 +7,6 @@ import {
   IconBook,
   IconDownload,
   IconEye,
-  IconGlobe,
   IconGraduation,
   IconShield,
   IconUsers,
@@ -131,14 +130,12 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
             </p>
           </div>
         </div>
-        <label className="relative inline-flex items-center gap-1.5">
-          <IconGlobe className="size-4 shrink-0 text-ng-muted" aria-hidden />
-          <span className="sr-only">{t.language}</span>
+        <label className="relative inline-flex items-center">
           <select
             value={locale}
             onChange={(e) => changeLocale(e.target.value as Locale)}
             aria-label={t.language}
-            className="min-h-9 max-w-[9.5rem] appearance-none rounded-full border border-[var(--ng-border)] bg-ng-surface py-1.5 pl-3 pr-8 text-xs font-semibold text-ng-primary outline-none focus-visible:ring-2 focus-visible:ring-ng-primary sm:max-w-none"
+            className="min-h-9 max-w-[10.5rem] appearance-none rounded-full border border-[var(--ng-border)] bg-ng-surface py-1.5 pl-3 pr-8 text-xs font-semibold text-ng-primary outline-none focus-visible:ring-2 focus-visible:ring-ng-primary sm:max-w-none"
           >
             {locales.map((code) => (
               <option key={code} value={code}>

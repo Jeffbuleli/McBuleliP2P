@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { ComposePhotos } from "@/components/compose-photos";
-import { IconShield, IconSpark } from "@/components/icons";
+import { IconEye, IconShield, IconSpark } from "@/components/icons";
 import { PolishButton } from "@/components/polish-button";
 import { TrustedContactsEditor } from "@/components/trusted-contacts-editor";
 import { VoiceButton } from "@/components/voice-button";
@@ -43,6 +43,18 @@ export function SosFlow({
   const t = messages[locale];
   const device = useDeviceClass();
   const isWitness = source === "witness";
+  const modeLabel = discrete ? t.discrete : isWitness ? t.witness : t.sos;
+  const modeTitle = discrete
+    ? t.tell
+    : isWitness
+      ? t.witnessTell
+      : t.tell;
+  const modeBanner = discrete
+    ? t.discreteSafety
+    : isWitness
+      ? t.witnessSafety
+      : t.sosComposeHint;
+  const ModeIcon = isWitness && !discrete ? IconEye : IconShield;
 
   const [step, setStep] = useState<Step>("tell");
   const [message, setMessage] = useState("");
@@ -200,10 +212,12 @@ export function SosFlow({
           className={`inline-flex items-center gap-2 rounded-full px-3.5 py-2 ${
             discrete
               ? "bg-white/10 text-[#e8d4e3]"
-              : "bg-ng-urgent/10 text-ng-urgent"
+              : isWitness
+                ? "bg-ng-secondary-muted text-ng-secondary"
+                : "bg-ng-urgent/10 text-ng-urgent"
           }`}
         >
-          <IconShield
+          <ModeIcon
             className={device === "desktop" ? "size-5" : "size-4"}
           />
           <span
@@ -211,7 +225,7 @@ export function SosFlow({
               device === "desktop" ? "text-sm" : "text-xs"
             }`}
           >
-            {discrete ? t.discrete : isWitness ? t.witness : t.sos}
+            {modeLabel}
           </span>
         </div>
         <div
@@ -224,11 +238,20 @@ export function SosFlow({
         </div>
       </header>
 
-      {isWitness && !discrete ? (
-        <p className="mt-4 rounded-xl bg-ng-secondary-muted px-3 py-2 text-xs font-medium leading-relaxed text-ng-secondary md:text-sm">
-          {t.witnessSafety}
-        </p>
-      ) : null}
+      <p
+        className={`mt-4 rounded-xl px-3 py-2 text-xs font-medium leading-relaxed md:text-sm ${
+          discrete
+            ? "bg-white/5 text-[#c9a0bc]"
+            : isWitness
+              ? "bg-ng-secondary-muted text-ng-secondary"
+              : "bg-ng-urgent/10 text-ng-urgent"
+        }`}
+      >
+        {modeBanner}
+        {discrete ? (
+          <span className="mt-1 block opacity-90">{t.discreteHint}</span>
+        ) : null}
+      </p>
 
       {step === "tell" ? (
         <section className="mt-6 flex flex-1 flex-col gap-3 md:gap-4">
@@ -237,7 +260,7 @@ export function SosFlow({
               device === "desktop" ? "text-2xl" : "text-xl"
             } ${discrete ? "text-[#e8d4e3]" : "text-ng-primary"}`}
           >
-            {discrete ? t.discrete : isWitness ? t.witnessTell : t.tell}
+            {modeTitle}
           </h1>
           <div className="relative">
             <textarea
@@ -304,7 +327,11 @@ export function SosFlow({
             disabled={!canSend || busy}
             onClick={() => (discrete ? void submit({}) : setStep("place"))}
             className={`mt-auto min-h-12 rounded-2xl px-4 text-sm font-semibold text-white disabled:opacity-50 ${
-              discrete ? "ng-discrete-btn" : "bg-ng-urgent"
+              discrete
+                ? "ng-discrete-btn"
+                : isWitness
+                  ? "bg-ng-secondary"
+                  : "bg-ng-urgent"
             }`}
           >
             {discrete ? t.discreteSend : t.send}
