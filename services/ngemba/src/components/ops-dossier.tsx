@@ -403,15 +403,19 @@ export function OpsDossierView({ id }: { id: string }) {
           </article>
         ) : null}
 
-        <SessionChat
-          sessionId={session.id}
-          labels={{
-            chatTitle: "Échange citoyen",
-            chatPlaceholder: "Réponse opérateur...",
-            chatSend: "Envoyer",
-            chatEmpty: "Aucun message pour l'instant.",
-          }}
-        />
+        <div className="md:col-span-2">
+          <SessionChat
+            sessionId={session.id}
+            viewerRole="operator"
+            labels={{
+              chatTitle: "Échange avec le citoyen",
+              chatPlaceholder: "Répondre au citoyen...",
+              chatSend: "Envoyer",
+              chatEmpty:
+                "Aucun message pour l'instant. Écrivez pour orienter la personne.",
+            }}
+          />
+        </div>
 
         <article className="rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-4">
           <h2 className="text-xs font-semibold uppercase tracking-wide text-ng-muted">
