@@ -15,11 +15,37 @@ type Props = {
   discrete?: boolean;
 };
 
+type Preview = { key: string; url: string; broken: boolean };
+
 function mosaicClass(count: number): string {
   if (count <= 1) return "grid-cols-1";
   if (count === 2) return "grid-cols-2";
   if (count === 3) return "grid-cols-2";
   return "grid-cols-2";
+}
+
+function fileKey(f: File, i: number): string {
+  return `${f.name}|${f.size}|${f.lastModified}|${i}`;
+}
+
+function isImageFile(f: File): boolean {
+  if (f.type.startsWith("image/")) return true;
+  return /\.(jpe?g|png|webp|gif|heic|heif)$/i.test(f.name);
+}
+
+function isLikelyUnpreviewable(f: File): boolean {
+  const t = (f.type || "").toLowerCase();
+  const n = f.name.toLowerCase();
+  return t.includes("heic") || t.includes("heif") || /\.heic$|\.heif$/i.test(n);
+}
+
+function readAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(reader.error ?? new Error("read_failed"));
+    reader.readAsDataURL(file);
+  });
 }
 
 function IconReplace({ className = "size-5" }: { className?: string }) {
@@ -55,37 +81,39 @@ export function ComposePhotos({
 }: Props) {
   const addRef = useRef<HTMLInputElement>(null);
   const replaceRef = useRef<HTMLInputElement>(null);
-  const [previews, setPreviews] = useState<string[]>([]);
+  const [previews, setPreviews] = useState<Preview[]>([]);
   const [active, setActive] = useState<number | null>(null);
   const replaceIndexRef = useRef<number | null>(null);
 
-  const urlsRef = useRef<string[]>([]);
-
+  // Data URLs survivront au remount Strict Mode (contrairement a createObjectURL revoke).
   useEffect(() => {
-    const next = photos.map((f) => URL.createObjectURL(f));
-    const prev = urlsRef.current;
-    urlsRef.current = next;
-    setPreviews(next);
-    // Revoke previous after paint so imgs never point at a dead blob.
-    const t = window.setTimeout(() => {
-      prev.forEach((u) => URL.revokeObjectURL(u));
-    }, 0);
+    let cancelled = false;
+    if (photos.length === 0) {
+      setPreviews([]);
+      return;
+    }
+    void (async () => {
+      const next: Preview[] = [];
+      for (let i = 0; i < photos.length; i++) {
+        const f = photos[i];
+        const key = fileKey(f, i);
+        if (isLikelyUnpreviewable(f)) {
+          next.push({ key, url: "", broken: true });
+          continue;
+        }
+        try {
+          const url = await readAsDataUrl(f);
+          next.push({ key, url, broken: !url });
+        } catch {
+          next.push({ key, url: "", broken: true });
+        }
+      }
+      if (!cancelled) setPreviews(next);
+    })();
     return () => {
-      window.clearTimeout(t);
+      cancelled = true;
     };
   }, [photos]);
-
-  useEffect(() => {
-    return () => {
-      urlsRef.current.forEach((u) => URL.revokeObjectURL(u));
-      urlsRef.current = [];
-    };
-  }, []);
-
-  function isImageFile(f: File): boolean {
-    if (f.type.startsWith("image/")) return true;
-    return /\.(jpe?g|png|webp|gif|heic|heif)$/i.test(f.name);
-  }
 
   function addFiles(list: FileList | null) {
     if (!list?.length) return;
@@ -130,7 +158,7 @@ export function ComposePhotos({
       <input
         ref={addRef}
         type="file"
-        accept="image/*,image/jpeg,image/png,image/webp"
+        accept="image/jpeg,image/png,image/webp,image/gif,image/*"
         multiple
         className="hidden"
         onChange={(e) => addFiles(e.target.files)}
@@ -138,7 +166,7 @@ export function ComposePhotos({
       <input
         ref={replaceRef}
         type="file"
-        accept="image/*,image/jpeg,image/png,image/webp"
+        accept="image/jpeg,image/png,image/webp,image/gif,image/*"
         className="hidden"
         onChange={(e) => replaceFile(e.target.files)}
       />
@@ -167,32 +195,47 @@ export function ComposePhotos({
           </button>
         ) : (
           <ul className={`grid gap-2 ${mosaicClass(photos.length)}`}>
-            {previews.map((url, i) => (
-              <li
-                key={`${photos[i]?.name ?? "p"}-${i}-${photos[i]?.size ?? 0}`}
-                className={`relative overflow-hidden rounded-xl border border-[var(--ng-border)] bg-black/5 ${tileH} ${
-                  photos.length === 3 && i === 0 ? "row-span-2 min-h-[16.5rem]" : ""
-                }`}
-              >
-                <button
-                  type="button"
-                  onClick={() => setActive(i)}
-                  className="block size-full"
-                  aria-label="View"
+            {photos.map((f, i) => {
+              const p = previews[i];
+              return (
+                <li
+                  key={fileKey(f, i)}
+                  className={`relative overflow-hidden rounded-xl border border-[var(--ng-border)] bg-black/5 ${tileH} ${
+                    photos.length === 3 && i === 0
+                      ? "row-span-2 min-h-[16.5rem]"
+                      : ""
+                  }`}
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={url}
-                    alt=""
-                    decoding="async"
-                    className="size-full min-h-[inherit] object-cover"
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).style.opacity = "0.35";
-                    }}
-                  />
-                </button>
-              </li>
-            ))}
+                  <button
+                    type="button"
+                    onClick={() => setActive(i)}
+                    className="block size-full"
+                    aria-label="Voir"
+                  >
+                    {p?.url && !p.broken ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={p.url}
+                        alt=""
+                        decoding="async"
+                        className="size-full min-h-[inherit] object-cover"
+                      />
+                    ) : (
+                      <span
+                        className={`flex size-full flex-col items-center justify-center gap-1 px-2 text-center text-[11px] font-medium ${
+                          discrete ? "text-[#c9a0bc]" : "text-ng-muted"
+                        }`}
+                      >
+                        <IconPhoto className="size-7 opacity-60" />
+                        {p?.broken
+                          ? "Apercu indisponible (fichier conserve)"
+                          : "Chargement…"}
+                      </span>
+                    )}
+                  </button>
+                </li>
+              );
+            })}
             {photos.length < COMPOSE_MAX_PHOTOS ? (
               <li>
                 <button
@@ -217,7 +260,7 @@ export function ComposePhotos({
         )}
       </div>
 
-      {active != null && previews[active] ? (
+      {active != null && photos[active] ? (
         <div
           className="fixed inset-0 z-50 flex items-end justify-center bg-black/55 p-4 sm:items-center"
           role="dialog"
@@ -228,19 +271,24 @@ export function ComposePhotos({
             className="w-full max-w-md overflow-hidden rounded-2xl bg-ng-surface shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={previews[active]}
-              alt=""
-              className="max-h-[55vh] w-full object-contain bg-black/5"
-            />
+            {previews[active]?.url && !previews[active]?.broken ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={previews[active].url}
+                alt=""
+                className="max-h-[55vh] w-full object-contain bg-black/5"
+              />
+            ) : (
+              <p className="px-4 py-10 text-center text-sm text-ng-muted">
+                Apercu indisponible - la photo sera bien envoyee.
+              </p>
+            )}
             <div className="flex items-center justify-around gap-2 p-3">
               <button
                 type="button"
                 onClick={() => setActive(null)}
                 className="inline-flex size-12 items-center justify-center rounded-xl bg-ng-primary-muted text-ng-primary"
-                aria-label="Close"
-                title="Close"
+                aria-label="Fermer"
               >
                 <IconClose className="size-5" />
               </button>
@@ -248,8 +296,7 @@ export function ComposePhotos({
                 type="button"
                 onClick={() => startReplace(active)}
                 className="inline-flex size-12 items-center justify-center rounded-xl bg-ng-primary-muted text-ng-primary"
-                aria-label="Replace"
-                title="Replace"
+                aria-label="Remplacer"
               >
                 <IconReplace className="size-5" />
               </button>
@@ -257,8 +304,7 @@ export function ComposePhotos({
                 type="button"
                 onClick={() => removeAt(active)}
                 className="inline-flex size-12 items-center justify-center rounded-xl bg-ng-urgent/10 text-ng-urgent"
-                aria-label="Delete"
-                title="Delete"
+                aria-label="Supprimer"
               >
                 <IconTrash className="size-5" />
               </button>

@@ -1,11 +1,11 @@
-NGEMBA — Paix en Kikongo · née du Hackathon
+NGEMBA - Paix en Kikongo · née du Hackathon
 
 Bonjour,
 
 NGEMBA est née du Hackathon. Aujourd'hui, elle appartient à toute la RDC.
 
 NGEMBA signifie Paix en Kikongo.
-C'est un outil numérique intelligent de vigilance citoyenne, conçu lors du Hackathon (Kinshasa · Silikin Village), pour aider la population à alerter, être entendue et être orientée — sans devoir comprendre un système complexe.
+C'est un outil numérique intelligent de vigilance citoyenne, conçu lors du Hackathon (Kinshasa · Silikin Village), pour aider la population à alerter, être entendue et être orientée - sans devoir comprendre un système complexe.
 
 Parcours : Écouter → Comprendre → Alerter → Orienter → Protéger → Suivre
 
@@ -13,11 +13,11 @@ VISION
 Une RDC où chaque personne dispose d'un outil numérique simple pour signaler un danger et être orientée, grâce à Ngemba IA.
 
 MISSION
-Réduire — et à terme contribuer à éradiquer — le fléau des violences et des silences forcés :
+Réduire - et à terme contribuer à éradiquer - le fléau des violences et des silences forcés :
 SOS · Témoin · Mode discret · Safe School · file OPS humaine.
 
 NGEMBA IA
-Ngemba IA comprend le message (texte, voix, photo), trie l'urgence et aide l'opérateur — l'IA oriente, l'humain décide.
+Ngemba IA comprend le message (texte, voix, photo), trie l'urgence et aide l'opérateur - l'IA oriente, l'humain décide.
 
 NOUS APPELONS TOUTES LES COUCHES
 - Population
@@ -29,10 +29,12 @@ Ouvrir NGEMBA : https://ngemba-rdc.org/
 OPS : https://ngemba-rdc.org/ops/login
 
 La paix se construit aussi avec le numérique.
-Rejoignez NGEMBA — pour la RDC.
+Rejoignez NGEMBA - pour la RDC.
 
 L'équipe NGEMBA
 Ngemba IA · Sécurité - Paix
 hi@mcbuleli.org
++243 997 366 736 · +243 860 218 521
+WhatsApp : https://wa.me/message/IF6DXNT6Q2VSI1
 
 © 2026 McBuleli · RCCM : CD/KNG/RCCM/26-A-00382 · ID Nat. / NIF : G2660507E

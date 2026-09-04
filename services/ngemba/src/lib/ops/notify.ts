@@ -158,7 +158,7 @@ async function sendOpsEmail(session: AlertSessionRecord) {
         ? [
             {
               label: "IP (investigation)",
-              value: `${session.clientIp} — identité citoyenne non demandée`,
+              value: `${session.clientIp} - identité citoyenne non demandée`,
             },
           ]
         : []),

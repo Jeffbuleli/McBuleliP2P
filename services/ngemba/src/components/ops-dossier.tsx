@@ -309,7 +309,7 @@ export function OpsDossierView({ id }: { id: string }) {
 
       {session.immediateDanger ? (
         <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-ng-urgent">
-          Danger immédiat signalé — prioriser la sécurité et les numéros
+          Danger immédiat signalé - prioriser la sécurité et les numéros
           d&apos;urgence locaux.
         </p>
       ) : null}
@@ -373,11 +373,11 @@ export function OpsDossierView({ id }: { id: string }) {
           {fmt(session.createdAt)} · {session.locale.toUpperCase()}
         </p>
         <p className="mt-2 text-xs leading-relaxed text-ng-muted">
-          Identité citoyenne non demandée. Dossier anonyme — IP / appareil
+          Identité citoyenne non demandée. Dossier anonyme - IP / appareil
           réservés à une investigation si besoin.
         </p>
         <p className="mt-2 font-mono text-[11px] text-ng-muted">
-          IP {session.clientIp || "—"}
+          IP {session.clientIp || "-"}
           {session.userAgent
             ? ` · ${session.userAgent.slice(0, 80)}${session.userAgent.length > 80 ? "…" : ""}`
             : ""}

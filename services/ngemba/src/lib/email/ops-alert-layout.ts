@@ -40,7 +40,7 @@ export type OpsAlertEmailArgs = {
   partnerLine?: string;
 };
 
-/** Layout alerte OPS — branding Ngemba IA. */
+/** Layout alerte OPS - branding Ngemba IA. */
 export function renderOpsAlertEmail(args: OpsAlertEmailArgs): {
   html: string;
   text: string;
@@ -134,6 +134,8 @@ export function renderOpsAlertEmail(args: OpsAlertEmailArgs): {
               </table>
               <p style="margin:0 0 6px;font-size:12px;line-height:1.5;color:#57534e;">
                 Support <a href="mailto:${NGEMBA_EMAIL_ASSETS.supportEmail}" style="color:#305f33;text-decoration:none;font-weight:600;">${NGEMBA_EMAIL_ASSETS.supportEmail}</a>
+                · +243 997 366 736 · +243 860 218 521 ·
+                <a href="https://wa.me/message/IF6DXNT6Q2VSI1" style="color:#305f33;text-decoration:none;font-weight:600;">WhatsApp</a>
               </p>
               <p style="margin:0;font-size:11px;line-height:1.45;color:#57534e;">
                 © ${year} McBuleli · RCCM : CD/KNG/RCCM/26-A-00382 · ID Nat. / NIF : G2660507E
