@@ -11,7 +11,7 @@
 | **APK direct** | (build `51529f24` en cours - page Expo) https://expo.dev/accounts/mcbuleli-inc/projects/ngemba/builds/51529f24-d969-46aa-bef6-40ba5863c479 |
 | **Page build** | https://expo.dev/accounts/mcbuleli-inc/projects/ngemba/builds/51529f24-d969-46aa-bef6-40ba5863c479 |
 | **Web / PWA** | https://ngemba-rdc.org |
-| **Lien MAJ sur le site** | Home → « APK Android (MAJ) » |
+| **Lien APK sur le site** | Home → « APK Android » |
 | **Repo mobile** | https://github.com/Jeffbuleli/ngemba-mobile |
 
 API cible de l'APK : `https://ngemba-rdc.org`
