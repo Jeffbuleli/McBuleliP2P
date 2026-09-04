@@ -47,6 +47,9 @@ export type AlertSessionRecord = {
   orientedAt: string | null;
   closedAt: string | null;
   citizenToken: string | null;
+  /** IP capturee a la creation - OPS only, pour investigation (pas d'identite citoyenne). */
+  clientIp: string | null;
+  userAgent: string | null;
   discreteMode: boolean;
   trustedContacts: TrustedContact[];
   schoolContext: SchoolContext | null;
@@ -69,6 +72,8 @@ function normalizeRecord(row: AlertSessionRecord): AlertSessionRecord {
   const base = {
     ...row,
     citizenToken: row.citizenToken ?? null,
+    clientIp: row.clientIp ?? null,
+    userAgent: row.userAgent ?? null,
     discreteMode: row.discreteMode ?? false,
     trustedContacts: row.trustedContacts ?? [],
     schoolContext: row.schoolContext ?? null,
@@ -138,6 +143,8 @@ export function createSession(
     | "media"
     | "chatMessages"
     | "citizenToken"
+    | "clientIp"
+    | "userAgent"
     | "discreteMode"
     | "trustedContacts"
     | "schoolContext"
@@ -147,6 +154,8 @@ export function createSession(
   > & {
     status?: AlertSessionRecord["status"];
     citizenToken?: string | null;
+    clientIp?: string | null;
+    userAgent?: string | null;
     discreteMode?: boolean;
     trustedContacts?: TrustedContact[];
     schoolContext?: SchoolContext | null;
@@ -173,6 +182,8 @@ export function createSession(
     ],
     ...input,
     citizenToken: input.citizenToken ?? null,
+    clientIp: input.clientIp ?? null,
+    userAgent: input.userAgent ?? null,
     discreteMode: input.discreteMode ?? false,
     trustedContacts: input.trustedContacts ?? [],
     schoolContext: input.schoolContext ?? null,
@@ -291,8 +302,14 @@ export function updateSession(
   if (patch.status === "oriented" && !next.orientedAt) {
     next.orientedAt = new Date().toISOString();
   }
-  if (patch.status === "closed" && !next.closedAt) {
+  if (
+    (patch.status === "closed" || patch.status === "cancelled") &&
+    !next.closedAt
+  ) {
     next.closedAt = new Date().toISOString();
+  }
+  if (patch.status === "active" && current.status !== "active") {
+    next.closedAt = null;
   }
 
   map.set(id, next);

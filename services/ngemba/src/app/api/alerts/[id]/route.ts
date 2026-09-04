@@ -16,7 +16,16 @@ import {
   buildRoutingMeta,
   partnersForSessionDisplay,
 } from "@/lib/partners/match";
-import { getSession, updateSession } from "@/lib/sessions/store";
+import {
+  sanitizeCitizenSession,
+  sanitizeOpsSession,
+  type RelatedAlertSummary,
+} from "@/lib/sessions/sanitize";
+import {
+  getSession,
+  listSessionsByCitizen,
+  updateSession,
+} from "@/lib/sessions/store";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -65,8 +74,29 @@ export async function GET(req: Request, ctx: Ctx) {
       nationalFallback: p.nationalFallback,
     }));
 
+    const relatedAlerts: RelatedAlertSummary[] = live.citizenToken
+      ? listSessionsByCitizen(live.citizenToken, 10)
+          .filter((s) => s.id !== live.id)
+          .map((s) => ({
+            id: s.id,
+            status: s.status,
+            urgency: s.urgency,
+            createdAt: s.createdAt,
+            source: s.source,
+          }))
+      : [];
+
+    const opsSession = sanitizeOpsSession(live);
+    // IP / UA : investigation OPS interne uniquement (pas partenaires).
+    const sessionForRole =
+      ctxAuth.role === "partner"
+        ? { ...opsSession, clientIp: null, userAgent: null, routingMeta }
+        : { ...opsSession, routingMeta };
+
     return NextResponse.json({
-      session: { ...live, routingMeta },
+      session: sessionForRole,
+      relatedAlerts: ctxAuth.role === "partner" ? [] : relatedAlerts,
+      relatedCount: ctxAuth.role === "partner" ? 0 : relatedAlerts.length,
       sla: slaUiState(live),
       role: ctxAuth.role,
       partner: ctxAuth.partner
@@ -76,14 +106,8 @@ export async function GET(req: Request, ctx: Ctx) {
     });
   }
 
-  const { trustedContacts: _hidden, routingMeta: _rm, ...publicSession } =
-    session;
   return NextResponse.json({
-    session: {
-      ...publicSession,
-      trustedContacts: [],
-      routingMeta: null,
-    },
+    session: sanitizeCitizenSession(session),
   });
 }
 
@@ -94,6 +118,7 @@ const patchBody = z.object({
   assignedTo: z.string().trim().min(1).max(120).nullable().optional(),
   operatorNotes: z.string().trim().max(4000).nullable().optional(),
   actorLabel: z.string().trim().min(1).max(120).optional(),
+  historyNote: z.string().trim().min(1).max(400).optional(),
 });
 
 export async function PATCH(req: Request, ctx: Ctx) {
@@ -123,7 +148,36 @@ export async function PATCH(req: Request, ctx: Ctx) {
     return NextResponse.json({ error: "invalid_body" }, { status: 400 });
   }
 
+  const nextStatus = parsed.data.status;
+  const mergedNotes =
+    parsed.data.operatorNotes !== undefined
+      ? parsed.data.operatorNotes
+      : existing.operatorNotes;
+
+  if (
+    nextStatus === "closed" ||
+    nextStatus === "cancelled"
+  ) {
+    if (!mergedNotes || mergedNotes.trim().length < 3) {
+      return NextResponse.json(
+        { error: "close_note_required" },
+        { status: 400 },
+      );
+    }
+  }
+
   const actor = parsed.data.actorLabel || opsActorLabel(auth.token);
+
+  const defaultNote =
+    nextStatus === "oriented"
+      ? "Prise en charge"
+        : nextStatus === "closed"
+        ? "Dossier clôturé"
+        : nextStatus === "cancelled"
+          ? "Alerte annulée / fausse alerte"
+          : nextStatus === "active"
+            ? "Dossier rouvert"
+            : undefined;
 
   const session = updateSession(
     id,
@@ -134,12 +188,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
     },
     {
       actor,
-      note:
-        parsed.data.status === "oriented"
-          ? "Prise en charge"
-          : parsed.data.status === "closed"
-            ? "Dossier cloture"
-            : undefined,
+      note: parsed.data.historyNote || defaultNote,
     },
   );
   if (!session) {
@@ -147,5 +196,5 @@ export async function PATCH(req: Request, ctx: Ctx) {
   }
 
   void notifySessionUpdated(session);
-  return NextResponse.json({ session });
+  return NextResponse.json({ session: sanitizeOpsSession(session) });
 }

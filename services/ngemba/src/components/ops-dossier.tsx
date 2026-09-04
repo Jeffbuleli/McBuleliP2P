@@ -52,6 +52,8 @@ type Session = {
   orientedAt: string | null;
   closedAt: string | null;
   discreteMode?: boolean;
+  clientIp?: string | null;
+  userAgent?: string | null;
   trustedContacts?: TrustedContact[];
   escalation?: {
     level: number;
@@ -101,6 +103,43 @@ function fmt(iso: string) {
   }
 }
 
+function workflowStep(status: string): number {
+  if (status === "closed" || status === "cancelled") return 3;
+  if (status === "oriented") return 2;
+  return 1;
+}
+
+function WorkflowBar({ status }: { status: string }) {
+  const step = workflowStep(status);
+  const items = [
+    { n: 1, label: "Reçue" },
+    { n: 2, label: "En charge" },
+    { n: 3, label: status === "cancelled" ? "Annulée" : "Clôturée" },
+  ];
+  return (
+    <ol className="mt-4 grid grid-cols-3 gap-2">
+      {items.map((it) => {
+        const done = step >= it.n;
+        const current = step === it.n;
+        return (
+          <li
+            key={it.n}
+            className={`rounded-xl px-2 py-2 text-center text-[11px] font-semibold ${
+              done
+                ? current
+                  ? "bg-ng-primary text-white"
+                  : "bg-ng-primary-muted text-ng-primary"
+                : "bg-ng-surface text-ng-muted ring-1 ring-[var(--ng-border)]"
+            }`}
+          >
+            {it.n}. {it.label}
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
 export function OpsDossierView({ id }: { id: string }) {
   const [session, setSession] = useState<Session | null>(null);
   const [suggestedPartners, setSuggestedPartners] = useState<
@@ -125,6 +164,16 @@ export function OpsDossierView({ id }: { id: string }) {
     null,
   );
   const [canPatch, setCanPatch] = useState(true);
+  const [relatedAlerts, setRelatedAlerts] = useState<
+    Array<{
+      id: string;
+      status: string;
+      urgency: string;
+      createdAt: string;
+      source: string;
+    }>
+  >([]);
+  const [actionError, setActionError] = useState<string | null>(null);
   const device = useDeviceClass();
 
   const load = useCallback(async () => {
@@ -144,6 +193,7 @@ export function OpsDossierView({ id }: { id: string }) {
     setSla(data.sla ?? null);
     setNotes(data.session.operatorNotes ?? "");
     setAssignedTo(data.session.assignedTo ?? "");
+    setRelatedAlerts(data.relatedAlerts ?? []);
   }, [id]);
 
   useEffect(() => {
@@ -158,12 +208,22 @@ export function OpsDossierView({ id }: { id: string }) {
 
   async function patch(body: Record<string, unknown>) {
     setBusy(true);
+    setActionError(null);
     try {
-      await fetch(`/api/alerts/${id}`, {
+      const res = await fetch(`/api/alerts/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setActionError(
+          data.error === "close_note_required"
+            ? "Note obligatoire (min. 3 caractères) pour clôturer ou annuler."
+            : "Action impossible. Réessayez.",
+        );
+        return;
+      }
       await load();
     } finally {
       setBusy(false);
@@ -221,6 +281,7 @@ export function OpsDossierView({ id }: { id: string }) {
             Dossier alerte
           </h1>
           <p className="mt-1 font-mono text-xs text-ng-muted">{session.id}</p>
+          <WorkflowBar status={session.status} />
         </div>
         <div className="flex gap-2">
           <span
@@ -263,7 +324,84 @@ export function OpsDossierView({ id }: { id: string }) {
         </p>
       ) : null}
 
+      {session.immediateDanger ? (
+        <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-ng-urgent">
+          Danger immediat signale - prioriser securite et numeros d&apos;urgence locaux.
+        </p>
+      ) : null}
+
+      {sla ? (
+        <p
+          className={`mt-3 rounded-xl px-3 py-2 text-xs font-medium ${
+            sla.breached || sla.escalated
+              ? "bg-ng-urgent/10 text-ng-urgent"
+              : "bg-ng-primary-muted text-ng-primary"
+          }`}
+        >
+          SLA : {sla.label}
+          {sla.dueAt ? ` · echeance ${fmt(sla.dueAt)}` : ""}
+        </p>
+      ) : null}
+
       <section className="mt-6 ng-ops-dossier-grid">
+        <article className="rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-4 md:col-span-2">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-ng-muted">
+            Qui a alerte
+          </h2>
+          <p className="mt-2 text-sm text-ng-text">
+            Source : <strong>{sourceLabelFr(session.source)}</strong>
+            {" · "}
+            {fmt(session.createdAt)}
+            {" · "}
+            Langue {session.locale.toUpperCase()}
+          </p>
+          <p className="mt-2 text-xs leading-relaxed text-ng-muted">
+            L&apos;identité citoyenne n&apos;est pas demandée à ce stade. Le
+            dossier reste anonyme ; l&apos;IP (et l&apos;appareil) sont
+            attachés uniquement pour une investigation approfondie si
+            nécessaire.
+          </p>
+          <dl className="mt-3 grid gap-2 text-xs text-ng-muted sm:grid-cols-2">
+            <div>
+              <dt className="font-semibold text-ng-text">IP du dossier</dt>
+              <dd className="mt-0.5 font-mono text-[11px]">
+                {session.clientIp || "Non capturée"}
+              </dd>
+            </div>
+            <div>
+              <dt className="font-semibold text-ng-text">Appareil (UA)</dt>
+              <dd className="mt-0.5 line-clamp-2 break-all text-[11px]">
+                {session.userAgent || "Non capturé"}
+              </dd>
+            </div>
+          </dl>
+          {relatedAlerts.length > 0 ? (
+            <div className="mt-3 rounded-xl bg-ng-primary-muted/50 px-3 py-2">
+              <p className="text-xs font-semibold text-ng-primary">
+                {relatedAlerts.length} autre(s) alerte(s) du même appareil /
+                session anonyme
+              </p>
+              <ul className="mt-1.5 space-y-1">
+                {relatedAlerts.slice(0, 5).map((r) => (
+                  <li key={r.id}>
+                    <Link
+                      href={`/ops/${r.id}`}
+                      className="text-xs text-ng-primary underline"
+                    >
+                      {urgencyLabelFr(r.urgency)} · {statusLabelFr(r.status)} ·{" "}
+                      {fmt(r.createdAt)}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <p className="mt-3 text-xs text-ng-muted">
+              Première alerte connue pour cette session anonyme.
+            </p>
+          )}
+        </article>
+
         <article className="rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-4">
           <h2 className="text-xs font-semibold uppercase tracking-wide text-ng-muted">
             Message citoyen
@@ -417,50 +555,74 @@ export function OpsDossierView({ id }: { id: string }) {
           />
         </div>
 
-        <article className="rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-4">
+        <article className="rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-4 md:col-span-2">
           <h2 className="text-xs font-semibold uppercase tracking-wide text-ng-muted">
-            Historique
+            Chronologie du dossier
           </h2>
+          <p className="mt-1 text-[11px] text-ng-muted">
+            De la réception à la clôture — qui a agi, et quand.
+          </p>
           <ul className="mt-3 space-y-2">
             {session.statusHistory.map((h, i) => (
               <li
                 key={`${h.at}-${h.status}-${i}`}
-                className="rounded-lg bg-ng-primary-muted/50 px-3 py-2 text-xs"
+                className="flex gap-3 rounded-lg bg-ng-primary-muted/50 px-3 py-2 text-xs"
               >
-                <span className="font-semibold text-ng-primary">
-                  {statusLabelFr(h.status)}
-                </span>
-                <span className="text-ng-muted"> - {fmt(h.at)}</span>
-                {h.actor ? (
-                  <span className="text-ng-muted"> - {h.actor}</span>
-                ) : null}
-                {h.note ? (
-                  <span className="block text-ng-muted">{h.note}</span>
-                ) : null}
+                <span className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-ng-primary" />
+                <div>
+                  <span className="font-semibold text-ng-primary">
+                    {statusLabelFr(h.status)}
+                  </span>
+                  <span className="text-ng-muted"> · {fmt(h.at)}</span>
+                  {h.actor ? (
+                    <span className="text-ng-muted"> · {h.actor}</span>
+                  ) : (
+                    <span className="text-ng-muted"> · système / citoyen</span>
+                  )}
+                  {h.note ? (
+                    <span className="mt-0.5 block text-ng-muted">{h.note}</span>
+                  ) : null}
+                </div>
               </li>
             ))}
           </ul>
         </article>
       </section>
 
-      <div className="mt-8 flex flex-wrap gap-2">
-        {canPatch && session.status !== "oriented" && session.status !== "closed" ? (
+      {actionError ? (
+        <p className="mt-4 text-sm font-medium text-ng-urgent">{actionError}</p>
+      ) : null}
+
+      <p className="mt-6 text-[11px] leading-relaxed text-ng-muted">
+        Parcours OPS : réception → prise en charge → chat / orientation →
+        clôture ou annulation (note obligatoire). L&apos;identité personnelle
+        citoyenne n&apos;est pas demandée ; l&apos;IP est réservée à
+        l&apos;investigation approfondie.
+      </p>
+
+      <div className="mt-3 flex flex-wrap gap-2">
+        {canPatch &&
+        session.status !== "oriented" &&
+        session.status !== "closed" &&
+        session.status !== "cancelled" ? (
           <button
             type="button"
             disabled={busy}
             onClick={() =>
               void patch({
                 status: "oriented",
-                assignedTo: assignedTo || "ops-local",
+                assignedTo: assignedTo.trim() || "ops",
                 operatorNotes: notes || null,
               })
             }
-            className="rounded-lg border border-[var(--ng-border)] px-4 py-2 text-xs font-semibold text-ng-primary disabled:opacity-50"
+            className="rounded-lg bg-ng-primary px-4 py-2 text-xs font-semibold text-white disabled:opacity-50"
           >
             Prendre en charge
           </button>
         ) : null}
-        {canPatch && session.status !== "closed" ? (
+        {canPatch &&
+        session.status !== "closed" &&
+        session.status !== "cancelled" ? (
           <button
             type="button"
             disabled={busy}
@@ -468,11 +630,47 @@ export function OpsDossierView({ id }: { id: string }) {
               void patch({
                 status: "closed",
                 operatorNotes: notes || null,
+                historyNote: "Dossier clôturé",
               })
             }
             className="rounded-lg border border-[var(--ng-border)] px-4 py-2 text-xs font-semibold text-ng-muted disabled:opacity-50"
           >
-            Cloturer
+            Clôturer (note requise)
+          </button>
+        ) : null}
+        {canPatch &&
+        session.status !== "closed" &&
+        session.status !== "cancelled" ? (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() =>
+              void patch({
+                status: "cancelled",
+                operatorNotes: notes || null,
+                historyNote: "Alerte annulée / fausse alerte",
+              })
+            }
+            className="rounded-lg border border-amber-300 px-4 py-2 text-xs font-semibold text-amber-800 disabled:opacity-50"
+          >
+            Annuler / fausse alerte
+          </button>
+        ) : null}
+        {canPatch &&
+        (session.status === "closed" || session.status === "cancelled") ? (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() =>
+              void patch({
+                status: "active",
+                operatorNotes: notes || null,
+                historyNote: "Dossier rouvert",
+              })
+            }
+            className="rounded-lg border border-[var(--ng-border)] px-4 py-2 text-xs font-semibold text-ng-primary disabled:opacity-50"
+          >
+            Rouvrir
           </button>
         ) : null}
         <button

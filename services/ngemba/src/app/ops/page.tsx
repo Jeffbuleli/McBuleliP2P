@@ -296,32 +296,23 @@ export default function OpsPage() {
                   href={`/ops/${r.id}`}
                   className="rounded-lg bg-ng-primary px-3 py-1.5 text-xs font-semibold text-white"
                 >
-                  Dossier
+                  Ouvrir dossier
                 </Link>
-                {canPatch ? (
-                  <>
-                    <button
-                      type="button"
-                      disabled={busyId === r.id}
-                      onClick={() =>
-                        void patch(r.id, {
-                          status: "oriented",
-                          assignedTo: "ops-local",
-                        })
-                      }
-                      className="rounded-lg border border-[var(--ng-border)] px-3 py-1.5 text-xs font-semibold text-ng-primary disabled:opacity-50"
-                    >
-                      Prendre
-                    </button>
-                    <button
-                      type="button"
-                      disabled={busyId === r.id}
-                      onClick={() => void patch(r.id, { status: "closed" })}
-                      className="rounded-lg border border-[var(--ng-border)] px-3 py-1.5 text-xs font-semibold text-ng-muted disabled:opacity-50"
-                    >
-                      Clôturer
-                    </button>
-                  </>
+                {canPatch && r.status !== "oriented" ? (
+                  <button
+                    type="button"
+                    disabled={busyId === r.id}
+                    onClick={() =>
+                      void patch(r.id, {
+                        status: "oriented",
+                        assignedTo: roleLabel || "ops",
+                        historyNote: "Prise en charge depuis la file",
+                      })
+                    }
+                    className="rounded-lg border border-[var(--ng-border)] px-3 py-1.5 text-xs font-semibold text-ng-primary disabled:opacity-50"
+                  >
+                    Prendre en charge
+                  </button>
                 ) : null}
               </div>
             </li>
@@ -331,16 +322,18 @@ export default function OpsPage() {
 
       {closed.length > 0 ? (
         <section className="mt-10">
-          <h2 className="text-sm font-semibold text-ng-muted">Clôturées</h2>
+          <h2 className="text-sm font-semibold text-ng-muted">
+            Clôturées / annulées
+          </h2>
           <ul className="mt-3 space-y-2">
-            {closed.slice(0, 10).map((r) => (
+            {closed.slice(0, 12).map((r) => (
               <li key={r.id}>
                 <Link
                   href={`/ops/${r.id}`}
                   className="text-xs text-ng-muted hover:text-ng-primary"
                 >
-                  {urgencyLabelFr(r.urgency)} - {categoryLabelFr(r.category)} -{" "}
-                  {preview(r.message, 60)}
+                  {statusLabelFr(r.status)} · {urgencyLabelFr(r.urgency)} ·{" "}
+                  {categoryLabelFr(r.category)} · {preview(r.message, 60)}
                 </Link>
               </li>
             ))}

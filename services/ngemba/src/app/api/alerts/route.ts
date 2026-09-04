@@ -24,6 +24,7 @@ import { buildRoutingMeta } from "@/lib/partners/match";
 import { listPartners } from "@/lib/partners/directory";
 import { clientIp, rateLimit, rateLimitResponse } from "@/lib/security/rate-limit";
 import { createSession, getSession, listSessions } from "@/lib/sessions/store";
+import { sanitizeCitizenSession, sanitizeOpsSession } from "@/lib/sessions/sanitize";
 import { normalizeTrustedContacts } from "@/lib/trusted-contacts/types";
 import { normalizeSchoolContext } from "@/lib/school/types";
 
@@ -192,6 +193,8 @@ export async function POST(req: Request) {
     aiMode,
     status: "active",
     citizenToken,
+    clientIp: ip !== "unknown" ? ip : null,
+    userAgent: req.headers.get("user-agent")?.slice(0, 300) || null,
     discreteMode: Boolean(body.discrete),
     trustedContacts,
     schoolContext,
@@ -229,7 +232,8 @@ export async function GET(req: Request) {
     if (!session) {
       return NextResponse.json({ error: "not_found" }, { status: 404 });
     }
-    return NextResponse.json({ session });
+    // Jamais de fuite IP/UA/token via ?id= (vue citoyenne).
+    return NextResponse.json({ session: sanitizeCitizenSession(session) });
   }
 
   const auth = await requireOpsAuth(req, { permission: "alerts.list" });
@@ -239,10 +243,16 @@ export async function GET(req: Request) {
   const sessions = listSessions(80)
     .map((s) => applySlaEscalationIfNeeded(s))
     .filter((s) => sessionVisibleToRole(auth.role, s, boundId))
-    .map((s) => ({
-      ...s,
-      sla: slaUiState(s),
-    }));
+    .map((s) => {
+      const base = sanitizeOpsSession(s);
+      // File liste : pas d'IP/UA (investigation = dossier détail admin).
+      return {
+        ...base,
+        clientIp: null,
+        userAgent: null,
+        sla: slaUiState(s),
+      };
+    });
 
   const stats =
     auth.role === "admin"

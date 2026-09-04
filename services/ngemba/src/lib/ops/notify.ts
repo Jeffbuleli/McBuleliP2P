@@ -154,6 +154,14 @@ async function sendOpsEmail(session: AlertSessionRecord) {
       { label: "Source", value: source },
       { label: "Lieu", value: place },
       { label: "Langue", value: session.locale.toUpperCase() },
+      ...(session.clientIp
+        ? [
+            {
+              label: "IP (investigation)",
+              value: `${session.clientIp} — identité citoyenne non demandée`,
+            },
+          ]
+        : []),
       ...(session.discreteMode
         ? [{ label: "Mode", value: "Discret (vibration)" }]
         : []),
