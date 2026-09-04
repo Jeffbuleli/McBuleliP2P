@@ -31,7 +31,7 @@ export async function uploadPendingMedia(opts: {
         credentials: "include",
       });
     } catch {
-      // Session is already created — media is best-effort.
+      // Session is already created - media is best-effort.
     }
   }
 }

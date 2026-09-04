@@ -7,6 +7,7 @@ import {
   IconTrash,
   IconWaveform,
 } from "@/components/icons";
+import { toPlayableWavBlob } from "@/lib/compose/audio-playable";
 import { COMPOSE_VOICE_MAX_SEC } from "@/lib/compose/limits";
 
 type Props = {
@@ -17,7 +18,6 @@ type Props = {
   onText: (text: string) => void;
   onAudioChange?: (blob: Blob | null) => void;
   discrete?: boolean;
-  /** Stretch to fill parent (e.g. 80% row). */
   className?: string;
 };
 
@@ -59,24 +59,14 @@ function getSpeechRecognition(): (new () => Rec) | null {
   return w.SpeechRecognition || w.webkitSpeechRecognition || null;
 }
 
-/**
- * Safari lit surtout mp4/aac ; Chrome/Firefox webm.
- * On choisit le premier format supporté pour enregistrement ET lecture locale.
- */
 function pickMime(): string {
   if (typeof MediaRecorder === "undefined") return "";
   const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
   const isSafari =
     /Safari/i.test(ua) && !/Chrome|Chromium|Edg|Android/i.test(ua);
   const order = isSafari
-    ? ["audio/mp4", "audio/aac", "audio/wav", "audio/webm"]
-    : [
-        "audio/webm;codecs=opus",
-        "audio/webm",
-        "audio/mp4",
-        "audio/ogg",
-        "audio/wav",
-      ];
+    ? ["audio/mp4", "audio/aac", "audio/webm"]
+    : ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg"];
   for (const m of order) {
     if (MediaRecorder.isTypeSupported(m)) return m;
   }
@@ -104,6 +94,8 @@ export function VoiceButton({
   const [recording, setRecording] = useState(false);
   const [leftSec, setLeftSec] = useState(COMPOSE_VOICE_MAX_SEC);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [durationLabel, setDurationLabel] = useState<string | null>(null);
+  const [preparing, setPreparing] = useState(false);
 
   const mediaRecRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
@@ -112,6 +104,7 @@ export function VoiceButton({
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioUrlRef = useRef<string | null>(null);
   const startedAtRef = useRef(0);
+  const preparingGenRef = useRef(0);
 
   useEffect(() => {
     setRecSupported(
@@ -172,17 +165,30 @@ export function VoiceButton({
       audioUrlRef.current = null;
     }
     setAudioUrl(null);
+    setDurationLabel(null);
   }
 
   function deleteAudio() {
+    preparingGenRef.current += 1;
     stopAll(true);
     revokePreview();
     onAudioChange?.(null);
     setLeftSec(COMPOSE_VOICE_MAX_SEC);
+    setPreparing(false);
+  }
+
+  function publishBlob(blob: Blob, elapsedSec: number) {
+    const url = URL.createObjectURL(blob);
+    if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
+    audioUrlRef.current = url;
+    setAudioUrl(url);
+    setDurationLabel(formatSec(elapsedSec));
+    onAudioChange?.(blob);
   }
 
   async function startRecording() {
-    if (recording) return;
+    if (recording || preparing) return;
+    preparingGenRef.current += 1;
     revokePreview();
     onAudioChange?.(null);
     chunksRef.current = [];
@@ -205,23 +211,43 @@ export function VoiceButton({
       if (e.data.size > 0) chunksRef.current.push(e.data);
     };
     mediaRec.onstop = () => {
+      const elapsedSec = Math.max(
+        0.5,
+        (Date.now() - startedAtRef.current) / 1000,
+      );
       const raw = mediaRec.mimeType || mime || "audio/webm";
-      // Strip codecs=… so <audio> maps the MIME correctly.
       const type = raw.split(";")[0].trim() || "audio/webm";
       const blob = new Blob(chunksRef.current, { type });
       chunksRef.current = [];
-      if (blob.size > 0) {
-        const url = URL.createObjectURL(blob);
-        audioUrlRef.current = url;
-        setAudioUrl(url);
-        onAudioChange?.(blob);
-      }
       stopStream();
       setRecording(false);
       clearTimer();
+
+      if (blob.size < 64) {
+        setPreparing(false);
+        return;
+      }
+
+      const gen = ++preparingGenRef.current;
+      setPreparing(true);
+      void (async () => {
+        try {
+          // WebM MediaRecorder → souvent 0:00/0:00 ; WAV a une vraie durée.
+          const playable = await toPlayableWavBlob(blob);
+          if (gen !== preparingGenRef.current) return;
+          publishBlob(playable, elapsedSec);
+        } catch {
+          if (gen !== preparingGenRef.current) return;
+          // Fallback: blob brut (envoi OK, preview parfois limitée)
+          publishBlob(blob, elapsedSec);
+        } finally {
+          if (gen === preparingGenRef.current) setPreparing(false);
+        }
+      })();
     };
 
-    mediaRec.start(250);
+    // Un seul blob final (pas de timeslice) = fichier plus propre.
+    mediaRec.start();
     startedAtRef.current = Date.now();
     setLeftSec(COMPOSE_VOICE_MAX_SEC);
     setRecording(true);
@@ -270,13 +296,6 @@ export function VoiceButton({
     const rec = mediaRecRef.current;
     if (rec && rec.state !== "inactive") {
       try {
-        if (rec.state === "recording") {
-          try {
-            rec.requestData();
-          } catch {
-            // optional
-          }
-        }
         rec.stop();
       } catch {
         setRecording(false);
@@ -311,6 +330,12 @@ export function VoiceButton({
           <span className="tabular-nums text-xs">{formatSec(leftSec)}</span>
           <IconStop className="size-4" />
         </button>
+      ) : preparing ? (
+        <p
+          className={`inline-flex min-h-11 w-full items-center justify-center rounded-xl px-3 text-xs font-semibold ${btnBase}`}
+        >
+          Preparation audio…
+        </p>
       ) : audioUrl ? (
         <div
           className={`flex min-h-11 w-full items-center gap-1 rounded-xl px-1.5 py-1 ${
@@ -319,15 +344,23 @@ export function VoiceButton({
           role="group"
           aria-label="Fichier audio"
         >
-          {/* Contrôles natifs = lecture fiable sur Chrome / Safari / Firefox */}
           <audio
             key={audioUrl}
             controls
-            preload="metadata"
+            preload="auto"
             src={audioUrl}
             className="min-w-0 flex-1"
             style={{ height: 36 }}
           />
+          {durationLabel ? (
+            <span
+              className={`shrink-0 px-1 text-[11px] font-semibold tabular-nums ${
+                discrete ? "text-[#c9a0bc]" : "text-ng-primary"
+              }`}
+            >
+              {durationLabel}
+            </span>
+          ) : null}
           <button
             type="button"
             onClick={() => void startRecording()}
