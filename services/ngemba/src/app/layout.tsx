@@ -10,13 +10,13 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "NGEMBA - Sécurité et paix",
+  title: "Ngemba RDC",
   description: "Alertez - McBuleli IA comprend - orientation humaine.",
-  applicationName: "NGEMBA",
+  applicationName: "Ngemba RDC",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    title: "NGEMBA",
+    title: "Ngemba RDC",
     statusBarStyle: "black-translucent",
   },
   other: {

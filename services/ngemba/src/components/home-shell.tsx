@@ -82,7 +82,7 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
           >
             <img
               src="/brand/ngemba-logo.png"
-              alt="NGEMBA"
+              alt="Ngemba RDC"
               width={48}
               height={48}
               className="size-12 rounded-xl object-contain"
@@ -90,7 +90,7 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
           </button>
           <div>
             <p className="text-[11px] font-semibold tracking-[0.2em] text-ng-primary uppercase">
-              NGEMBA
+              Ngemba RDC
             </p>
             <p className="mt-0.5 text-sm font-medium text-ng-muted">{t.tagline}</p>
           </div>
