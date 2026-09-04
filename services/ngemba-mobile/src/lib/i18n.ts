@@ -603,7 +603,7 @@ export const messages: Record<Locale, Copy> = {
     discreteTap: "Kangisa moke na logo NGEMBA ezali na mokolo ya moke.",
     resourcesTitle: "Mibeko na bisika",
     preventTitle: "Kukanga",
-    privacyLink: "Kubomba makambo",
+    privacyLink: "Kubomba mambu",
     cguLink: "CGU",
     charterLink: "Charte ONG",
     legalDraftNotice: "",
