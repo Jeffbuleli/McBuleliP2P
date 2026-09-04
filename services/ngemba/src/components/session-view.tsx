@@ -8,6 +8,7 @@ import {
   SessionMediaUpload,
 } from "@/components/session-media";
 import { IconShield, IconSpark } from "@/components/icons";
+import { PoweredByMcbuleli } from "@/components/powered-by-mcbuleli";
 import { useCitizenLocale } from "@/hooks/use-citizen-locale";
 import { messages } from "@/lib/i18n";
 import { urgencyLabel } from "@/lib/labels";
@@ -206,6 +207,7 @@ export function SessionView({
           </Link>
         </section>
       )}
+      <PoweredByMcbuleli />
     </main>
   );
 }

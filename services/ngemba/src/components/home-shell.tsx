@@ -10,9 +10,9 @@ import {
   IconGlobe,
   IconGraduation,
   IconShield,
-  IconSpark,
   IconUsers,
 } from "@/components/icons";
+import { PoweredByMcbuleli } from "@/components/powered-by-mcbuleli";
 import { useCitizenLocale } from "@/hooks/use-citizen-locale";
 import { ngembaApkUrl } from "@/lib/apk";
 import {
@@ -115,16 +115,6 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
       </header>
 
       <section className="relative z-10 mt-10 flex flex-1 flex-col items-center justify-center gap-8">
-        <div className="flex max-w-sm flex-col items-center gap-2 text-center">
-          <div className="inline-flex items-center gap-2 text-ng-primary">
-            <IconSpark className="size-5" />
-            <span className="text-sm font-bold tracking-tight">{t.powered}</span>
-          </div>
-          <p className="text-sm font-medium leading-snug text-ng-muted">
-            {t.line}
-          </p>
-        </div>
-
         <Link
           href={href("/sos")}
           aria-label={`${t.sos} - ${t.sosHint}`}
@@ -162,7 +152,7 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
 
         <p className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center text-[11px] text-ng-muted">
           <Link href={href("/resources")} className="inline-flex items-center gap-1 hover:text-ng-primary">
-            <IconSpark className="size-3" />
+            <IconBook className="size-3" />
             {t.resources}
           </Link>
           <Link href={href("/prevent")} className="inline-flex items-center gap-1 hover:text-ng-primary">
@@ -191,11 +181,13 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
           <Link href={href("/legal/confidentialite")} className="underline">
             {t.privacyLink}
           </Link>
-          {" - "}
+          {" · "}
           <Link href={href("/legal/cgu")} className="underline">
             {t.cguLink}
           </Link>
         </p>
+
+        <PoweredByMcbuleli className="pt-2" />
       </section>
     </main>
   );

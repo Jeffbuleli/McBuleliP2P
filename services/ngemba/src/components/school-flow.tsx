@@ -3,11 +3,15 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { ComposePhotos } from "@/components/compose-photos";
 import { IconShield, IconSpark } from "@/components/icons";
 import { PolishButton } from "@/components/polish-button";
+import { PoweredByMcbuleli } from "@/components/powered-by-mcbuleli";
 import { TrustedContactsEditor } from "@/components/trusted-contacts-editor";
 import { VoiceButton } from "@/components/voice-button";
 import { useCitizenLocale } from "@/hooks/use-citizen-locale";
+import { COMPOSE_MAX_CHARS } from "@/lib/compose/limits";
+import { uploadPendingMedia } from "@/lib/compose/upload-pending";
 import { messages } from "@/lib/i18n";
 import type { SchoolConcernType } from "@/lib/school/types";
 import { readLocalTrustedContacts } from "@/lib/trusted-contacts/client-store";
@@ -39,6 +43,8 @@ export function SchoolFlow({ initialLocale }: { initialLocale?: string }) {
   const [concernType, setConcernType] = useState<SchoolConcernType | "">("");
   const [establishment, setEstablishment] = useState("");
   const [message, setMessage] = useState("");
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [photos, setPhotos] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hint, setHint] = useState<string | null>(null);
@@ -51,7 +57,8 @@ export function SchoolFlow({ initialLocale }: { initialLocale?: string }) {
     return p?.cities ?? [];
   }, [provinces, provinceId]);
 
-  const canSend = message.trim().length >= 3;
+  const canSend =
+    message.trim().length >= 3 || Boolean(audioBlob) || photos.length > 0;
   const canUsePlace = Boolean(provinceId);
 
   const concernLabels: Record<SchoolConcernType, string> = {
@@ -81,12 +88,15 @@ export function SchoolFlow({ initialLocale }: { initialLocale?: string }) {
     setError(null);
     try {
       const trustedContacts = readLocalTrustedContacts();
+      const trimmed = message.trim().slice(0, COMPOSE_MAX_CHARS);
+      const bodyMessage =
+        trimmed.length >= 1 ? trimmed : audioBlob || photos.length ? "·" : trimmed;
       const res = await fetch("/api/alerts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          message: message.trim(),
+          message: bodyMessage,
           locale,
           source: "school",
           shareLocation: Boolean(opts.shareLocation),
@@ -108,6 +118,11 @@ export function SchoolFlow({ initialLocale }: { initialLocale?: string }) {
         setBusy(false);
         return;
       }
+      await uploadPendingMedia({
+        sessionId: data.id,
+        audio: audioBlob,
+        photos,
+      });
       router.push(href(`/session/${data.id}`));
     } catch {
       setError(t.errorGeneric);
@@ -204,25 +219,42 @@ export function SchoolFlow({ initialLocale }: { initialLocale?: string }) {
           </button>
         </section>
       ) : step === "tell" ? (
-        <section className="mt-6 flex flex-1 flex-col gap-4">
+        <section className="mt-6 flex flex-1 flex-col gap-3">
           <h1 className="text-xl font-semibold text-ng-primary">{t.schoolTell}</h1>
-          <textarea
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder={t.placeholder}
-            rows={6}
-            className="w-full resize-none rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-4 text-base leading-relaxed text-ng-text outline-none focus:ring-2 ring-ng-primary"
-            autoFocus
-          />
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="relative">
+            <textarea
+              value={message}
+              onChange={(e) =>
+                setMessage(e.target.value.slice(0, COMPOSE_MAX_CHARS))
+              }
+              placeholder={t.placeholder}
+              rows={5}
+              maxLength={COMPOSE_MAX_CHARS}
+              className="w-full resize-none rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-4 pb-8 text-base leading-relaxed text-ng-text outline-none focus:ring-2 ring-ng-primary"
+              autoFocus
+            />
+            <span className="pointer-events-none absolute bottom-2.5 right-3 text-[11px] tabular-nums text-ng-muted">
+              {message.length}/{COMPOSE_MAX_CHARS}
+            </span>
+          </div>
+          <div className="flex flex-col gap-2">
             <VoiceButton
               locale={locale}
               label={t.voice}
               listeningLabel={t.voiceListening}
               unsupportedLabel={t.voiceUnsupported}
               onText={(text) =>
-                setMessage((prev) => (prev ? `${prev} ${text}` : text))
+                setMessage((prev) => {
+                  const next = prev ? `${prev} ${text}` : text;
+                  return next.slice(0, COMPOSE_MAX_CHARS);
+                })
               }
+              onAudioChange={setAudioBlob}
+            />
+            <ComposePhotos
+              photos={photos}
+              onChange={setPhotos}
+              label={t.addMedia}
             />
             <PolishButton
               text={message}
@@ -230,7 +262,9 @@ export function SchoolFlow({ initialLocale }: { initialLocale?: string }) {
               label={t.polish}
               busyLabel={t.polishing}
               disabled={busy}
-              onPolished={setMessage}
+              onPolished={(text) =>
+                setMessage(text.slice(0, COMPOSE_MAX_CHARS))
+              }
             />
           </div>
           {error ? (
@@ -328,6 +362,7 @@ export function SchoolFlow({ initialLocale }: { initialLocale?: string }) {
           </div>
         </section>
       )}
+      <PoweredByMcbuleli />
     </main>
   );
 }

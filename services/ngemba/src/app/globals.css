@@ -163,3 +163,20 @@ body.ng-discrete .ng-discrete-btn:disabled {
   white-space: nowrap;
   border: 0;
 }
+
+@keyframes ng-wave {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+.ng-wave-bar {
+  transform-origin: center;
+  animation: ng-wave 0.7s ease-in-out infinite;
+}

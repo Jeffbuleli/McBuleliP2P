@@ -3,11 +3,15 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { ComposePhotos } from "@/components/compose-photos";
 import { IconShield, IconSpark } from "@/components/icons";
 import { PolishButton } from "@/components/polish-button";
+import { PoweredByMcbuleli } from "@/components/powered-by-mcbuleli";
 import { TrustedContactsEditor } from "@/components/trusted-contacts-editor";
 import { VoiceButton } from "@/components/voice-button";
 import { useCitizenLocale } from "@/hooks/use-citizen-locale";
+import { COMPOSE_MAX_CHARS } from "@/lib/compose/limits";
+import { uploadPendingMedia } from "@/lib/compose/upload-pending";
 import { vibrateDiscreteConfirm } from "@/lib/discrete/vibrate";
 import { messages } from "@/lib/i18n";
 import { readLocalTrustedContacts } from "@/lib/trusted-contacts/client-store";
@@ -39,6 +43,8 @@ export function SosFlow({
 
   const [step, setStep] = useState<Step>("tell");
   const [message, setMessage] = useState("");
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [photos, setPhotos] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hint, setHint] = useState<string | null>(null);
@@ -52,7 +58,13 @@ export function SosFlow({
     return p?.cities ?? [];
   }, [provinces, provinceId]);
 
-  const canSend = useMemo(() => message.trim().length >= 3, [message]);
+  const canSend = useMemo(
+    () =>
+      message.trim().length >= 3 ||
+      Boolean(audioBlob) ||
+      photos.length > 0,
+    [message, audioBlob, photos],
+  );
   const canUsePlace = Boolean(provinceId);
 
   useEffect(() => {
@@ -67,6 +79,14 @@ export function SosFlow({
     document.body.classList.add("ng-discrete");
     return () => document.body.classList.remove("ng-discrete");
   }, [discrete]);
+
+  function composeMessage(): string {
+    const trimmed = message.trim().slice(0, COMPOSE_MAX_CHARS);
+    if (trimmed.length >= 1) return trimmed;
+    if (audioBlob) return "·";
+    if (photos.length) return "·";
+    return trimmed;
+  }
 
   async function submit(opts: {
     shareLocation?: boolean;
@@ -84,7 +104,7 @@ export function SosFlow({
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          message: message.trim(),
+          message: composeMessage(),
           locale,
           source,
           shareLocation: Boolean(opts.shareLocation),
@@ -102,6 +122,11 @@ export function SosFlow({
         setBusy(false);
         return;
       }
+      await uploadPendingMedia({
+        sessionId: data.id,
+        audio: audioBlob,
+        photos,
+      });
       if (discrete) vibrateDiscreteConfirm();
       router.push(`${href(`/session/${data.id}`)}${discrete ? "&discrete=1" : ""}`);
     } catch {
@@ -143,12 +168,18 @@ export function SosFlow({
         });
       },
       () => {
-        // Soft fail: stay on place step, pick province/city
         setBusy(false);
         setHint(t.gpsDenied);
       },
       { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 },
     );
+  }
+
+  function appendVoiceText(text: string) {
+    setMessage((prev) => {
+      const next = prev ? `${prev} ${text}` : text;
+      return next.slice(0, COMPOSE_MAX_CHARS);
+    });
   }
 
   return (
@@ -180,12 +211,6 @@ export function SosFlow({
         </div>
       </header>
 
-      {discrete ? (
-        <p className="mt-4 rounded-xl bg-[#88236433] px-3 py-2 text-xs font-medium leading-relaxed text-[#e8d4e3]">
-          {t.discreteSafety}
-        </p>
-      ) : null}
-
       {isWitness && !discrete ? (
         <p className="mt-4 rounded-xl bg-ng-secondary-muted px-3 py-2 text-xs font-medium leading-relaxed text-ng-secondary">
           {t.witnessSafety}
@@ -193,33 +218,51 @@ export function SosFlow({
       ) : null}
 
       {step === "tell" ? (
-        <section className="mt-6 flex flex-1 flex-col gap-4">
+        <section className="mt-6 flex flex-1 flex-col gap-3">
           <h1
             className={`text-xl font-semibold ${discrete ? "text-[#e8d4e3]" : "text-ng-primary"}`}
           >
             {discrete ? t.discrete : isWitness ? t.witnessTell : t.tell}
           </h1>
-          <textarea
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder={t.placeholder}
-            rows={discrete ? 4 : 6}
-            className={`w-full resize-none rounded-2xl border p-4 text-base leading-relaxed outline-none focus:ring-2 ${
-              discrete
-                ? "ng-discrete-surface border-white/10 text-[#f5f0f4] ring-[#882364]"
-                : "border-[var(--ng-border)] bg-ng-surface text-ng-text ring-ng-primary"
-            }`}
-            autoFocus
-          />
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="relative">
+            <textarea
+              value={message}
+              onChange={(e) =>
+                setMessage(e.target.value.slice(0, COMPOSE_MAX_CHARS))
+              }
+              placeholder={t.placeholder}
+              rows={discrete ? 4 : 5}
+              maxLength={COMPOSE_MAX_CHARS}
+              className={`w-full resize-none rounded-2xl border p-4 pb-8 text-base leading-relaxed outline-none focus:ring-2 ${
+                discrete
+                  ? "ng-discrete-surface border-white/10 text-[#f5f0f4] ring-[#882364]"
+                  : "border-[var(--ng-border)] bg-ng-surface text-ng-text ring-ng-primary"
+              }`}
+              autoFocus
+            />
+            <span
+              className={`pointer-events-none absolute bottom-2.5 right-3 text-[11px] tabular-nums ${
+                discrete ? "text-[#c9a0bc]" : "text-ng-muted"
+              }`}
+            >
+              {message.length}/{COMPOSE_MAX_CHARS}
+            </span>
+          </div>
+          <div className="flex flex-col gap-2">
             <VoiceButton
               locale={locale}
               label={t.voice}
               listeningLabel={t.voiceListening}
               unsupportedLabel={t.voiceUnsupported}
-              onText={(text) =>
-                setMessage((prev) => (prev ? `${prev} ${text}` : text))
-              }
+              onText={appendVoiceText}
+              onAudioChange={setAudioBlob}
+              discrete={discrete}
+            />
+            <ComposePhotos
+              photos={photos}
+              onChange={setPhotos}
+              label={t.addMedia}
+              discrete={discrete}
             />
             <PolishButton
               text={message}
@@ -228,7 +271,9 @@ export function SosFlow({
               busyLabel={t.polishing}
               discrete={discrete}
               disabled={busy}
-              onPolished={setMessage}
+              onPolished={(text) =>
+                setMessage(text.slice(0, COMPOSE_MAX_CHARS))
+              }
             />
           </div>
           {error ? (
@@ -331,6 +376,7 @@ export function SosFlow({
           </div>
         </section>
       )}
+      <PoweredByMcbuleli />
     </main>
   );
 }

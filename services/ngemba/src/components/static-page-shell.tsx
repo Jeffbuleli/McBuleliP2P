@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PoweredByMcbuleli } from "@/components/powered-by-mcbuleli";
 import type { StaticSection } from "@/lib/static-pages";
 
 export function StaticPageShell({
@@ -42,19 +43,19 @@ export function StaticPageShell({
         ))}
       </div>
       <p className="mt-8 text-center text-xs text-ng-muted">
-        NGEMBA - McBuleli  - {" "}
         <Link href="/legal/confidentialite" className="text-ng-primary">
           Confidentialité
         </Link>
-        {" - "}
+        {" · "}
         <Link href="/legal/cgu" className="text-ng-primary">
           CGU
         </Link>
-        {" - "}
+        {" · "}
         <Link href="/legal/charte-ong" className="text-ng-primary">
           Charte ONG
         </Link>
       </p>
+      <PoweredByMcbuleli />
     </main>
   );
 }

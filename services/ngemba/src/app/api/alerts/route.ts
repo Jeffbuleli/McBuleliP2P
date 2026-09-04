@@ -28,7 +28,7 @@ import { normalizeTrustedContacts } from "@/lib/trusted-contacts/types";
 import { normalizeSchoolContext } from "@/lib/school/types";
 
 const createBody = z.object({
-  message: z.string().trim().min(3).max(4000),
+  message: z.string().trim().min(1).max(500),
   locale: z.string().default("fr"),
   source: z
     .enum(["sos_button", "witness", "chat", "shake", "school"])

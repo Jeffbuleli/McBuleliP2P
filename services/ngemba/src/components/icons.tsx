@@ -289,3 +289,145 @@ export function IconDownload({ title, className = "size-6", ...rest }: IconProps
     </svg>
   );
 }
+
+export function IconPlay({ title, className = "size-6", ...rest }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden={title ? undefined : true}
+      className={className}
+      {...rest}
+    >
+      {title ? <title>{title}</title> : null}
+      <path
+        d="M8 6.5v11l9-5.5-9-5.5Z"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function IconPause({ title, className = "size-6", ...rest }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden={title ? undefined : true}
+      className={className}
+      {...rest}
+    >
+      {title ? <title>{title}</title> : null}
+      <path
+        d="M8 6.5h2.5v11H8V6.5ZM13.5 6.5H16v11h-2.5V6.5Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
+export function IconTrash({ title, className = "size-6", ...rest }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden={title ? undefined : true}
+      className={className}
+      {...rest}
+    >
+      {title ? <title>{title}</title> : null}
+      <path
+        d="M5 7.5h14M10 7.5V5.5h4v2M8.5 7.5l.7 11h5.6l.7-11"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function IconPhoto({ title, className = "size-6", ...rest }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden={title ? undefined : true}
+      className={className}
+      {...rest}
+    >
+      {title ? <title>{title}</title> : null}
+      <path
+        d="M4.5 6.5h15v12h-15v-12Z"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinejoin="round"
+      />
+      <circle cx="9" cy="10.5" r="1.5" stroke="currentColor" strokeWidth="1.5" />
+      <path
+        d="M4.5 16.5 9 12.5l3 2.5 2.5-2 5 3.5"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function IconStop({ title, className = "size-6", ...rest }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden={title ? undefined : true}
+      className={className}
+      {...rest}
+    >
+      {title ? <title>{title}</title> : null}
+      <rect
+        x="7"
+        y="7"
+        width="10"
+        height="10"
+        rx="1.5"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
+/** Animated waveform bars while recording (WAV-style visual). */
+export function IconWaveform({
+  title,
+  className = "size-6",
+  active = false,
+  ...rest
+}: IconProps & { active?: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 48 24"
+      fill="none"
+      aria-hidden={title ? undefined : true}
+      className={className}
+      {...rest}
+    >
+      {title ? <title>{title}</title> : null}
+      {[4, 10, 16, 22, 28, 34, 40].map((x, i) => (
+        <rect
+          key={x}
+          x={x}
+          y={4}
+          width="3"
+          height="16"
+          rx="1.5"
+          fill="currentColor"
+          className={active ? "ng-wave-bar" : undefined}
+          style={active ? { animationDelay: `${i * 0.08}s` } : undefined}
+        />
+      ))}
+    </svg>
+  );
+}

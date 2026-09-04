@@ -50,7 +50,7 @@ const RESOURCES: Record<Locale, PageCopy> = {
       {
         title: "Jeunes - apprendre à se protéger",
         body: [
-          "Module McBuleli Jeunesse : 10 situations pour réfléchir (consentement, cyber, corruption...).",
+          "Module Ngemba Jeunesse : 10 situations pour réfléchir (consentement, cyber, corruption...).",
           "Ce n'est pas un classement ni un jugement - un guide éducatif.",
           "Situation réelle grave : utilisez SOS NGEMBA tout de suite.",
         ],
@@ -96,7 +96,7 @@ const RESOURCES: Record<Locale, PageCopy> = {
       {
         title: "Youth - learn to stay safe",
         body: [
-          "McBuleli Youth: 10 situations to reflect (consent, cyber, corruption...).",
+          "Ngemba Youth: 10 situations to reflect (consent, cyber, corruption...).",
           "Not a ranking or judgment - an educational guide.",
           "Real serious danger: use NGEMBA SOS immediately.",
         ],
@@ -104,124 +104,192 @@ const RESOURCES: Record<Locale, PageCopy> = {
     ],
   },
   ln: {
-    title: "Bokoli na Bantu",
+    title: "Mokano mpe biloko",
     sections: [
       {
-        title: "Mokolo ya Nganga (RDC)",
+        title: "Mokolo ya nzela (RDC)",
         body: [
-          "Polisi: 112 to komisi ya polisi ya liboso",
-          "Bokoli: ndenge na esika na yo",
-          "Mokolo ya nzoto: hopital to centre ya nzoto ya liboso",
-          "Na esika ya mpasi: yebisa liboso, nsima NGEMBA soki okoki.",
+          "Polis : 112 to komisi ya liboso",
+          "Bompoko : ndenge na yo",
+          "Nzela ya bokoko : hopital to centre ya santé ya liboso",
+          "Na esengo ya mbala : yebisa liboso ba secours, na nsima NGEMBA soki ezali na possibilité.",
         ],
       },
       {
-        title: "Mokano ya NGEMBA",
+        title: "Orientation NGEMBA",
         body: [
-          "NGEMBA ebandaka na mokonzi ya moto - ezali te lokola polisi to mokolo ya nzoto.",
-          "Sikoyo ya malamu: koyebisa moto na miniti.",
-          "Na nsima ya malamu: alerte ya kokoma; mokolo ya nganga ezali na esika.",
+          "NGEMBA ezali na oryantasyon na opérateur humain - ezali te remplacement ya police to urgences médicales.",
+          "Heures pilote : réponse humaine ezali na nzela ya miniti mingi.",
+          "Hors horaires : alerte ezali enregistrée ; numéros d'urgence ezali na disponibilité.",
         ],
       },
       {
-        title: "Mokolo ya Bantu (VBG)",
+        title: "Mibeko etali na nzela ya ngenge (VBG)",
         body: [
-          "Soki ozali na esika ya koloba, yebisa SOS to Koloba.",
-          "Mokano ya kokanga: koloba makambo moke; mokonzi akokutana na yo na message.",
-          "Soki okoki, soki ozali na esika ya kokanga, soki okoki.",
+          "Soki ozali na esengo ya kolobela, tinda SOS.",
+          "Mokolo ya kokanga : yemba makambo moke ; mokonzi akokutana na yo na nzela ya message.",
+          "Oyo osengeli te kozala moko soki okoki kokende na esika ya malamu.",
+        ],
+      },
+      {
+        title: "Ékole na ba mineurs (Safe School)",
+        body: [
+          "Kokoma na nzela ya module Ékole - identité ezali na protection.",
+          "Referent ya Ékole azwa file ya sika, eza na séparation na ba dosye ya mibali.",
+          "Danger ya ntango moko : yebisa mpe ba secours ya libanda.",
+        ],
+      },
+      {
+        title: "Bato ya mbala - koyekola ndenge ya kokokisa",
+        body: [
+          "Module Ngemba IA ya Bato ya mbala : 10 makambo mpo na kolimbola (koyebisa, cyber, corruption...).",
+          "Oyo ezali te classement to jugement - ezali guide ya koyekola.",
+          "Makambo ya solo ya mabe : salela SOS NGEMBA ntango moko.",
         ],
       },
     ],
+
   },
   sw: {
-    title: "Msaada na Rasilimali",
+    title: "Msaada na rasilimali",
     sections: [
       {
-        title: "Nambari za Dharura (DRC)",
+        title: "Nambari za dharura (RDC)",
         body: [
-          "Polisi: 112 au kituo cha polisi kilicho karibu",
-          "Wakaguzi wa moto: kulingana na jiji lako",
-          "Dharura ya matibabu: hospitali au kituo cha afya kilicho karibu",
-          "Katika hatari ya papo hapo: piga simu kwa msaada kwanza, kisha NGEMBA ikiwa inawezekana.",
+          "Polisi : 112 au kituo cha polisi kilicho karibu",
+          "Zimamoto : kulingana na jiji lako",
+          "Dharura ya matibabu : hospitali au kituo cha afya kilicho karibu",
+          "Katika hatari ya papo hapo : piga simu kwanza kwa msaada, kisha NGEMBA ikiwa inawezekana.",
         ],
       },
       {
-        title: "Mwongozo wa NGEMBA",
+        title: "Mwelekeo wa NGEMBA",
         body: [
-          "NGEMBA inakuongoza kwa opereta wa kibinadamu - si mbadala wa polisi au dharura za matibabu.",
+          "NGEMBA inaelekeza kwa opereta wa kibinadamu - si mbadala wa polisi wala huduma za dharura za matibabu.",
           "Saa za majaribio: jibu la kibinadamu linatarajiwa ndani ya dakika chache.",
-          "Nje ya saa: tahadhari iliyorekodiwa; nambari za dharura zinapatikana.",
+          "Nje ya saa: tahadhari imeandikwa; nambari za dharura zinapatikana.",
         ],
       },
       {
-        title: "Vikosi vya Kijinsia (VBG)",
+        title: "Vikosi vinavyotokana na jinsia (VBG)",
         body: [
-          "Ikiwa uko salama kuzungumza, tumia SOS au Zungumza.",
+          "Ikiwa uko salama kuzungumza, tumia SOS.",
           "Njia ya siri: andika maneno machache; opereta atajibu kwa ujumbe.",
-          "Usikose kuwa peke yako ikiwa unaweza kwenda mahali salama.",
+          "Usibaki peke yako ikiwa unaweza kwenda mahali salama.",
+        ],
+      },
+      {
+        title: "Shule na watoto wadogo (Shule Salama)",
+        body: [
+          "Ripoti iliyohifadhiwa kupitia moduli ya Shule - utambulisho umehifadhiwa.",
+          "Mwakilishi wa shule anapokea faili maalum, tofauti na faili za watu wazima.",
+          "Hatari ya papo hapo: piga simu pia kwa huduma za dharura za eneo hilo.",
+        ],
+      },
+      {
+        title: "Vijana - jifunze kujilinda",
+        body: [
+          "Moduli ya Ngemba Vijana: hali 10 za kufikiri (idhini, mtandao, ufisadi...).",
+          "Hii si orodha wala hukumu - mwongozo wa elimu.",
+          "Hali halisi mbaya: tumia SOS NGEMBA mara moja.",
         ],
       },
     ],
+
   },
   lua: {
-    title: "Bantu na Misa",
+    title: "Bikala ne bisalu",
     sections: [
       {
-        title: "Nambari za Dharura (RDC)",
+        title: "Mibulu ya nganga (RDC)",
         body: [
-          "Polisi: 112 au kituo cha polisi kilicho karibu",
-          "Wakaguzi wa moto: kulingana na jiji lako",
-          "Dharura ya matibabu: hospitali au kituo cha afya kilicho karibu",
-          "Katika hatari ya papo hapo: piga simu kwa msaada kwanza, kisha NGEMBA ikiwa inawezekana.",
+          "Polisi : 112 to komisi ya mobali ya nsuka",
+          "Bompanga : malamu na mboka na yo",
+          "Nganga ya mpasi : boloko to centre ya nganga ya nsuka",
+          "Na likama ya mbala : yebisa liboso ba nganga, na nsuka NGEMBA soki ezali na mposa.",
         ],
       },
       {
-        title: "Mwongozo wa NGEMBA",
+        title: "Orientation NGEMBA",
         body: [
-          "NGEMBA inakuongoza kwa opereta wa kibinadamu - si mbadala wa polisi au dharura za matibabu.",
-          "Saa za majaribio: jibu la kibinadamu linatarajiwa ndani ya dakika chache.",
-          "Nje ya saa: tahadhari iliyorekodiwa; nambari za dharura zinapatikana.",
+          "NGEMBA ebandaka ku mukonzi wa bantu - te ezali kokanga police to ba urgences médicales.",
+          "Mokolo ya pilote : réponse ya muntu ebandaka na miniti mingi.",
+          "Na nsima ya mikolo : alerte ebandaki ; ba numéros ya urgence ezali na disponibilité.",
         ],
       },
       {
-        title: "Vikosi vya Kijinsia (VBG)",
+        title: "Violences basées sur le genre (VBG)",
         body: [
-          "Ikiwa uko salama kuzungumza, tumia SOS au Zungumza.",
-          "Njia ya siri: andika maneno machache; opereta atajibu kwa ujumbe.",
-          "Usikose kuwa peke yako ikiwa unaweza kwenda mahali salama.",
+          "Soki o zali na bokasi ya koloba, salela SOS.",
+          "Mode discret : yebisa moke ; opérateur akopesa na message.",
+          "Okozala te na moko soki okoki kokende na esika ya bokasi.",
+        ],
+      },
+      {
+        title: "Ékole na bana (Safe School)",
+        body: [
+          "Kusanga kwikala mu mposo ya Ékole - ntu ya kusanga ikala mu mposo.",
+          "Mokambi ya ékole akokuta file ya mposo, eza na mposo ya bana.",
+          "Kizanga ya ntete: yebisa mpe ba secours ya mabele.",
+        ],
+      },
+      {
+        title: "Bana - kumona kudi kudi",
+        body: [
+          "Module Ngemba IA ya Bana : 10 bintu bikalaka ku kudi (kudiyangisa, cyber, corruption...).",
+          "Kasi te, ezali te kudi to kudi - ezali muku ya koyekola.",
+          "Situasiya ya solo ya mabe : salela SOS NGEMBA ntango nyonso.",
         ],
       },
     ],
+
   },
   kg: {
-    title: "Mokolo na Bantu",
+    title: "Mibeko na bisika",
     sections: [
       {
-        title: "Nambari za Dharura (RDC)",
+        title: "Mibeko ya ntango ya mpasi (RDC)",
         body: [
-          "Polisi: 112 au kituo cha polisi kilicho karibu",
-          "Wakaguzi wa moto: kulingana na jiji lako",
-          "Dharura ya matibabu: hospitali au kituo cha afya kilicho karibu",
-          "Katika hatari ya papo hapo: piga simu kwa msaada kwanza, kisha NGEMBA ikiwa inawezekana.",
+          "Polisi : 112 to komisi ya mabe ya sika",
+          "Bompanga : ndenge ya mboka na yo",
+          "Mokolo ya mpasi : boloko to ndako ya nzoto ya sika",
+          "Na mpasi ya ntango ya mabe : yebisa liboso ba ndako ya mpasi, na nsima NGEMBA soki ekoki.",
         ],
       },
       {
-        title: "Mwongozo wa NGEMBA",
+        title: "Nganga NGEMBA",
         body: [
-          "NGEMBA inakuongoza kwa opereta wa kibinadamu - si mbadala wa polisi au dharura za matibabu.",
-          "Saa za majaribio: jibu la kibinadamu linatarajiwa ndani ya dakika chache.",
-          "Nje ya saa: tahadhari iliyorekodiwa; nambari za dharura zinapatikana.",
+          "NGEMBA ebandaka na mosi ya muntu - te ezali kokanga na polisi to na ba urgences médicales.",
+          "Mokolo ya mabele : nzela ya mosi ya muntu ebandaka na miniti mingi.",
+          "Na ntango ya moke : alerte eza na nzela ; ba numéros ya urgence ezali na esika.",
         ],
       },
       {
-        title: "Vikosi vya Kijinsia (VBG)",
+        title: "Viyangani vingi ku zinga (VBG)",
         body: [
-          "Ikiwa uko salama kuzungumza, tumia SOS au Zungumza.",
-          "Njia ya siri: andika maneno machache; opereta atajibu kwa ujumbe.",
-          "Usikose kuwa peke yako ikiwa unaweza kwenda mahali salama.",
+          "Soki o zali na ntina ya koloba, tinda SOS.",
+          "Mokolo ya kokanga : yemba makambo moke ; mokonzi akotanga na message.",
+          "Keba te o zala moko soki okoki kokende na esika ya nsuka.",
+        ],
+      },
+      {
+        title: "Sukulu na bana (Safe School)",
+        body: [
+          "Kukangisa na nzela ya module Sukulu - ntina ya kukangisa eza na nzela ya nzela.",
+          "Mokambi ya sukulu akokisi file ya sika, eza na esika ya ba dossier ya mibali.",
+          "Bango ya mpasi ya ntango ya sika : yebisa mpe ba secours ya lokasa.",
+        ],
+      },
+      {
+        title: "Bana - koyangela ndenge ya kokokisa",
+        body: [
+          "Module McBuleli Bana : 10 makambo mpo na kotala (koyokela, cyber, corruption...).",
+          "Ezali te classement to jugement - ezali guide ya koyekola.",
+          "Makambo ya solo ya ntango : salela SOS NGEMBA ntango moko.",
         ],
       },
     ],
+
   },
 };
 
@@ -256,7 +324,7 @@ const PREVENT: Record<Locale, PageCopy> = {
       {
         title: "Pour les jeunes",
         body: [
-          "Explorez les scénarios McBuleli Jeunesse pour vous entraîner à dire non.",
+          "Explorez les scénarios Ngemba Jeunesse pour vous entraîner à dire non.",
           "Consentement = choix libre, sans pression ni chantage.",
           "Corruption scolaire : refusez et parlez à un adulte de confiance ou signalez.",
         ],
@@ -293,7 +361,7 @@ const PREVENT: Record<Locale, PageCopy> = {
       {
         title: "For young people",
         body: [
-          "Explore McBuleli Youth scenarios to practice saying no.",
+          "Explore Ngemba Youth scenarios to practice saying no.",
           "Consent means a free choice - no pressure or blackmail.",
           "School corruption: refuse and talk to a trusted adult or report.",
         ],
@@ -301,88 +369,120 @@ const PREVENT: Record<Locale, PageCopy> = {
     ],
   },
   ln: {
-    title: "Kokisa",
+    title: "Kobatela",
     sections: [
       {
-        title: "Liboso ya kokisa",
+        title: "Liboso ya likambo",
         body: [
-          "Yebisa mokonzi ya motema ya kokisa soki ozali na mpasi.",
-          "Mémorisez les numéros d'urgence locaux.",
-          "Tanga na makambo ya mpasi na ntango ya liboso - soki okoki, soki okoki.",
+          "Identifiez un contact ya confiance mpe zala na ye NGEMBA soki ezali na ntina.",
+          "Tala bisika ya esengo oyo ezali na mboko na yo (nganga, ekolo, centre ya santé, mosali ya confiance).",
+          "Zala na n° ya urgence oyo oza na yango na téléphone na yo.",
         ],
       },
       {
-        title: "Na Internet mpe na esika",
+        title: "Soki ozali témoin",
         body: [
-          "Soki ozali na mpasi, soki okoki, soki okoki.",
-          "Kanga mpe yebisa makambo ya mpasi na Internet.",
-          "Na esika ya mosala to na esika ya masolo: yebisa mokonzi ya motema.",
+          "Te komitisa nzela mpo na kolanda to koyanola.",
+          "Tindela na Témoin to SOS na makambo moke ya mposa.",
+          "Lendisa moto na koluka esika ya malamu soki ezali na bokono te.",
+        ],
+      },
+      {
+        title: "Ba alarme ya lokuta",
+        body: [
+          "NGEMBA ezali service ya kondima. Mokanda ya mabe oyo ebimisami na ntango nyonso ekoki kokitisa nzela ya kokota.",
+          "Soki ozali na mposa ya koyeba, yebisa na maloba ya solo ete ezali test to likambo.",
         ],
       },
     ],
+
   },
   sw: {
     title: "Kuzuia",
     sections: [
       {
-        title: "Kabla ya Kuchelewa",
+        title: "Kabla ya hali",
         body: [
-          "Tambua mtu wa kuaminika wa kumtaarifu endapo kuna hatari.",
-          "Kumbuka nambari za dharura za eneo lako.",
-          "Zungumza kuhusu hali zinazotia wasiwasi mapema - usijifungie.",
+          "Tambua mtu wa kuaminika na mshirikishe NGEMBA ikiwa ni muhimu.",
+          "Tambua maeneo salama karibu na nyumbani kwako (kanisa, shule, kituo cha afya, jirani wa kuaminika).",
+          "Hifadhi nambari za dharura kwenye simu yako.",
         ],
       },
       {
-        title: "Mtandaoni na Nje ya Mtandao",
+        title: "Ikiwa wewe ni shahidi",
         body: [
-          "Usishiriki picha za faragha chini ya shinikizo.",
-          "Zuia na ripoti unyanyasaji mtandaoni.",
-          "Shuleni au kazini: zungumza na mtu wa kuaminika.",
+          "Usijitumbukize katika hatari ili kupiga picha au kuingilia kati.",
+          "Ripoti kupitia Témoin au SOS kwa maelezo machache ya msaada.",
+          "Msaidie mtu huyo kupata mahali salama ikiwa inawezekana bila hatari.",
+        ],
+      },
+      {
+        title: "Tahadhari za uongo",
+        body: [
+          "NGEMBA ni huduma ya kuaminika. Tahadhari za uongo zinazojirudia zinaweza kupunguza upatikanaji.",
+          "Ikiwa una shaka, andika wazi kwamba ni jaribio au swali.",
         ],
       },
     ],
+
   },
   lua: {
-    title: "Kuzuia",
+    title: "Kukangama",
     sections: [
       {
-        title: "Kabla ya Kuchelewa",
+        title: "Kudi bantu bionso",
         body: [
-          "Tambua mtu wa kuaminika wa kumtaarifu endapo kuna hatari.",
-          "Kumbuka nambari za dharura za eneo lako.",
-          "Zungumza kuhusu hali zinazotia wasiwasi mapema - usijifungie.",
+          "Kangila mukanda wa ntu wa kinsala mpe banga NGEMBA soki ekokani.",
+          "Tanga bisika ya bolamu banzela ya ndaku na yo (nganga, ekolo, centre ya bokoko, ntu ya kinsala).",
+          "Zala na namba ya banga ebandaka na telefone na yo.",
         ],
       },
       {
-        title: "Mtandaoni na Nje ya Mtandao",
+        title: "Soki o zali na mposa",
         body: [
-          "Usishiriki picha za faragha chini ya shinikizo.",
-          "Zuia na ripoti unyanyasaji mtandaoni.",
-          "Shuleni au kazini: zungumza na mtu wa kuaminika.",
+          "Te salaka na mposa mpo na kokanga to koluka.",
+          "Tindika na Témoin to SOS na makambo moke ya mabe.",
+          "Lendisa moto na kokanga esika ya malamu soki ezali na bokono te.",
+        ],
+      },
+      {
+        title: "Mikanda ya mabe",
+        body: [
+          "NGEMBA ke sevis ya kwikala na ntete. Mikanda ya mabe ya kanyokanyoko eza na makasi ya kutika nzela.",
+          "Soki oza na mposa, yebisa na ntete ete ke test to nsango.",
         ],
       },
     ],
+
   },
   kg: {
-    title: "Kuzuia",
+    title: "Kukanga",
     sections: [
       {
-        title: "Kabla ya Kuchelewa",
+        title: "Liboso ya mambu",
         body: [
-          "Tambua mtu wa kuaminika wa kumtaarifu endapo kuna hatari.",
-          "Kumbuka nambari za dharura za eneo lako.",
-          "Zungumza kuhusu hali zinazotia wasiwasi mapema - usijifungie.",
+          "Kanga mosi ya ntina ya kimpwanza mpe zola na ye NGEMBA soki ezali na ntina.",
+          "Tanga bisika ya nsuka ya malamu na nse ya yo (nganga, ekolo, centre ya nzoto, mobali ya zola).",
+          "Zala na nambala ya nzoto ya mbala na yo na telefone.",
         ],
       },
       {
-        title: "Mtandaoni na Nje ya Mtandao",
+        title: "Soki o zali na mposa",
         body: [
-          "Usishiriki picha za faragha chini ya shinikizo.",
-          "Zuia na ripoti unyanyasaji mtandaoni.",
-          "Shuleni au kazini: zungumza na mtu wa kuaminika.",
+          "Tezola na mposa mpo na kokoma to koluka.",
+          "Tanga na Témoin to SOS na makambo moke ya ntina.",
+          "Lendisa moto na kokoma na esika ya nsuka soki ezali na mposa te.",
+        ],
+      },
+      {
+        title: "Mikanda ya mabe",
+        body: [
+          "NGEMBA ezali mosala ya kondima. Mikanda ya mabe oyo ebimaka na ntango nyonso ekoki kokitisa nzela ya kokota.",
+          "Soki ozali na mposa ya koyeba, yebisa na ntango ya solo ete ezali test to likambo.",
         ],
       },
     ],
+
   },
 };
 

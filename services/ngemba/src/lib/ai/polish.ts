@@ -2,10 +2,10 @@ import OpenAI from "openai";
 import { readEnvKey } from "@/lib/env";
 import { resolveAiMode } from "@/lib/ai/triage";
 
-const POLISH_MAX_CHARS = 2000;
+const POLISH_MAX_CHARS = 500;
 const POLISH_MAX_TOKENS = 400;
 
-const POLISH_SYSTEM = `You clarify citizen alert text for NGEMBA / McBuleli IA.
+const POLISH_SYSTEM = `You clarify citizen alert text for NGEMBA / Ngemba IA.
 Rules:
 - Fix spelling, accents, grammar, and punctuation only.
 - Keep the same language as the input.

@@ -11,7 +11,7 @@ const poppins = Poppins({
 
 export const metadata: Metadata = {
   title: "Ngemba RDC",
-  description: "Alertez - McBuleli IA comprend - orientation humaine.",
+  description: "Alertez - Ngemba IA comprend - orientation humaine.",
   applicationName: "Ngemba RDC",
   manifest: "/manifest.webmanifest",
   appleWebApp: {

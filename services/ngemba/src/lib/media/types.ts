@@ -13,7 +13,10 @@ export type MediaAttachment = {
 };
 
 export const MEDIA_MAX_BYTES = 8 * 1024 * 1024;
+/** Total attachments per session (photos + audio + video). */
 export const MEDIA_MAX_PER_SESSION = 5;
+/** Citizen compose: max photos before / after send. */
+export const MEDIA_MAX_PHOTOS = 4;
 
 export const ALLOWED_MEDIA: Record<
   MediaKind,

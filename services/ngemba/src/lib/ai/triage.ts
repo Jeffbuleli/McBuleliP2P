@@ -92,7 +92,7 @@ export async function runTriage(input: {
           content: JSON.stringify({
             locale: input.locale,
             source: input.source,
-            message: input.message.slice(0, 2000),
+            message: input.message.slice(0, 500),
             local_hint: {
               category: localResult.category,
               urgency: localResult.urgency,

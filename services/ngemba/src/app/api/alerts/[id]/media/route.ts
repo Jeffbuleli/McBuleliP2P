@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { readCitizenToken } from "@/lib/citizen/token";
-import { MEDIA_MAX_PER_SESSION } from "@/lib/media/types";
+import { MEDIA_MAX_PER_SESSION, MEDIA_MAX_PHOTOS } from "@/lib/media/types";
 import { saveMedia } from "@/lib/media/store";
 import { transcribeAudioIfConfigured } from "@/lib/media/transcribe";
 import {
@@ -57,6 +57,15 @@ export async function POST(req: Request, ctx: Ctx) {
   const file = form.get("file");
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "missing_file" }, { status: 400 });
+  }
+
+  const looksPhoto = file.type.startsWith("image/");
+  if (looksPhoto) {
+    const photoCount = access.session.media.filter((m) => m.kind === "photo")
+      .length;
+    if (photoCount >= MEDIA_MAX_PHOTOS) {
+      return NextResponse.json({ error: "photo_limit" }, { status: 400 });
+    }
   }
 
   try {

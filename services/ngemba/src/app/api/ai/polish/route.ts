@@ -5,7 +5,7 @@ import {
   rateLimitResponse,
 } from "@/lib/security/rate-limit";
 
-const MAX_CHARS = 2000;
+const MAX_CHARS = 500;
 
 export async function POST(req: Request) {
   const ip = clientIp(req);
