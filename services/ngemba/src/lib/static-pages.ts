@@ -95,9 +95,17 @@ export const PRIVACY_SECTIONS: StaticSection[] = [
 
 export const CGU_SECTIONS: StaticSection[] = [
   {
+    title: "Qui opère NGEMBA",
+    body: [
+      "NGEMBA est une plateforme citoyenne d'alerte et d'orientation, opérée par McBuleli.",
+      "Elle est conçue pour toute personne en RDC, sans appartenance à une organisation particulière.",
+      "Des opérateurs humains partenaires accrédités peuvent vous orienter ; le label public reste McBuleli / NGEMBA.",
+    ],
+  },
+  {
     title: "Acceptation",
     body: [
-      "En utilisant NGEMBA, vous acceptez ces conditions d'utilisation (brouillon pilote).",
+      "En utilisant NGEMBA, vous acceptez ces conditions d'utilisation.",
       "Si vous n'acceptez pas, n'envoyez pas d'alerte via la plateforme.",
     ],
   },
@@ -105,7 +113,7 @@ export const CGU_SECTIONS: StaticSection[] = [
     title: "Usage autorisé",
     body: [
       "Signaler une situation réelle ou un besoin d'orientation.",
-      "Utiliser le parcours Témoin sans vous mettre en danger.",
+      "Utiliser le parcours Témoin, École ou Jeunesse sans vous mettre en danger.",
       "Consulter les ressources d'aide et de prévention.",
     ],
   },
@@ -113,50 +121,57 @@ export const CGU_SECTIONS: StaticSection[] = [
     title: "Usage interdit",
     body: [
       "Fausses alertes malveillantes ou répétées.",
-      "Harcèlement d'opérateurs ou de citoyens.",
-      "Tentative d'accès non autorisé au dashboard ops.",
+      "Harcèlement d'opérateurs, de citoyens ou de partenaires.",
+      "Tentative d'accès non autorisé aux outils opérateurs.",
     ],
   },
   {
-    title: "Limites",
+    title: "Limites du service",
     body: [
-      "NGEMBA n'est pas un service d'urgence directe type police ou SAMU.",
-      "En danger immédiat, appelez d'abord les numéros d'urgence locaux.",
-      "McBuleli peut suspendre un accès abusif sans bloquer une urgence critical.",
+      "NGEMBA n'est pas un service d'urgence directe (police, pompiers, SAMU).",
+      "En danger immédiat, appelez d'abord les numéros d'urgence locaux, puis NGEMBA si vous le pouvez.",
+      "McBuleli peut limiter un usage abusif, sans jamais bloquer automatiquement une urgence critique.",
+    ],
+  },
+  {
+    title: "Contact",
+    body: [
+      "Questions sur le service : info@ngemba-rdc.org",
+      "McBuleli : https://mcbuleli.com",
     ],
   },
 ];
 
 export const CHARTE_ONG_SECTIONS: StaticSection[] = [
   {
-    title: "Mission opérateur ONG",
+    title: "Mission de l'opérateur partenaire",
     body: [
-      "Accueillir la personne avec respect et sans jugement.",
+      "Accueillir chaque personne avec respect et sans jugement.",
       "Prioriser la sécurité immédiate de la personne.",
-      "Orienter vers les ressources JGL ou partenaires compétents.",
+      "Orienter vers les ressources et partenaires compétents du réseau McBuleli / NGEMBA.",
     ],
   },
   {
     title: "Confidentialité",
     body: [
-      "Ne pas divulguer le contenu des dossiers hors NGEMBA et JGL.",
-      "Ne pas partager le code opérateur.",
-      "Ne pas contacter la personne par téléphone sans son accord si risque d'agresseur.",
+      "Ne pas divulguer le contenu des dossiers hors du cadre NGEMBA et des partenaires accrédités.",
+      "Ne pas partager le code ou les accès opérateur.",
+      "Ne pas contacter la personne par téléphone sans son accord si un risque d'agresseur existe.",
     ],
   },
   {
-    title: "Qualité de service (pilote)",
+    title: "Qualité de service",
     body: [
-      "Critical : prise en charge visée sous 5 minutes (heures ouverture).",
-      "High : sous 30 minutes.",
+      "Urgence critique : prise en charge visée sous 5 minutes (heures d'ouverture).",
+      "Urgence élevée : sous 30 minutes.",
       "Documenter chaque action dans les notes opérateur.",
     ],
   },
   {
-    title: "Signalement incident",
+    title: "Signalement d'incident",
     body: [
       "Toute faille de sécurité ou fuite de données : info@ngemba-rdc.org sous 24 h.",
-      "Escalade juridique : Me Arjoule Karinda / McBuleli ceo@mcbuleli.org.",
+      "Escalade : McBuleli (équipe plateforme) via info@ngemba-rdc.org ou ceo@mcbuleli.org.",
     ],
   },
 ];

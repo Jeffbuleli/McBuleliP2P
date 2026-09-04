@@ -678,42 +678,461 @@ const PRIVACY: Record<Locale, PageCopy> = {
   },
 };
 
-function legalPage(
-  locale: Locale,
-  titleFr: string,
-  sectionsFr: StaticSection[],
-): PageCopy {
-  const notice: Record<Locale, string> = {
-    fr: "",
-    en: "Legal draft in French - full translation coming.",
-    ln: "Mokanda ya mibeko ezali na lifalans - ndimbola mobimba ezali koya.",
-    sw: "Hati ya kisheria kwa Kifaransa - tafsiri kamili inakuja.",
-    lua: "Mokanda ya mibeko ezali na lifalans - ndimbola mobimba ezali koya.",
-    kg: "Mokanda ya mibeko ezali na lifalans - ndimbola mobimba ke kwisa.",
-  };
-  const n = notice[locale];
-  return {
-    title: titleFr,
-    sections: n ? [{ title: n, body: [] }, ...sectionsFr] : sectionsFr,
-  };
-}
+const CGU: Record<Locale, PageCopy> = {
+  fr: {
+    title: "Conditions d'utilisation",
+    sections: CGU_SECTIONS,
+  },
+  en: {
+    title: "Terms of use",
+    sections: [
+      {
+        title: "Who operates NGEMBA",
+        body: [
+          "NGEMBA is a citizen alert and guidance platform operated by McBuleli.",
+          "It is designed for anyone in the DRC, without belonging to any particular organisation.",
+          "Accredited human partner operators may guide you; the public label remains McBuleli / NGEMBA.",
+        ],
+      },
+      {
+        title: "Acceptance",
+        body: [
+          "By using NGEMBA, you accept these terms of use.",
+          "If you do not accept them, do not send an alert through the platform.",
+        ],
+      },
+      {
+        title: "Allowed use",
+        body: [
+          "Report a real situation or a need for guidance.",
+          "Use Witness, School or Youth paths without putting yourself in danger.",
+          "Consult help and prevention resources.",
+        ],
+      },
+      {
+        title: "Forbidden use",
+        body: [
+          "Malicious or repeated false alerts.",
+          "Harassment of operators, citizens or partners.",
+          "Unauthorised attempts to access operator tools.",
+        ],
+      },
+      {
+        title: "Service limits",
+        body: [
+          "NGEMBA is not a direct emergency service (police, firefighters, ambulance).",
+          "In immediate danger, call local emergency numbers first, then NGEMBA if you can.",
+          "McBuleli may limit abusive use, without ever automatically blocking a critical emergency.",
+        ],
+      },
+      {
+        title: "Contact",
+        body: [
+          "Questions about the service: info@ngemba-rdc.org",
+          "McBuleli: https://mcbuleli.com",
+        ],
+      },
+    ],
+  },
+  ln: {
+    title: "Mibeko ya kosalela",
+    sections: [
+      {
+        title: "Nani azali kosala NGEMBA",
+        body: [
+          "NGEMBA ezali plateforme ya alerte mpe orientation ya bato, McBuleli ezali kosala yango.",
+          "Ezali mpo na moto nyonso na RDC, ezali te ya organisation moko kaka.",
+          "Ba opérateurs partenaires bakoki koyangela yo ; nkombo public ezali McBuleli / NGEMBA.",
+        ],
+      },
+      {
+        title: "Kondima",
+        body: [
+          "Soki osalelaka NGEMBA, ondimi mibeko oyo.",
+          "Soki ondimi te, tinda te alerte na plateforme.",
+        ],
+      },
+      {
+        title: "Ndenge ya malamu",
+        body: [
+          "Yebisa makambo ya solo to mposa ya koyangela.",
+          "Salela nzela ya Momonisi, Ekele to Bato ya moke, kasi tikala na kimia.",
+          "Tala biloko ya lisalisi mpe ya kobatela.",
+        ],
+      },
+      {
+        title: "Ndenge oyo ezali te",
+        body: [
+          "Ba alerte ya lokuta to oyo ezali mingi.",
+          "Kokanga ba opérateurs, bato to ba partenaires.",
+          "Kokota na biloko ya opérateurs soki ezali te na ndingisa.",
+        ],
+      },
+      {
+        title: "Nini NGEMBA ekoki te",
+        body: [
+          "NGEMBA ezali te service ya urgence directe (police, pompiers, SAMU).",
+          "Soki ozali na danger mbala moko, yebisa liboso numéros ya urgence, na nsima NGEMBA soki okoki.",
+          "McBuleli ekoki kolimita usage ya mabe, kasi ekanga te urgence critique automatique.",
+        ],
+      },
+      {
+        title: "Contact",
+        body: [
+          "Mituna ya service : info@ngemba-rdc.org",
+          "McBuleli : https://mcbuleli.com",
+        ],
+      },
+    ],
+  },
+  sw: {
+    title: "Masharti ya matumizi",
+    sections: [
+      {
+        title: "Nani anaendesha NGEMBA",
+        body: [
+          "NGEMBA ni jukwaa la tahadhari na mwongozo wa raia linaloendeshwa na McBuleli.",
+          "Imeundwa kwa mtu yeyote nchini DRC, bila kuwa wa shirika lolote maalum.",
+          "Waendeshaji washirika walioidhinishwa wanaweza kukuongoza; jina la umma linabaki McBuleli / NGEMBA.",
+        ],
+      },
+      {
+        title: "Ukubali",
+        body: [
+          "Kwa kutumia NGEMBA, unakubali masharti haya ya matumizi.",
+          "Ikiwa hukubali, usitume tahadhari kupitia jukwaa.",
+        ],
+      },
+      {
+        title: "Matumizi yanayoruhusiwa",
+        body: [
+          "Ripoti hali halisi au hitaji la mwongozo.",
+          "Tumia njia za Shahidi, Shule au Vijana bila kujitia hatarini.",
+          "Soma rasilimali za msaada na kuzuia.",
+        ],
+      },
+      {
+        title: "Matumizi yaliyokatazwa",
+        body: [
+          "Tahadhari za uwongo zenye nia mbaya au za kurudiwa.",
+          "Unyanyasaji wa waendeshaji, raia au washirika.",
+          "Jaribio la kuingia bila ruhusa kwenye zana za waendeshaji.",
+        ],
+      },
+      {
+        title: "Mipaka ya huduma",
+        body: [
+          "NGEMBA si huduma ya dharura moja kwa moja (polisi, zimamoto, ambulansi).",
+          "Katika hatari ya papo hapo, piga nambari za dharura kwanza, kisha NGEMBA ikiwezekana.",
+          "McBuleli inaweza kupunguza matumizi mabaya, bila kuzuia kiotomatiki dharura muhimu.",
+        ],
+      },
+      {
+        title: "Mawasiliano",
+        body: [
+          "Maswali kuhusu huduma: info@ngemba-rdc.org",
+          "McBuleli: https://mcbuleli.com",
+        ],
+      },
+    ],
+  },
+  lua: {
+    title: "Mibeko ya kusadila",
+    sections: [
+      {
+        title: "Nani udi kusala NGEMBA",
+        body: [
+          "NGEMBA i plateforme ya alerte ne orientation ya bantu, McBuleli udi kusala.",
+          "I di mpo na muntu onso mu RDC, ke di te ya organisation moko kaka.",
+          "Ba opérateurs partenaires bakoki kukuyangela ; nkombo public i McBuleli / NGEMBA.",
+        ],
+      },
+      {
+        title: "Kundima",
+        body: [
+          "Soki usadilaka NGEMBA, undima mibeko eyi.",
+          "Soki undima te, tinda te alerte ku plateforme.",
+        ],
+      },
+      {
+        title: "Ndenge ya malamu",
+        body: [
+          "Yebisha makambo ya solo to mposa ya koyangela.",
+          "Sadila nzela ya Momonisi, Ekole to Bantu ya moke, kadi tikala na kimia.",
+          "Tala biloko ya lisalisi ne ya kukanga.",
+        ],
+      },
+      {
+        title: "Ndenge ke di te",
+        body: [
+          "Ba alerte ya lokuta to eyi mingi.",
+          "Kokanga ba opérateurs, bantu to ba partenaires.",
+          "Kokota ku biloko ya opérateurs soki ke di te na ndingisa.",
+        ],
+      },
+      {
+        title: "Nini NGEMBA ikoki te",
+        body: [
+          "NGEMBA ke di te service ya urgence directe (police, pompiers, SAMU).",
+          "Soki udi na danger mbala moko, yebisha liboso numéros ya urgence, ne nsima NGEMBA soki ukoki.",
+          "McBuleli ikoki kulimita usage ya mabe, kadi ikanga te urgence critique automatique.",
+        ],
+      },
+      {
+        title: "Contact",
+        body: [
+          "Mituna ya service : info@ngemba-rdc.org",
+          "McBuleli : https://mcbuleli.com",
+        ],
+      },
+    ],
+  },
+  kg: {
+    title: "Mibeko ya kusadila",
+    sections: [
+      {
+        title: "Nani udi kusala NGEMBA",
+        body: [
+          "NGEMBA i plateforme ya alerte ye orientation ya bantu, McBuleli udi kusala.",
+          "I di mpo na muntu onso mu RDC, ke di te ya organisation moko kaka.",
+          "Ba opérateurs partenaires bakoki kukuyangela ; nkombo public i McBuleli / NGEMBA.",
+        ],
+      },
+      {
+        title: "Kundima",
+        body: [
+          "Soki usadilaka NGEMBA, undima mibeko yiyi.",
+          "Soki undima te, tinda te alerte ku plateforme.",
+        ],
+      },
+      {
+        title: "Ndenge ya mbote",
+        body: [
+          "Yebisha mambu ya solo to mposa ya koyangela.",
+          "Sadila nzila ya Momonisi, Ekole to Bantu ya moke, kadi tikala na kimia.",
+          "Tala biloko ya lisalisi ye ya kukanga.",
+        ],
+      },
+      {
+        title: "Ndenge ke di te",
+        body: [
+          "Ba alerte ya lokuta to yiyi mingi.",
+          "Kokanga ba opérateurs, bantu to ba partenaires.",
+          "Kokota ku biloko ya opérateurs soki ke di te na ndingisa.",
+        ],
+      },
+      {
+        title: "Nki NGEMBA ikoki te",
+        body: [
+          "NGEMBA ke di te service ya urgence directe (police, pompiers, SAMU).",
+          "Soki udi na danger mbala moko, yebisha liboso numéros ya urgence, ye nsima NGEMBA soki ukoki.",
+          "McBuleli ikoki kulimita usage ya mabe, kadi ikanga te urgence critique automatique.",
+        ],
+      },
+      {
+        title: "Contact",
+        body: [
+          "Mituna ya service : info@ngemba-rdc.org",
+          "McBuleli : https://mcbuleli.com",
+        ],
+      },
+    ],
+  },
+};
+
+const CHARTER: Record<Locale, PageCopy> = {
+  fr: {
+    title: "Charte des opérateurs partenaires",
+    sections: CHARTE_ONG_SECTIONS,
+  },
+  en: {
+    title: "Partner operator charter",
+    sections: [
+      {
+        title: "Partner operator mission",
+        body: [
+          "Welcome every person with respect and without judgment.",
+          "Prioritise the person's immediate safety.",
+          "Guide them toward competent resources and partners in the McBuleli / NGEMBA network.",
+        ],
+      },
+      {
+        title: "Confidentiality",
+        body: [
+          "Do not disclose case content outside NGEMBA and accredited partners.",
+          "Do not share operator codes or access.",
+          "Do not phone the person without their consent if an aggressor risk exists.",
+        ],
+      },
+      {
+        title: "Service quality",
+        body: [
+          "Critical urgency: response aimed within 5 minutes (opening hours).",
+          "High urgency: within 30 minutes.",
+          "Document every action in operator notes.",
+        ],
+      },
+      {
+        title: "Incident reporting",
+        body: [
+          "Any security breach or data leak: info@ngemba-rdc.org within 24 hours.",
+          "Escalation: McBuleli (platform team) via info@ngemba-rdc.org or ceo@mcbuleli.org.",
+        ],
+      },
+    ],
+  },
+  ln: {
+    title: "Charte ya ba opérateurs partenaires",
+    sections: [
+      {
+        title: "Mosala ya opérateur partenaire",
+        body: [
+          "Ndima moto nyonso na respect, te na jugement.",
+          "Tia liboso kimia ya moto ntango moko.",
+          "Yangela ye na biloko mpe ba partenaires ya réseau McBuleli / NGEMBA.",
+        ],
+      },
+      {
+        title: "Libomba",
+        body: [
+          "Tanga te makambo ya dossier libanda ya NGEMBA mpe ba partenaires oyo bazali na ndingisa.",
+          "Kabaka te code to accès ya opérateur.",
+          "Benga te na téléphone soki moto andimi te, soki ezali na risque ya agresseur.",
+        ],
+      },
+      {
+        title: "Qualité ya service",
+        body: [
+          "Urgence critique : prise en charge sous 5 minutes (heures ya ouverture).",
+          "Urgence élevée : sous 30 minutes.",
+          "Andika action nyonso na notes ya opérateur.",
+        ],
+      },
+      {
+        title: "Yebisa incident",
+        body: [
+          "Faille ya sécurité to fuite ya données : info@ngemba-rdc.org na nse ya 24 h.",
+          "Escalade : McBuleli (équipe plateforme) na info@ngemba-rdc.org to ceo@mcbuleli.org.",
+        ],
+      },
+    ],
+  },
+  sw: {
+    title: "Katiba ya waendeshaji washirika",
+    sections: [
+      {
+        title: "Dhamira ya opereta mshirika",
+        body: [
+          "Karibisha kila mtu kwa heshima bila hukumu.",
+          "Weka usalama wa mtu kwanza.",
+          "Mwelekeze kwa rasilimali na washirika wa mtandao wa McBuleli / NGEMBA.",
+        ],
+      },
+      {
+        title: "Faragha",
+        body: [
+          "Usitoe maudhui ya faili nje ya NGEMBA na washirika walioidhinishwa.",
+          "Usishiriki msimbo au ufikiaji wa opereta.",
+          "Usipige simu bila idhini yake ikiwa kuna hatari ya mshambuliaji.",
+        ],
+      },
+      {
+        title: "Ubora wa huduma",
+        body: [
+          "Dharura muhimu: majibu ndani ya dakika 5 (saa za kazi).",
+          "Dharura ya juu: ndani ya dakika 30.",
+          "Andika kila hatua katika maezo ya opereta.",
+        ],
+      },
+      {
+        title: "Ripoti ya tukio",
+        body: [
+          "Uvunjaji wowote wa usalama au uvujaji wa data: info@ngemba-rdc.org ndani ya saa 24.",
+          "Kuongeza: McBuleli (timu ya jukwaa) kupitia info@ngemba-rdc.org au ceo@mcbuleli.org.",
+        ],
+      },
+    ],
+  },
+  lua: {
+    title: "Charte ya ba opérateurs partenaires",
+    sections: [
+      {
+        title: "Mosala ya opérateur partenaire",
+        body: [
+          "Ndima muntu onso na respect, te na jugement.",
+          "Tia liboso kimia ya muntu ntango moko.",
+          "Kuyangela ye ku biloko ne ba partenaires ya réseau McBuleli / NGEMBA.",
+        ],
+      },
+      {
+        title: "Kubomba",
+        body: [
+          "Tanga te makambo ya dossier libanda ya NGEMBA ne ba partenaires na ndingisa.",
+          "Kabaka te code to accès ya opérateur.",
+          "Benga te na téléphone soki muntu andima te, soki i di na risque ya agresseur.",
+        ],
+      },
+      {
+        title: "Qualité ya service",
+        body: [
+          "Urgence critique : prise en charge sous 5 minutes (heures ya ouverture).",
+          "Urgence élevée : sous 30 minutes.",
+          "Andika action onso na notes ya opérateur.",
+        ],
+      },
+      {
+        title: "Yebisha incident",
+        body: [
+          "Faille ya sécurité to fuite ya données : info@ngemba-rdc.org na nse ya 24 h.",
+          "Escalade : McBuleli (équipe plateforme) na info@ngemba-rdc.org to ceo@mcbuleli.org.",
+        ],
+      },
+    ],
+  },
+  kg: {
+    title: "Charte ya ba opérateurs partenaires",
+    sections: [
+      {
+        title: "Mosala ya opérateur partenaire",
+        body: [
+          "Ndima muntu onso na respect, te na jugement.",
+          "Tia liboso kimia ya muntu ntango moko.",
+          "Kuyangela ye ku biloko ye ba partenaires ya réseau McBuleli / NGEMBA.",
+        ],
+      },
+      {
+        title: "Kubomba",
+        body: [
+          "Tanga te mambu ya dossier libanda ya NGEMBA ye ba partenaires na ndingisa.",
+          "Kabaka te code to accès ya opérateur.",
+          "Benga te na téléphone soki muntu andima te, soki i di na risque ya agresseur.",
+        ],
+      },
+      {
+        title: "Qualité ya service",
+        body: [
+          "Urgence critique : prise en charge sous 5 minutes (heures ya ouverture).",
+          "Urgence élevée : sous 30 minutes.",
+          "Andika action onso na notes ya opérateur.",
+        ],
+      },
+      {
+        title: "Yebisha incident",
+        body: [
+          "Faille ya sécurité to fuite ya données : info@ngemba-rdc.org na nse ya 24 h.",
+          "Escalade : McBuleli (équipe plateforme) na info@ngemba-rdc.org to ceo@mcbuleli.org.",
+        ],
+      },
+    ],
+  },
+};
 
 const PAGES: Record<PageKey, Record<Locale, PageCopy>> = {
   resources: RESOURCES,
   prevent: PREVENT,
   privacy: PRIVACY,
-  cgu: Object.fromEntries(
-    (["fr", "en", "ln", "sw", "lua", "kg"] as Locale[]).map((l) => [
-      l,
-      legalPage(l, "Conditions d'utilisation (brouillon)", CGU_SECTIONS),
-    ]),
-  ) as Record<Locale, PageCopy>,
-  charter: Object.fromEntries(
-    (["fr", "en", "ln", "sw", "lua", "kg"] as Locale[]).map((l) => [
-      l,
-      legalPage(l, "Charte opérateur ONG (brouillon)", CHARTE_ONG_SECTIONS),
-    ]),
-  ) as Record<Locale, PageCopy>,
+  cgu: CGU,
+  charter: CHARTER,
 };
 
 export function getStaticPage(page: PageKey, locale: Locale): PageCopy {

@@ -47,11 +47,11 @@ export function StaticPageShell({
         </Link>
         {" · "}
         <Link href="/legal/cgu" className="text-ng-primary">
-          CGU
+          Conditions d&apos;utilisation
         </Link>
         {" · "}
         <Link href="/legal/charte-ong" className="text-ng-primary">
-          Charte ONG
+          Charte partenaires
         </Link>
       </p>
     </main>
