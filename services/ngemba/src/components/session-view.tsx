@@ -11,7 +11,11 @@ import { IconShield, IconSpark } from "@/components/icons";
 import { useCitizenLocale } from "@/hooks/use-citizen-locale";
 import { messages } from "@/lib/i18n";
 import { urgencyLabel } from "@/lib/labels";
-import { citizenPagePad, citizenShellMaxWidth, useDeviceClass } from "@/lib/ui/device";
+import {
+  citizenPagePad,
+  citizenShellMaxWidth,
+  useDeviceClass,
+} from "@/lib/ui/device";
 
 type SessionPayload = {
   id: string;
@@ -36,6 +40,7 @@ type SessionPayload = {
     kind: string;
     fileName: string;
     transcription: string | null;
+    publicUrl?: string | null;
   }>;
 };
 
@@ -97,24 +102,31 @@ export function SessionView({
       className={`ng-shell mx-auto flex min-h-dvh flex-col ${citizenPagePad(device)} ${citizenShellMaxWidth(device)} ${discrete ? "ng-discrete-surface" : ""}`}
     >
       <header className="flex items-center justify-between">
-        <Link href={href("/")} className="text-sm font-medium text-ng-muted">
+        <Link
+          href={href("/")}
+          className={`text-sm font-medium ${discrete ? "ng-discrete-muted" : "text-ng-muted"}`}
+        >
           {t.home}
         </Link>
-        <div className="inline-flex items-center gap-1.5 text-ng-primary">
+        <div
+          className={`inline-flex items-center gap-1.5 ${discrete ? "text-[#c9a0bc]" : "text-ng-primary"}`}
+        >
           <IconSpark className="size-3.5" />
           <span className="text-[11px] font-semibold">{t.powered}</span>
         </div>
       </header>
 
       {error ? (
-        <p className="mt-10 text-sm font-medium text-ng-urgent">{t.errorGeneric}</p>
+        <p className="mt-10 text-sm font-medium text-ng-urgent">
+          {t.errorGeneric}
+        </p>
       ) : !session ? (
         <p className="mt-10 text-sm text-ng-muted">{t.sending}</p>
       ) : (
-        <section className="mt-8 flex flex-1 flex-col gap-5">
-          <div className="flex items-center gap-3">
+        <section className="mt-6 flex flex-1 flex-col gap-5">
+          <div className="flex items-start gap-3">
             <span
-              className={`inline-flex size-11 items-center justify-center rounded-2xl ${
+              className={`inline-flex size-12 shrink-0 items-center justify-center rounded-2xl ${
                 discrete
                   ? "bg-white/5 text-[#c9a0bc]"
                   : "bg-ng-urgent/10 text-ng-urgent"
@@ -122,25 +134,26 @@ export function SessionView({
             >
               <IconShield className="size-5" />
             </span>
-            <div>
+            <div className="min-w-0 flex-1">
               <h1
-                className={`text-lg font-semibold ${discrete ? "text-[#e8d4e3]" : "text-ng-primary"}`}
+                className={`text-xl font-semibold ${discrete ? "text-[#e8d4e3]" : "text-ng-primary"}`}
               >
                 {t.alertOk}
               </h1>
-              <p className={`text-sm ${discrete ? "ng-discrete-muted" : "text-ng-muted"}`}>
+              <p
+                className={`mt-0.5 text-sm ${discrete ? "ng-discrete-muted" : "text-ng-muted"}`}
+              >
                 {t.humanSoon}
               </p>
+              <div
+                className={`mt-3 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${urgencyClass(session.urgency)}`}
+              >
+                {t.urgency} - {urgencyLabel(session.urgency, locale)}
+              </div>
             </div>
           </div>
 
-          <div
-            className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-semibold ${urgencyClass(session.urgency)}`}
-          >
-            {t.urgency} - {urgencyLabel(session.urgency, locale)}
-          </div>
-
-          <div className="rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-4">
+          <article className="rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-4">
             <div className="mb-2 inline-flex items-center gap-1.5 text-ng-primary">
               <IconSpark className="size-3.5" />
               <span className="text-[11px] font-semibold">{t.powered}</span>
@@ -153,7 +166,18 @@ export function SessionView({
                 {t.place} - {session.locationLabel || session.commune}
               </p>
             ) : null}
-          </div>
+          </article>
+
+          {(media?.length ?? 0) > 0 ? (
+            <article className="rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-4">
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-ng-muted">
+                {t.addMedia}
+              </h2>
+              <div className="mt-3">
+                <SessionMediaList sessionId={id} items={media ?? []} />
+              </div>
+            </article>
+          ) : null}
 
           {session.aiPayload.follow_up_questions?.length ? (
             <ul className="space-y-2">
@@ -172,12 +196,6 @@ export function SessionView({
             {t.emergencyHint}
           </p>
 
-          {session.aiPayload.ai_disclaimer ? (
-            <p className="text-[11px] leading-relaxed text-ng-muted">
-              {session.aiPayload.ai_disclaimer}
-            </p>
-          ) : null}
-
           <SessionMediaUpload
             sessionId={id}
             labels={{
@@ -187,7 +205,7 @@ export function SessionView({
             }}
             onUploaded={setMedia}
           />
-          <SessionMediaList sessionId={id} items={media ?? []} />
+
           <SessionChat
             sessionId={id}
             labels={{
@@ -198,12 +216,11 @@ export function SessionView({
             }}
           />
 
-          <Link
-            href={href("/me")}
-            className="text-center text-sm font-semibold text-ng-primary underline"
-          >
-            {t.myAlerts}
-          </Link>
+          {session.aiPayload.ai_disclaimer ? (
+            <p className="pb-4 text-[11px] leading-relaxed text-ng-muted">
+              {session.aiPayload.ai_disclaimer}
+            </p>
+          ) : null}
         </section>
       )}
     </main>

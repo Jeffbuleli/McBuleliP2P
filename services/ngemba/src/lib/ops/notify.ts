@@ -3,6 +3,7 @@ import {
   NGEMBA_EMAIL_ASSETS,
   NGEMBA_EMAIL_FROM,
   NGEMBA_OPS_BCC_DEFAULT,
+  NGEMBA_OPS_EMAIL_DEFAULT,
 } from "@/lib/email/brand";
 import { renderOpsAlertEmail } from "@/lib/email/ops-alert-layout";
 import { readEnvKey } from "@/lib/env";
@@ -22,17 +23,17 @@ function appUrl(): string {
   );
 }
 
-const NGEMBA_OPS_EMAIL_DEFAULT = "info@ngemba-rdc.org";
+const NGEMBA_OPS_EMAIL_FALLBACK = NGEMBA_OPS_EMAIL_DEFAULT;
 
-/** Tant que le pilote JGL n'est pas valide, alertes → info@ (BCC McBuleli). */
+/** Alertes → hi@mcbuleli.org (Resend mcbuleli.org). ONG pilote optionnelle si verifiee. */
 function pilotVerified(): boolean {
   return readEnvKey("NGEMBA_OPS_PILOT_VERIFIED") === "true";
 }
 
 function opsEmails(): string[] {
   const raw = pilotVerified()
-    ? readEnvKey("NGEMBA_OPS_EMAIL") || NGEMBA_OPS_EMAIL_DEFAULT
-    : NGEMBA_OPS_EMAIL_DEFAULT;
+    ? readEnvKey("NGEMBA_OPS_EMAIL") || NGEMBA_OPS_EMAIL_FALLBACK
+    : readEnvKey("NGEMBA_OPS_EMAIL") || NGEMBA_OPS_EMAIL_FALLBACK;
   return raw
     .split(/[,;]/)
     .map((s) => s.trim())
@@ -58,8 +59,7 @@ function pilotPartnerLine(): string | undefined {
   }
   return (
     `Partenaire ONG pilote prévu : ${name}${referent}. ` +
-    `L'accès opérateur JGL n'est pas encore activé ; ` +
-    `cette alerte vous est transmise sur info@ngemba-rdc.org pour vérification (BCC McBuleli).`
+    `Cette alerte est transmise à hi@mcbuleli.org pour vérification (BCC McBuleli).`
   );
 }
 

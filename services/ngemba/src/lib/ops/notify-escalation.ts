@@ -2,6 +2,7 @@ import type { AlertSessionRecord } from "@/lib/sessions/store";
 import {
   NGEMBA_EMAIL_FROM,
   NGEMBA_OPS_BCC_DEFAULT,
+  NGEMBA_OPS_EMAIL_DEFAULT,
 } from "@/lib/email/brand";
 import { readEnvKey } from "@/lib/env";
 import { categoryLabelFr, urgencyLabelFr } from "@/lib/labels";
@@ -46,10 +47,7 @@ async function sendEscalationWebhook(session: AlertSessionRecord) {
 async function sendEscalationEmail(session: AlertSessionRecord) {
   const apiKey = readEnvKey("RESEND_API_KEY");
   const toRaw =
-    readEnvKey("NGEMBA_OPS_EMAIL") ||
-    (readEnvKey("NGEMBA_OPS_PILOT_VERIFIED") === "true"
-      ? null
-      : "info@ngemba-rdc.org");
+    readEnvKey("NGEMBA_OPS_EMAIL") || NGEMBA_OPS_EMAIL_DEFAULT;
   if (!apiKey || !toRaw) return;
 
   const to = toRaw

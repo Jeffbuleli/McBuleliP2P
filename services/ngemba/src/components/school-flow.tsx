@@ -295,7 +295,25 @@ export function SchoolFlow({ initialLocale }: { initialLocale?: string }) {
       ) : (
         <section className="mt-6 flex flex-1 flex-col gap-4">
           <h1 className="text-xl font-semibold text-ng-primary">{t.gpsAsk}</h1>
-          <p className="text-sm text-ng-muted line-clamp-3">{message}</p>
+          <div className="rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-3">
+            {message.trim() ? (
+              <p className="text-sm text-ng-muted line-clamp-4 whitespace-pre-wrap">
+                {message}
+              </p>
+            ) : null}
+            {photos.length > 0 ? (
+              <ComposePhotos
+                photos={photos}
+                onChange={setPhotos}
+                label={t.addMedia}
+              />
+            ) : null}
+            {audioBlob ? (
+              <p className="mt-2 text-xs font-semibold text-ng-primary">
+                Audio joint ({Math.max(1, Math.round(audioBlob.size / 1024))} Ko)
+              </p>
+            ) : null}
+          </div>
           {hint ? (
             <p className="text-sm font-medium text-ng-warning">{hint}</p>
           ) : null}

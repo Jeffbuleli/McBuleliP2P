@@ -46,10 +46,12 @@ export const NGEMBA_EMAIL_ASSETS = {
   mcbuleliLogo: `${r2PublicBase()}/ngemba/brand/mcbuleli-logo-256.png`,
   illustration: `${r2PublicBase()}/ngemba/email/email-security.png`,
   site: "https://ngemba-rdc.org",
-  supportEmail: "info@ngemba-rdc.org",
+  supportEmail: "hi@mcbuleli.org",
 } as const;
 
-export const NGEMBA_EMAIL_FROM =
-  "NGEMBA <info@ngemba-rdc.org>";
+/** Domaine Resend verifie McBuleli (preferer a ngemba-rdc.org tant que DNS email non pret). */
+export const NGEMBA_EMAIL_FROM = "NGEMBA <noreply@mcbuleli.org>";
+
+export const NGEMBA_OPS_EMAIL_DEFAULT = "hi@mcbuleli.org";
 
 export const NGEMBA_OPS_BCC_DEFAULT = "ceo@mcbuleli.org";

@@ -71,7 +71,9 @@ export function ComposePhotos({
     if (!list?.length) return;
     const next = [...photos];
     for (const f of Array.from(list)) {
-      if (!f.type.startsWith("image/")) continue;
+      if (!f.type.startsWith("image/") && !/\.(jpe?g|png|webp|heic|heif)$/i.test(f.name)) {
+        continue;
+      }
       if (next.length >= COMPOSE_MAX_PHOTOS) break;
       next.push(f);
     }
@@ -149,22 +151,22 @@ export function ComposePhotos({
           <ul className={`grid gap-2 ${mosaicClass(photos.length)}`}>
             {previews.map((url, i) => (
               <li
-                key={`${url}-${i}`}
-                className={`relative overflow-hidden rounded-xl border border-[var(--ng-border)] ${tileH} ${
+                key={`${photos[i]?.name ?? "p"}-${i}-${photos[i]?.size ?? 0}`}
+                className={`relative overflow-hidden rounded-xl border border-[var(--ng-border)] bg-black/5 ${tileH} ${
                   photos.length === 3 && i === 0 ? "row-span-2 min-h-[16.5rem]" : ""
                 }`}
               >
                 <button
                   type="button"
                   onClick={() => setActive(i)}
-                  className="absolute inset-0"
+                  className="block size-full"
                   aria-label="View"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={url}
                     alt=""
-                    className="size-full object-cover"
+                    className="size-full min-h-[inherit] object-cover"
                   />
                 </button>
               </li>

@@ -77,6 +77,7 @@ type Session = {
     kind: string;
     fileName: string;
     transcription: string | null;
+    publicUrl?: string | null;
   }>;
   chatMessages?: Array<{
     id: string;
@@ -268,7 +269,9 @@ export function OpsDossierView({ id }: { id: string }) {
             Message citoyen
           </h2>
           <p className="mt-2 text-sm leading-relaxed text-ng-text whitespace-pre-wrap">
-            {session.message}
+            {session.message === "·"
+              ? "(Message vocal ou photo sans texte)"
+              : session.message}
           </p>
           <dl className="mt-4 grid grid-cols-2 gap-3 text-xs text-ng-muted">
             <div>
@@ -386,12 +389,16 @@ export function OpsDossierView({ id }: { id: string }) {
         </article>
 
         {session.media?.length ? (
-          <article className="rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-4">
+          <article className="rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-4 md:col-span-2">
             <h2 className="text-xs font-semibold uppercase tracking-wide text-ng-muted">
               Médias citoyen
             </h2>
             <div className="mt-3">
-              <SessionMediaList sessionId={session.id} items={session.media} />
+              <SessionMediaList
+                sessionId={session.id}
+                items={session.media}
+                dense
+              />
             </div>
           </article>
         ) : null}
