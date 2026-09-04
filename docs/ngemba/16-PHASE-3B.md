@@ -53,7 +53,7 @@ npm install
 npm start
 ```
 
-`EXPO_PUBLIC_NGEMBA_API_URL=https://ngemba.cyberalert-rdc.org`
+`EXPO_PUBLIC_NGEMBA_API_URL=https://ngemba-rdc.org`
 
 ---
 

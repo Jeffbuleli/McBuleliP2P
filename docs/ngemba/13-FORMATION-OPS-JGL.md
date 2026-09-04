@@ -1,7 +1,7 @@
 # Formation ops NGEMBA - JGL AFRICA (30 minutes)
 
 > **Public :** opérateurs Justicia Great Lakes · **Référent :** Me Arjoule Karinda  
-> **Support :** hi@mcbuleli.org
+> **Support :** info@ngemba-rdc.org
 
 ---
 
@@ -17,9 +17,9 @@
 ## 1. Contexte (5 min)
 
 - **NGEMBA** = canal citoyen → triage IA → opérateur humain JGL.
-- **URL ops :** https://ngemba.cyberalert-rdc.org/ops/login
+- **URL ops :** https://ngemba-rdc.org/ops/login
 - **Code opérateur :** transmis par McBuleli **après validation** (ne pas partager).
-- En phase test McBuleli : alertes sur **hi@mcbuleli.org**.
+- En phase test McBuleli : alertes sur **info@ngemba-rdc.org**.
 
 ---
 
@@ -72,7 +72,7 @@ Sur la fiche `/ops/[id]` :
 |-----------|--------|
 | Danger de mort | Numéros urgence RDC **d’abord** |
 | Enfant en danger | Protocole protection enfant JGL |
-| Débordement | hi@mcbuleli.org + ceo@mcbuleli.org |
+| Débordement | info@ngemba-rdc.org + ceo@mcbuleli.org |
 
 ---
 
@@ -84,7 +84,7 @@ Sur la fiche `/ops/[id]` :
 4. **Fausses alertes** - rappel bienveillant ; jamais bloquer une nouvelle urgence critical.
 5. **Confidentialité** - ne pas exporter dossiers hors NGEMBA/JGL.
 
-Charte complète : https://ngemba.cyberalert-rdc.org/legal/charte-ong
+Charte complète : https://ngemba-rdc.org/legal/charte-ong
 
 ---
 

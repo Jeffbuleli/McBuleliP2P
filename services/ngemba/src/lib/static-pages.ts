@@ -88,7 +88,7 @@ export const PRIVACY_SECTIONS: StaticSection[] = [
     body: [
       "Alertes : durée limitée (objectif pilote 24 mois, à confirmer juridiquement).",
       "Accès opérateurs journalisés.",
-      "Contact : hi@mcbuleli.org",
+      "Contact : info@ngemba-rdc.org",
     ],
   },
 ];
@@ -155,7 +155,7 @@ export const CHARTE_ONG_SECTIONS: StaticSection[] = [
   {
     title: "Signalement incident",
     body: [
-      "Toute faille de sécurité ou fuite de données : hi@mcbuleli.org sous 24 h.",
+      "Toute faille de sécurité ou fuite de données : info@ngemba-rdc.org sous 24 h.",
       "Escalade juridique : Me Arjoule Karinda / McBuleli ceo@mcbuleli.org.",
     ],
   },

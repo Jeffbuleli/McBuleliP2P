@@ -10,10 +10,10 @@
 |--|--|
 | **APK direct** | https://expo.dev/artifacts/eas/ewCQpWoxhAGKji1l1rlIJqLq_zvFTPfUFY0Rj-IbsII.apk |
 | **Page build** | https://expo.dev/accounts/mcbuleli-inc/projects/ngemba/builds/888f6f3e-43d3-469c-8356-9f1b8313aac6 |
-| **Web / PWA** | https://ngemba.cyberalert-rdc.org |
+| **Web / PWA** | https://ngemba-rdc.org |
 | **Repo mobile** | https://github.com/Jeffbuleli/ngemba-mobile |
 
-API cible de l'APK : `https://ngemba.cyberalert-rdc.org`
+API cible de l'APK : `https://ngemba-rdc.org`
 
 ---
 
@@ -28,7 +28,7 @@ API cible de l'APK : `https://ngemba.cyberalert-rdc.org`
 
 ## Checklist test terrain (15 min)
 
-Cocher et renvoyer à `hi@mcbuleli.org` (appareil + Android version).
+Cocher et renvoyer à `info@ngemba-rdc.org` (appareil + Android version).
 
 | # | Test | OK ? |
 |---|------|------|
@@ -43,7 +43,7 @@ Cocher et renvoyer à `hi@mcbuleli.org` (appareil + Android version).
 | 9 | Tuiles École / Jeunesse s'ouvrent | |
 | 10 | Pas de crash au retour home | |
 
-Alerte test : confirmer réception côté ops (`/ops` ou email `hi@mcbuleli.org`).
+Alerte test : confirmer réception côté ops (`/ops` ou email `info@ngemba-rdc.org`).
 
 ---
 
@@ -60,7 +60,7 @@ Merci de tester l'app Android NGEMBA (canal citoyen McBuleli / Cyber Alert).
 https://expo.dev/artifacts/eas/ewCQpWoxhAGKji1l1rlIJqLq_zvFTPfUFY0Rj-IbsII.apk
 
 2) Sur le site (sans install) :
-https://ngemba.cyberalert-rdc.org
+https://ngemba-rdc.org
 
 3) Tests prioritaires (~15 min) :
 - SOS avec le mot « TEST PILOTE » dans le message
@@ -69,7 +69,7 @@ https://ngemba.cyberalert-rdc.org
 - Changer la langue
 
 Renvoyer : modèle téléphone + Android + ce qui a marché / bloqué
-→ hi@mcbuleli.org
+→ info@ngemba-rdc.org
 
 Merci
 Équipe McBuleli

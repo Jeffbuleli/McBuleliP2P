@@ -8,7 +8,7 @@ export function apiBaseUrl(): string {
   return (
     process.env.EXPO_PUBLIC_NGEMBA_API_URL?.replace(/\/$/, "") ||
     extra?.ngembaApiUrl?.replace(/\/$/, "") ||
-    "https://ngemba.cyberalert-rdc.org"
+    "https://ngemba-rdc.org"
   );
 }
 

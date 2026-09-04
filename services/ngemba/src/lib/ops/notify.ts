@@ -22,9 +22,9 @@ function appUrl(): string {
   );
 }
 
-const NGEMBA_OPS_EMAIL_DEFAULT = "hi@mcbuleli.org";
+const NGEMBA_OPS_EMAIL_DEFAULT = "info@ngemba-rdc.org";
 
-/** Tant que le pilote JGL n'est pas valide par McBuleli, alertes → hi@ uniquement. */
+/** Tant que le pilote JGL n'est pas valide, alertes → info@ (BCC McBuleli). */
 function pilotVerified(): boolean {
   return readEnvKey("NGEMBA_OPS_PILOT_VERIFIED") === "true";
 }
@@ -59,7 +59,7 @@ function pilotPartnerLine(): string | undefined {
   return (
     `Partenaire ONG pilote prévu : ${name}${referent}. ` +
     `L'accès opérateur JGL n'est pas encore activé ; ` +
-    `cette alerte vous est transmise sur hi@mcbuleli.org pour vérification par McBuleli.`
+    `cette alerte vous est transmise sur info@ngemba-rdc.org pour vérification (BCC McBuleli).`
   );
 }
 

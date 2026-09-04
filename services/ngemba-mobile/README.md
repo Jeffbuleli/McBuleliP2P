@@ -2,7 +2,7 @@
 
 App **Expo / React Native** - SOS, mode discret, secousse, contacts de confiance.
 
-- **API :** https://ngemba.cyberalert-rdc.org
+- **API :** https://ngemba-rdc.org
 - **Version :** 0.3.0
 
 ## Demarrage (Expo Go)

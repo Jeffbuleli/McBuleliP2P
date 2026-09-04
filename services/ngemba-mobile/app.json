@@ -50,7 +50,7 @@
       "router": {
         "origin": false
       },
-      "ngembaApiUrl": "https://ngemba.cyberalert-rdc.org",
+      "ngembaApiUrl": "https://ngemba-rdc.org",
       "eas": {
         "projectId": "42bb1cda-6899-4c01-bd95-5f55c60f9428"
       }

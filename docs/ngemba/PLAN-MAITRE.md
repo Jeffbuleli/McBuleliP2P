@@ -585,7 +585,7 @@ Références visuelles à consulter sur [Dribbble SOS emergency](https://dribbbl
 
 | # | Question | Décision |
 |---|----------|----------|
-| D1 | Domaine | **`ngemba.cyberalert-rdc.org`** (temporaire) - domaine propre plus tard |
+| D1 | Domaine | **`ngemba-rdc.org`** (temporaire) - domaine propre plus tard |
 | D1b | VPS | **`153.75.235.176`** (Cyber Alert + Africa Insight + Patty) - voir [PHASE0-AUDIT.md](./PHASE0-AUDIT.md) |
 | D2 | Compte obligatoire ? | Non pour SOS · oui pour historique *(à confirmer)* |
 | D3 | Hébergement données | Même VPS CyberAlert · DB `ngemba` isolée · R2 sous `media.cyberalert-rdc.org` |
@@ -608,7 +608,7 @@ Le succès ne se mesure pas au nombre de fonctionnalités, mais au temps gagné 
 
 ## Annexes
 
-- [PHASE0-AUDIT.md](./PHASE0-AUDIT.md) - audit VPS + domaine `ngemba.cyberalert-rdc.org`
+- [PHASE0-AUDIT.md](./PHASE0-AUDIT.md) - audit VPS + domaine `ngemba-rdc.org`
 - [01-DESIGN-TOKENS.md](./01-DESIGN-TOKENS.md) - palette, typo, composants Tailwind
 - [02-SCHEMA-DB-DRAFT.md](./02-SCHEMA-DB-DRAFT.md) - tables Drizzle proposées
 - [03-PROMPTS-IA-DRAFT.md](./03-PROMPTS-IA-DRAFT.md) - system prompts & JSON schema triage

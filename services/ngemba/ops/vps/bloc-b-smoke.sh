@@ -68,7 +68,7 @@ PATCH=$(curl -sf -X PATCH "$BASE/api/alerts/$SESSION_ID" \
   -d '{
     "status": "oriented",
     "assignedTo": "McBuleli - test pilote Bloc B",
-    "operatorNotes": "Alerte test Bloc B - prise en charge simulee. Email hi@mcbuleli.org a verifier."
+    "operatorNotes": "Alerte test Bloc B - prise en charge simulee. Email info@ngemba-rdc.org a verifier."
   }') || {
   echo "ERROR: patch failed" >&2
   exit 1

@@ -18,8 +18,10 @@
 | **Phase 5.2** (carte OSM + filtres province/categorie) | ✅ v0.2 |
 | **UI audit** (McBuleli IA centre, polish, charts, PWA install) | ✅ v0.3 |
 | **Repo mobile dedie** (`Jeffbuleli/ngemba-mobile`) | ✅ pour EAS stable |
+| **Domaine propre** (`ngemba-rdc.org`) | ⏳ cutover DNS/TLS/Resend |
 
-Live : https://ngemba.cyberalert-rdc.org
+Live : https://ngemba-rdc.org · email `info@ngemba-rdc.org`  
+Cutover : [24-DOMAINE-NGEMBA-RDC.md](./24-DOMAINE-NGEMBA-RDC.md) (DNS / TLS / Resend / APK)
 
 ## UI audit - livre
 
@@ -47,9 +49,10 @@ Live : https://ngemba.cyberalert-rdc.org
 
 ## Prochain (technique)
 
-1. Envoyer pack APK aux testeurs · remonter retours
-2. Widget Android / volume keys (native)
-3. Bloc B : signatures JGL + relecture avocat
+1. Cutover domaine `ngemba-rdc.org` (DNS + TLS + Resend `info@`) - [24-DOMAINE-NGEMBA-RDC.md](./24-DOMAINE-NGEMBA-RDC.md)
+2. Rebuild APK pointe vers le nouveau domaine · redistribuer
+3. Widget Android / volume keys (native)
+4. Bloc B : signatures JGL + relecture avocat
 
 ## Phase 5.2 - livre
 

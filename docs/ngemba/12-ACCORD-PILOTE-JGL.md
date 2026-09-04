@@ -8,10 +8,10 @@
 
 | Partie | Représentant | Contact |
 |--------|--------------|---------|
-| **Opérateur plateforme** | McBuleli | hi@mcbuleli.org · ceo@mcbuleli.org |
+| **Opérateur plateforme** | McBuleli | info@ngemba-rdc.org · ceo@mcbuleli.org |
 | **ONG pilote** | Justicia Great Lakes (JGL AFRICA) | Me Arjoule Karinda · akarhinda@gmail.com |
 
-**URL pilote :** https://ngemba.cyberalert-rdc.org
+**URL pilote :** https://ngemba-rdc.org
 
 ---
 
@@ -32,9 +32,9 @@ Mise à disposition de la plateforme **NGEMBA** à JGL AFRICA pour une phase pil
 ## 3. Engagements McBuleli
 
 1. Hébergement sécurisé de la plateforme (VPS Cyber Alert RDC).
-2. Notifications email vers **hi@mcbuleli.org** en phase vérification, puis vers JGL après validation.
+2. Notifications email vers **info@ngemba-rdc.org** en phase vérification, puis vers JGL après validation.
 3. Fourniture d’un **code opérateur ONG** dédié (dashboard `/ops`).
-4. Support technique : hi@mcbuleli.org (délai cible 24 h ouvrées).
+4. Support technique : info@ngemba-rdc.org (délai cible 24 h ouvrées).
 5. Aucune revente des données citoyennes ; minimisation des données.
 
 ---

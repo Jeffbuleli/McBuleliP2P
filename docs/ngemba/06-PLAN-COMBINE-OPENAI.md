@@ -1,6 +1,6 @@
 # Plan combiné NGEMBA - McBuleli + OpenAI
 
-> Date : 2 sept. 2026 · Domaine : `ngemba.cyberalert-rdc.org`  
+> Date : 2 sept. 2026 · Domaine : `ngemba-rdc.org`  
 > Sources : plan maître McBuleli + contribution OpenAI (gpt-4o-mini) + brief produit
 
 ---
@@ -124,4 +124,4 @@ OpenAI proposait recherche utilisateur + wireframes + NLP + lancement en 4 semai
 1. Home + SOS + GPS + triage local/hybrid - **fait**
 2. Persist sessions + `/ops` + voix + temoin - **fait**
 3. **Suivant :** hybrid OpenAI en prod (optionnel) · medias · alerte discrete
-4. **Live :** https://ngemba.cyberalert-rdc.org
+4. **Live :** https://ngemba-rdc.org

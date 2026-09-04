@@ -1,7 +1,7 @@
 # Note juridique - brouillon Phase 0 (NON VALIDÉ)
 
 > **Statut :** brouillon interne · à faire relire par un conseil juridique RDC  
-> **Produit :** NGEMBA · URL temporaire `ngemba.cyberalert-rdc.org`
+> **Produit :** NGEMBA · URL temporaire `ngemba-rdc.org`
 
 ## 1. Nature du service
 

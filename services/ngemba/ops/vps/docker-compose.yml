@@ -1,6 +1,6 @@
 # NGEMBA - VPS stack (même hôte que Cyber Alert / Patty / Africa Insight)
 # Host: 153.75.235.176
-# Domain: ngemba.cyberalert-rdc.org
+# Domain: ngemba-rdc.org (legacy: ngemba.cyberalert-rdc.org → redirect)
 # Port: 3012
 #
 # Pas de Postgres dédié (RAM 1.6 GiB) - sessions dans volume data/
@@ -17,15 +17,15 @@ services:
       context: ../..
       dockerfile: ops/vps/Dockerfile
       args:
-        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://ngemba.cyberalert-rdc.org}
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://ngemba-rdc.org}
     restart: unless-stopped
     env_file:
       - .env
     environment:
       PORT: "3012"
       HOSTNAME: "0.0.0.0"
-      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://ngemba.cyberalert-rdc.org}
-      APP_URL: ${APP_URL:-https://ngemba.cyberalert-rdc.org}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://ngemba-rdc.org}
+      APP_URL: ${APP_URL:-https://ngemba-rdc.org}
       NGEMBA_AI_MODE: ${NGEMBA_AI_MODE:-hybrid}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENAI_WHISPER_MODEL: ${OPENAI_WHISPER_MODEL:-whisper-1}
@@ -36,10 +36,10 @@ services:
       NGEMBA_OPS_TOKEN_SECURITY: ${NGEMBA_OPS_TOKEN_SECURITY:-}
       NGEMBA_OPS_TOKEN_PARTNER: ${NGEMBA_OPS_TOKEN_PARTNER:-}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
-      NGEMBA_OPS_EMAIL: ${NGEMBA_OPS_EMAIL:-hi@mcbuleli.org}
+      NGEMBA_OPS_EMAIL: ${NGEMBA_OPS_EMAIL:-info@ngemba-rdc.org}
       NGEMBA_OPS_EMAIL_BCC: ${NGEMBA_OPS_EMAIL_BCC:-ceo@mcbuleli.org}
-      NGEMBA_OPS_EMAIL_FROM: ${NGEMBA_OPS_EMAIL_FROM:-McBuleli NGEMBA <noreply@mcbuleli.org>}
-      NGEMBA_OPS_EMAIL_REPLY_TO: ${NGEMBA_OPS_EMAIL_REPLY_TO:-hi@mcbuleli.org}
+      NGEMBA_OPS_EMAIL_FROM: ${NGEMBA_OPS_EMAIL_FROM:-NGEMBA <info@ngemba-rdc.org>}
+      NGEMBA_OPS_EMAIL_REPLY_TO: ${NGEMBA_OPS_EMAIL_REPLY_TO:-info@ngemba-rdc.org}
       NGEMBA_OPS_PILOT_VERIFIED: ${NGEMBA_OPS_PILOT_VERIFIED:-false}
       NGEMBA_OPS_PARTNER_NAME: ${NGEMBA_OPS_PARTNER_NAME:-}
       NGEMBA_OPS_PARTNER_CONTACT: ${NGEMBA_OPS_PARTNER_CONTACT:-}

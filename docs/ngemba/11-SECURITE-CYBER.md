@@ -33,7 +33,7 @@
 
 ## Actions recommandees (court terme)
 
-1. **Cloudflare WAF** regles sur `ngemba.cyberalert-rdc.org`
+1. **Cloudflare WAF** regles sur `ngemba-rdc.org`
 2. **Fail2ban** nginx sur 401/429 ops login
 3. **Backup chiffre** volume `ngemba_data`
 4. **Rotation tokens** ops trimestrielle

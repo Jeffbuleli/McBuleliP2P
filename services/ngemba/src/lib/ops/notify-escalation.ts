@@ -49,7 +49,7 @@ async function sendEscalationEmail(session: AlertSessionRecord) {
     readEnvKey("NGEMBA_OPS_EMAIL") ||
     (readEnvKey("NGEMBA_OPS_PILOT_VERIFIED") === "true"
       ? null
-      : "hi@mcbuleli.org");
+      : "info@ngemba-rdc.org");
   if (!apiKey || !toRaw) return;
 
   const to = toRaw

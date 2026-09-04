@@ -1,7 +1,8 @@
 # PHASE 0 - Audit VPS & démarrage NGEMBA
 
-> Date : **2 septembre 2026** · Domaine temporaire : **`ngemba.cyberalert-rdc.org`**  
-> Repo parent : McBuleliP2P · produit isolé prévu : `services/ngemba/`
+> Date : **2 septembre 2026** · Domaine initial temporaire `ngemba.cyberalert-rdc.org`  
+> **Depuis sept. 2026 :** domaine propre **`ngemba-rdc.org`** · email **`info@ngemba-rdc.org`** · voir [24-DOMAINE-NGEMBA-RDC.md](./24-DOMAINE-NGEMBA-RDC.md)  
+> Repo parent : McBuleliP2P · produit isolé : `services/ngemba/`
 
 ---
 
@@ -22,7 +23,7 @@
 
 | Décision | Choix | Pourquoi |
 |----------|-------|----------|
-| **Domaine** | `ngemba.cyberalert-rdc.org` | Même pattern que `patty.cyberalert-rdc.org` ; pas d’achat domaine propre pour l’instant |
+| **Domaine** | `ngemba-rdc.org` | Même pattern que `patty.cyberalert-rdc.org` ; pas d’achat domaine propre pour l’instant |
 | **Hôte cible** | **`153.75.235.176`** (CyberAlert) | Cohérence produit « protection / alerte » ; DNS déjà sous `cyberalert-rdc.org` |
 | **Risque principal** | **RAM**, pas le disque | 1,6 GiB déjà partagé par 3 apps + 2 Postgres |
 | **Mitigation MVP** | DB **partagée** `cyberalert-db` (nouvelle DB `ngemba`) · pas de 2ᵉ Postgres · build hors-box ou prune cache avant deploy | Évite +150-300 MiB RAM |
@@ -76,8 +77,8 @@ Volumes      ~161 Mo
 
 | Record | Type | Cible | Notes |
 |--------|------|-------|-------|
-| `ngemba.cyberalert-rdc.org` | **A** | `153.75.235.176` | Proxied Cloudflare (comme `patty`) |
-| - | - | - | Certbot après vhost nginx : `-d ngemba.cyberalert-rdc.org` |
+| `ngemba-rdc.org` | **A** | `153.75.235.176` | Proxied Cloudflare (comme `patty`) |
+| - | - | - | Certbot après vhost nginx : `-d ngemba-rdc.org` |
 
 App bind proposé : **`127.0.0.1:3012`** (3002 Africa · 3010 Cyber · 3011 Patty · **3012 Ngemba**).
 
@@ -88,7 +89,7 @@ App bind proposé : **`127.0.0.1:3012`** (3002 Africa · 3010 Cyber · 3011 Patt
 | # | Livrable | Statut |
 |---|----------|--------|
 | 0.1 | Audit VPS (ce document) | ✅ |
-| 0.2 | Domaine figé : `ngemba.cyberalert-rdc.org` | ✅ décision |
+| 0.2 | Domaine figé : `ngemba-rdc.org` | ✅ décision |
 | 0.3 | Scaffold `services/ngemba/` + tokens + health | ✅ |
 | 0.4 | Schéma DB v0 (Drizzle draft) | ✅ |
 | 0.5 | Ops : nginx stub + compose notes | ✅ stub nginx + HOST.md |
@@ -96,7 +97,7 @@ App bind proposé : **`127.0.0.1:3012`** (3002 Africa · 3010 Cyber · 3011 Patt
 | 0.7 | Protocole opérateur ONG (brouillon) | ✅ brouillon |
 | 0.8 | Home SVG + i18n 6 langues + plan OpenAI combiné | ✅ |
 | 0.8b | Spec écrans E0-E5 (lien Figma) | ⏳ design |
-| 0.9 | DNS Cloudflare + TLS (quand app prête) | ✅ https://ngemba.cyberalert-rdc.org |
+| 0.9 | DNS Cloudflare + TLS (quand app prête) | ✅ https://ngemba-rdc.org |
 | 0.10 | ONG pilote signée | ⏳ hors tech |
 | 0.11 | Prune Docker build cache VPS (~16 Go) | ⏳ manuel |
 | 0.12 | Upgrade RAM VPS ≥ 4 GiB (recommandé avant charge) | ⏳ optionnel |
@@ -112,7 +113,7 @@ Internet → Cloudflare
               ↓
    VPS 153.75.235.176 (nginx TLS)
               ↓
-   ngemba.cyberalert-rdc.org → 127.0.0.1:3012 (ngemba-web)
+   ngemba-rdc.org → 127.0.0.1:3012 (ngemba-web)
               ↓
    Postgres cyberalert-db (:5433) → database `ngemba`  (même instance, DB séparée)
    R2 media.cyberalert-rdc.org   → préfixe `ngemba/` (ou bucket dédié plus tard)

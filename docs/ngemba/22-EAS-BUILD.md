@@ -33,7 +33,7 @@ npx eas-cli build -p android --profile preview --non-interactive
 
 - Build cloud Expo (~10-20 min)
 - Lien APK en fin de build + page expo.dev
-- API : `https://ngemba.cyberalert-rdc.org` (`eas.json` → env)
+- API : `https://ngemba-rdc.org` (`eas.json` → env)
 
 ## Installer sur Android
 

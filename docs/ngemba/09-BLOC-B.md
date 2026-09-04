@@ -9,8 +9,8 @@
 | **Organisation** | Justicia Great Lakes (JGL AFRICA) |
 | **Referent** | Me **Arjoule Karinda** |
 | **Email contact** | `akarhinda@gmail.com` *(apres validation McBuleli)* |
-| **Statut** | Verification McBuleli via **hi@mcbuleli.org** |
-| **Email alertes (pilote)** | **hi@mcbuleli.org** · BCC **ceo@mcbuleli.org** |
+| **Statut** | Verification McBuleli via **info@ngemba-rdc.org** |
+| **Email alertes (pilote)** | **info@ngemba-rdc.org** · BCC **ceo@mcbuleli.org** |
 
 Apres validation : `NGEMBA_OPS_PILOT_VERIFIED=true` + email JGL + code ONG.
 

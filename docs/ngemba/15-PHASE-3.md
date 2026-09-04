@@ -29,7 +29,7 @@
 
 ## URLs
 
-- Mode discret : https://ngemba.cyberalert-rdc.org/discrete
+- Mode discret : https://ngemba-rdc.org/discrete
 - Triple-tap : logo NGEMBA sur l'accueil (3 fois)
 
 ---

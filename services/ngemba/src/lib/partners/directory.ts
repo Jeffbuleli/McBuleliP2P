@@ -12,7 +12,7 @@ const SEED_PARTNERS: PartnerOrg[] = [
     coverageCommunes: [],
     nationalFallback: true,
     active: true,
-    contactHint: "hi@mcbuleli.org",
+    contactHint: "info@ngemba-rdc.org",
   },
   {
     id: "jgl-africa",

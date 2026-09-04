@@ -5,7 +5,7 @@ export async function GET() {
     ok: true,
     service: "ngemba",
     phase: "0",
-    domain: "ngemba.cyberalert-rdc.org",
+    domain: "ngemba-rdc.org",
     time: new Date().toISOString(),
   });
 }
