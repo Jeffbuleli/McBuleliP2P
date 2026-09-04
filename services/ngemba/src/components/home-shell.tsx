@@ -172,8 +172,8 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
         </Link>
       </section>
 
-      {/* Secondary actions — pushed toward bottom */}
-      <section className="relative z-10 mt-auto flex w-full flex-col items-center gap-5 pt-2">
+      {/* Secondary actions — pushed toward bottom; SOS keeps vertical center */}
+      <section className="relative z-10 mt-auto flex w-full flex-col items-center gap-6 pt-4 pb-1">
         <nav
           className="flex w-full max-w-md items-start justify-center gap-1 sm:max-w-lg"
           aria-label="Actions"
@@ -221,21 +221,21 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
           </Link>
         </p>
 
-        <a
-          href={ngembaApkUrl()}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-ng-primary hover:underline md:text-xs"
-        >
-          <IconDownload className="size-3.5" />
-          {t.installAndroid}
-        </a>
-
-        <p className="text-center text-[10px] text-ng-muted md:text-[11px]">
+        <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-[10px] text-ng-muted md:text-[11px]">
+          <a
+            href={ngembaApkUrl()}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 font-semibold text-ng-primary hover:underline"
+          >
+            <IconDownload className="size-3.5" />
+            {t.installAndroid}
+          </a>
+          <span aria-hidden>·</span>
           <Link href={href("/legal/confidentialite")} className="underline">
             {t.privacyLink}
           </Link>
-          {" · "}
+          <span aria-hidden>·</span>
           <Link href={href("/legal/cgu")} className="underline">
             {t.cguLink}
           </Link>

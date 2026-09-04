@@ -55,15 +55,21 @@ export function PolishButton({
       title={busy ? busyLabel : label}
       aria-label={busy ? busyLabel : label}
       className={`inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl disabled:opacity-50 ${
-        compact ? "w-full px-2" : "px-3 text-xs font-semibold"
+        compact
+          ? "w-full px-1.5 text-[10px] font-semibold leading-tight sm:px-2 sm:text-xs"
+          : "px-3 text-xs font-semibold"
       } ${
         discrete
           ? "border border-white/15 bg-white/5 text-[#e8d4e3]"
           : "border border-[var(--ng-border)] bg-ng-primary-muted text-ng-primary"
       } ${className}`}
     >
-      <IconSpark className={busy ? "size-5 animate-pulse" : "size-5"} />
-      {compact ? null : busy ? busyLabel : label}
+      <IconSpark
+        className={`shrink-0 ${busy ? "animate-pulse" : ""} ${compact ? "size-4" : "size-5"}`}
+      />
+      <span className={compact ? "truncate" : undefined}>
+        {busy ? busyLabel : label}
+      </span>
     </button>
   );
 }
