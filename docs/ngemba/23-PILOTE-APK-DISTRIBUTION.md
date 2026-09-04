@@ -8,7 +8,7 @@
 
 | | |
 |--|--|
-| **APK direct** | (build `2487d515` en cours - page Expo) https://expo.dev/accounts/mcbuleli-inc/projects/ngemba/builds/2487d515-ffa0-48f2-89ce-26afe344b673 |
+| **APK direct** | https://expo.dev/artifacts/eas/Jf9DrIEOha_AByPc3mg5BT-7SklbbMBgMARqBaTbmT8.apk |
 | **Page build** | https://expo.dev/accounts/mcbuleli-inc/projects/ngemba/builds/2487d515-ffa0-48f2-89ce-26afe344b673 |
 | **Web / PWA** | https://ngemba-rdc.org |
 | **Lien APK sur le site** | Home → « APK Android » |
