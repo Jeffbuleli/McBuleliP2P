@@ -98,18 +98,8 @@ const nextConfig: NextConfig = {
         destination: "https://mcbuleli.com/:path*",
         permanent: true,
       },
-      {
-        source: "/:path*",
-        has: [{ type: "host", value: "mcbuleli.org" }],
-        destination: "https://mcbuleli.com/:path*",
-        permanent: true,
-      },
-      {
-        source: "/:path*",
-        has: [{ type: "host", value: "www.mcbuleli.org" }],
-        destination: "https://mcbuleli.com/:path*",
-        permanent: true,
-      },
+      // TEMP: do not redirect mcbuleli.org → .com while Cloudflare still
+      // sends mcbuleli.com → africa-insight.org (breaks live traffic).
       {
         source: "/:path*",
         has: [{ type: "host", value: "www.mcbuleli.com" }],

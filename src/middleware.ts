@@ -10,12 +10,15 @@ import {
 
 const CANONICAL_HOST = new URL(CANONICAL_PRODUCTION_ORIGIN).hostname;
 
-/** Legacy hosts → single PWA origin (avoids duplicate home-screen apps). */
+/**
+ * Legacy hosts → single PWA origin (avoids duplicate home-screen apps).
+ * NOTE: mcbuleli.org / www.mcbuleli.org stay off this list until Cloudflare
+ * stops redirecting mcbuleli.com → africa-insight.org (otherwise .org visitors
+ * bounce to Africa Insight). Nginx may still serve both hosts in parallel.
+ */
 const LEGACY_HOSTS = new Set([
   "mcbuleli.online",
   "www.mcbuleli.online",
-  "mcbuleli.org",
-  "www.mcbuleli.org",
   "www.mcbuleli.com",
 ]);
 
