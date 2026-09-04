@@ -10,12 +10,11 @@ import { loadEnvFile } from "node:process";
 import {
   canSendViaResendApi,
   resendSendBlockedReason,
-  sendEmail,
 } from "../src/lib/email/send";
 import { SUPPORT_EMAIL } from "../src/lib/support-contact";
 
 const SUBJECT =
-  "NGEMBA · Paix en Kikongo · solution née du McBuleli Hackathon";
+  "NGEMBA · Paix en Kikongo · solution née du Hackathon";
 
 function loadLocalEnv(): void {
   const envPath = path.resolve(process.cwd(), ".env");
@@ -55,6 +54,42 @@ function loadDossier() {
   };
 }
 
+async function sendViaResend(args: {
+  to: string;
+  subject: string;
+  html: string;
+  text: string;
+  from: string;
+  replyTo: string;
+}): Promise<{ ok: boolean; id?: string; status: number; body: string }> {
+  const key = process.env.RESEND_API_KEY?.trim();
+  if (!key) return { ok: false, status: 0, body: "missing_api_key" };
+
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${key}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: args.from,
+      reply_to: args.replyTo,
+      to: [args.to],
+      subject: args.subject,
+      html: args.html,
+      text: args.text,
+    }),
+  });
+  const body = await res.text();
+  let id: string | undefined;
+  try {
+    id = JSON.parse(body)?.id;
+  } catch {
+    /* ignore */
+  }
+  return { ok: res.ok, id, status: res.status, body: body.slice(0, 400) };
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const { html, text } = loadDossier();
@@ -79,11 +114,13 @@ async function main() {
     process.exit(1);
   }
 
+  // Domaine Resend verifie mcbuleli.org (noreply) — reply-to hi@.
   const from =
-    process.env.NGEMBA_OPS_EMAIL_FROM?.trim() ||
+    process.env.AUTH_EMAIL_FROM?.trim() ||
+    process.env.PARTNERSHIP_EMAIL_FROM?.trim() ||
     "NGEMBA <noreply@mcbuleli.org>";
 
-  const ok = await sendEmail({
+  const result = await sendViaResend({
     to,
     subject: `[TEST] ${SUBJECT}`,
     html: html.replace(/\{\{\{contact\.first_name\|ami\}\}\}/g, "ami"),
@@ -91,11 +128,14 @@ async function main() {
     from,
     replyTo: SUPPORT_EMAIL,
   });
-  if (!ok) {
-    console.error("Echec Resend");
+
+  if (!result.ok) {
+    console.error("Echec Resend", result.status, result.body);
     process.exit(1);
   }
   console.log(`Envoye via Resend -> ${to}`);
+  console.log(`from: ${from}`);
+  console.log(`resend_id: ${result.id ?? "(inconnu)"}`);
 }
 
 main().catch((err) => {

@@ -1,37 +1,38 @@
-NGEMBA — Paix en Kikongo · née du McBuleli Hackathon
+NGEMBA — Paix en Kikongo · née du Hackathon
 
 Bonjour,
 
 NGEMBA est née du Hackathon. Aujourd'hui, elle appartient à toute la RDC.
 
 NGEMBA signifie Paix en Kikongo.
-C'est une solution numérique de vigilance citoyenne, conçue lors du McBuleli Hackathon (Kinshasa · Silikin Village), pour aider la population à alerter, être entendue et être orientée — sans devoir comprendre un système complexe.
+C'est un outil numérique intelligent de vigilance citoyenne, conçu lors du Hackathon (Kinshasa · Silikin Village), pour aider la population à alerter, être entendue et être orientée — sans devoir comprendre un système complexe.
 
 Parcours : Écouter → Comprendre → Alerter → Orienter → Protéger → Suivre
 
 VISION
-Une RDC où chaque personne — femme, enfant, jeune, famille, témoin — dispose d'un outil numérique simple, digne et accessible pour signaler un danger et obtenir une orientation vers les bons acteurs (services, ONG, partenaires locaux), grâce à l'intelligence artificielle.
+Une RDC où chaque personne dispose d'un outil numérique simple pour signaler un danger et être orientée, grâce à Ngemba IA.
 
 MISSION
-Réduire — et à terme contribuer à éradiquer — le fléau des violences, des situations d'urgence non prises en charge et des silences forcés, en reliant citoyens, opérateurs et partenaires autour d'un canal unique :
-SOS (victime) · Témoin · Mode discret · Safe School · file OPS humaine.
+Réduire — et à terme contribuer à éradiquer — le fléau des violences et des silences forcés :
+SOS · Témoin · Mode discret · Safe School · file OPS humaine.
 
-IA · McBuleli IA · OpenAI
-NGEMBA s'appuie sur McBuleli IA et les capacités OpenAI pour comprendre le message (texte, voix, photo), trier l'urgence et aider l'opérateur humain — l'IA oriente, l'humain décide.
+NGEMBA IA
+Ngemba IA comprend le message (texte, voix, photo), trie l'urgence et aide l'opérateur — l'IA oriente, l'humain décide.
 
 NOUS APPELONS TOUTES LES COUCHES
-- Population : utilisez NGEMBA et partagez-la.
-- Participants & mentors du Hackathon : rejoignez la suite (builders, tests, ambassadeurs).
-- Partenaires, ONG, services & entreprises : accréditez-vous pour traiter les alertes sur votre zone.
-- Ceux qui n'étaient pas au Hackathon : venez maintenant.
+- Population
+- Participants & mentors du Hackathon
+- Partenaires, ONG, services & entreprises
+- Ceux qui n'étaient pas au Hackathon
 
 Ouvrir NGEMBA : https://ngemba-rdc.org/
-OPS / partenaires : https://ngemba-rdc.org/ops/login
-Hackathon : https://mcbuleli.org/hackathon
+OPS : https://ngemba-rdc.org/ops/login
 
 La paix se construit aussi avec le numérique.
 Rejoignez NGEMBA — pour la RDC.
 
-L'équipe McBuleli
-McBuleli IA · NGEMBA · Cyber Alert RDC
+L'équipe NGEMBA
+Ngemba IA · Sécurité - Paix
 hi@mcbuleli.org
+
+© 2026 McBuleli · RCCM : CD/KNG/RCCM/26-A-00382 · ID Nat. / NIF : G2660507E

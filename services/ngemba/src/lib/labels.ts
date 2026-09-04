@@ -133,9 +133,9 @@ export function locationSourceLabelFr(source: string | null): string {
 }
 
 export function providerLabelFr(provider: string): string {
-  if (provider === "openai") return "IA OpenAI";
-  if (provider === "local") return "Analyse locale";
-  return provider;
+  if (provider === "openai") return "Ngemba IA";
+  if (provider === "local") return "Ngemba IA (locale)";
+  return "Ngemba IA";
 }
 
 /** Resume citoyen - sans codes techniques entre parentheses. */

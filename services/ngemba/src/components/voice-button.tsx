@@ -329,7 +329,7 @@ export function VoiceButton({
     : "bg-ng-primary-muted text-ng-primary";
 
   return (
-    <div className={`flex min-w-0 flex-col gap-2 ${className}`}>
+    <div className={`flex min-w-0 flex-col gap-1 ${className}`}>
       <audio
         ref={audioElRef}
         preload="auto"
@@ -354,23 +354,13 @@ export function VoiceButton({
           <span className="tabular-nums text-xs">{formatSec(leftSec)}</span>
           <IconStop className="size-4" />
         </button>
-      ) : (
-        <button
-          type="button"
-          onClick={() => void startRecording()}
-          className={`inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold ${btnBase}`}
-          aria-label={label}
-        >
-          <IconMic className="size-5 shrink-0" />
-          <span>{label}</span>
-        </button>
-      )}
-
-      {audioUrl && !recording ? (
+      ) : audioUrl ? (
         <div
           className={`inline-flex min-h-11 w-full items-center gap-1 rounded-xl px-1 ${
             discrete ? "bg-white/10" : "bg-ng-primary-muted"
           } ${playError ? "ring-1 ring-ng-urgent/40" : ""}`}
+          role="group"
+          aria-label="Fichier audio"
         >
           <button
             type="button"
@@ -378,7 +368,7 @@ export function VoiceButton({
             className={`inline-flex size-10 shrink-0 items-center justify-center rounded-lg ${
               discrete ? "text-[#e8d4e3]" : "text-ng-primary"
             }`}
-            aria-label={playing ? "Pause" : "Play"}
+            aria-label={playing ? "Pause" : "Écouter"}
           >
             {playing ? (
               <IconPause className="size-5" />
@@ -391,13 +381,39 @@ export function VoiceButton({
           />
           <button
             type="button"
+            onClick={() => void startRecording()}
+            className={`inline-flex size-10 shrink-0 items-center justify-center rounded-lg ${
+              discrete ? "text-[#e8d4e3]" : "text-ng-primary"
+            }`}
+            aria-label="Réenregistrer"
+            title="Réenregistrer"
+          >
+            <IconMic className="size-4" />
+          </button>
+          <button
+            type="button"
             onClick={deleteAudio}
             className="inline-flex size-10 shrink-0 items-center justify-center rounded-lg text-ng-urgent"
-            aria-label="Delete"
+            aria-label="Supprimer"
           >
             <IconTrash className="size-4" />
           </button>
         </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => void startRecording()}
+          className={`inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold ${btnBase}`}
+          aria-label={label}
+        >
+          <IconMic className="size-5 shrink-0" />
+          <span>{label}</span>
+        </button>
+      )}
+      {playError && audioUrl && !recording ? (
+        <p className="text-[11px] text-ng-urgent">
+          Lecture impossible sur cet appareil — le fichier sera bien envoyé.
+        </p>
       ) : null}
     </div>
   );

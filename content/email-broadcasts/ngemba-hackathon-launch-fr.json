@@ -1,7 +1,7 @@
 {
   "slug": "ngemba-hackathon-launch-fr",
   "name": "NGEMBA · lancement post-Hackathon (FR)",
-  "subject": "NGEMBA · Paix en Kikongo · solution née du McBuleli Hackathon",
+  "subject": "NGEMBA · Paix en Kikongo · solution née du Hackathon",
   "html": "ngemba-hackathon-launch-fr.html",
   "text": "ngemba-hackathon-launch-fr.txt",
   "locale": "fr",
@@ -16,5 +16,6 @@
   ],
   "cta": "https://ngemba-rdc.org/",
   "fromHint": "NGEMBA <noreply@mcbuleli.org>",
-  "replyTo": "hi@mcbuleli.org"
+  "replyTo": "hi@mcbuleli.org",
+  "branding": "Ngemba IA · Sécurité - Paix"
 }

@@ -67,6 +67,17 @@ export function SosFlow({
   const [provinceId, setProvinceId] = useState("");
   const [cityId, setCityId] = useState("");
   const [gpsHint, setGpsHint] = useState<string | null>(null);
+  const [audioPreviewUrl, setAudioPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!audioBlob) {
+      setAudioPreviewUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(audioBlob);
+    setAudioPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [audioBlob]);
 
   const cities = useMemo(() => {
     const p = provinces.find((x) => x.id === provinceId);
@@ -354,10 +365,15 @@ export function SosFlow({
                 discrete={discrete}
               />
             ) : null}
-            {audioBlob ? (
-              <p className="mt-2 text-xs font-semibold text-ng-primary">
-                Audio joint ({Math.max(1, Math.round(audioBlob.size / 1024))} Ko)
-              </p>
+            {audioPreviewUrl ? (
+              <div className="mt-2">
+                <audio
+                  controls
+                  preload="metadata"
+                  className="w-full"
+                  src={audioPreviewUrl}
+                />
+              </div>
             ) : null}
           </div>
           {gpsHint ? (

@@ -59,21 +59,39 @@ export function ComposePhotos({
   const [active, setActive] = useState<number | null>(null);
   const replaceIndexRef = useRef<number | null>(null);
 
+  const urlsRef = useRef<string[]>([]);
+
   useEffect(() => {
-    const urls = photos.map((f) => URL.createObjectURL(f));
-    setPreviews(urls);
+    const next = photos.map((f) => URL.createObjectURL(f));
+    const prev = urlsRef.current;
+    urlsRef.current = next;
+    setPreviews(next);
+    // Revoke previous after paint so imgs never point at a dead blob.
+    const t = window.setTimeout(() => {
+      prev.forEach((u) => URL.revokeObjectURL(u));
+    }, 0);
     return () => {
-      urls.forEach((u) => URL.revokeObjectURL(u));
+      window.clearTimeout(t);
     };
   }, [photos]);
+
+  useEffect(() => {
+    return () => {
+      urlsRef.current.forEach((u) => URL.revokeObjectURL(u));
+      urlsRef.current = [];
+    };
+  }, []);
+
+  function isImageFile(f: File): boolean {
+    if (f.type.startsWith("image/")) return true;
+    return /\.(jpe?g|png|webp|gif|heic|heif)$/i.test(f.name);
+  }
 
   function addFiles(list: FileList | null) {
     if (!list?.length) return;
     const next = [...photos];
     for (const f of Array.from(list)) {
-      if (!f.type.startsWith("image/") && !/\.(jpe?g|png|webp|heic|heif)$/i.test(f.name)) {
-        continue;
-      }
+      if (!isImageFile(f)) continue;
       if (next.length >= COMPOSE_MAX_PHOTOS) break;
       next.push(f);
     }
@@ -84,7 +102,7 @@ export function ComposePhotos({
   function replaceFile(list: FileList | null) {
     const idx = replaceIndexRef.current;
     replaceIndexRef.current = null;
-    if (idx == null || !list?.[0] || !list[0].type.startsWith("image/")) return;
+    if (idx == null || !list?.[0] || !isImageFile(list[0])) return;
     const next = [...photos];
     next[idx] = list[0];
     onChange(next);
@@ -112,7 +130,7 @@ export function ComposePhotos({
       <input
         ref={addRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp"
+        accept="image/*,image/jpeg,image/png,image/webp"
         multiple
         className="hidden"
         onChange={(e) => addFiles(e.target.files)}
@@ -120,7 +138,7 @@ export function ComposePhotos({
       <input
         ref={replaceRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp"
+        accept="image/*,image/jpeg,image/png,image/webp"
         className="hidden"
         onChange={(e) => replaceFile(e.target.files)}
       />
@@ -166,7 +184,11 @@ export function ComposePhotos({
                   <img
                     src={url}
                     alt=""
+                    decoding="async"
                     className="size-full min-h-[inherit] object-cover"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).style.opacity = "0.35";
+                    }}
                   />
                 </button>
               </li>

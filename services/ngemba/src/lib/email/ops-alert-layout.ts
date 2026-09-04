@@ -40,7 +40,7 @@ export type OpsAlertEmailArgs = {
   partnerLine?: string;
 };
 
-/** Layout alerte OPS — style McBuleli (carte 560px, header logo, blocs mint). */
+/** Layout alerte OPS — branding Ngemba IA. */
 export function renderOpsAlertEmail(args: OpsAlertEmailArgs): {
   html: string;
   text: string;
@@ -66,17 +66,14 @@ export function renderOpsAlertEmail(args: OpsAlertEmailArgs): {
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border-radius:16px;border:1px solid #d6d3d1;overflow:hidden;">
           <tr>
             <td style="padding:20px 26px 12px;border-bottom:1px solid #d6d3d1;">
-              <table role="presentation" cellspacing="0" cellpadding="0" width="100%">
+              <table role="presentation" cellspacing="0" cellpadding="0">
                 <tr>
                   <td style="vertical-align:middle;padding-right:12px;width:52px;">
                     <img src="${NGEMBA_EMAIL_ASSETS.logo}" width="48" height="48" alt="NGEMBA" style="display:block;border:0;border-radius:12px;background:#fff;" />
                   </td>
                   <td style="vertical-align:middle;">
                     <p style="margin:0;font-size:17px;font-weight:800;color:${B.primary};letter-spacing:-0.02em;">NGEMBA OPS</p>
-                    <p style="margin:2px 0 0;font-size:12px;color:#57534e;">Alerte citoyenne · McBuleli IA</p>
-                  </td>
-                  <td style="vertical-align:middle;text-align:right;">
-                    <img src="${NGEMBA_EMAIL_ASSETS.mcbuleliLogo}" width="32" height="32" alt="McBuleli" style="display:inline-block;border:0;border-radius:50%;" />
+                    <p style="margin:2px 0 0;font-size:12px;color:#57534e;">Alerte citoyenne · Ngemba IA</p>
                   </td>
                 </tr>
               </table>
@@ -111,7 +108,7 @@ export function renderOpsAlertEmail(args: OpsAlertEmailArgs): {
               <p style="margin:0;font-size:14px;line-height:1.55;color:${B.text};background:#ffffff;padding:14px 16px;border-radius:12px;border:1px solid #d6d3d1;">${esc(args.messageExcerpt).replace(/\n/g, "<br>")}</p>
               ${
                 args.summary
-                  ? `<p style="margin:12px 0 0;font-size:13px;line-height:1.5;color:#57534e;"><strong style="color:${B.primary};">Triage IA :</strong> ${esc(args.summary)}</p>`
+                  ? `<p style="margin:12px 0 0;font-size:13px;line-height:1.5;color:#57534e;"><strong style="color:${B.primary};">Ngemba IA :</strong> ${esc(args.summary)}</p>`
                   : ""
               }
             </td>
@@ -122,13 +119,25 @@ export function renderOpsAlertEmail(args: OpsAlertEmailArgs): {
             </td>
           </tr>
           <tr>
-            <td style="padding:16px 26px 22px;border-top:1px solid #d6d3d1;background:#e6f2ec;">
+            <td style="padding:18px 26px 22px;border-top:1px solid #d6d3d1;background:#e6f2ec;text-align:center;">
               ${partnerBlock}
-              <p style="margin:0 0 8px;font-size:12px;line-height:1.5;color:#57534e;">
-                Powered by <strong style="color:${B.primary};">McBuleli IA</strong>
-                · Support <a href="mailto:${NGEMBA_EMAIL_ASSETS.supportEmail}" style="color:#305f33;text-decoration:none;font-weight:600;">${NGEMBA_EMAIL_ASSETS.supportEmail}</a>
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 auto 10px;">
+                <tr>
+                  <td style="vertical-align:middle;padding-right:8px;">
+                    <img src="${NGEMBA_EMAIL_ASSETS.logo}" width="26" height="26" alt="" style="display:block;border:0;border-radius:8px;" />
+                  </td>
+                  <td style="vertical-align:middle;text-align:left;">
+                    <p style="margin:0;font-size:13px;font-weight:800;color:${B.primary};">Ngemba IA</p>
+                    <p style="margin:1px 0 0;font-size:11px;color:#57534e;">Sécurité - Paix</p>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:0 0 6px;font-size:12px;line-height:1.5;color:#57534e;">
+                Support <a href="mailto:${NGEMBA_EMAIL_ASSETS.supportEmail}" style="color:#305f33;text-decoration:none;font-weight:600;">${NGEMBA_EMAIL_ASSETS.supportEmail}</a>
               </p>
-              <p style="margin:0;font-size:11px;color:#57534e;">© ${year} McBuleli · NGEMBA · Cyber Alert RDC</p>
+              <p style="margin:0;font-size:11px;line-height:1.45;color:#57534e;">
+                © ${year} McBuleli · RCCM : CD/KNG/RCCM/26-A-00382 · ID Nat. / NIF : G2660507E
+              </p>
             </td>
           </tr>
         </table>
@@ -150,12 +159,13 @@ export function renderOpsAlertEmail(args: OpsAlertEmailArgs): {
     "Message citoyen:",
     args.messageExcerpt,
     "",
-    args.summary ? `Triage IA: ${args.summary}` : "",
+    args.summary ? `Ngemba IA: ${args.summary}` : "",
     "",
     `${args.cta}: ${args.actionUrl}`,
     args.partnerLine ?? "",
     "",
     `Support: ${NGEMBA_EMAIL_ASSETS.supportEmail}`,
+    "Ngemba IA · Sécurité - Paix",
   ]
     .filter(Boolean)
     .join("\n");
