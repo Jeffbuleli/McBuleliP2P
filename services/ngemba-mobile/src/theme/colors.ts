@@ -15,5 +15,6 @@ export const colors = {
 } as const;
 
 export const brand = {
+  /** Prefer local asset in UI; remote kept for emails / fallbacks. */
   logoUrl: "https://media.cyberalert-rdc.org/ngemba/brand/ngemba-logo.png",
 } as const;

@@ -2,7 +2,7 @@
   "expo": {
     "name": "Ngemba RDC",
     "slug": "ngemba",
-    "version": "0.3.0",
+    "version": "0.3.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "ngemba",
@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "org.mcbuleli.ngemba",
-      "buildNumber": "3",
+      "buildNumber": "4",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "NGEMBA utilise votre position pour orienter l'aide, jamais obligatoire.",
         "NSMotionUsageDescription": "NGEMBA detecte une secousse pour ouvrir le mode discret."
@@ -28,7 +28,7 @@
         "backgroundColor": "#06402b"
       },
       "package": "org.mcbuleli.ngemba",
-      "versionCode": 3,
+      "versionCode": 4,
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",

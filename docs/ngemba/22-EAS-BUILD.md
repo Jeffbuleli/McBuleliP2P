@@ -41,6 +41,25 @@ npx eas-cli build -p android --profile preview --non-interactive
 2. Autoriser installation depuis sources inconnues
 3. Tester SOS / discret / contacts
 
+## PWA vs APK - mises a jour
+
+| | **PWA / web** | **APK Expo (preview)** |
+|--|--|--|
+| Contenu UI | Charge a chaque visite depuis le serveur | **Fige dans le binaire** au moment du build EAS |
+| MAJ | Automatique (refresh / nouvel onglet) | Nouveau build EAS + **reinstaller** l'APK |
+| API | Toujours l'URL live | URL bakee (`EXPO_PUBLIC_NGEMBA_API_URL`) |
+
+**Pas de MAJ magique de l'APK** tant que `eas update` (OTA) n'est pas active. Pour le pilote :
+
+```bash
+cd /Users/mac/Documents/ngemba-mobile
+# bumper versionCode dans app.json
+npx eas-cli build -p android --profile preview --non-interactive
+# envoyer le nouveau lien APK aux testeurs (ecrase l'ancienne install)
+```
+
+Option future : `expo-updates` + `eas update` pour pousser le JS sans rebuilder le natif (logo assets / native modules exigent encore un build).
+
 ## Autres profiles
 
 | Commande | Sortie |

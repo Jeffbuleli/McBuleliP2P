@@ -50,7 +50,7 @@ Cutover : [24-DOMAINE-NGEMBA-RDC.md](./24-DOMAINE-NGEMBA-RDC.md) (DNS / TLS / Re
 ## Prochain (technique)
 
 1. Cutover domaine `ngemba-rdc.org` (DNS + TLS + Resend `info@`) - [24-DOMAINE-NGEMBA-RDC.md](./24-DOMAINE-NGEMBA-RDC.md)
-2. Rebuild APK pointe vers le nouveau domaine · redistribuer
+2. Rebuild APK v0.3.1 (logo + Ngemba RDC) · redistribuer - [22-EAS-BUILD.md](./22-EAS-BUILD.md)
 3. Widget Android / volume keys (native)
 4. Bloc B : signatures JGL + relecture avocat
 

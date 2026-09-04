@@ -25,21 +25,19 @@ import {
   readTrustedContacts,
   readTrustedContactsSkipped,
 } from "../src/lib/trusted-contacts-prefs";
-import { brand, colors } from "../src/theme/colors";
+import { colors } from "../src/theme/colors";
+
+const logoSource = require("../assets/ngemba-logo.png");
 
 function IconAction({
   label,
   href,
   icon,
-  accent = "primary",
 }: {
   label: string;
   href: "/witness" | "/school" | "/jeunesse";
   icon: ReactNode;
-  accent?: "primary" | "secondary";
 }) {
-  const bg = accent === "secondary" ? colors.secondaryMuted : colors.primaryMuted;
-  const fg = accent === "secondary" ? colors.secondary : colors.primary;
   return (
     <Link href={href} asChild>
       <Pressable
@@ -49,8 +47,8 @@ function IconAction({
           pressed && { opacity: 0.88 },
         ]}
       >
-        <View style={[styles.iconBubble, { backgroundColor: bg }]}>{icon}</View>
-        <Text style={[styles.iconLabel, { color: fg }]}>{label}</Text>
+        <View style={styles.iconBubble}>{icon}</View>
+        <Text style={styles.iconLabel}>{label}</Text>
       </Pressable>
     </Link>
   );
@@ -78,12 +76,22 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.header}>
-          <Pressable onPress={onLogoTap} accessibilityLabel={t.discrete}>
-            <Image source={{ uri: brand.logoUrl }} style={styles.logo} />
-          </Pressable>
-          <View style={styles.headerText}>
-            <Text style={styles.brand}>NGEMBA</Text>
-            <Text style={styles.tagline}>{t.tagline}</Text>
+          <View style={styles.brandRow}>
+            <Pressable
+              onPress={onLogoTap}
+              accessibilityLabel={t.discrete}
+              style={styles.logoWrap}
+            >
+              <Image
+                source={logoSource}
+                style={styles.logo}
+                resizeMode="contain"
+              />
+            </Pressable>
+            <View style={styles.headerText}>
+              <Text style={styles.brand}>Ngemba RDC</Text>
+              <Text style={styles.tagline}>{t.tagline}</Text>
+            </View>
           </View>
           <View style={styles.langWrap}>
             <Text style={styles.langHint}>{t.language}</Text>
@@ -138,14 +146,12 @@ export default function HomeScreen() {
           <IconAction
             label={t.witness}
             href="/witness"
-            accent="secondary"
-            icon={<IconEye size={20} color={colors.secondary} />}
+            icon={<IconEye size={20} color={colors.primary} />}
           />
           <IconAction
             label={t.school}
             href="/school"
-            accent="secondary"
-            icon={<IconGraduation size={20} color={colors.secondary} />}
+            icon={<IconGraduation size={20} color={colors.primary} />}
           />
           <IconAction
             label={t.youth}
@@ -185,23 +191,39 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   header: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 12,
     marginTop: 8,
+    gap: 12,
   },
-  logo: { width: 48, height: 48, borderRadius: 12 },
+  brandRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  logoWrap: {
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    backgroundColor: colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 6,
+  },
+  logo: { width: "100%", height: "100%" },
   headerText: { flex: 1 },
   brand: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "700",
-    letterSpacing: 2,
+    letterSpacing: 1.5,
     color: colors.primary,
+    textTransform: "uppercase",
   },
   tagline: { fontSize: 14, color: colors.muted, marginTop: 2 },
-  langWrap: { alignItems: "flex-end", maxWidth: 140 },
-  langHint: { fontSize: 10, color: colors.muted, marginBottom: 4 },
-  langRow: { flexDirection: "row", flexWrap: "wrap", gap: 4, justifyContent: "flex-end" },
+  langWrap: { gap: 4 },
+  langHint: { fontSize: 10, color: colors.muted },
+  langRow: { flexDirection: "row", flexWrap: "wrap", gap: 4 },
   langBtn: {
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -226,8 +248,8 @@ const styles = StyleSheet.create({
   },
   sosBtn: {
     marginTop: 12,
-    width: 120,
-    height: 120,
+    width: 132,
+    height: 132,
     borderRadius: 999,
     backgroundColor: colors.urgent,
     alignItems: "center",
@@ -252,8 +274,9 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: colors.primaryMuted,
   },
-  iconLabel: { fontSize: 12, fontWeight: "600" },
+  iconLabel: { fontSize: 12, fontWeight: "600", color: colors.primary },
   footerLinks: {
     marginTop: 28,
     flexDirection: "row",
