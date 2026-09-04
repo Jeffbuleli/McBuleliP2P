@@ -13,7 +13,7 @@ import {
   markChallengeUsed,
 } from "@/lib/auth/challenges";
 import {
-  webAuthnOrigin,
+  webAuthnExpectedOrigins,
   webAuthnRpId,
   webAuthnRpName,
 } from "@/lib/auth/passkeys-config";
@@ -81,7 +81,7 @@ export async function passkeyRegisterVerify(args: {
   const verification = await verifyRegistrationResponse({
     response: args.response as Parameters<typeof verifyRegistrationResponse>[0]["response"],
     expectedChallenge,
-    expectedOrigin: webAuthnOrigin(),
+    expectedOrigin: webAuthnExpectedOrigins(),
     expectedRPID: webAuthnRpId(),
     requireUserVerification: false,
   });
@@ -192,7 +192,7 @@ export async function passkeyLoginVerify(args: {
   const verification = await verifyAuthenticationResponse({
     response,
     expectedChallenge,
-    expectedOrigin: webAuthnOrigin(),
+    expectedOrigin: webAuthnExpectedOrigins(),
     expectedRPID: webAuthnRpId(),
     credential: {
       id: passkey.credentialId,
@@ -295,7 +295,7 @@ export async function passkeyStepUpVerify(args: {
   const verification = await verifyAuthenticationResponse({
     response,
     expectedChallenge,
-    expectedOrigin: webAuthnOrigin(),
+    expectedOrigin: webAuthnExpectedOrigins(),
     expectedRPID: webAuthnRpId(),
     credential: {
       id: passkey.credentialId,
