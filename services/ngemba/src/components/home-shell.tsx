@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   IconBook,
+  IconDownload,
   IconEye,
   IconGlobe,
   IconGraduation,
@@ -14,6 +15,7 @@ import {
 } from "@/components/icons";
 import { PwaInstallButton } from "@/components/pwa-install";
 import { useCitizenLocale } from "@/hooks/use-citizen-locale";
+import { ngembaApkUrl } from "@/lib/apk";
 import {
   localeLabels,
   locales,
@@ -176,7 +178,18 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
           </Link>
         </p>
 
-        <PwaInstallButton label={t.installApp} iosHint={t.installIos} />
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+          <PwaInstallButton label={t.installApp} iosHint={t.installIos} />
+          <a
+            href={ngembaApkUrl()}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-ng-primary hover:underline"
+          >
+            <IconDownload className="size-3.5" />
+            {t.installAndroid}
+          </a>
+        </div>
 
         <p className="text-center text-[10px] text-ng-muted">
           <Link href={href("/legal/confidentialite")} className="underline">

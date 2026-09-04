@@ -27,6 +27,7 @@ type Copy = {
   language: string;
   installApp: string;
   installIos: string;
+  installAndroid: string;
   back: string;
   tell: string;
   witnessTell: string;
@@ -115,6 +116,7 @@ const baseFr: Copy = {
   language: "Langue",
   installApp: "Installer",
   installIos: "Sur iPhone : Partager - Sur l'écran d'accueil",
+  installAndroid: "APK Android (MAJ)",
   back: "Retour",
   tell: "Que se passe-t-il ?",
   witnessTell: "Que voyez-vous ?",
@@ -206,6 +208,7 @@ export const messages: Record<Locale, Copy> = {
     language: "Language",
     installApp: "Install",
     installIos: "On iPhone: Share - Add to Home Screen",
+    installAndroid: "Android APK (update)",
     back: "Back",
     tell: "What is happening?",
     witnessTell: "What do you see?",
@@ -294,6 +297,7 @@ export const messages: Record<Locale, Copy> = {
     language: "Monoko",
     installApp: "Kotya",
     installIos: "Na iPhone: Partager - Sur l'ecran d'accueil",
+    installAndroid: "APK Android (MAJ)",
     back: "Koma",
     tell: "Nani ezali kosalema?",
     witnessTell: "Nani oyebaka?",
@@ -382,6 +386,7 @@ export const messages: Record<Locale, Copy> = {
     language: "Lugha",
     installApp: "Sakinisha",
     installIos: "Kwenye iPhone: Share - Add to Home Screen",
+    installAndroid: "APK Android (MAJ)",
     back: "Rudi",
     tell: "Nini kinaendelea?",
     witnessTell: "Unaona nini?",

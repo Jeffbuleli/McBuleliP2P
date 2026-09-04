@@ -8,9 +8,10 @@
 
 | | |
 |--|--|
-| **APK direct** | https://expo.dev/artifacts/eas/ewCQpWoxhAGKji1l1rlIJqLq_zvFTPfUFY0Rj-IbsII.apk |
-| **Page build** | https://expo.dev/accounts/mcbuleli-inc/projects/ngemba/builds/888f6f3e-43d3-469c-8356-9f1b8313aac6 |
+| **APK direct** | (build `51529f24` en cours - page Expo) https://expo.dev/accounts/mcbuleli-inc/projects/ngemba/builds/51529f24-d969-46aa-bef6-40ba5863c479 |
+| **Page build** | https://expo.dev/accounts/mcbuleli-inc/projects/ngemba/builds/51529f24-d969-46aa-bef6-40ba5863c479 |
 | **Web / PWA** | https://ngemba-rdc.org |
+| **Lien MAJ sur le site** | Home → « APK Android (MAJ) » |
 | **Repo mobile** | https://github.com/Jeffbuleli/ngemba-mobile |
 
 API cible de l'APK : `https://ngemba-rdc.org`
