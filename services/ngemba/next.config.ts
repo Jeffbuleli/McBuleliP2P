@@ -49,7 +49,8 @@ const nextConfig: NextConfig = {
             value: 'attachment; filename="ngemba-rdc.apk"',
           },
           { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "Cache-Control", value: "public, max-age=3600" },
+          // Short TTL so /telecharger always picks up the latest hosted APK after deploy.
+          { key: "Cache-Control", value: "public, max-age=60, must-revalidate" },
         ],
       },
     ];

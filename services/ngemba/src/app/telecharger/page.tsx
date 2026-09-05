@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { NGEMBA_APK_BUILD_PAGE } from "@/lib/apk";
+import { NGEMBA_APK_BUILD_PAGE, NGEMBA_APK_DIRECT } from "@/lib/apk";
 
 export const metadata: Metadata = {
   title: "Installer NGEMBA RDC (Android)",
@@ -48,9 +48,9 @@ export default function TelechargerPage() {
           </ol>
 
           <a
-            href="/downloads/ngemba-rdc.apk"
+            href={NGEMBA_APK_DIRECT}
             download="ngemba-rdc.apk"
-            className="mt-6 flex min-h-12 w-full items-center justify-center rounded-xl bg-ng-primary px-4 text-center text-sm font-bold text-white"
+            className="mt-6 flex min-h-12 w-full items-center justify-center rounded-xl bg-ng-primary px-4 text-sm font-bold text-white"
           >
             Télécharger l&apos;APK NGEMBA
           </a>

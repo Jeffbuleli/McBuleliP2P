@@ -8,7 +8,8 @@ export const NGEMBA_APK_BUILD_PAGE =
 
 export const NGEMBA_APK_INSTALL_PAGE = "/telecharger";
 
-export const NGEMBA_APK_DIRECT = "/downloads/ngemba-rdc.apk";
+/** Query busts CDN/browser cache when the APK file is replaced in place. */
+export const NGEMBA_APK_DIRECT = "/downloads/ngemba-rdc.apk?v=0.3.5";
 
 export function ngembaApkUrl(): string {
   const fromEnv = process.env.NEXT_PUBLIC_NGEMBA_APK_URL?.trim();
