@@ -55,7 +55,7 @@ export function PolishButton({
         setNotice(errorLabel);
         return;
       }
-      // Local / no-key mode echoes input — be honest instead of fake success.
+      // Local / no-key mode echoes input - be honest instead of fake success.
       if (data.provider === "local" || next === text.trim()) {
         setNotice(unavailableLabel);
         return;

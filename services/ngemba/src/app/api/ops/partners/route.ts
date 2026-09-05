@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireOpsAuth } from "@/lib/ops/auth";
-import { listPartners } from "@/lib/partners/directory";
+import { listOrganizationsView, listDirectoryServices } from "@/lib/directory";
 
 export async function GET(req: Request) {
   const auth = await requireOpsAuth(req, {
@@ -9,7 +9,10 @@ export async function GET(req: Request) {
   });
   if (auth instanceof NextResponse) return auth;
 
-  const partners = listPartners().map((p) => ({
+  const organizations = listOrganizationsView();
+  const services = listDirectoryServices();
+
+  const partners = organizations.map((p) => ({
     id: p.id,
     name: p.name,
     slug: p.slug,
@@ -19,7 +22,14 @@ export async function GET(req: Request) {
     coverageCommunes: p.coverageCommunes,
     nationalFallback: p.nationalFallback,
     contactHint: p.contactHint ?? null,
+    orgType: p.orgType,
+    verified: p.verified,
+    serviceCodes: p.serviceCodes,
+    servicesCount: services.filter((s) => s.partnerSeedId === p.id).length,
   }));
 
-  return NextResponse.json({ partners });
+  return NextResponse.json({
+    partners,
+    servicesCount: services.length,
+  });
 }

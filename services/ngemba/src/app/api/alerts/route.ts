@@ -15,16 +15,21 @@ import {
   reverseGeocode,
 } from "@/lib/location/geoapify";
 import { opsSummaryFr } from "@/lib/labels";
+import { buildReferrals } from "@/lib/directory/referral";
+import { saveReferrals } from "@/lib/directory/store";
 import { notifyNewAlert } from "@/lib/ops/notify";
 import { requireOpsAuth } from "@/lib/ops/auth";
-import { sessionVisibleToRole } from "@/lib/ops/visibility";
+import { sessionVisibleToActor } from "@/lib/ops/visibility";
 import { applySlaEscalationIfNeeded } from "@/lib/ops/sla-engine";
 import { computeSlaDueAt, slaUiState } from "@/lib/ops/sla";
 import { buildRoutingMeta } from "@/lib/partners/match";
 import { listPartners } from "@/lib/partners/directory";
 import { clientIp, rateLimit, rateLimitResponse } from "@/lib/security/rate-limit";
 import { createSession, getSession, listSessions } from "@/lib/sessions/store";
-import { sanitizeCitizenSession, sanitizeOpsSession } from "@/lib/sessions/sanitize";
+import {
+  sanitizeCitizenSession,
+  sanitizeOpsSessionForActor,
+} from "@/lib/sessions/sanitize";
 import { normalizeTrustedContacts } from "@/lib/trusted-contacts/types";
 import { normalizeSchoolContext } from "@/lib/school/types";
 
@@ -121,21 +126,11 @@ export async function POST(req: Request) {
     locationConsentAt = new Date().toISOString();
   }
 
-  const { triage, routing: baseRouting, provider, aiMode } = await runTriage({
+  const { triage, routing, provider, aiMode } = await runTriage({
     message: body.message,
     locale,
     source: body.source,
   });
-
-  let routing = baseRouting;
-  if (body.source === "school") {
-    routing = { queue: "school_referent", autoRoute: false };
-  } else if (
-    triage.immediate_danger ||
-    triage.urgency === "critical"
-  ) {
-    routing = { queue: "operator_urgent", autoRoute: false };
-  }
 
   const triageForSession =
     body.source === "school" && triage.category === "unknown"
@@ -202,6 +197,18 @@ export async function POST(req: Request) {
     slaDueAt,
   });
 
+  const referrals = buildReferrals({
+    requiredServices: triageForSession.required_services ?? [],
+    commune,
+    locationLabel,
+    category: triageForSession.category,
+  });
+  saveReferrals({
+    sessionId: session.id,
+    matches: referrals.matches,
+    unmatched: referrals.unmatched,
+  });
+
   await notifyNewAlert(session);
 
   const response = NextResponse.json({
@@ -239,17 +246,18 @@ export async function GET(req: Request) {
   const auth = await requireOpsAuth(req, { permission: "alerts.list" });
   if (auth instanceof NextResponse) return auth;
 
-  const boundId = auth.partner?.id ?? null;
   const sessions = listSessions(80)
     .map((s) => applySlaEscalationIfNeeded(s))
-    .filter((s) => sessionVisibleToRole(auth.role, s, boundId))
+    .filter((s) => sessionVisibleToActor(auth.actor, s, "operational"))
     .map((s) => {
-      const base = sanitizeOpsSession(s);
-      // File liste : pas d'IP/UA (investigation = dossier détail admin).
+      const base = sanitizeOpsSessionForActor(s, auth.actor);
+      // File liste : pas d'IP/UA (investigation = dossier détail).
       return {
         ...base,
         clientIp: null,
         userAgent: null,
+        trustedContacts: [],
+        media: [],
         sla: slaUiState(s),
       };
     });
@@ -272,6 +280,12 @@ export async function GET(req: Request) {
     sessions: sessions.slice(0, 40),
     stats,
     role: auth.role,
+    actor: {
+      id: auth.actor.id,
+      organizationId: auth.actor.organizationId,
+      scopes: auth.actor.accreditation.scopes,
+      level: auth.actor.accreditation.level,
+    },
     partner: auth.partner
       ? { id: auth.partner.id, name: auth.partner.name }
       : null,

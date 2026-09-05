@@ -1,28 +1,37 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import {
+  decideIncidentAccess,
+  hashIp,
+  logAccess,
+  resolveOpsActor,
+} from "@/lib/access";
+import { buildReferrals } from "@/lib/directory/referral";
+import { getReferrals, saveReferrals } from "@/lib/directory/store";
+import {
   opsActorLabel,
   readOpsTokenFromCookie,
   readOpsTokenFromRequest,
   requireOpsAuth,
 } from "@/lib/ops/auth";
+import { matchUnitsForIncident } from "@/lib/units/match";
 import { notifySessionUpdated } from "@/lib/ops/notify";
 import { roleHasPermission } from "@/lib/ops/roles";
-import { sessionVisibleToRole } from "@/lib/ops/visibility";
 import { applySlaEscalationIfNeeded } from "@/lib/ops/sla-engine";
 import { slaUiState } from "@/lib/ops/sla";
-import { resolveOpsContext } from "@/lib/partners/bind";
 import {
   buildRoutingMeta,
   partnersForSessionDisplay,
 } from "@/lib/partners/match";
+import { clientIp } from "@/lib/security/rate-limit";
 import {
   sanitizeCitizenSession,
-  sanitizeOpsSession,
+  sanitizeOpsSessionForActor,
   type RelatedAlertSummary,
 } from "@/lib/sessions/sanitize";
 import {
   getSession,
+  listIncidentEvents,
   listSessionsByCitizen,
   updateSession,
 } from "@/lib/sessions/store";
@@ -38,23 +47,31 @@ export async function GET(req: Request, ctx: Ctx) {
 
   const bearer = readOpsTokenFromRequest(req);
   const cookieToken = await readOpsTokenFromCookie();
-  const ctxAuth = resolveOpsContext(bearer || cookieToken);
+  const actor = resolveOpsActor(bearer || cookieToken);
 
-  if (ctxAuth.role) {
-    if (!roleHasPermission(ctxAuth.role, "alerts.view")) {
+  if (actor) {
+    if (!roleHasPermission(actor.role, "alerts.view")) {
       return NextResponse.json({ error: "forbidden" }, { status: 403 });
     }
 
     const live = applySlaEscalationIfNeeded(session);
+    const decision = decideIncidentAccess(actor, live, "operational");
+    logAccess({
+      actor,
+      resourceType: "alert_session",
+      resourceId: id,
+      action: "view",
+      scope: "operational",
+      allowed: decision.allowed,
+      reason: decision.reason,
+      ipHash: hashIp(clientIp(req)),
+    });
 
-    if (
-      !sessionVisibleToRole(
-        ctxAuth.role,
-        live,
-        ctxAuth.partner?.id ?? null,
-      )
-    ) {
-      return NextResponse.json({ error: "forbidden" }, { status: 403 });
+    if (!decision.allowed) {
+      return NextResponse.json(
+        { error: "forbidden", reason: decision.reason },
+        { status: 403 },
+      );
     }
 
     const routingMeta =
@@ -86,23 +103,69 @@ export async function GET(req: Request, ctx: Ctx) {
           }))
       : [];
 
-    const opsSession = sanitizeOpsSession(live);
-    // IP / UA : investigation OPS interne uniquement (pas partenaires).
-    const sessionForRole =
-      ctxAuth.role === "partner"
-        ? { ...opsSession, clientIp: null, userAgent: null, routingMeta }
-        : { ...opsSession, routingMeta };
+    const opsSession = sanitizeOpsSessionForActor(
+      { ...live, routingMeta },
+      actor,
+    );
+
+    const events = await listIncidentEvents(id, 100);
+
+    let referrals = getReferrals(id);
+    if (!referrals) {
+      const built = buildReferrals({
+        requiredServices: live.aiPayload?.required_services ?? [],
+        commune: live.commune,
+        locationLabel: live.locationLabel,
+        category: live.category,
+      });
+      referrals = saveReferrals({
+        sessionId: id,
+        matches: built.matches,
+        unmatched: built.unmatched,
+      });
+    }
 
     return NextResponse.json({
-      session: sessionForRole,
-      relatedAlerts: ctxAuth.role === "partner" ? [] : relatedAlerts,
-      relatedCount: ctxAuth.role === "partner" ? 0 : relatedAlerts.length,
+      session: opsSession,
+      relatedAlerts: actor.role === "partner" ? [] : relatedAlerts,
+      relatedCount: actor.role === "partner" ? 0 : relatedAlerts.length,
       sla: slaUiState(live),
-      role: ctxAuth.role,
-      partner: ctxAuth.partner
-        ? { id: ctxAuth.partner.id, name: ctxAuth.partner.name }
+      role: actor.role,
+      actor: {
+        id: actor.id,
+        organizationId: actor.organizationId,
+        scopes: actor.accreditation.scopes,
+        level: actor.accreditation.level,
+      },
+      partner: actor.partner
+        ? { id: actor.partner.id, name: actor.partner.name }
         : null,
       suggestedPartners,
+      referrals: {
+        requiredServices: live.aiPayload?.required_services ?? [],
+        matches: referrals.matches,
+        unmatched: referrals.unmatched,
+      },
+      unitMatches: matchUnitsForIncident({
+        requiredServices: live.aiPayload?.required_services ?? [],
+        commune: live.commune,
+        locationLabel: live.locationLabel,
+        lat: live.lat,
+        lng: live.lng,
+      }).map((m) => ({
+        id: m.unit.id,
+        name: m.unit.name,
+        unitType: m.unit.unitType,
+        status: m.unit.status,
+        organizationName: m.unit.organizationName,
+        locationLabel: m.unit.locationLabel,
+        capabilities: m.unit.capabilities,
+        score: m.score,
+        reason: m.reason,
+        matchedCapabilities: m.matchedCapabilities,
+        etaMinutes: m.unit.etaMinutes,
+      })),
+      events,
     });
   }
 
@@ -131,10 +194,22 @@ export async function PATCH(req: Request, ctx: Ctx) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
-  if (
-    !sessionVisibleToRole(auth.role, existing, auth.partner?.id ?? null)
-  ) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  const decision = decideIncidentAccess(auth.actor, existing, "operational");
+  if (!decision.allowed) {
+    logAccess({
+      actor: auth.actor,
+      resourceType: "alert_session",
+      resourceId: id,
+      action: "patch",
+      scope: "operational",
+      allowed: false,
+      reason: decision.reason,
+      ipHash: hashIp(clientIp(req)),
+    });
+    return NextResponse.json(
+      { error: "forbidden", reason: decision.reason },
+      { status: 403 },
+    );
   }
 
   let json: unknown;
@@ -154,10 +229,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
       ? parsed.data.operatorNotes
       : existing.operatorNotes;
 
-  if (
-    nextStatus === "closed" ||
-    nextStatus === "cancelled"
-  ) {
+  if (nextStatus === "closed" || nextStatus === "cancelled") {
     if (!mergedNotes || mergedNotes.trim().length < 3) {
       return NextResponse.json(
         { error: "close_note_required" },
@@ -171,7 +243,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
   const defaultNote =
     nextStatus === "oriented"
       ? "Prise en charge"
-        : nextStatus === "closed"
+      : nextStatus === "closed"
         ? "Dossier clôturé"
         : nextStatus === "cancelled"
           ? "Alerte annulée / fausse alerte"
@@ -195,6 +267,20 @@ export async function PATCH(req: Request, ctx: Ctx) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
+  logAccess({
+    actor: auth.actor,
+    resourceType: "alert_session",
+    resourceId: id,
+    action: "patch",
+    scope: "operational",
+    allowed: true,
+    reason: "ok",
+    ipHash: hashIp(clientIp(req)),
+    meta: { status: session.status },
+  });
+
   void notifySessionUpdated(session);
-  return NextResponse.json({ session: sanitizeOpsSession(session) });
+  return NextResponse.json({
+    session: sanitizeOpsSessionForActor(session, auth.actor),
+  });
 }

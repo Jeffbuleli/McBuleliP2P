@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-/** Footer brand strip — same pattern as mcbuleli.org / McBuleliPoweredFooter. */
+/** Footer brand strip - same pattern as mcbuleli.org / McBuleliPoweredFooter. */
 export function PoweredByMcbuleli({ className = "" }: { className?: string }) {
   return (
     <footer

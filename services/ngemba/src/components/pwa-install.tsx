@@ -9,7 +9,7 @@ type BeforeInstallPromptEvent = Event & {
 };
 
 const DISMISS_KEY = "ngemba_pwa_install_dismiss_until";
-/** Soft dismiss — remind again after 3 days. */
+/** Soft dismiss - remind again after 3 days. */
 const DISMISS_MS = 3 * 24 * 60 * 60 * 1000;
 /** Let the browser show its own install UI first. */
 const REMINDER_DELAY_MS = 2_000;
@@ -42,7 +42,7 @@ function dismiss(): void {
 }
 
 /**
- * Soft install reminder — McBuleli-style fixed bottom dock.
+ * Soft install reminder - McBuleli-style fixed bottom dock.
  * Only if not already installed / dismissed.
  */
 export function PwaInstallReminder({

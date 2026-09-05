@@ -16,12 +16,32 @@ type RoutingMeta = {
   note: string;
 };
 
+type ReferralHint = {
+  serviceId: string;
+  serviceCode: string;
+  serviceName: string;
+  organizationName: string | null;
+  contactHint: string | null;
+  score: number;
+  reason: string;
+  scope: string;
+};
+
 type Props = {
   routingMeta: RoutingMeta | null;
   suggestedPartners: PartnerHint[];
+  referrals?: {
+    requiredServices: string[];
+    matches: ReferralHint[];
+    unmatched: string[];
+  } | null;
 };
 
-export function OpsRoutingPanel({ routingMeta, suggestedPartners }: Props) {
+export function OpsRoutingPanel({
+  routingMeta,
+  suggestedPartners,
+  referrals,
+}: Props) {
   const scope = routingMeta?.scope ?? "unassigned";
   const scopeLabel =
     scope === "local"
@@ -62,6 +82,43 @@ export function OpsRoutingPanel({ routingMeta, suggestedPartners }: Props) {
           {routingMeta.note}
         </p>
       ) : null}
+
+      {referrals?.requiredServices?.length ? (
+        <p className="mt-3 text-[11px] text-ng-muted">
+          Services requis : {referrals.requiredServices.join(" - ")}
+        </p>
+      ) : null}
+
+      {referrals?.matches?.length ? (
+        <div className="mt-3">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-ng-primary">
+            Referral
+          </p>
+          <ul className="mt-2 space-y-2">
+            {referrals.matches.map((m) => (
+              <li
+                key={m.serviceId}
+                className="rounded-xl border border-[var(--ng-border)] px-3 py-2 text-sm"
+              >
+                <p className="font-semibold text-ng-text">{m.serviceName}</p>
+                <p className="text-[11px] text-ng-muted">
+                  {m.reason} · score {m.score}
+                  {m.organizationName ? ` · ${m.organizationName}` : ""}
+                </p>
+                {m.contactHint ? (
+                  <p className="text-xs text-ng-muted">{m.contactHint}</p>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+          {referrals.unmatched?.length ? (
+            <p className="mt-2 text-[11px] text-ng-muted">
+              Non couverts : {referrals.unmatched.join(" - ")}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
       {suggestedPartners.length ? (
         <ul className="mt-3 space-y-2">
           {suggestedPartners.map((p) => (
@@ -76,11 +133,11 @@ export function OpsRoutingPanel({ routingMeta, suggestedPartners }: Props) {
             </li>
           ))}
         </ul>
-      ) : (
+      ) : !referrals?.matches?.length ? (
         <p className="mt-3 text-sm text-ng-muted">
           Aucun partenaire annuaire pour ce bassin.
         </p>
-      )}
+      ) : null}
     </article>
   );
 }

@@ -5,10 +5,10 @@ import { PwaInstallButton } from "@/components/pwa-install";
 export const metadata: Metadata = {
   title: "Installer NGEMBA RDC",
   description:
-    "Installer NGEMBA RDC sur l'écran d'accueil (PWA) — même expérience que le site.",
+    "Installer NGEMBA RDC sur l'écran d'accueil (PWA) - même expérience que le site.",
 };
 
-/** Install guide — PWA only (no APK). */
+/** Install guide - PWA only (no APK). */
 export default function TelechargerPage() {
   return (
     <main className="min-h-dvh bg-ng-bg px-4 py-10 text-ng-text">

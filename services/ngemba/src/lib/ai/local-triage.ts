@@ -1,6 +1,8 @@
 import type { TriageResult } from "@/lib/ai/triage-schema";
-import { isLocale, type Locale } from "@/lib/i18n";
+import { normalizeTriageResult } from "@/lib/ai/triage-schema";
+import { isLocale } from "@/lib/i18n";
 import { citizenSummary, opsSummaryFr } from "@/lib/labels";
+import type { RequiredService } from "@/lib/response-engine/types";
 
 /**
  * Triage local (0 credit OpenAI).
@@ -14,23 +16,29 @@ export function localTriage(
   const loc = isLocale(locale) ? locale : "fr";
   const trimmed = message.trim();
 
-  // Media-only alert (audio/photo without text) — marker from compose UI.
+  // Media-only alert (audio/photo without text) - marker from compose UI.
   if (trimmed === "·" || trimmed.length === 0) {
-    return {
-      category: "unknown",
-      urgency: source === "sos_button" || source === "shake" ? "high" : "medium",
-      immediate_danger: source === "sos_button" || source === "shake",
-      summary_fr: "Alerte multimédia sans texte — lire audio/photos, orientation humaine.",
-      summary_user_locale: mediaOnlySummary(loc),
-      missing_info: [],
-      routing_hint: "operator_required",
-      confidence: 0.55,
-      follow_up_questions: followUpsForLocale(loc),
-      ai_disclaimer: disclaimerForLocale(loc),
-      witness_safety_reminder:
-        source === "witness" ? witnessSafetyForLocale(loc) : "",
-      localConfidence: 0.55,
-    };
+    return withLocal(
+      {
+        category: "unknown",
+        urgency: source === "sos_button" || source === "shake" ? "high" : "medium",
+        immediate_danger: source === "sos_button" || source === "shake",
+        summary_fr:
+          "Alerte multimédia sans texte - lire audio/photos, orientation humaine.",
+        summary_user_locale: mediaOnlySummary(loc),
+        missing_info: [],
+        routing_hint: "operator_required",
+        confidence: 0.55,
+        follow_up_questions: followUpsForLocale(loc),
+        ai_disclaimer: disclaimerForLocale(loc),
+        witness_safety_reminder:
+          source === "witness" ? witnessSafetyForLocale(loc) : "",
+        people_at_risk: ["personne_signalee"],
+        required_services: ["operator"],
+        recommended_actions: [],
+      },
+      0.55,
+    );
   }
 
   const m = trimmed.toLowerCase();
@@ -42,6 +50,8 @@ export function localTriage(
     immediate: boolean;
     routing: TriageResult["routing_hint"];
     conf: number;
+    services: RequiredService[];
+    people?: string[];
   }> = [
     {
       re: /\b(viol|violée|violée|sexual|mwasi|fille).{0,40}(force|menace|viol)/i,
@@ -50,6 +60,8 @@ export function localTriage(
       immediate: true,
       routing: "ngo_vbg",
       conf: 0.82,
+      services: ["ngo_vbg", "medical", "psychosocial"],
+      people: ["victime"],
     },
     {
       re: /\b(mari|époux|epoux|conjoint|boyfriend).{0,30}(menace|frappe|devant|porte|bat)/i,
@@ -58,6 +70,8 @@ export function localTriage(
       immediate: true,
       routing: "ngo_vbg",
       conf: 0.8,
+      services: ["ngo_vbg", "psychosocial"],
+      people: ["victime"],
     },
     {
       re: /\b(vbg|violence conjugale|domestic)/i,
@@ -66,6 +80,7 @@ export function localTriage(
       immediate: false,
       routing: "ngo_vbg",
       conf: 0.75,
+      services: ["ngo_vbg", "psychosocial"],
     },
     {
       re: /\b(enfant|mwana|mtoto).{0,40}(danger|frapp|abus|viol)/i,
@@ -74,6 +89,8 @@ export function localTriage(
       immediate: true,
       routing: "ngo_child_protection",
       conf: 0.8,
+      services: ["ngo_child_protection", "psychosocial"],
+      people: ["enfant"],
     },
     {
       re: /\b(accident|renversé|renverse|voiture|moto|blessé|blesse)/i,
@@ -82,6 +99,8 @@ export function localTriage(
       immediate: true,
       routing: "medical_info_only",
       conf: 0.78,
+      services: ["medical", "ambulance"],
+      people: ["blesse"],
     },
     {
       re: /\b(incendie|feu|motoi|moto ya|fire)/i,
@@ -90,6 +109,7 @@ export function localTriage(
       immediate: true,
       routing: "emergency_info_only",
       conf: 0.8,
+      services: ["firefighters", "ambulance"],
     },
     {
       re: /\b(inondation|flood|mai ebele)/i,
@@ -98,6 +118,7 @@ export function localTriage(
       immediate: false,
       routing: "emergency_info_only",
       conf: 0.75,
+      services: ["firefighters", "operator"],
     },
     {
       re: /\b(vol|braquage|arme|agression|robbery|assault)/i,
@@ -106,6 +127,7 @@ export function localTriage(
       immediate: true,
       routing: "operator_required",
       conf: 0.72,
+      services: ["security", "police_info", "medical"],
     },
     {
       re: /\b(harcelement|harcèlement|cyber|photos? (intimes|nues)|chantage)/i,
@@ -114,6 +136,7 @@ export function localTriage(
       immediate: false,
       routing: "ngo_vbg",
       conf: 0.7,
+      services: ["ngo_vbg", "prevention"],
     },
     {
       re: /\b(escroquerie|arnaque|scam|phishing)/i,
@@ -122,6 +145,7 @@ export function localTriage(
       immediate: false,
       routing: "prevention_resources",
       conf: 0.7,
+      services: ["prevention"],
     },
     {
       re: /\b(eclairage|éclairage|trou|route|infrastructure)/i,
@@ -130,6 +154,7 @@ export function localTriage(
       immediate: false,
       routing: "infrastructure_report",
       conf: 0.72,
+      services: ["infrastructure"],
     },
     {
       re: /\b(peur|doute|normal\?|je ne sais pas|afraid|hatari\?)/i,
@@ -138,6 +163,7 @@ export function localTriage(
       immediate: false,
       routing: "prevention_resources",
       conf: 0.55,
+      services: ["prevention"],
     },
     {
       re: /\b(danger|aide|urgence|mort|sang|menace|mbila|hatari|likama|zingu)/i,
@@ -146,54 +172,71 @@ export function localTriage(
       immediate: true,
       routing: "operator_required",
       conf: 0.65,
+      services: ["operator"],
+      people: ["personne_signalee"],
     },
   ];
 
   for (const rule of rules) {
     if (rule.re.test(m)) {
-      return {
-        category: rule.category,
-        urgency: rule.urgency,
-        immediate_danger: rule.immediate,
-        summary_fr: opsSummaryFr(rule.category, rule.urgency),
-        summary_user_locale: citizenSummary(
-          isLocale(locale) ? locale : "fr",
-          rule.category,
-          rule.urgency,
-          true,
-        ),
-        missing_info: [],
-        routing_hint: rule.routing,
-        confidence: rule.conf,
-        follow_up_questions: [],
-        ai_disclaimer: disclaimerForLocale(locale),
-        witness_safety_reminder:
-          source === "witness" ? witnessSafetyForLocale(locale) : "",
-        localConfidence: rule.conf,
-      };
+      return withLocal(
+        {
+          category: rule.category,
+          urgency: rule.urgency,
+          immediate_danger: rule.immediate,
+          summary_fr: opsSummaryFr(rule.category, rule.urgency),
+          summary_user_locale: citizenSummary(
+            isLocale(locale) ? locale : "fr",
+            rule.category,
+            rule.urgency,
+            true,
+          ),
+          missing_info: [],
+          routing_hint: rule.routing,
+          confidence: rule.conf,
+          follow_up_questions: [],
+          ai_disclaimer: disclaimerForLocale(locale),
+          witness_safety_reminder:
+            source === "witness" ? witnessSafetyForLocale(locale) : "",
+          people_at_risk: rule.people ?? [],
+          required_services: rule.services,
+          recommended_actions: [],
+        },
+        rule.conf,
+      );
     }
   }
 
-  return {
-    category: "unknown",
-    urgency: "medium",
-    immediate_danger: false,
-    summary_fr: opsSummaryFr("unknown", "medium"),
-    summary_user_locale: citizenSummary(
-      isLocale(locale) ? locale : "fr",
-      "unknown",
-      "medium",
-      false,
-    ),
-    missing_info: missingInfoForLocale(locale),
-    routing_hint: "operator_required",
-    confidence: 0.4,
-    follow_up_questions: followUpsForLocale(locale),
-    ai_disclaimer: disclaimerForLocale(locale),
-    witness_safety_reminder:
-      source === "witness" ? witnessSafetyForLocale(locale) : "",
-    localConfidence: 0.4,
-  };
+  return withLocal(
+    {
+      category: "unknown",
+      urgency: "medium",
+      immediate_danger: false,
+      summary_fr: opsSummaryFr("unknown", "medium"),
+      summary_user_locale: citizenSummary(
+        isLocale(locale) ? locale : "fr",
+        "unknown",
+        "medium",
+        false,
+      ),
+      missing_info: missingInfoForLocale(locale),
+      routing_hint: "operator_required",
+      confidence: 0.4,
+      follow_up_questions: followUpsForLocale(locale),
+      ai_disclaimer: disclaimerForLocale(locale),
+      witness_safety_reminder:
+        source === "witness" ? witnessSafetyForLocale(locale) : "",
+      required_services: ["operator"],
+    },
+    0.4,
+  );
+}
+
+function withLocal(
+  partial: Parameters<typeof normalizeTriageResult>[0],
+  localConfidence: number,
+): TriageResult & { localConfidence: number } {
+  return { ...normalizeTriageResult(partial), localConfidence };
 }
 
 function followUpsForLocale(locale: string): string[] {
@@ -255,18 +298,18 @@ function disclaimerForLocale(locale: string): string {
 
 function mediaOnlySummary(locale: string): string {
   if (locale === "en") {
-    return "Media alert (audio or photo) — Ngemba IA orients, a human reviews the case.";
+    return "Media alert (audio or photo) - Ngemba IA orients, a human reviews the case.";
   }
   if (locale === "sw") {
-    return "Tahadhari ya media — Ngemba IA inaongoza, binadamu anasoma.";
+    return "Tahadhari ya media - Ngemba IA inaongoza, binadamu anasoma.";
   }
   if (locale === "ln" || locale === "kg") {
-    return "Alerte ya audio/photo — Ngemba IA azongisa, moto akotanga.";
+    return "Alerte ya audio/photo - Ngemba IA azongisa, moto akotanga.";
   }
   if (locale === "lua") {
-    return "Alerte ya audio/photo — Ngemba IA, muntu udi umona.";
+    return "Alerte ya audio/photo - Ngemba IA, muntu udi umona.";
   }
-  return "Alerte multimédia (audio ou photo) — Ngemba IA oriente, un humain lit le dossier.";
+  return "Alerte multimédia (audio ou photo) - Ngemba IA oriente, un humain lit le dossier.";
 }
 
 function witnessSafetyForLocale(locale: string): string {

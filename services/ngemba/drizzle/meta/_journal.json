@@ -1,0 +1,34 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1788602892431,
+      "tag": "0000_phase1_incident_core",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788604297322,
+      "tag": "0001_phase3_rbac_abac",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788604796642,
+      "tag": "0002_phase4_directory_referral",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1788605327091,
+      "tag": "0003_phase5_operational_units",
+      "breakpoints": true
+    }
+  ]
+}

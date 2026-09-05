@@ -19,6 +19,11 @@
 | **UI audit** (McBuleli IA centre, polish, charts, PWA install) | ✅ v0.3 |
 | **Repo mobile dedie** (`Jeffbuleli/ngemba-mobile`) | ✅ pour EAS stable |
 | **Domaine propre** (`ngemba-rdc.org`) | ✅ HTTPS live (certbot + nginx) |
+| **Phase 1 Incident Core** (Postgres dual-write + incident_events) | ✅ v1 |
+| **Phase 2 AI Triage v2** (Response Engine + schema enrichi) | ✅ v1 |
+| **Phase 3 RBAC/ABAC** (actor + scopes + audit bridge) | ✅ v1 |
+| **Phase 4 Directory + Referral** (orgs/services + orientation) | ✅ v1 |
+| **Phase 5 Operational Units** (unites + matching + soft-assign) | ✅ v1 |
 
 Live : https://ngemba-rdc.org · email `info@ngemba-rdc.org`  
 Cutover : [24-DOMAINE-NGEMBA-RDC.md](./24-DOMAINE-NGEMBA-RDC.md) (DNS / TLS / Resend / APK)
@@ -49,10 +54,12 @@ Cutover : [24-DOMAINE-NGEMBA-RDC.md](./24-DOMAINE-NGEMBA-RDC.md) (DNS / TLS / Re
 
 ## Prochain (technique)
 
+0. **Phase 1-5** - push schema PG VPS + commit/deploy ([25](./25-PHASE-1-INCIDENT-CORE.md) · [26](./26-PHASE-2-AI-TRIAGE.md) · [27](./27-PHASE-3-RBAC-ABAC.md) · [28](./28-PHASE-4-DIRECTORY-REFERRAL.md) · [29](./29-PHASE-5-OPERATIONAL-UNITS.md))
 1. Cutover domaine `ngemba-rdc.org` (DNS + TLS + Resend `info@`) - [24-DOMAINE-NGEMBA-RDC.md](./24-DOMAINE-NGEMBA-RDC.md)
 2. Rebuild APK v0.3.1 (logo + Ngemba RDC) · redistribuer - [22-EAS-BUILD.md](./22-EAS-BUILD.md)
 3. Widget Android / volume keys (native)
 4. Bloc B : signatures JGL + relecture avocat
+5. Phase 6 Dispatch Engine
 
 ## Phase 5.2 - livre
 

@@ -66,6 +66,15 @@ export default function OpsPage() {
     open: number;
     slaBreached?: number;
   } | null>(null);
+  const [unitStats, setUnitStats] = useState<{
+    total: number;
+    available: number;
+    assigned: number;
+    enRoute: number;
+    onScene: number;
+    busy: number;
+    offline: number;
+  } | null>(null);
 
   const canPatch = role !== "partner";
   const device = useDeviceClass();
@@ -77,6 +86,13 @@ export default function OpsPage() {
     setRows(data.sessions ?? []);
     if (data.role) setRole(data.role);
     if (data.stats) setStats(data.stats);
+  }, []);
+
+  const loadUnits = useCallback(async () => {
+    const res = await fetch("/api/ops/units");
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.stats) setUnitStats(data.stats);
   }, []);
 
   useEffect(() => {
@@ -91,7 +107,8 @@ export default function OpsPage() {
 
   useEffect(() => {
     void load();
-  }, [load]);
+    void loadUnits();
+  }, [load, loadUnits]);
 
   useEffect(() => {
     const es = new EventSource("/api/ops/stream");
@@ -227,6 +244,26 @@ export default function OpsPage() {
           />
         </div>
       </section>
+
+      {unitStats ? (
+        <section className="mt-4 grid grid-cols-3 gap-2 rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-3 sm:grid-cols-6">
+          {[
+            { label: "Unites", value: unitStats.total },
+            { label: "Dispo", value: unitStats.available },
+            { label: "Assignees", value: unitStats.assigned },
+            { label: "En route", value: unitStats.enRoute },
+            { label: "Sur place", value: unitStats.onScene },
+            { label: "Offline", value: unitStats.offline + unitStats.busy },
+          ].map((c) => (
+            <div key={c.label} className="text-center">
+              <p className="text-[10px] font-semibold uppercase text-ng-muted">
+                {c.label}
+              </p>
+              <p className="text-base font-bold text-ng-primary">{c.value}</p>
+            </div>
+          ))}
+        </section>
+      ) : null}
 
       <ul className="mt-6 space-y-3">
         {open.length === 0 ? (

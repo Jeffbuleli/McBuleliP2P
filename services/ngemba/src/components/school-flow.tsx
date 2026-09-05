@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { AudioUploadButton } from "@/components/audio-upload-button";
 import { ComposePhotos } from "@/components/compose-photos";
 import { IconShield, IconSpark } from "@/components/icons";
 import { PolishButton } from "@/components/polish-button";
 import { TrustedContactsEditor } from "@/components/trusted-contacts-editor";
-import { VoiceButton } from "@/components/voice-button";
 import { useCitizenLocale } from "@/hooks/use-citizen-locale";
 import { COMPOSE_MAX_CHARS } from "@/lib/compose/limits";
 import { uploadPendingMedia } from "@/lib/compose/upload-pending";
@@ -44,13 +44,23 @@ export function SchoolFlow({ initialLocale }: { initialLocale?: string }) {
   const [message, setMessage] = useState("");
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [photos, setPhotos] = useState<File[]>([]);
-  const voiceBaseRef = useRef("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hint, setHint] = useState<string | null>(null);
   const [provinces, setProvinces] = useState<ProvinceOption[]>([]);
   const [provinceId, setProvinceId] = useState("");
   const [cityId, setCityId] = useState("");
+  const [audioPreviewUrl, setAudioPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!audioBlob) {
+      setAudioPreviewUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(audioBlob);
+    setAudioPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [audioBlob]);
 
   const cities = useMemo(() => {
     const p = provinces.find((x) => x.id === provinceId);
@@ -247,27 +257,15 @@ export function SchoolFlow({ initialLocale }: { initialLocale?: string }) {
             </span>
           </div>
           <div className="flex flex-col gap-3">
+            <AudioUploadButton
+              label={t.voice}
+              changeLabel={t.voiceChange}
+              tooLargeLabel={t.voiceTooLarge}
+              unsupportedLabel={t.voiceUnsupported}
+              onAudioChange={setAudioBlob}
+              className="w-full"
+            />
             <div className="flex w-full items-start gap-2">
-              <VoiceButton
-                locale={locale}
-                label={t.voice}
-                listeningLabel={t.voiceListening}
-                unsupportedLabel={t.voiceUnsupported}
-                onRecordingChange={(on) => {
-                  if (on) voiceBaseRef.current = message;
-                }}
-                onLiveTranscript={(live) => {
-                  const base = voiceBaseRef.current.trim();
-                  const next = live.trim()
-                    ? base
-                      ? `${base} ${live.trim()}`
-                      : live.trim()
-                    : base;
-                  setMessage(next.slice(0, COMPOSE_MAX_CHARS));
-                }}
-                onAudioChange={setAudioBlob}
-                className="min-w-0 flex-[4]"
-              />
               <PolishButton
                 text={message}
                 locale={locale}
@@ -277,7 +275,7 @@ export function SchoolFlow({ initialLocale }: { initialLocale?: string }) {
                 errorLabel={t.errorGeneric}
                 disabled={busy}
                 compact
-                className="min-w-0 flex-[1] self-start"
+                className="min-w-0 flex-1 self-start"
                 onPolished={(text) =>
                   setMessage(text.slice(0, COMPOSE_MAX_CHARS))
                 }
@@ -317,10 +315,15 @@ export function SchoolFlow({ initialLocale }: { initialLocale?: string }) {
                 label={t.addMedia}
               />
             ) : null}
-            {audioBlob ? (
-              <p className="mt-2 text-xs font-semibold text-ng-primary">
-                Audio joint ({Math.max(1, Math.round(audioBlob.size / 1024))} Ko)
-              </p>
+            {audioPreviewUrl ? (
+              <div className="mt-2">
+                <audio
+                  controls
+                  preload="metadata"
+                  className="w-full"
+                  src={audioPreviewUrl}
+                />
+              </div>
             ) : null}
           </div>
           {hint ? (

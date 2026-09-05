@@ -1,0 +1,19 @@
+{
+  "verdict": "La vision cible est ambitieuse mais nécessite des ajustements progressifs pour s'aligner avec l'existant.",
+  "aligns": ["citoyen -> signal -> IA triage", "service disponible -> intervention -> suivi -> resolution"],
+  "gaps": ["PAS de verdict culpabilite", "PAS OperationalUnit", "PAS ETA", "PAS dispatch multi-unite"],
+  "keep": ["Next.js 16", "React 19", "OpenAI", "Zod", "Leaflet", "R2", "Expo mobile"],
+  "improve": ["sessions en JSON file", "authentification sans MFA", "absence de DB utilisateurs"],
+  "refactor": ["routing partenaires", "lifecycle sans ACK/EN_ROUTE/ON_SCENE"],
+  "replace": ["PAS Postgres en production pour alertes"],
+  "remove": ["PAS de verdict culpabilite"],
+  "new": ["OperationalUnit", "ETA/capacite", "dispatch multi-agency", "RBAC+ABAC"],
+  "target_architecture": ["citoyen -> signal -> IA -> moteur de réponse -> service -> suivi -> prevention"],
+  "migration_phases": [{"id":"P0","name":"Initial Alignment","focus":"Aligner l'IA et le moteur de réponse avec l'existant"}],
+  "mvp_priorities": ["ajouter OperationalUnit", "introduire ETA/capacite", "implémenter dispatch multi-agency"],
+  "risks": ["complexité accrue avec multi-agency", "sécurité sans MFA", "gestion des sessions en JSON"],
+  "ai_vs_engine": "L'IA doit se concentrer sur le triage et la recommandation. Le moteur de réponse applique les règles définies. Les décisions sensibles restent sous contrôle humain.",
+  "data_model_delta": ["ajouter OperationalUnit", "ajouter ETA", "ajouter dispatch multi-agency"],
+  "rbac_delta": "Évoluer vers RBAC/ABAC en partant des tokens de rôle actuels, en ajoutant des niveaux d'accréditation et de privilège minimal.",
+  "do_not_break": ["citoyen -> signal", "IA triage", "service disponible -> intervention"]
+}

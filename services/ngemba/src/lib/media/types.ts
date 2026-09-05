@@ -12,7 +12,9 @@ export type MediaAttachment = {
   publicUrl?: string | null;
 };
 
-export const MEDIA_MAX_BYTES = 8 * 1024 * 1024;
+export const MEDIA_MAX_BYTES = 10 * 1024 * 1024;
+/** Audio citizen upload (SOS) - humains ecoutent, pas de Whisper. */
+export const AUDIO_MAX_BYTES = 10 * 1024 * 1024;
 /** Total attachments per session (photos + audio + video). */
 export const MEDIA_MAX_PER_SESSION = 5;
 /** Citizen compose: max photos before / after send. */
@@ -27,8 +29,16 @@ export const ALLOWED_MEDIA: Record<
     exts: [".jpg", ".jpeg", ".png", ".webp"],
   },
   audio: {
-    mimes: ["audio/webm", "audio/mpeg", "audio/wav", "audio/mp4", "audio/ogg"],
-    exts: [".webm", ".mp3", ".wav", ".m4a", ".ogg"],
+    mimes: [
+      "audio/webm",
+      "audio/mpeg",
+      "audio/wav",
+      "audio/mp4",
+      "audio/ogg",
+      "audio/aac",
+      "audio/x-m4a",
+    ],
+    exts: [".webm", ".mp3", ".wav", ".m4a", ".ogg", ".aac", ".m4a"],
   },
   video: {
     mimes: ["video/mp4", "video/webm", "video/quicktime"],

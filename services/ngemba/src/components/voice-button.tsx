@@ -256,7 +256,7 @@ export function VoiceButton({
     };
     speech.onend = () => {
       if (!recordingRef.current) return;
-      // Chrome stops continuous recognition periodically — restart while mic is open.
+      // Chrome stops continuous recognition periodically - restart while mic is open.
       window.setTimeout(() => {
         if (!recordingRef.current || speechRef.current !== speech) return;
         try {

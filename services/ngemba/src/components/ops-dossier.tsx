@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { SessionChat } from "@/components/session-chat";
 import { SessionMediaList } from "@/components/session-media";
 import { OpsRoutingPanel } from "@/components/ops-routing-panel";
+import { OpsUnitsPanel } from "@/components/ops-units-panel";
 import { OpsTrustedContacts } from "@/components/ops-trusted-contacts";
 import {
   categoryLabelFr,
@@ -41,6 +42,12 @@ type Session = {
     ai_disclaimer?: string;
     summary_user_locale?: string;
     missing_info?: string[];
+    required_services?: string[];
+    people_at_risk?: string[];
+    recommended_actions?: string[];
+    engine_policy_version?: string;
+    engine_reason?: string;
+    prompt_version?: string;
   };
   routingQueue: string;
   provider: string;
@@ -150,6 +157,35 @@ export function OpsDossierView({ id }: { id: string }) {
       nationalFallback: boolean;
     }>
   >([]);
+  const [referrals, setReferrals] = useState<{
+    requiredServices: string[];
+    matches: Array<{
+      serviceId: string;
+      serviceCode: string;
+      serviceName: string;
+      organizationName: string | null;
+      contactHint: string | null;
+      score: number;
+      reason: string;
+      scope: string;
+    }>;
+    unmatched: string[];
+  } | null>(null);
+  const [unitMatches, setUnitMatches] = useState<
+    Array<{
+      id: string;
+      name: string;
+      unitType: string;
+      status: string;
+      organizationName: string | null;
+      locationLabel: string | null;
+      capabilities: string[];
+      score: number;
+      reason: string;
+      matchedCapabilities: string[];
+      etaMinutes: number | null;
+    }>
+  >([]);
   const [sla, setSla] = useState<{
     label: string;
     breached: boolean;
@@ -173,6 +209,16 @@ export function OpsDossierView({ id }: { id: string }) {
       source: string;
     }>
   >([]);
+  const [events, setEvents] = useState<
+    Array<{
+      id: string;
+      at: string;
+      eventType: string;
+      status: string | null;
+      actor: string | null;
+      note: string | null;
+    }>
+  >([]);
   const [actionError, setActionError] = useState<string | null>(null);
   const device = useDeviceClass();
 
@@ -190,10 +236,13 @@ export function OpsDossierView({ id }: { id: string }) {
     setError(null);
     setSession(data.session);
     setSuggestedPartners(data.suggestedPartners ?? []);
+    setReferrals(data.referrals ?? null);
+    setUnitMatches(data.unitMatches ?? []);
     setSla(data.sla ?? null);
     setNotes(data.session.operatorNotes ?? "");
     setAssignedTo(data.session.assignedTo ?? "");
     setRelatedAlerts(data.relatedAlerts ?? []);
+    setEvents(Array.isArray(data.events) ? data.events : []);
   }, [id]);
 
   useEffect(() => {
@@ -360,6 +409,25 @@ export function OpsDossierView({ id }: { id: string }) {
             {Math.round(session.aiConfidence * 100)}% ·{" "}
             {routingLabelFr(session.routingQueue)}
           </p>
+          {session.aiPayload.required_services?.length ? (
+            <p className="mt-1 text-[11px] text-ng-muted">
+              Services : {session.aiPayload.required_services.join(" - ")}
+            </p>
+          ) : null}
+          {session.aiPayload.people_at_risk?.length ? (
+            <p className="mt-1 text-[11px] text-ng-muted">
+              Personnes a risque :{" "}
+              {session.aiPayload.people_at_risk.join(" - ")}
+            </p>
+          ) : null}
+          {session.aiPayload.engine_reason ? (
+            <p className="mt-1 text-[11px] text-ng-muted">
+              Moteur : {session.aiPayload.engine_reason}
+              {session.aiPayload.engine_policy_version
+                ? ` (${session.aiPayload.engine_policy_version})`
+                : ""}
+            </p>
+          ) : null}
         </div>
       </section>
 
@@ -505,6 +573,13 @@ export function OpsDossierView({ id }: { id: string }) {
       <OpsRoutingPanel
         routingMeta={session.routingMeta ?? null}
         suggestedPartners={suggestedPartners}
+        referrals={referrals}
+      />
+      <OpsUnitsPanel
+        matches={unitMatches}
+        sessionId={session.id}
+        canAssign={canPatch}
+        onAssigned={() => void load()}
       />
       <OpsTrustedContacts contacts={session.trustedContacts ?? []} />
 
@@ -539,23 +614,42 @@ export function OpsDossierView({ id }: { id: string }) {
           Chronologie
         </h2>
         <ul className="mt-3 space-y-2">
-          {session.statusHistory.map((h, i) => (
-            <li
-              key={`${h.at}-${h.status}-${i}`}
-              className="rounded-lg bg-ng-primary-muted/50 px-3 py-2 text-xs"
-            >
-              <span className="font-semibold text-ng-primary">
-                {statusLabelFr(h.status)}
-              </span>
-              <span className="text-ng-muted">
-                {" "}
-                · {fmt(h.at)} · {h.actor || "système"}
-              </span>
-              {h.note ? (
-                <span className="mt-0.5 block text-ng-muted">{h.note}</span>
-              ) : null}
-            </li>
-          ))}
+          {events.length
+            ? events.map((e) => (
+                <li
+                  key={e.id}
+                  className="rounded-lg bg-ng-primary-muted/50 px-3 py-2 text-xs"
+                >
+                  <span className="font-semibold text-ng-primary">
+                    {e.eventType}
+                    {e.status ? ` · ${statusLabelFr(e.status)}` : ""}
+                  </span>
+                  <span className="text-ng-muted">
+                    {" "}
+                    · {fmt(e.at)} · {e.actor || "systeme"}
+                  </span>
+                  {e.note ? (
+                    <span className="mt-0.5 block text-ng-muted">{e.note}</span>
+                  ) : null}
+                </li>
+              ))
+            : session.statusHistory.map((h, i) => (
+                <li
+                  key={`${h.at}-${h.status}-${i}`}
+                  className="rounded-lg bg-ng-primary-muted/50 px-3 py-2 text-xs"
+                >
+                  <span className="font-semibold text-ng-primary">
+                    {statusLabelFr(h.status)}
+                  </span>
+                  <span className="text-ng-muted">
+                    {" "}
+                    · {fmt(h.at)} · {h.actor || "système"}
+                  </span>
+                  {h.note ? (
+                    <span className="mt-0.5 block text-ng-muted">{h.note}</span>
+                  ) : null}
+                </li>
+              ))}
         </ul>
       </section>
 

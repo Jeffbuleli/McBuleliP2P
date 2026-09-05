@@ -1,6 +1,9 @@
 import { createHmac } from "crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { decidePermission } from "@/lib/access/abac";
+import { resolveOpsActor } from "@/lib/access/bridge";
+import type { OpsActor } from "@/lib/access/types";
 import { readEnvKey } from "@/lib/env";
 import {
   OPS_COOKIE,
@@ -36,6 +39,7 @@ export async function readOpsSession(): Promise<{
   token: string | null;
   role: OpsRole | null;
   partner: PartnerOrg | null;
+  actor: OpsActor | null;
 }> {
   const jar = await cookies();
   const token = jar.get(OPS_COOKIE)?.value ?? null;
@@ -48,7 +52,8 @@ export async function readOpsSession(): Promise<{
     roleFromToken === (roleCookie as OpsRole)
       ? roleFromToken
       : roleFromToken;
-  return { token, role: role ?? null, partner: ctx.partner };
+  const actor = resolveOpsActor(token);
+  return { token, role: role ?? null, partner: ctx.partner, actor };
 }
 
 export function opsCookieOptions(secure: boolean) {
@@ -62,6 +67,12 @@ export function opsCookieOptions(secure: boolean) {
 }
 
 export function opsActorLabel(token: string): string {
+  const actor = resolveOpsActor(token);
+  if (actor) {
+    const short = actor.id.replace(/^legacy:[^:]+:/, "").slice(0, 6);
+    const prefix = actor.partner?.slug ?? actor.role;
+    return `${prefix}-${short}`;
+  }
   const ctx = resolveOpsContext(token);
   const role = ctx.role;
   if (!role) return "ops";
@@ -78,12 +89,17 @@ export function opsActorLabel(token: string): string {
   return `${prefix}-${hash}`;
 }
 
+export type OpsAuthOk = {
+  role: OpsRole;
+  partner: PartnerOrg | null;
+  token: string;
+  actor: OpsActor;
+};
+
 export async function requireOpsAuth(
   req: Request,
   opts?: { permission?: OpsPermission; roles?: OpsRole[] },
-): Promise<
-  NextResponse | { role: OpsRole; partner: PartnerOrg | null; token: string }
-> {
+): Promise<NextResponse | OpsAuthOk> {
   if (!opsAuthConfigured()) {
     return NextResponse.json(
       { error: "ops_auth_not_configured" },
@@ -95,10 +111,10 @@ export async function requireOpsAuth(
   const jar = await cookies();
   const cookieToken = jar.get(OPS_COOKIE)?.value ?? null;
   const token = bearer || cookieToken;
-  const ctx = resolveOpsContext(token);
-  const role = ctx.role;
+  const actor = resolveOpsActor(token);
+  const role = actor?.role ?? null;
 
-  if (!role || !token) {
+  if (!role || !token || !actor) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
@@ -111,15 +127,21 @@ export async function requireOpsAuth(
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
-  if (opts?.permission && !roleHasPermission(role, opts.permission)) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  if (opts?.permission) {
+    const decision = decidePermission(actor, opts.permission);
+    if (!decision.allowed) {
+      return NextResponse.json(
+        { error: "forbidden", reason: decision.reason },
+        { status: 403 },
+      );
+    }
   }
 
-  return { role, partner: ctx.partner, token };
+  return { role, partner: actor.partner, token, actor };
 }
 
 export function verifyOpsToken(value: string | null | undefined): boolean {
-  return resolveOpsContext(value).role !== null;
+  return resolveOpsActor(value) !== null;
 }
 
 export function getOpsToken(): string | null {
@@ -138,7 +160,9 @@ export async function readOpsTokenFromCookie(): Promise<string | null> {
 export function isOpsAuthed(req: Request, cookieToken?: string | null): boolean {
   const bearer = readOpsTokenFromRequest(req);
   return (
-    resolveOpsContext(bearer).role !== null ||
-    resolveOpsContext(cookieToken).role !== null
+    resolveOpsActor(bearer) !== null || resolveOpsActor(cookieToken) !== null
   );
 }
+
+/** Compat: encore utilise roleHasPermission cote client legacy. */
+export { roleHasPermission };

@@ -39,7 +39,7 @@ export function citizenShellMaxWidth(device: DeviceClass): string {
   return "max-w-md";
 }
 
-/** Home SOS — larger, centered hero. */
+/** Home SOS - larger, centered hero. */
 export function sosButtonSize(device: DeviceClass): string {
   if (device === "desktop") return "size-[200px]";
   if (device === "tablet") return "size-[176px]";

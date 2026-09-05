@@ -1,3 +1,8 @@
+import {
+  decideIncidentAccess,
+  type IncidentAccessSubject,
+} from "@/lib/access/abac";
+import type { AccessScope, OpsActor } from "@/lib/access/types";
 import { sessionInRoleCoverage } from "@/lib/partners/match";
 import type { SessionRoutingMeta } from "@/lib/partners/types";
 import {
@@ -29,4 +34,13 @@ export function sessionVisibleToRole(
     },
     boundPartnerId,
   );
+}
+
+/** Phase 3 - visibilite via ABAC + accreditation. */
+export function sessionVisibleToActor(
+  actor: OpsActor,
+  session: IncidentAccessSubject,
+  need: AccessScope = "operational",
+): boolean {
+  return decideIncidentAccess(actor, session, need).allowed;
 }

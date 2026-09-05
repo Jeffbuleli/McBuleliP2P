@@ -144,7 +144,7 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
         </label>
       </header>
 
-      {/* SOS hero — centered in remaining upper space */}
+      {/* SOS hero - centered in remaining upper space */}
       <section className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center py-6">
         <Link
           href={href("/sos")}
@@ -167,7 +167,7 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
         </Link>
       </section>
 
-      {/* Secondary actions — pushed toward bottom; SOS keeps vertical center */}
+      {/* Secondary actions - pushed toward bottom; SOS keeps vertical center */}
       <section className="relative z-10 mt-auto flex w-full flex-col items-center gap-6 pt-4 pb-1">
         <nav
           className="flex w-full max-w-md items-start justify-center gap-1 sm:max-w-lg"

@@ -8,6 +8,7 @@ import {
 } from "@/lib/media/r2";
 import {
   ALLOWED_MEDIA,
+  AUDIO_MAX_BYTES,
   MEDIA_MAX_BYTES,
   type MediaAttachment,
   type MediaKind,
@@ -47,6 +48,9 @@ export async function saveMedia(params: {
     throw new Error("unsupported_media_type");
   }
   if (params.file.size > MEDIA_MAX_BYTES) {
+    throw new Error("file_too_large");
+  }
+  if (kind === "audio" && params.file.size > AUDIO_MAX_BYTES) {
     throw new Error("file_too_large");
   }
 

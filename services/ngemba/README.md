@@ -41,4 +41,13 @@ npm run dev   # http://localhost:3012
 4. Deploy Docker : `ops/vps/deploy.sh`
 
 Phase 0 = scaffold + docs.  
-Phase 1 (en cours) : SOS texte + GPS optionnel + triage McBuleli IA (OpenAI) + ecran session.
+Phase 1 Incident Core : dual-write Postgres + `incident_events` - voir `docs/ngemba/25-PHASE-1-INCIDENT-CORE.md`.
+
+```bash
+npm run db:push              # schema
+npm run db:migrate-sessions  # JSON -> Postgres
+# optionnel lecture PG :
+# NGEMBA_SESSION_PRIMARY=postgres
+```
+
+Phase 1 (en cours produit) : SOS texte + GPS optionnel + triage McBuleli IA (OpenAI) + ecran session.

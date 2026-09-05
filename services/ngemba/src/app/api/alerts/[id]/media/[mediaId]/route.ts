@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
+import { decideIncidentAccess, hashIp, logAccess } from "@/lib/access";
+import { actorHasScope } from "@/lib/access/bridge";
 import { readCitizenToken } from "@/lib/citizen/token";
 import { getNgembaObject } from "@/lib/media/r2";
 import { mediaPublicUrl, readMediaFile } from "@/lib/media/store";
 import { getSession } from "@/lib/sessions/store";
 import { requireOpsAuth } from "@/lib/ops/auth";
+import { clientIp } from "@/lib/security/rate-limit";
 
 type Ctx = { params: Promise<{ id: string; mediaId: string }> };
 
@@ -26,6 +29,29 @@ export async function GET(req: Request, ctx: Ctx) {
 
   if (!isOps && !isCitizen) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
+
+  if (isOps) {
+    const decision = decideIncidentAccess(auth.actor, session, "evidence");
+    const allowed =
+      decision.allowed && actorHasScope(auth.actor, "evidence");
+    logAccess({
+      actor: auth.actor,
+      resourceType: "alert_media",
+      resourceId: mediaId,
+      action: "download",
+      scope: "evidence",
+      allowed,
+      reason: allowed ? "ok" : decision.reason || "scope_evidence_required",
+      ipHash: hashIp(clientIp(req)),
+      meta: { sessionId: id },
+    });
+    if (!allowed) {
+      return NextResponse.json(
+        { error: "forbidden", reason: "scope_evidence_required" },
+        { status: 403 },
+      );
+    }
   }
 
   const publicUrl = mediaPublicUrl(attachment);

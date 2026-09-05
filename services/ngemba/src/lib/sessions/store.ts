@@ -1,64 +1,28 @@
 import { randomUUID } from "crypto";
 import fs from "fs";
 import path from "path";
-import type { TriageResult, RoutingQueue } from "@/lib/ai/triage-schema";
 import type { MediaAttachment } from "@/lib/media/types";
 import type { ChatMessage } from "@/lib/sessions/chat";
 import type { SchoolContext } from "@/lib/school/types";
 import type { SessionRoutingMeta } from "@/lib/partners/types";
 import type { SessionEscalation } from "@/lib/ops/sla";
 import type { TrustedContact } from "@/lib/trusted-contacts/types";
+import {
+  isPgSessionsEnabled,
+  pgAppendIncidentEvent,
+  pgGetSession,
+  pgListIncidentEvents,
+  pgListSessions,
+  pgListSessionsByCitizen,
+  pgUpsertSession,
+} from "@/lib/sessions/pg-store";
+import type {
+  AlertSessionRecord,
+  IncidentEventRecord,
+  StatusHistoryEntry,
+} from "@/lib/sessions/types";
 
-export type { ChatMessage };
-
-export type StatusHistoryEntry = {
-  at: string;
-  status: AlertSessionRecord["status"];
-  actor: string | null;
-  note?: string;
-};
-
-export type AlertSessionRecord = {
-  id: string;
-  status: "opened" | "active" | "oriented" | "closed" | "cancelled";
-  source: "sos_button" | "witness" | "chat" | "shake" | "school";
-  locale: string;
-  message: string;
-  urgency: TriageResult["urgency"];
-  category: TriageResult["category"];
-  immediateDanger: boolean;
-  lat: number | null;
-  lng: number | null;
-  locationLabel: string | null;
-  commune: string | null;
-  locationSource: string | null;
-  locationConsentAt: string | null;
-  aiSummary: string;
-  aiConfidence: number;
-  aiPayload: TriageResult;
-  routingQueue: RoutingQueue;
-  autoRoute: boolean;
-  provider: "openai" | "local";
-  aiMode: string;
-  operatorNotes: string | null;
-  assignedTo: string | null;
-  statusHistory: StatusHistoryEntry[];
-  createdAt: string;
-  orientedAt: string | null;
-  closedAt: string | null;
-  citizenToken: string | null;
-  /** IP capturee a la creation - OPS only, pour investigation (pas d'identite citoyenne). */
-  clientIp: string | null;
-  userAgent: string | null;
-  discreteMode: boolean;
-  trustedContacts: TrustedContact[];
-  schoolContext: SchoolContext | null;
-  routingMeta: SessionRoutingMeta | null;
-  slaDueAt: string | null;
-  escalation: SessionEscalation | null;
-  media: MediaAttachment[];
-  chatMessages: ChatMessage[];
-};
+export type { ChatMessage, AlertSessionRecord, StatusHistoryEntry, IncidentEventRecord };
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const DATA_FILE = path.join(DATA_DIR, "sessions.json");
@@ -67,6 +31,13 @@ const g = globalThis as unknown as {
   __ngembaSessions?: Map<string, AlertSessionRecord>;
   __ngembaSessionsLoaded?: boolean;
 };
+
+/** json (default) | postgres - read primary after dual-write. */
+function sessionPrimary(): "json" | "postgres" {
+  const raw = (process.env.NGEMBA_SESSION_PRIMARY || "").toLowerCase();
+  if (raw === "postgres" && isPgSessionsEnabled()) return "postgres";
+  return "json";
+}
 
 function normalizeRecord(row: AlertSessionRecord): AlertSessionRecord {
   const base = {
@@ -127,6 +98,22 @@ function persist() {
   } catch (err) {
     console.warn("[ngemba] persist sessions failed", err);
   }
+}
+
+function dualWrite(record: AlertSessionRecord) {
+  void pgUpsertSession(record);
+}
+
+function emitEvent(input: {
+  sessionId: string;
+  eventType: string;
+  status?: string | null;
+  actor?: string | null;
+  note?: string | null;
+  payload?: unknown;
+  at?: string;
+}) {
+  void pgAppendIncidentEvent(input);
 }
 
 export function createSession(
@@ -195,12 +182,46 @@ export function createSession(
   };
   map.set(record.id, record);
   persist();
+  dualWrite(record);
+  emitEvent({
+    sessionId: record.id,
+    eventType: "created",
+    status: record.status,
+    actor: null,
+    note: "Alerte creee",
+    at: createdAt,
+    payload: {
+      source: record.source,
+      urgency: record.urgency,
+      category: record.category,
+      routingQueue: record.routingQueue,
+    },
+  });
   return record;
 }
 
 export function getSession(id: string): AlertSessionRecord | null {
+  if (sessionPrimary() === "postgres") {
+    // Sync path cannot await - warm from JSON; async helper for routes
+    const local = ensureLoaded().get(id);
+    if (local) return normalizeRecord(local);
+  }
   const row = ensureLoaded().get(id);
   return row ? normalizeRecord(row) : null;
+}
+
+/** Async get - prefers Postgres when NGEMBA_SESSION_PRIMARY=postgres. */
+export async function getSessionAsync(
+  id: string,
+): Promise<AlertSessionRecord | null> {
+  if (sessionPrimary() === "postgres") {
+    const fromPg = await pgGetSession(id);
+    if (fromPg) {
+      ensureLoaded().set(id, fromPg);
+      return fromPg;
+    }
+  }
+  return getSession(id);
 }
 
 export function listSessions(limit = 50): AlertSessionRecord[] {
@@ -208,6 +229,20 @@ export function listSessions(limit = 50): AlertSessionRecord[] {
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .slice(0, limit)
     .map(normalizeRecord);
+}
+
+export async function listSessionsAsync(
+  limit = 50,
+): Promise<AlertSessionRecord[]> {
+  if (sessionPrimary() === "postgres") {
+    const rows = await pgListSessions(limit);
+    if (rows.length) {
+      const map = ensureLoaded();
+      for (const row of rows) map.set(row.id, row);
+      return rows;
+    }
+  }
+  return listSessions(limit);
 }
 
 export function listSessionsByCitizen(
@@ -221,6 +256,17 @@ export function listSessionsByCitizen(
     .map(normalizeRecord);
 }
 
+export async function listSessionsByCitizenAsync(
+  citizenToken: string,
+  limit = 20,
+): Promise<AlertSessionRecord[]> {
+  if (sessionPrimary() === "postgres") {
+    const rows = await pgListSessionsByCitizen(citizenToken, limit);
+    if (rows.length) return rows;
+  }
+  return listSessionsByCitizen(citizenToken, limit);
+}
+
 export function addSessionMedia(
   id: string,
   attachment: MediaAttachment,
@@ -228,7 +274,17 @@ export function addSessionMedia(
   const current = getSession(id);
   if (!current) return null;
   const media = [...current.media, attachment];
-  return updateSessionRaw(id, { media });
+  const next = updateSessionRaw(id, { media });
+  if (next) {
+    emitEvent({
+      sessionId: id,
+      eventType: "media",
+      status: next.status,
+      note: `Media ${attachment.kind}`,
+      payload: { mediaId: attachment.id, kind: attachment.kind },
+    });
+  }
+  return next;
 }
 
 export function setMediaTranscription(
@@ -251,7 +307,18 @@ export function addSessionChatMessage(
   const current = getSession(id);
   if (!current) return null;
   const chatMessages = [...current.chatMessages, message];
-  return updateSessionRaw(id, { chatMessages });
+  const next = updateSessionRaw(id, { chatMessages });
+  if (next) {
+    emitEvent({
+      sessionId: id,
+      eventType: "chat",
+      status: next.status,
+      actor: message.actor ?? message.role,
+      note: "Message chat",
+      payload: { messageId: message.id, role: message.role },
+    });
+  }
+  return next;
 }
 
 function updateSessionRaw(
@@ -264,6 +331,7 @@ function updateSessionRaw(
   const next = { ...normalizeRecord(current), ...patch };
   map.set(id, next);
   persist();
+  dualWrite(next);
   return next;
 }
 
@@ -288,25 +356,44 @@ export function updateSession(
 
   const next: AlertSessionRecord = { ...normalizeRecord(current), ...patch };
   const history = [...next.statusHistory];
+  const at = new Date().toISOString();
 
   if (patch.status && patch.status !== current.status) {
     history.unshift({
-      at: new Date().toISOString(),
+      at,
       status: patch.status,
       actor: meta?.actor ?? null,
       note: meta?.note,
     });
     next.statusHistory = history;
+    emitEvent({
+      sessionId: id,
+      eventType: "status_change",
+      status: patch.status,
+      actor: meta?.actor ?? null,
+      note: meta?.note ?? `Statut ${current.status} -> ${patch.status}`,
+      at,
+      payload: { from: current.status, to: patch.status },
+    });
+  } else if (meta?.note || patch.operatorNotes !== undefined) {
+    emitEvent({
+      sessionId: id,
+      eventType: "note",
+      status: next.status,
+      actor: meta?.actor ?? null,
+      note: meta?.note ?? "Mise a jour ops",
+      at,
+    });
   }
 
   if (patch.status === "oriented" && !next.orientedAt) {
-    next.orientedAt = new Date().toISOString();
+    next.orientedAt = at;
   }
   if (
     (patch.status === "closed" || patch.status === "cancelled") &&
     !next.closedAt
   ) {
-    next.closedAt = new Date().toISOString();
+    next.closedAt = at;
   }
   if (patch.status === "active" && current.status !== "active") {
     next.closedAt = null;
@@ -314,6 +401,7 @@ export function updateSession(
 
   map.set(id, next);
   persist();
+  dualWrite(next);
   return next;
 }
 
@@ -345,10 +433,11 @@ export function patchSessionSla(
         : current.routingMeta ?? null,
   };
 
+  const at = new Date().toISOString();
   if (patch.historyNote) {
     next.statusHistory = [
       {
-        at: new Date().toISOString(),
+        at,
         status: next.status,
         actor: "systeme",
         note: patch.historyNote,
@@ -359,5 +448,80 @@ export function patchSessionSla(
 
   map.set(id, next);
   persist();
+  dualWrite(next);
+
+  if (patch.escalation) {
+    emitEvent({
+      sessionId: id,
+      eventType: "escalation",
+      status: next.status,
+      actor: "systeme",
+      note: patch.historyNote ?? "Escalade SLA",
+      at,
+      payload: patch.escalation,
+    });
+  } else if (patch.slaDueAt !== undefined) {
+    emitEvent({
+      sessionId: id,
+      eventType: "sla",
+      status: next.status,
+      actor: "systeme",
+      note: patch.historyNote ?? "SLA mis a jour",
+      at,
+      payload: { slaDueAt: patch.slaDueAt },
+    });
+  } else if (patch.historyNote) {
+    emitEvent({
+      sessionId: id,
+      eventType: "system",
+      status: next.status,
+      actor: "systeme",
+      note: patch.historyNote,
+      at,
+    });
+  }
+
   return next;
+}
+
+export async function listIncidentEvents(
+  sessionId: string,
+  limit = 100,
+): Promise<IncidentEventRecord[]> {
+  const fromPg = await pgListIncidentEvents(sessionId, limit);
+  if (fromPg.length) return fromPg;
+
+  const session = getSession(sessionId);
+  if (!session) return [];
+  return session.statusHistory.map((h, i) => ({
+    id: `local-${sessionId}-${i}`,
+    sessionId,
+    at: h.at,
+    eventType: i === session.statusHistory.length - 1 ? "created" : "status_change",
+    status: h.status,
+    actor: h.actor,
+    note: h.note ?? null,
+    payload: null,
+  }));
+}
+
+/** Import / refresh one record into both stores (migration). */
+export function upsertSessionRecord(record: AlertSessionRecord): AlertSessionRecord {
+  const next = normalizeRecord(record);
+  ensureLoaded().set(next.id, next);
+  persist();
+  dualWrite(next);
+  return next;
+}
+
+export function sessionStoreInfo(): {
+  primary: "json" | "postgres";
+  pgEnabled: boolean;
+  jsonCount: number;
+} {
+  return {
+    primary: sessionPrimary(),
+    pgEnabled: isPgSessionsEnabled(),
+    jsonCount: ensureLoaded().size,
+  };
 }

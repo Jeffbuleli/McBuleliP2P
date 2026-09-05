@@ -1,6 +1,6 @@
 import type { Locale } from "@/lib/i18n";
 import type { TriageResult } from "@/lib/ai/triage-schema";
-import type { RoutingQueue } from "@/lib/ai/triage-schema";
+import type { RoutingQueue } from "@/lib/response-engine/types";
 
 const CATEGORY_FR: Record<TriageResult["category"], string> = {
   vbg: "Violence basée sur le genre",
