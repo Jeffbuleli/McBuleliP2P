@@ -16,20 +16,22 @@ import {
 
 const MEDIA_ROOT = path.join(process.cwd(), "data", "media");
 
+/** Strip "audio/webm;codecs=opus" → "audio/webm". */
+export function normalizeMime(raw: string): string {
+  const base = (raw || "").split(";")[0].trim().toLowerCase();
+  if (base === "audio/mp3") return "audio/mpeg";
+  if (base === "audio/x-wav" || base === "audio/wave") return "audio/wav";
+  if (base === "audio/m4a" || base === "audio/x-m4a") return "audio/mp4";
+  return base;
+}
+
 function kindFromMime(mime: string): MediaKind | null {
-  const normalized =
-    mime === "audio/mp3"
-      ? "audio/mpeg"
-      : mime === "audio/x-wav" || mime === "audio/wave"
-        ? "audio/wav"
-        : mime === "audio/m4a"
-          ? "audio/mp4"
-          : mime;
+  const normalized = normalizeMime(mime);
   for (const [kind, cfg] of Object.entries(ALLOWED_MEDIA) as [
     MediaKind,
     (typeof ALLOWED_MEDIA)[MediaKind],
   ][]) {
-    if (cfg.mimes.includes(normalized) || cfg.mimes.includes(mime)) return kind;
+    if (cfg.mimes.includes(normalized)) return kind;
   }
   return null;
 }
@@ -51,12 +53,25 @@ function mimeFromFileName(name: string): string | null {
 }
 
 function extFromMime(mime: string): string {
-  const normalized =
-    mime === "audio/mp3" ? "audio/mpeg" : mime === "audio/x-wav" ? "audio/wav" : mime;
-  for (const cfg of Object.values(ALLOWED_MEDIA)) {
-    const i = cfg.mimes.indexOf(normalized);
-    if (i >= 0) return cfg.exts[i] ?? ".bin";
-  }
+  const normalized = normalizeMime(mime);
+  if (normalized.startsWith("image/jpeg")) return ".jpg";
+  if (normalized === "image/png") return ".png";
+  if (normalized === "image/webp") return ".webp";
+  if (normalized === "audio/mpeg" || normalized === "audio/mp3") return ".mp3";
+  if (normalized === "audio/wav") return ".wav";
+  if (
+    normalized === "audio/mp4" ||
+    normalized === "audio/m4a" ||
+    normalized === "audio/aac" ||
+    normalized === "audio/x-m4a"
+  )
+    return ".m4a";
+  if (normalized === "audio/ogg") return ".ogg";
+  if (normalized === "audio/webm") return ".webm";
+  if (normalized === "video/mp4") return ".mp4";
+  if (normalized === "video/webm") return ".webm";
+  if (normalized === "video/quicktime") return ".mov";
+  if (normalized.startsWith("audio/")) return ".webm";
   return ".bin";
 }
 
@@ -70,11 +85,17 @@ export async function saveMedia(params: {
 }): Promise<MediaAttachment> {
   const rawMime = params.file.type || "";
   const mime =
-    (rawMime === "audio/mp3" ? "audio/mpeg" : rawMime) ||
+    normalizeMime(rawMime) ||
     mimeFromFileName(params.file.name) ||
     "application/octet-stream";
   const kind = kindFromMime(mime);
   if (!kind) {
+    console.warn("[ngemba] unsupported_media_type", {
+      rawMime,
+      mime,
+      name: params.file.name,
+      size: params.file.size,
+    });
     throw new Error("unsupported_media_type");
   }
   if (params.file.size > MEDIA_MAX_BYTES) {
@@ -88,18 +109,17 @@ export async function saveMedia(params: {
   const mediaId = randomUUID();
   const ext = extFromMime(mime);
   const storageKey = ngembaMediaKey(params.sessionId, mediaId, ext);
-  let publicUrl = await putNgembaObject({
+
+  // Always keep a local copy (Whisper + ops fallback), even when R2 succeeds.
+  const dir = path.join(MEDIA_ROOT, params.sessionId);
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(mediaFilePath(params.sessionId, mediaId, ext), buf);
+
+  const publicUrl = await putNgembaObject({
     objectKey: storageKey,
     body: new Uint8Array(buf),
     mimeType: mime,
   });
-
-  if (!publicUrl) {
-    const dir = path.join(MEDIA_ROOT, params.sessionId);
-    fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(mediaFilePath(params.sessionId, mediaId, ext), buf);
-    publicUrl = null;
-  }
 
   return {
     id: mediaId,

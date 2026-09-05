@@ -42,19 +42,8 @@ export const ALLOWED_MEDIA: Record<
       "audio/x-m4a",
       "audio/m4a",
     ],
-    exts: [
-      ".webm",
-      ".mp3",
-      ".mp3",
-      ".wav",
-      ".wav",
-      ".wav",
-      ".m4a",
-      ".ogg",
-      ".aac",
-      ".m4a",
-      ".m4a",
-    ],
+    // Keep unique exts for disk lookup (Set used in transcribe).
+    exts: [".webm", ".mp3", ".wav", ".m4a", ".ogg", ".aac"],
   },
   video: {
     mimes: ["video/mp4", "video/webm", "video/quicktime"],

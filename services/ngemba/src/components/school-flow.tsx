@@ -140,11 +140,13 @@ export function SchoolFlow({ initialLocale }: { initialLocale?: string }) {
         setBusy(false);
         return;
       }
-      void uploadPendingMedia({
-        sessionId: data.id,
-        audio: audioBlob,
-        photos,
-      });
+      if (audioBlob || photos.length > 0) {
+        await uploadPendingMedia({
+          sessionId: data.id,
+          audio: audioBlob,
+          photos,
+        });
+      }
       const dest = href(`/session/${data.id}`);
       router.push(dest);
       window.setTimeout(() => {

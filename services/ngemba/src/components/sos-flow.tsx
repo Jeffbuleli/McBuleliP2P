@@ -170,12 +170,14 @@ export function SosFlow({
         setBusy(false);
         return;
       }
-      // Never block confirmation on media upload (large audio / nginx).
-      void uploadPendingMedia({
-        sessionId: data.id,
-        audio: audioBlob,
-        photos,
-      });
+      // Critical path: wait for audio/photos before leaving SOS (PWA-safe).
+      if (audioBlob || photos.length > 0) {
+        await uploadPendingMedia({
+          sessionId: data.id,
+          audio: audioBlob,
+          photos,
+        });
+      }
       if (discrete) vibrateDiscreteConfirm();
       const dest = discrete
         ? `${href(`/session/${data.id}`)}&discrete=1`

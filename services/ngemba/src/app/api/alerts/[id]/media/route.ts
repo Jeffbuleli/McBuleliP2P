@@ -59,6 +59,13 @@ export async function POST(req: Request, ctx: Ctx) {
     return NextResponse.json({ error: "missing_file" }, { status: 400 });
   }
 
+  console.info("[ngemba] MEDIA RECEIVED", {
+    sessionId: id,
+    name: file.name,
+    type: file.type,
+    size: file.size,
+  });
+
   const looksPhoto = file.type.startsWith("image/");
   if (looksPhoto) {
     const photoCount = access.session.media.filter((m) => m.kind === "photo")
