@@ -80,6 +80,11 @@ export async function runTriage(input: {
     const model =
       readEnvKey("OPENAI_ASSISTANT_MODEL") || "gpt-4o-mini";
 
+    const messageForModel =
+      input.message.trim() === "·" || input.message.trim().length === 0
+        ? `[Citizen sent audio and/or photos without written text. Orient for human review. Do not invent facts. Locale=${input.locale}; source=${input.source}]`
+        : input.message.slice(0, 500);
+
     const completion = await client.chat.completions.create({
       model,
       temperature: 0.2,
@@ -92,7 +97,7 @@ export async function runTriage(input: {
           content: JSON.stringify({
             locale: input.locale,
             source: input.source,
-            message: input.message.slice(0, 500),
+            message: messageForModel,
             local_hint: {
               category: localResult.category,
               urgency: localResult.urgency,

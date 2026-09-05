@@ -109,8 +109,8 @@ export function SosFlow({
   function composeMessage(): string {
     const trimmed = message.trim().slice(0, COMPOSE_MAX_CHARS);
     if (trimmed.length >= 1) return trimmed;
-    if (audioBlob) return "·";
-    if (photos.length) return "·";
+    // Internal marker for media-only alerts (ops UI); triage gets a clear summary.
+    if (audioBlob || photos.length) return "·";
     return trimmed;
   }
 
@@ -314,6 +314,8 @@ export function SosFlow({
                 locale={locale}
                 label={t.polish}
                 busyLabel={t.polishing}
+                unavailableLabel={t.polishUnavailable}
+                errorLabel={t.errorGeneric}
                 discrete={discrete}
                 disabled={busy}
                 compact

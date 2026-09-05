@@ -9,6 +9,7 @@ import {
   IconGraduation,
   IconHeart,
   IconShield,
+  IconSpark,
   IconUsers,
 } from "@/components/icons";
 import { PoweredByMcbuleli } from "@/components/powered-by-mcbuleli";
@@ -165,6 +166,10 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
             {t.sosHint}
           </span>
         </Link>
+        <p className="mt-5 flex max-w-xs items-center justify-center gap-1.5 text-center text-sm text-ng-muted">
+          <IconSpark className="size-4 shrink-0 text-ng-primary" />
+          <span>{t.line}</span>
+        </p>
       </section>
 
       {/* Secondary actions — pushed toward bottom; SOS keeps vertical center */}

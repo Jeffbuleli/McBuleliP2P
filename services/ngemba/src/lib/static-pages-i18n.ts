@@ -142,7 +142,7 @@ const RESOURCES: Record<Locale, PageCopy> = {
       {
         title: "Bato ya mbala - koyekola ndenge ya kokokisa",
         body: [
-          "Module Ngemba IA ya Bato ya mbala : 10 makambo mpo na kolimbola (koyebisa, cyber, corruption...).",
+          "Module Ngemba Jeunesse : 10 makambo mpo na kolimbola (koyebisa, cyber, corruption...).",
           "Oyo ezali te classement to jugement - ezali guide ya koyekola.",
           "Makambo ya solo ya mabe : salela SOS NGEMBA ntango moko.",
         ],
@@ -236,7 +236,7 @@ const RESOURCES: Record<Locale, PageCopy> = {
       {
         title: "Bana - kumona kudi kudi",
         body: [
-          "Module Ngemba IA ya Bana : 10 bintu bikalaka ku kudi (kudiyangisa, cyber, corruption...).",
+          "Module Ngemba Jeunesse : 10 bintu bikalaka ku kudi (kudiyangisa, cyber, corruption...).",
           "Kasi te, ezali te kudi to kudi - ezali muku ya koyekola.",
           "Situasiya ya solo ya mabe : salela SOS NGEMBA ntango nyonso.",
         ],
@@ -283,7 +283,7 @@ const RESOURCES: Record<Locale, PageCopy> = {
       {
         title: "Bana - koyangela ndenge ya kokokisa",
         body: [
-          "Module McBuleli Bana : 10 makambo mpo na kotala (koyokela, cyber, corruption...).",
+          "Module Ngemba Jeunesse : 10 makambo mpo na kotala (koyokela, cyber, corruption...).",
           "Ezali te classement to jugement - ezali guide ya koyekola.",
           "Makambo ya solo ya ntango : salela SOS NGEMBA ntango moko.",
         ],

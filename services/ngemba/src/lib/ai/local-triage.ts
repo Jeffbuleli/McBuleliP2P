@@ -11,7 +11,29 @@ export function localTriage(
   locale: string,
   source: string,
 ): TriageResult & { localConfidence: number } {
-  const m = message.toLowerCase();
+  const loc = isLocale(locale) ? locale : "fr";
+  const trimmed = message.trim();
+
+  // Media-only alert (audio/photo without text) — marker from compose UI.
+  if (trimmed === "·" || trimmed.length === 0) {
+    return {
+      category: "unknown",
+      urgency: source === "sos_button" || source === "shake" ? "high" : "medium",
+      immediate_danger: source === "sos_button" || source === "shake",
+      summary_fr: "Alerte multimédia sans texte — lire audio/photos, orientation humaine.",
+      summary_user_locale: mediaOnlySummary(loc),
+      missing_info: [],
+      routing_hint: "operator_required",
+      confidence: 0.55,
+      follow_up_questions: followUpsForLocale(loc),
+      ai_disclaimer: disclaimerForLocale(loc),
+      witness_safety_reminder:
+        source === "witness" ? witnessSafetyForLocale(loc) : "",
+      localConfidence: 0.55,
+    };
+  }
+
+  const m = trimmed.toLowerCase();
 
   const rules: Array<{
     re: RegExp;
@@ -229,6 +251,22 @@ function disclaimerForLocale(locale: string): string {
     return "Evaluation automatique NGEMBA - muntu me tala ve. Kele preuve judiciaire ve.";
   }
   return "Évaluation automatique NGEMBA (locale) - non vérifiée par un humain. Ne constitue pas une preuve judiciaire.";
+}
+
+function mediaOnlySummary(locale: string): string {
+  if (locale === "en") {
+    return "Media alert (audio or photo) — Ngemba IA orients, a human reviews the case.";
+  }
+  if (locale === "sw") {
+    return "Tahadhari ya media — Ngemba IA inaongoza, binadamu anasoma.";
+  }
+  if (locale === "ln" || locale === "kg") {
+    return "Alerte ya audio/photo — Ngemba IA azongisa, moto akotanga.";
+  }
+  if (locale === "lua") {
+    return "Alerte ya audio/photo — Ngemba IA, muntu udi umona.";
+  }
+  return "Alerte multimédia (audio ou photo) — Ngemba IA oriente, un humain lit le dossier.";
 }
 
 function witnessSafetyForLocale(locale: string): string {

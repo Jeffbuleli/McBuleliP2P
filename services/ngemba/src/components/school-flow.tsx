@@ -266,6 +266,8 @@ export function SchoolFlow({ initialLocale }: { initialLocale?: string }) {
                 locale={locale}
                 label={t.polish}
                 busyLabel={t.polishing}
+                unavailableLabel={t.polishUnavailable}
+                errorLabel={t.errorGeneric}
                 disabled={busy}
                 compact
                 className="min-w-0 flex-[1] self-start"

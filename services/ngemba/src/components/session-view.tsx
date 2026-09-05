@@ -31,6 +31,7 @@ type SessionPayload = {
     follow_up_questions?: string[];
     ai_disclaimer?: string;
     summary_user_locale?: string;
+    witness_safety_reminder?: string;
   };
   routingQueue: string;
   lat: number | null;
@@ -160,13 +161,18 @@ export function SessionView({
             <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-ng-primary">
               <span className="inline-flex items-center gap-1.5">
                 <IconSpark className="size-3.5" />
-                Orientation Ngemba IA
+                {t.orientationTitle}
               </span>
             </summary>
             <div className="border-t border-[var(--ng-border)] px-4 py-3">
               <p className="text-sm leading-relaxed text-ng-text">
                 {session.aiPayload.summary_user_locale || session.aiSummary}
               </p>
+              {session.aiPayload.witness_safety_reminder ? (
+                <p className="mt-2 rounded-xl bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900">
+                  {session.aiPayload.witness_safety_reminder}
+                </p>
+              ) : null}
               {session.locationLabel || session.commune ? (
                 <p className="mt-2 text-xs font-medium text-ng-muted">
                   {t.place} - {session.locationLabel || session.commune}
