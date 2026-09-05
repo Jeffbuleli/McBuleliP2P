@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
   IconMic,
-  IconPlay,
   IconStop,
   IconTrash,
   IconWaveform,
@@ -396,8 +395,8 @@ export function VoiceButton({
           }`}
         >
           <div className="mb-2 flex items-center gap-2">
-            <IconPlay
-              className={`size-4 shrink-0 ${discrete ? "text-[#c9a0bc]" : "text-ng-primary"}`}
+            <IconWaveform
+              className={`size-5 shrink-0 ${discrete ? "text-[#c9a0bc]" : "text-ng-primary"}`}
             />
             <span
               className={`min-w-0 flex-1 truncate text-[11px] font-semibold ${
