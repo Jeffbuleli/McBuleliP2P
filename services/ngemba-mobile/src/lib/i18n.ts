@@ -99,6 +99,21 @@ type Copy = {
   youthSosHint: string;
   youthBackToList: string;
   youthDisclaimer: string;
+  discreteShake: string;
+  trustedContactsLink: string;
+  trustedContactsTitle: string;
+  trustedContactsSubtitle: string;
+  trustedContactLabel: string;
+  trustedContactName: string;
+  trustedContactRelation: string;
+  trustedContactPhone: string;
+  trustedContactEmail: string;
+  trustedContactAddress: string;
+  trustedContactRemove: string;
+  trustedContactAdd: string;
+  trustedContactsSave: string;
+  trustedContactsSkip: string;
+  trustedContactsError: string;
 };
 
 const baseFr: Copy = {
@@ -109,9 +124,9 @@ const baseFr: Copy = {
   resources: "Aide",
   sos: "SOS",
   sosHint: "Danger",
-  line: "Racontez - McBuleli IA comprend",
-  powered: "McBuleli IA",
-  aiListening: "McBuleli IA écoute",
+  line: "Racontez - Ngemba IA comprend",
+  powered: "Ngemba IA",
+  aiListening: "Ngemba IA écoute",
   polish: "Clarifier",
   polishing: "Clarification...",
   language: "Langue",
@@ -181,7 +196,7 @@ const baseFr: Copy = {
   schoolEstablishmentPlaceholder: "Ex. Lycée X, commune Y",
   schoolTell: "Raconte ce qui se passe",
   schoolAnonymousNote: "Pas besoin de donner ton nom complet.",
-  youthTitle: "McBuleli Jeunesse",
+  youthTitle: "Ngemba Jeunesse",
   youthSubtitle: "10 situations pour réfléchir - consentement, cyber, corruption, amitié. Pas de classement public.",
   youthYourTurn: "Et toi, que ferais-tu ?",
   youthPlaceholder: "Écris ta réponse...",
@@ -189,6 +204,22 @@ const baseFr: Copy = {
   youthSosHint: "Situation grave ? Utilise le bouton",
   youthBackToList: "<- Tous les scénarios",
   youthDisclaimer: "Guide éducatif - pas un avocat ni un médecin. En danger réel, utilise SOS NGEMBA.",
+  discreteShake: "Secouer le téléphone 5 fois ouvre aussi le mode discret.",
+  trustedContactsLink: "Proches de confiance",
+  trustedContactsTitle: "Proches de confiance",
+  trustedContactsSubtitle:
+    "Optionnel. Ces infos aident les services si vous n'êtes plus joignable. Elles ne sont pas diffusées à chaque alerte.",
+  trustedContactLabel: "Contact",
+  trustedContactName: "Nom",
+  trustedContactRelation: "Lien (mère, ami, voisin...)",
+  trustedContactPhone: "Téléphone (+243...)",
+  trustedContactEmail: "Email (optionnel)",
+  trustedContactAddress: "Adresse / quartier (optionnel)",
+  trustedContactRemove: "Retirer",
+  trustedContactAdd: "Ajouter un contact",
+  trustedContactsSave: "Enregistrer",
+  trustedContactsSkip: "Passer pour l'instant",
+  trustedContactsError: "Ajoutez au moins un nom et un téléphone ou email.",
 };
 
 export const messages: Record<Locale, Copy> = {
@@ -282,8 +313,25 @@ export const messages: Record<Locale, Copy> = {
     youthSosHint: "Serious situation? Use the button",
     youthBackToList: "<- All scenarios",
     youthDisclaimer: "Educational guide - not a lawyer or doctor. In real danger, use SOS NGEMBA.",
+    discreteShake: "Shake the phone 5 times to open discrete mode.",
+    trustedContactsLink: "Trusted contacts",
+    trustedContactsTitle: "Trusted contacts",
+    trustedContactsSubtitle:
+      "Optional. This helps responders if you become unreachable. It is not shared with every alert.",
+    trustedContactLabel: "Contact",
+    trustedContactName: "Name",
+    trustedContactRelation: "Relation (mother, friend, neighbor...)",
+    trustedContactPhone: "Phone (+243...)",
+    trustedContactEmail: "Email (optional)",
+    trustedContactAddress: "Address / neighborhood (optional)",
+    trustedContactRemove: "Remove",
+    trustedContactAdd: "Add a contact",
+    trustedContactsSave: "Save",
+    trustedContactsSkip: "Skip for now",
+    trustedContactsError: "Add at least a name and a phone or email.",
   },
   ln: {
+    ...baseFr,
     tagline: "Bokebi - Kimia",
     speak: "Lobela",
     witness: "Momonisi",
@@ -373,6 +421,7 @@ export const messages: Record<Locale, Copy> = {
     youthDisclaimer: "Mokanda ya koyekola - te avocat to médecin. Na mabe ya solo, tinda SOS NGEMBA.",
   },
   sw: {
+    ...baseFr,
     tagline: "Usalama - Amani",
     speak: "Sema",
     witness: "Shahidi",
@@ -462,6 +511,7 @@ export const messages: Record<Locale, Copy> = {
     youthDisclaimer: "Mwongozo wa elimu - si wakili wala daktari. Katika hatari halisi, tumia SOS NGEMBA.",
   },
   lua: {
+    ...baseFr,
     tagline: "Bokebuka - Mpeve",
     speak: "Lobela",
     witness: "Mumonishi",
@@ -551,6 +601,7 @@ export const messages: Record<Locale, Copy> = {
     youthDisclaimer: "Mokanda ya koyekola - te avocat to médecin. Na mabe ya solo, tinda SOS NGEMBA.",
   },
   kg: {
+    ...baseFr,
     tagline: "Lunda - Ngemba",
     speak: "Lobela",
     witness: "Momonisi",

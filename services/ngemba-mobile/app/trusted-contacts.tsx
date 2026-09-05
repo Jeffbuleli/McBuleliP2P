@@ -93,32 +93,39 @@ export default function TrustedContactsScreen() {
           <Text style={styles.back}>{t.back}</Text>
         </Pressable>
 
-        <Text style={styles.title}>{t.trustedContactsTitle}</Text>
-        <Text style={styles.subtitle}>{t.trustedContactsSubtitle}</Text>
+            <Text style={styles.title}>
+              {t.trustedContactsTitle || "Proches de confiance"}
+            </Text>
+            <Text style={styles.subtitle}>
+              {t.trustedContactsSubtitle ||
+                "Optionnel. Ces infos aident les services si vous n'êtes plus joignable."}
+            </Text>
 
         {contacts.map((contact, index) => (
           <View key={index} style={styles.card}>
             <Text style={styles.cardLabel}>
-              {t.trustedContactLabel} {index + 1}
+              {t.trustedContactLabel || "Contact"} {index + 1}
             </Text>
             <TextInput
               value={contact.name}
               onChangeText={(v) => updateContact(index, "name", v)}
-              placeholder={t.trustedContactName}
+              placeholder={t.trustedContactName || "Nom"}
               placeholderTextColor={colors.muted}
               style={styles.input}
             />
             <TextInput
               value={contact.relation ?? ""}
               onChangeText={(v) => updateContact(index, "relation", v)}
-              placeholder={t.trustedContactRelation}
+              placeholder={
+                t.trustedContactRelation || "Lien (mère, ami, voisin...)"
+              }
               placeholderTextColor={colors.muted}
               style={styles.input}
             />
             <TextInput
               value={contact.phone}
               onChangeText={(v) => updateContact(index, "phone", v)}
-              placeholder={t.trustedContactPhone}
+              placeholder={t.trustedContactPhone || "Téléphone (+243...)"}
               placeholderTextColor={colors.muted}
               keyboardType="phone-pad"
               style={styles.input}
@@ -126,7 +133,7 @@ export default function TrustedContactsScreen() {
             <TextInput
               value={contact.email ?? ""}
               onChangeText={(v) => updateContact(index, "email", v)}
-              placeholder={t.trustedContactEmail}
+              placeholder={t.trustedContactEmail || "Email (optionnel)"}
               placeholderTextColor={colors.muted}
               keyboardType="email-address"
               autoCapitalize="none"
@@ -135,13 +142,17 @@ export default function TrustedContactsScreen() {
             <TextInput
               value={contact.address ?? ""}
               onChangeText={(v) => updateContact(index, "address", v)}
-              placeholder={t.trustedContactAddress}
+              placeholder={
+                t.trustedContactAddress || "Adresse / quartier (optionnel)"
+              }
               placeholderTextColor={colors.muted}
               style={styles.input}
             />
             {contacts.length > 1 ? (
               <Pressable onPress={() => removeContact(index)}>
-                <Text style={styles.remove}>{t.trustedContactRemove}</Text>
+                <Text style={styles.remove}>
+                  {t.trustedContactRemove || "Retirer"}
+                </Text>
               </Pressable>
             ) : null}
           </View>
@@ -149,7 +160,9 @@ export default function TrustedContactsScreen() {
 
         {contacts.length < MAX_TRUSTED_CONTACTS ? (
           <Pressable onPress={addContact} style={styles.addBtn}>
-            <Text style={styles.addBtnText}>{t.trustedContactAdd}</Text>
+            <Text style={styles.addBtnText}>
+              {t.trustedContactAdd || "Ajouter un contact"}
+            </Text>
           </Pressable>
         ) : null}
 
@@ -161,11 +174,15 @@ export default function TrustedContactsScreen() {
             { opacity: busy ? 0.5 : pressed ? 0.9 : 1 },
           ]}
         >
-          <Text style={styles.primaryBtnText}>{t.trustedContactsSave}</Text>
+          <Text style={styles.primaryBtnText}>
+            {t.trustedContactsSave || "Enregistrer"}
+          </Text>
         </Pressable>
 
         <Pressable onPress={() => void skip()} style={styles.skipBtn}>
-          <Text style={styles.skipBtnText}>{t.trustedContactsSkip}</Text>
+          <Text style={styles.skipBtnText}>
+            {t.trustedContactsSkip || "Passer pour l'instant"}
+          </Text>
         </Pressable>
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
