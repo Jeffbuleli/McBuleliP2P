@@ -16,8 +16,9 @@ npm-debug.log*
 *.db
 /data
 
-# Brand assets (repo root ignores *.png)
+# Brand + PWA icons (repo root ignores *.png)
 !public/brand/ngemba-logo.png
+!public/icons/*.png
 
 # APK binaries — distribution dropped in favour of PWA; never commit APKs
 /public/downloads/*

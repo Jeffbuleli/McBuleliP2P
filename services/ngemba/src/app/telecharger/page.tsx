@@ -21,11 +21,11 @@ export default function TelechargerPage() {
           <div className="flex items-center gap-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/brand/ngemba-logo.png"
+              src="/icons/icon-192.png"
               alt="NGEMBA"
               width={56}
               height={56}
-              className="rounded-xl bg-white object-contain p-1.5"
+              className="rounded-xl object-contain"
             />
             <div>
               <h1 className="text-xl font-extrabold tracking-tight text-ng-primary">
