@@ -13,7 +13,7 @@ export type MediaAttachment = {
 };
 
 export const MEDIA_MAX_BYTES = 10 * 1024 * 1024;
-/** Audio citizen upload (SOS) - humains ecoutent, pas de Whisper. */
+/** Audio citizen upload - Whisper optional if OPENAI_API_KEY set. */
 export const AUDIO_MAX_BYTES = 10 * 1024 * 1024;
 /** Total attachments per session (photos + audio + video). */
 export const MEDIA_MAX_PER_SESSION = 5;

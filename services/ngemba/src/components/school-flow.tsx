@@ -6,8 +6,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ComposePhotos } from "@/components/compose-photos";
 import { IconShield, IconSpark } from "@/components/icons";
 import { PolishButton } from "@/components/polish-button";
-import { SosAudioPanel } from "@/components/sos-audio-panel";
 import { TrustedContactsEditor } from "@/components/trusted-contacts-editor";
+import { VoiceButton } from "@/components/voice-button";
 import { useCitizenLocale } from "@/hooks/use-citizen-locale";
 import { COMPOSE_MAX_CHARS } from "@/lib/compose/limits";
 import { uploadPendingMedia } from "@/lib/compose/upload-pending";
@@ -44,6 +44,7 @@ export function SchoolFlow({ initialLocale }: { initialLocale?: string }) {
   const [message, setMessage] = useState("");
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [photos, setPhotos] = useState<File[]>([]);
+  const voiceBaseRef = useRef("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hint, setHint] = useState<string | null>(null);
@@ -274,17 +275,27 @@ export function SchoolFlow({ initialLocale }: { initialLocale?: string }) {
             </span>
           </div>
           <div className="flex flex-col gap-3">
-            <SosAudioPanel
-              recordLabel={t.voiceRecord}
-              listeningLabel={t.voiceListening}
-              importLabel={t.voiceImport}
-              changeLabel={t.voiceChange}
-              tooLargeLabel={t.voiceTooLarge}
-              unsupportedLabel={t.voiceUnsupported}
-              onAudioChange={setAudioBlob}
-              className="w-full"
-            />
             <div className="flex w-full items-start gap-2">
+              <VoiceButton
+                locale={locale}
+                label={t.voiceRecord}
+                listeningLabel={t.voiceListening}
+                unsupportedLabel={t.voiceUnsupported}
+                onRecordingChange={(on) => {
+                  if (on) voiceBaseRef.current = message;
+                }}
+                onLiveTranscript={(live) => {
+                  const base = voiceBaseRef.current.trim();
+                  const next = live.trim()
+                    ? base
+                      ? `${base} ${live.trim()}`
+                      : live.trim()
+                    : base;
+                  setMessage(next.slice(0, COMPOSE_MAX_CHARS));
+                }}
+                onAudioChange={setAudioBlob}
+                className="min-w-0 flex-[4]"
+              />
               <PolishButton
                 text={message}
                 locale={locale}
@@ -294,7 +305,7 @@ export function SchoolFlow({ initialLocale }: { initialLocale?: string }) {
                 errorLabel={t.errorGeneric}
                 disabled={busy}
                 compact
-                className="min-w-0 flex-1 self-start"
+                className="min-w-0 flex-[1] self-start"
                 onPolished={(text) =>
                   setMessage(text.slice(0, COMPOSE_MAX_CHARS))
                 }

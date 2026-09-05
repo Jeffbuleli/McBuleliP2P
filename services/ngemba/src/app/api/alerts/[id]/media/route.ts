@@ -2,7 +2,12 @@ import { NextResponse } from "next/server";
 import { readCitizenToken } from "@/lib/citizen/token";
 import { MEDIA_MAX_PER_SESSION, MEDIA_MAX_PHOTOS } from "@/lib/media/types";
 import { saveMedia } from "@/lib/media/store";
-import { addSessionMedia, getSession } from "@/lib/sessions/store";
+import { transcribeAudioIfConfigured } from "@/lib/media/transcribe";
+import {
+  addSessionMedia,
+  getSession,
+  setMediaTranscription,
+} from "@/lib/sessions/store";
 import { clientIp, rateLimit, rateLimitResponse } from "@/lib/security/rate-limit";
 import { requireOpsAuth } from "@/lib/ops/auth";
 
@@ -64,11 +69,18 @@ export async function POST(req: Request, ctx: Ctx) {
   }
 
   try {
-    // Audio: humains ecoutent - pas de transcription Whisper.
     const attachment = await saveMedia({ sessionId: id, file });
-    const updated = addSessionMedia(id, attachment);
+    let updated = addSessionMedia(id, attachment);
     if (!updated) {
       return NextResponse.json({ error: "not_found" }, { status: 404 });
+    }
+
+    if (attachment.kind === "audio") {
+      const transcription = await transcribeAudioIfConfigured(id, attachment);
+      if (transcription) {
+        updated =
+          setMediaTranscription(id, attachment.id, transcription) ?? updated;
+      }
     }
 
     return NextResponse.json({

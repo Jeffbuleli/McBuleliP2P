@@ -6,8 +6,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ComposePhotos } from "@/components/compose-photos";
 import { IconEye, IconShield, IconSpark } from "@/components/icons";
 import { PolishButton } from "@/components/polish-button";
-import { SosAudioPanel } from "@/components/sos-audio-panel";
 import { TrustedContactsEditor } from "@/components/trusted-contacts-editor";
+import { VoiceButton } from "@/components/voice-button";
 import { useCitizenLocale } from "@/hooks/use-citizen-locale";
 import { COMPOSE_MAX_CHARS } from "@/lib/compose/limits";
 import { uploadPendingMedia } from "@/lib/compose/upload-pending";
@@ -59,6 +59,7 @@ export function SosFlow({
   const [step, setStep] = useState<Step>("tell");
   const [message, setMessage] = useState("");
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const voiceBaseRef = useRef("");
   const [photos, setPhotos] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -123,6 +124,16 @@ export function SosFlow({
     // Internal marker for media-only alerts (ops UI); triage gets a clear summary.
     if (audioBlob || photos.length) return "·";
     return trimmed;
+  }
+
+  function applyLiveTranscript(live: string) {
+    const base = voiceBaseRef.current.trim();
+    const next = live.trim()
+      ? base
+        ? `${base} ${live.trim()}`
+        : live.trim()
+      : base;
+    setMessage(next.slice(0, COMPOSE_MAX_CHARS));
   }
 
   async function submit(opts: {
@@ -311,18 +322,20 @@ export function SosFlow({
             </span>
           </div>
           <div className="flex flex-col gap-3">
-            <SosAudioPanel
-              recordLabel={t.voiceRecord}
-              listeningLabel={t.voiceListening}
-              importLabel={t.voiceImport}
-              changeLabel={t.voiceChange}
-              tooLargeLabel={t.voiceTooLarge}
-              unsupportedLabel={t.voiceUnsupported}
-              onAudioChange={setAudioBlob}
-              discrete={discrete}
-              className="w-full"
-            />
             <div className="flex w-full items-start gap-2">
+              <VoiceButton
+                locale={locale}
+                label={t.voiceRecord}
+                listeningLabel={t.voiceListening}
+                unsupportedLabel={t.voiceUnsupported}
+                onRecordingChange={(on) => {
+                  if (on) voiceBaseRef.current = message;
+                }}
+                onLiveTranscript={applyLiveTranscript}
+                onAudioChange={setAudioBlob}
+                discrete={discrete}
+                className="min-w-0 flex-[4]"
+              />
               <PolishButton
                 text={message}
                 locale={locale}
@@ -333,7 +346,7 @@ export function SosFlow({
                 discrete={discrete}
                 disabled={busy}
                 compact
-                className="min-w-0 flex-1 self-start"
+                className="min-w-0 flex-[1] self-start"
                 onPolished={(text) =>
                   setMessage(text.slice(0, COMPOSE_MAX_CHARS))
                 }
