@@ -44,8 +44,7 @@ export default function TelechargerPage() {
 
           <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm leading-relaxed text-ng-text">
             <li>
-              Android (Chrome) : menu ⋮ → <strong>Installer l&apos;application</strong>{" "}
-              (ou le bouton ci-dessous).
+              Android (Chrome) : menu ⋮ → <strong>Installer l&apos;application</strong>.
             </li>
             <li>
               iPhone (Safari) : Partager → <strong>Sur l&apos;écran d&apos;accueil</strong>.
@@ -54,10 +53,9 @@ export default function TelechargerPage() {
           </ol>
 
           <PwaInstallButton
-            variant="primary"
-            label="Installer NGEMBA"
+            label="Installer"
             iosHint="Sur iPhone : ouvrez ce site dans Safari, puis Partager → Sur l'écran d'accueil."
-            manualHint="Si le bouton d'installation n'apparaît pas, utilisez le menu du navigateur → Installer l'application / Ajouter à l'écran d'accueil."
+            manualHint="Le navigateur propose souvent l'installation lui-même. Sinon : menu → Installer l'application / Ajouter à l'écran d'accueil."
           />
         </div>
       </div>

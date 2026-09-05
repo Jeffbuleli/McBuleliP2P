@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   IconCheck,
-  IconDownload,
   IconEye,
   IconGraduation,
   IconHeart,
@@ -13,9 +12,8 @@ import {
   IconUsers,
 } from "@/components/icons";
 import { PoweredByMcbuleli } from "@/components/powered-by-mcbuleli";
-import { PwaInstallButton } from "@/components/pwa-install";
+import { PwaInstallReminder } from "@/components/pwa-install";
 import { useCitizenLocale } from "@/hooks/use-citizen-locale";
-import { ngembaInstallUrl } from "@/lib/install";
 import {
   localeLabels,
   locales,
@@ -219,15 +217,6 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
         </p>
 
         <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-[10px] text-ng-muted md:text-[11px]">
-          <PwaInstallButton label={t.installApp} iosHint={t.installIos} />
-          <Link
-            href={ngembaInstallUrl()}
-            className="inline-flex items-center gap-1 font-semibold text-ng-primary hover:underline"
-          >
-            <IconDownload className="size-3.5" />
-            {t.installAndroid}
-          </Link>
-          <span aria-hidden>·</span>
           <Link href={href("/legal/confidentialite")} className="underline">
             {t.privacyLink}
           </Link>
@@ -236,6 +225,13 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
             {t.cguLink}
           </Link>
         </p>
+
+        <PwaInstallReminder
+          reminder={t.installReminder}
+          installLabel={t.installApp}
+          laterLabel={t.installLater}
+          iosHint={t.installIos}
+        />
 
         <PoweredByMcbuleli className="pt-1" />
       </section>

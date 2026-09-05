@@ -27,7 +27,8 @@ type Copy = {
   language: string;
   installApp: string;
   installIos: string;
-  installAndroid: string;
+  installReminder: string;
+  installLater: string;
   back: string;
   tell: string;
   witnessTell: string;
@@ -116,8 +117,9 @@ const baseFr: Copy = {
   polishing: "Clarification...",
   language: "Langue",
   installApp: "Installer",
-  installIos: "Sur iPhone : Partager - Sur l'écran d'accueil",
-  installAndroid: "Installer l'app",
+  installIos: "Sur iPhone : Partager → Sur l'écran d'accueil",
+  installReminder: "Ajoutez NGEMBA à l'écran d'accueil pour un accès plus rapide.",
+  installLater: "Plus tard",
   back: "Retour",
   tell: "Que se passe-t-il ?",
   witnessTell: "Que voyez-vous ?",
@@ -209,8 +211,9 @@ export const messages: Record<Locale, Copy> = {
     polishing: "Clarification...",
     language: "Language",
     installApp: "Install",
-    installIos: "On iPhone: Share - On home screen",
-    installAndroid: "Install app",
+    installIos: "On iPhone: Share → Add to Home Screen",
+    installReminder: "Add NGEMBA to your home screen for quicker access.",
+    installLater: "Later",
     back: "Back",
     tell: "What's happening?",
     witnessTell: "What do you see?",
@@ -298,8 +301,9 @@ export const messages: Record<Locale, Copy> = {
     polishing: "Kokanga...",
     language: "Lokota",
     installApp: "Kanga",
-    installIos: "Na iPhone: Sanga - Na ekanga ya libanga",
-    installAndroid: "Installer l'app",
+    installIos: "Na iPhone: Sanga → Na ekanga ya libanga",
+    installReminder: "Bakisa NGEMBA na ekanga ya libanga pona kozwa yango noki.",
+    installLater: "Simasi",
     back: "Kembali",
     tell: "Nini ezali kolanda?",
     witnessTell: "Oyo ozwaka nini?",
@@ -387,8 +391,9 @@ export const messages: Record<Locale, Copy> = {
     polishing: "Ufafanuzi...",
     language: "Lugha",
     installApp: "Sakinisha",
-    installIos: "Kwenye iPhone: Shiriki - Kwenye skrini ya nyumbani",
-    installAndroid: "Installer l'app",
+    installIos: "Kwenye iPhone: Shiriki → Kwenye skrini ya nyumbani",
+    installReminder: "Ongeza NGEMBA kwenye skrini ya nyumbani kwa ufikiaji wa haraka.",
+    installLater: "Baadaye",
     back: "Rudi",
     tell: "Nini kinaendelea?",
     witnessTell: "Unaona nini?",
@@ -476,8 +481,9 @@ export const messages: Record<Locale, Copy> = {
     polishing: "Kokanga...",
     language: "Ludimi",
     installApp: "Kanga",
-    installIos: "Na iPhone: Sanga - Na ekanga ya libanga",
-    installAndroid: "Installer l'app",
+    installIos: "Na iPhone: Sanga → Na ekanga ya libanga",
+    installReminder: "Bakisa NGEMBA ku dikanga dia ntuala.",
+    installLater: "Kala",
     back: "Tshienda",
     tell: "Nani ezali kolanda?",
     witnessTell: "Oyo ozwaka nini?",
@@ -565,8 +571,9 @@ export const messages: Record<Locale, Copy> = {
     polishing: "Kokanga...",
     language: "Ndinga",
     installApp: "Kanga",
-    installIos: "Na iPhone: Sanga - Na ekanga ya libanga",
-    installAndroid: "Installer l'app",
+    installIos: "Na iPhone: Sanga → Na ekanga ya libanga",
+    installReminder: "Bakisa NGEMBA na ekanga ya libanga pona kozwa yango noki.",
+    installLater: "Simasi",
     back: "Kembali",
     tell: "Nani ezali kolanda?",
     witnessTell: "Oyo ozwaka nini?",
