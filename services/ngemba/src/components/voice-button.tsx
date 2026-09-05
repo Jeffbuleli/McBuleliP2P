@@ -15,7 +15,9 @@ type Props = {
   label: string;
   listeningLabel: string;
   unsupportedLabel: string;
-  onText: (text: string) => void;
+  /** Full live transcript for this take (finals + interim). Parent replaces voice segment. */
+  onLiveTranscript: (text: string) => void;
+  onRecordingChange?: (recording: boolean) => void;
   onAudioChange?: (blob: Blob | null) => void;
   discrete?: boolean;
   className?: string;
@@ -35,10 +37,11 @@ type Rec = {
         }>;
       }) => void)
     | null;
-  onerror: (() => void) | null;
+  onerror: ((ev?: { error?: string }) => void) | null;
   onend: (() => void) | null;
   start: () => void;
   stop: () => void;
+  abort?: () => void;
 };
 
 const LANG_MAP: Record<string, string> = {
@@ -74,7 +77,7 @@ function pickMime(): string {
 }
 
 function formatSec(sec: number) {
-  const s = Math.max(0, Math.ceil(sec));
+  const s = Math.max(0, Math.floor(sec));
   const m = Math.floor(s / 60);
   const r = s % 60;
   return `${m}:${r.toString().padStart(2, "0")}`;
@@ -85,7 +88,8 @@ export function VoiceButton({
   label,
   listeningLabel,
   unsupportedLabel,
-  onText,
+  onLiveTranscript,
+  onRecordingChange,
   onAudioChange,
   discrete = false,
   className = "",
@@ -94,8 +98,10 @@ export function VoiceButton({
   const [recording, setRecording] = useState(false);
   const [leftSec, setLeftSec] = useState(COMPOSE_VOICE_MAX_SEC);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [durationLabel, setDurationLabel] = useState<string | null>(null);
+  const [durationSec, setDurationSec] = useState(0);
   const [preparing, setPreparing] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const [playhead, setPlayhead] = useState(0);
 
   const mediaRecRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
@@ -103,8 +109,11 @@ export function VoiceButton({
   const speechRef = useRef<Rec | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioUrlRef = useRef<string | null>(null);
+  const audioElRef = useRef<HTMLAudioElement | null>(null);
   const startedAtRef = useRef(0);
   const preparingGenRef = useRef(0);
+  const recordingRef = useRef(false);
+  const finalsRef = useRef("");
 
   useEffect(() => {
     setRecSupported(
@@ -122,6 +131,12 @@ export function VoiceButton({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  function setRecordingState(v: boolean) {
+    recordingRef.current = v;
+    setRecording(v);
+    onRecordingChange?.(v);
+  }
+
   function clearTimer() {
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -130,12 +145,21 @@ export function VoiceButton({
   }
 
   function stopSpeech() {
-    try {
-      speechRef.current?.stop();
-    } catch {
-      // ignore
-    }
+    const speech = speechRef.current;
     speechRef.current = null;
+    if (!speech) return;
+    try {
+      speech.onend = null;
+      speech.onresult = null;
+      speech.onerror = null;
+      speech.stop();
+    } catch {
+      try {
+        speech.abort?.();
+      } catch {
+        // ignore
+      }
+    }
   }
 
   function stopStream() {
@@ -149,6 +173,7 @@ export function VoiceButton({
     const rec = mediaRecRef.current;
     if (rec && rec.state !== "inactive") {
       try {
+        if (rec.state === "recording") rec.requestData();
         rec.stop();
       } catch {
         // ignore
@@ -156,16 +181,22 @@ export function VoiceButton({
     }
     mediaRecRef.current = null;
     stopStream();
-    if (!silent) setRecording(false);
+    if (!silent) setRecordingState(false);
   }
 
   function revokePreview() {
+    if (audioElRef.current) {
+      audioElRef.current.pause();
+      audioElRef.current = null;
+    }
     if (audioUrlRef.current) {
       URL.revokeObjectURL(audioUrlRef.current);
       audioUrlRef.current = null;
     }
     setAudioUrl(null);
-    setDurationLabel(null);
+    setDurationSec(0);
+    setPlayhead(0);
+    setPlaying(false);
   }
 
   function deleteAudio() {
@@ -175,6 +206,7 @@ export function VoiceButton({
     onAudioChange?.(null);
     setLeftSec(COMPOSE_VOICE_MAX_SEC);
     setPreparing(false);
+    finalsRef.current = "";
   }
 
   function publishBlob(blob: Blob, elapsedSec: number) {
@@ -182,8 +214,63 @@ export function VoiceButton({
     if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
     audioUrlRef.current = url;
     setAudioUrl(url);
-    setDurationLabel(formatSec(elapsedSec));
+    setDurationSec(elapsedSec);
+    setPlayhead(0);
+    setPlaying(false);
     onAudioChange?.(blob);
+  }
+
+  function emitTranscript(finals: string, interim = "") {
+    const live = [finals, interim].filter(Boolean).join(" ").trim();
+    onLiveTranscript(live);
+  }
+
+  function startSpeech() {
+    const SR = getSpeechRecognition();
+    if (!SR) return;
+    stopSpeech();
+    const speech = new SR();
+    speechRef.current = speech;
+    speech.lang = LANG_MAP[locale] || "fr-FR";
+    speech.continuous = true;
+    speech.interimResults = true;
+    speech.maxAlternatives = 1;
+    speech.onresult = (event) => {
+      let interim = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const r = event.results[i];
+        const t = r?.[0]?.transcript?.trim();
+        if (!t) continue;
+        if (r.isFinal) {
+          finalsRef.current = finalsRef.current
+            ? `${finalsRef.current} ${t}`
+            : t;
+        } else {
+          interim = interim ? `${interim} ${t}` : t;
+        }
+      }
+      emitTranscript(finalsRef.current, interim);
+    };
+    speech.onerror = () => {
+      // network / no-speech: keep recording audio; STT may restart onend
+    };
+    speech.onend = () => {
+      if (!recordingRef.current) return;
+      // Chrome stops continuous recognition periodically — restart while mic is open.
+      window.setTimeout(() => {
+        if (!recordingRef.current || speechRef.current !== speech) return;
+        try {
+          speech.start();
+        } catch {
+          // ignore
+        }
+      }, 120);
+    };
+    try {
+      speech.start();
+    } catch {
+      // STT optional
+    }
   }
 
   async function startRecording() {
@@ -192,10 +279,18 @@ export function VoiceButton({
     revokePreview();
     onAudioChange?.(null);
     chunksRef.current = [];
+    finalsRef.current = "";
+    emitTranscript("");
 
     let stream: MediaStream;
     try {
-      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          channelCount: 1,
+        },
+      });
     } catch {
       setRecSupported(false);
       return;
@@ -208,7 +303,7 @@ export function VoiceButton({
       : new MediaRecorder(stream);
     mediaRecRef.current = mediaRec;
     mediaRec.ondataavailable = (e) => {
-      if (e.data.size > 0) chunksRef.current.push(e.data);
+      if (e.data && e.data.size > 0) chunksRef.current.push(e.data);
     };
     mediaRec.onstop = () => {
       const elapsedSec = Math.max(
@@ -220,10 +315,10 @@ export function VoiceButton({
       const blob = new Blob(chunksRef.current, { type });
       chunksRef.current = [];
       stopStream();
-      setRecording(false);
+      setRecordingState(false);
       clearTimer();
 
-      if (blob.size < 64) {
+      if (blob.size < 32) {
         setPreparing(false);
         return;
       }
@@ -232,13 +327,11 @@ export function VoiceButton({
       setPreparing(true);
       void (async () => {
         try {
-          // WebM MediaRecorder → souvent 0:00/0:00 ; WAV a une vraie durée.
           const playable = await toPlayableWavBlob(blob);
           if (gen !== preparingGenRef.current) return;
           publishBlob(playable, elapsedSec);
         } catch {
           if (gen !== preparingGenRef.current) return;
-          // Fallback: blob brut (envoi OK, preview parfois limitée)
           publishBlob(blob, elapsedSec);
         } finally {
           if (gen === preparingGenRef.current) setPreparing(false);
@@ -246,40 +339,12 @@ export function VoiceButton({
       })();
     };
 
-    // Un seul blob final (pas de timeslice) = fichier plus propre.
-    mediaRec.start();
+    // Timeslice: some Android Chrome only flush chunks with a timeslice.
+    mediaRec.start(250);
     startedAtRef.current = Date.now();
     setLeftSec(COMPOSE_VOICE_MAX_SEC);
-    setRecording(true);
-
-    const SR = getSpeechRecognition();
-    if (SR) {
-      const speech = new SR();
-      speechRef.current = speech;
-      speech.lang = LANG_MAP[locale] || "fr-FR";
-      speech.continuous = true;
-      speech.interimResults = true;
-      speech.maxAlternatives = 1;
-      let lastFinal = "";
-      speech.onresult = (event) => {
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const r = event.results[i];
-          const t = r?.[0]?.transcript?.trim();
-          if (!t || !r.isFinal) continue;
-          if (t !== lastFinal) {
-            lastFinal = t;
-            onText(t);
-          }
-        }
-      };
-      speech.onerror = () => {};
-      speech.onend = () => {};
-      try {
-        speech.start();
-      } catch {
-        // STT optional
-      }
-    }
+    setRecordingState(true);
+    startSpeech();
 
     clearTimer();
     timerRef.current = setInterval(() => {
@@ -291,20 +356,54 @@ export function VoiceButton({
   }
 
   function stopRecording() {
-    stopSpeech();
     clearTimer();
+    // Let last STT finals flush briefly before killing recognition.
+    window.setTimeout(() => stopSpeech(), 280);
     const rec = mediaRecRef.current;
     if (rec && rec.state !== "inactive") {
       try {
+        if (rec.state === "recording") rec.requestData();
         rec.stop();
       } catch {
-        setRecording(false);
+        setRecordingState(false);
         stopStream();
       }
     } else {
-      setRecording(false);
+      setRecordingState(false);
       stopStream();
     }
+  }
+
+  function togglePlay() {
+    const url = audioUrlRef.current;
+    if (!url) return;
+    let el = audioElRef.current;
+    if (!el) {
+      el = new Audio(url);
+      audioElRef.current = el;
+      el.preload = "auto";
+      el.onended = () => {
+        setPlaying(false);
+        setPlayhead(durationSec);
+      };
+      el.ontimeupdate = () => {
+        setPlayhead(el?.currentTime || 0);
+      };
+      el.onloadedmetadata = () => {
+        if (el && Number.isFinite(el.duration) && el.duration > 0) {
+          setDurationSec(el.duration);
+        }
+      };
+    }
+    if (playing) {
+      el.pause();
+      setPlaying(false);
+      return;
+    }
+    void el.play().then(
+      () => setPlaying(true),
+      () => setPlaying(false),
+    );
   }
 
   if (!recSupported) {
@@ -338,29 +437,35 @@ export function VoiceButton({
         </p>
       ) : audioUrl ? (
         <div
-          className={`flex min-h-11 w-full items-center gap-1 rounded-xl px-1.5 py-1 ${
+          className={`flex min-h-11 w-full items-center gap-1.5 rounded-xl px-2 py-1 ${
             discrete ? "bg-white/10" : "bg-ng-primary-muted"
           }`}
           role="group"
           aria-label="Fichier audio"
         >
-          <audio
-            key={audioUrl}
-            controls
-            preload="auto"
-            src={audioUrl}
-            className="min-w-0 flex-1"
-            style={{ height: 36 }}
-          />
-          {durationLabel ? (
-            <span
-              className={`shrink-0 px-1 text-[11px] font-semibold tabular-nums ${
-                discrete ? "text-[#c9a0bc]" : "text-ng-primary"
-              }`}
-            >
-              {durationLabel}
-            </span>
-          ) : null}
+          <button
+            type="button"
+            onClick={togglePlay}
+            className={`inline-flex size-9 shrink-0 items-center justify-center rounded-lg font-bold ${
+              discrete ? "text-[#e8d4e3]" : "text-ng-primary"
+            }`}
+            aria-label={playing ? "Pause" : "Lecture"}
+          >
+            {playing ? (
+              <IconStop className="size-4" />
+            ) : (
+              <span className="text-sm leading-none" aria-hidden>
+                ▶
+              </span>
+            )}
+          </button>
+          <span
+            className={`min-w-0 flex-1 truncate text-[11px] font-semibold tabular-nums ${
+              discrete ? "text-[#c9a0bc]" : "text-ng-primary"
+            }`}
+          >
+            {formatSec(playhead)} / {formatSec(durationSec)}
+          </span>
           <button
             type="button"
             onClick={() => void startRecording()}

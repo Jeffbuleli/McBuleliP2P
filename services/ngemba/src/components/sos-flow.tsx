@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ComposePhotos } from "@/components/compose-photos";
 import { IconEye, IconShield, IconSpark } from "@/components/icons";
 import { PolishButton } from "@/components/polish-button";
@@ -59,6 +59,7 @@ export function SosFlow({
   const [step, setStep] = useState<Step>("tell");
   const [message, setMessage] = useState("");
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const voiceBaseRef = useRef("");
   const [photos, setPhotos] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -201,11 +202,14 @@ export function SosFlow({
     );
   }
 
-  function appendVoiceText(text: string) {
-    setMessage((prev) => {
-      const next = prev ? `${prev} ${text}` : text;
-      return next.slice(0, COMPOSE_MAX_CHARS);
-    });
+  function applyLiveTranscript(live: string) {
+    const base = voiceBaseRef.current.trim();
+    const next = live.trim()
+      ? base
+        ? `${base} ${live.trim()}`
+        : live.trim()
+      : base;
+    setMessage(next.slice(0, COMPOSE_MAX_CHARS));
   }
 
   return (
@@ -304,7 +308,10 @@ export function SosFlow({
                 label={t.voice}
                 listeningLabel={t.voiceListening}
                 unsupportedLabel={t.voiceUnsupported}
-                onText={appendVoiceText}
+                onRecordingChange={(on) => {
+                  if (on) voiceBaseRef.current = message;
+                }}
+                onLiveTranscript={applyLiveTranscript}
                 onAudioChange={setAudioBlob}
                 discrete={discrete}
                 className="min-w-0 flex-[4]"

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ComposePhotos } from "@/components/compose-photos";
 import { IconShield, IconSpark } from "@/components/icons";
 import { PolishButton } from "@/components/polish-button";
@@ -44,6 +44,7 @@ export function SchoolFlow({ initialLocale }: { initialLocale?: string }) {
   const [message, setMessage] = useState("");
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [photos, setPhotos] = useState<File[]>([]);
+  const voiceBaseRef = useRef("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hint, setHint] = useState<string | null>(null);
@@ -252,12 +253,18 @@ export function SchoolFlow({ initialLocale }: { initialLocale?: string }) {
                 label={t.voice}
                 listeningLabel={t.voiceListening}
                 unsupportedLabel={t.voiceUnsupported}
-                onText={(text) =>
-                  setMessage((prev) => {
-                    const next = prev ? `${prev} ${text}` : text;
-                    return next.slice(0, COMPOSE_MAX_CHARS);
-                  })
-                }
+                onRecordingChange={(on) => {
+                  if (on) voiceBaseRef.current = message;
+                }}
+                onLiveTranscript={(live) => {
+                  const base = voiceBaseRef.current.trim();
+                  const next = live.trim()
+                    ? base
+                      ? `${base} ${live.trim()}`
+                      : live.trim()
+                    : base;
+                  setMessage(next.slice(0, COMPOSE_MAX_CHARS));
+                }}
                 onAudioChange={setAudioBlob}
                 className="min-w-0 flex-[4]"
               />
