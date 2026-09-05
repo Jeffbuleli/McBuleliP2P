@@ -4,7 +4,7 @@
  * Direct file: /downloads/ngemba-rdc.apk (served from public/).
  */
 export const NGEMBA_APK_BUILD_PAGE =
-  "https://expo.dev/accounts/mcbuleli-inc/projects/ngemba/builds/2487d515-ffa0-48f2-89ce-26afe344b673";
+  "https://expo.dev/accounts/mcbuleli-inc/projects/ngemba/builds/d53eea19-6402-4e00-bde3-72e08bf0ecaf";
 
 export const NGEMBA_APK_INSTALL_PAGE = "/telecharger";
 
