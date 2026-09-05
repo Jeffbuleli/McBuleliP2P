@@ -4,8 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { IconUpload, IconWaveform } from "@/components/icons";
 import { AUDIO_MAX_BYTES } from "@/lib/media/types";
 
-const ACCEPT =
-  "audio/mpeg,audio/mp3,audio/mp4,audio/wav,audio/x-wav,audio/webm,audio/ogg,audio/aac,audio/x-m4a,.mp3,.m4a,.wav,.webm,.ogg,.aac";
+const ACCEPT = "audio/*,.mp3,.wav,.m4a,.ogg,.webm,.aac";
 
 function mimeFromName(name: string): string | null {
   const lower = name.toLowerCase();
@@ -24,11 +23,16 @@ function normalizeAudioFile(file: File): File {
   const resolved =
     mime === "audio/mp3" || mime === "audio/mpeg"
       ? "audio/mpeg"
-      : mime.startsWith("audio/")
-        ? mime
-        : fromName || "audio/mpeg";
+      : mime === "audio/wave" || mime === "audio/x-wav"
+        ? "audio/wav"
+        : mime.startsWith("audio/")
+          ? mime
+          : fromName || "audio/mpeg";
   if (file.type === resolved) return file;
-  return new File([file], file.name, { type: resolved, lastModified: file.lastModified });
+  return new File([file], file.name, {
+    type: resolved,
+    lastModified: file.lastModified,
+  });
 }
 
 type Props = {
@@ -39,6 +43,8 @@ type Props = {
   onAudioChange: (blob: Blob | null) => void;
   discrete?: boolean;
   className?: string;
+  /** Parent clears this side when the other audio source is used. */
+  resetToken?: number;
 };
 
 export function AudioUploadButton({
@@ -49,6 +55,7 @@ export function AudioUploadButton({
   onAudioChange,
   discrete = false,
   className = "",
+  resetToken = 0,
 }: Props) {
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -69,6 +76,16 @@ export function AudioUploadButton({
   useEffect(() => {
     return () => revokeUrl();
   }, []);
+
+  useEffect(() => {
+    if (resetToken === 0) return;
+    revokeUrl();
+    setPreviewUrl(null);
+    setFileName(null);
+    setSizeLabel(null);
+    setError(null);
+    if (inputRef.current) inputRef.current.value = "";
+  }, [resetToken]);
 
   function clear() {
     revokeUrl();

@@ -18,12 +18,18 @@ const MEDIA_ROOT = path.join(process.cwd(), "data", "media");
 
 function kindFromMime(mime: string): MediaKind | null {
   const normalized =
-    mime === "audio/mp3" ? "audio/mpeg" : mime === "audio/x-wav" ? "audio/wav" : mime;
+    mime === "audio/mp3"
+      ? "audio/mpeg"
+      : mime === "audio/x-wav" || mime === "audio/wave"
+        ? "audio/wav"
+        : mime === "audio/m4a"
+          ? "audio/mp4"
+          : mime;
   for (const [kind, cfg] of Object.entries(ALLOWED_MEDIA) as [
     MediaKind,
     (typeof ALLOWED_MEDIA)[MediaKind],
   ][]) {
-    if (cfg.mimes.includes(normalized)) return kind;
+    if (cfg.mimes.includes(normalized) || cfg.mimes.includes(mime)) return kind;
   }
   return null;
 }

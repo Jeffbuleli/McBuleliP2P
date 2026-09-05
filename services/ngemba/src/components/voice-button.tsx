@@ -3,24 +3,26 @@
 import { useEffect, useRef, useState } from "react";
 import {
   IconMic,
+  IconPlay,
   IconStop,
   IconTrash,
   IconWaveform,
 } from "@/components/icons";
-import { toPlayableWavBlob } from "@/lib/compose/audio-playable";
 import { COMPOSE_VOICE_MAX_SEC } from "@/lib/compose/limits";
 
 type Props = {
-  locale: string;
   label: string;
   listeningLabel: string;
   unsupportedLabel: string;
-  /** Full live transcript for this take (finals + interim). Parent replaces voice segment. */
-  onLiveTranscript: (text: string) => void;
+  /** Optional live STT into parent text (off by default for SOS). */
+  onLiveTranscript?: (text: string) => void;
+  locale?: string;
   onRecordingChange?: (recording: boolean) => void;
   onAudioChange?: (blob: Blob | null) => void;
   discrete?: boolean;
   className?: string;
+  /** When parent clears audio from the other source (import). */
+  resetToken?: number;
 };
 
 type Rec = {
@@ -62,18 +64,27 @@ function getSpeechRecognition(): (new () => Rec) | null {
   return w.SpeechRecognition || w.webkitSpeechRecognition || null;
 }
 
+/** Never force wav/mp3 - browsers only support a subset. */
 function pickMime(): string {
   if (typeof MediaRecorder === "undefined") return "";
-  const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
-  const isSafari =
-    /Safari/i.test(ua) && !/Chrome|Chromium|Edg|Android/i.test(ua);
-  const order = isSafari
-    ? ["audio/mp4", "audio/aac", "audio/webm"]
-    : ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg"];
-  for (const m of order) {
-    if (MediaRecorder.isTypeSupported(m)) return m;
-  }
-  return "";
+  const candidates = [
+    "audio/webm;codecs=opus",
+    "audio/webm",
+    "audio/mp4",
+    "audio/ogg;codecs=opus",
+    "audio/ogg",
+    "audio/aac",
+  ];
+  return candidates.find((t) => MediaRecorder.isTypeSupported(t)) ?? "";
+}
+
+function extForMime(mime: string): string {
+  const base = mime.split(";")[0].trim().toLowerCase();
+  if (base.includes("mp4") || base.includes("aac") || base.includes("m4a"))
+    return "m4a";
+  if (base.includes("ogg")) return "ogg";
+  if (base.includes("wav")) return "wav";
+  return "webm";
 }
 
 function formatSec(sec: number) {
@@ -84,24 +95,22 @@ function formatSec(sec: number) {
 }
 
 export function VoiceButton({
-  locale,
   label,
   listeningLabel,
   unsupportedLabel,
   onLiveTranscript,
+  locale = "fr",
   onRecordingChange,
   onAudioChange,
   discrete = false,
   className = "",
+  resetToken = 0,
 }: Props) {
   const [recSupported, setRecSupported] = useState(false);
   const [recording, setRecording] = useState(false);
   const [leftSec, setLeftSec] = useState(COMPOSE_VOICE_MAX_SEC);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [durationSec, setDurationSec] = useState(0);
-  const [preparing, setPreparing] = useState(false);
-  const [playing, setPlaying] = useState(false);
-  const [playhead, setPlayhead] = useState(0);
+  const [fileMeta, setFileMeta] = useState<string | null>(null);
 
   const mediaRecRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
@@ -109,11 +118,10 @@ export function VoiceButton({
   const speechRef = useRef<Rec | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioUrlRef = useRef<string | null>(null);
-  const audioElRef = useRef<HTMLAudioElement | null>(null);
   const startedAtRef = useRef(0);
-  const preparingGenRef = useRef(0);
   const recordingRef = useRef(false);
   const finalsRef = useRef("");
+  const mimeRef = useRef("");
 
   useEffect(() => {
     setRecSupported(
@@ -130,6 +138,12 @@ export function VoiceButton({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (resetToken === 0) return;
+    deleteAudio(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resetToken]);
 
   function setRecordingState(v: boolean) {
     recordingRef.current = v;
@@ -185,47 +199,45 @@ export function VoiceButton({
   }
 
   function revokePreview() {
-    if (audioElRef.current) {
-      audioElRef.current.pause();
-      audioElRef.current = null;
-    }
     if (audioUrlRef.current) {
       URL.revokeObjectURL(audioUrlRef.current);
       audioUrlRef.current = null;
     }
     setAudioUrl(null);
-    setDurationSec(0);
-    setPlayhead(0);
-    setPlaying(false);
+    setFileMeta(null);
   }
 
-  function deleteAudio() {
-    preparingGenRef.current += 1;
+  function deleteAudio(silentParent = false) {
     stopAll(true);
     revokePreview();
-    onAudioChange?.(null);
     setLeftSec(COMPOSE_VOICE_MAX_SEC);
-    setPreparing(false);
     finalsRef.current = "";
+    if (!silentParent) onAudioChange?.(null);
   }
 
   function publishBlob(blob: Blob, elapsedSec: number) {
-    const url = URL.createObjectURL(blob);
+    const mime = blob.type || mimeRef.current || "audio/webm";
+    const file = new File(
+      [blob],
+      `ngemba-${Date.now()}.${extForMime(mime)}`,
+      { type: mime },
+    );
+    const url = URL.createObjectURL(file);
     if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
     audioUrlRef.current = url;
     setAudioUrl(url);
-    setDurationSec(elapsedSec);
-    setPlayhead(0);
-    setPlaying(false);
-    onAudioChange?.(blob);
+    setFileMeta(`${formatSec(elapsedSec)} · ${extForMime(mime)}`);
+    onAudioChange?.(file);
   }
 
   function emitTranscript(finals: string, interim = "") {
+    if (!onLiveTranscript) return;
     const live = [finals, interim].filter(Boolean).join(" ").trim();
     onLiveTranscript(live);
   }
 
   function startSpeech() {
+    if (!onLiveTranscript) return;
     const SR = getSpeechRecognition();
     if (!SR) return;
     stopSpeech();
@@ -251,12 +263,9 @@ export function VoiceButton({
       }
       emitTranscript(finalsRef.current, interim);
     };
-    speech.onerror = () => {
-      // network / no-speech: keep recording audio; STT may restart onend
-    };
+    speech.onerror = () => {};
     speech.onend = () => {
       if (!recordingRef.current) return;
-      // Chrome stops continuous recognition periodically - restart while mic is open.
       window.setTimeout(() => {
         if (!recordingRef.current || speechRef.current !== speech) return;
         try {
@@ -274,8 +283,7 @@ export function VoiceButton({
   }
 
   async function startRecording() {
-    if (recording || preparing) return;
-    preparingGenRef.current += 1;
+    if (recording) return;
     revokePreview();
     onAudioChange?.(null);
     chunksRef.current = [];
@@ -298,6 +306,7 @@ export function VoiceButton({
     streamRef.current = stream;
 
     const mime = pickMime();
+    mimeRef.current = mime;
     const mediaRec = mime
       ? new MediaRecorder(stream, { mimeType: mime })
       : new MediaRecorder(stream);
@@ -317,29 +326,11 @@ export function VoiceButton({
       stopStream();
       setRecordingState(false);
       clearTimer();
-
-      if (blob.size < 32) {
-        setPreparing(false);
-        return;
-      }
-
-      const gen = ++preparingGenRef.current;
-      setPreparing(true);
-      void (async () => {
-        try {
-          const playable = await toPlayableWavBlob(blob);
-          if (gen !== preparingGenRef.current) return;
-          publishBlob(playable, elapsedSec);
-        } catch {
-          if (gen !== preparingGenRef.current) return;
-          publishBlob(blob, elapsedSec);
-        } finally {
-          if (gen === preparingGenRef.current) setPreparing(false);
-        }
-      })();
+      if (blob.size < 32) return;
+      // Keep native browser format - do not force WAV/MP3.
+      publishBlob(blob, elapsedSec);
     };
 
-    // Timeslice: some Android Chrome only flush chunks with a timeslice.
     mediaRec.start(250);
     startedAtRef.current = Date.now();
     setLeftSec(COMPOSE_VOICE_MAX_SEC);
@@ -357,7 +348,6 @@ export function VoiceButton({
 
   function stopRecording() {
     clearTimer();
-    // Let last STT finals flush briefly before killing recognition.
     window.setTimeout(() => stopSpeech(), 280);
     const rec = mediaRecRef.current;
     if (rec && rec.state !== "inactive") {
@@ -374,38 +364,6 @@ export function VoiceButton({
     }
   }
 
-  function togglePlay() {
-    const url = audioUrlRef.current;
-    if (!url) return;
-    let el = audioElRef.current;
-    if (!el) {
-      el = new Audio(url);
-      audioElRef.current = el;
-      el.preload = "auto";
-      el.onended = () => {
-        setPlaying(false);
-        setPlayhead(durationSec);
-      };
-      el.ontimeupdate = () => {
-        setPlayhead(el?.currentTime || 0);
-      };
-      el.onloadedmetadata = () => {
-        if (el && Number.isFinite(el.duration) && el.duration > 0) {
-          setDurationSec(el.duration);
-        }
-      };
-    }
-    if (playing) {
-      el.pause();
-      setPlaying(false);
-      return;
-    }
-    void el.play().then(
-      () => setPlaying(true),
-      () => setPlaying(false),
-    );
-  }
-
   if (!recSupported) {
     return (
       <p className={`text-xs text-ng-muted ${className}`}>{unsupportedLabel}</p>
@@ -413,84 +371,73 @@ export function VoiceButton({
   }
 
   const btnBase = discrete
-    ? "bg-white/10 text-[#e8d4e3]"
-    : "bg-ng-primary-muted text-ng-primary";
+    ? "border-white/15 bg-white/10 text-[#e8d4e3]"
+    : "border-[var(--ng-border)] bg-ng-surface text-ng-primary";
 
   return (
-    <div className={`flex min-w-0 flex-col gap-1 ${className}`}>
+    <div className={`flex min-w-0 flex-col gap-2 ${className}`}>
       {recording ? (
         <button
           type="button"
           onClick={stopRecording}
-          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-ng-urgent px-3 text-sm font-semibold text-white"
+          className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-ng-urgent px-3 text-sm font-semibold text-white"
           aria-label={listeningLabel}
         >
           <IconWaveform active className="h-5 w-12 text-white" />
           <span className="tabular-nums text-xs">{formatSec(leftSec)}</span>
           <IconStop className="size-4" />
         </button>
-      ) : preparing ? (
-        <p
-          className={`inline-flex min-h-11 w-full items-center justify-center rounded-xl px-3 text-xs font-semibold ${btnBase}`}
-        >
-          Preparation audio…
-        </p>
       ) : audioUrl ? (
         <div
-          className={`flex min-h-11 w-full items-center gap-1.5 rounded-xl px-2 py-1 ${
-            discrete ? "bg-white/10" : "bg-ng-primary-muted"
+          className={`rounded-2xl border px-3 py-3 ${
+            discrete
+              ? "border-white/15 bg-white/5"
+              : "border-[var(--ng-border)] bg-ng-surface"
           }`}
-          role="group"
-          aria-label="Fichier audio"
         >
-          <button
-            type="button"
-            onClick={togglePlay}
-            className={`inline-flex size-9 shrink-0 items-center justify-center rounded-lg font-bold ${
-              discrete ? "text-[#e8d4e3]" : "text-ng-primary"
-            }`}
-            aria-label={playing ? "Pause" : "Lecture"}
-          >
-            {playing ? (
-              <IconStop className="size-4" />
-            ) : (
-              <span className="text-sm leading-none" aria-hidden>
-                ▶
-              </span>
-            )}
-          </button>
-          <span
-            className={`min-w-0 flex-1 truncate text-[11px] font-semibold tabular-nums ${
-              discrete ? "text-[#c9a0bc]" : "text-ng-primary"
-            }`}
-          >
-            {formatSec(playhead)} / {formatSec(durationSec)}
-          </span>
-          <button
-            type="button"
-            onClick={() => void startRecording()}
-            className={`inline-flex size-9 shrink-0 items-center justify-center rounded-lg ${
-              discrete ? "text-[#e8d4e3]" : "text-ng-primary"
-            }`}
-            aria-label="Reenregistrer"
-            title="Reenregistrer"
-          >
-            <IconMic className="size-4" />
-          </button>
-          <button
-            type="button"
-            onClick={deleteAudio}
-            className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-ng-urgent"
-            aria-label="Supprimer"
-          >
-            <IconTrash className="size-4" />
-          </button>
+          <div className="mb-2 flex items-center gap-2">
+            <IconPlay
+              className={`size-4 shrink-0 ${discrete ? "text-[#c9a0bc]" : "text-ng-primary"}`}
+            />
+            <span
+              className={`min-w-0 flex-1 truncate text-[11px] font-semibold ${
+                discrete ? "text-[#c9a0bc]" : "text-ng-muted"
+              }`}
+            >
+              {fileMeta ?? "Audio"}
+            </span>
+            <button
+              type="button"
+              onClick={() => void startRecording()}
+              className={`text-[11px] font-semibold underline ${
+                discrete ? "text-[#e8d4e3]" : "text-ng-primary"
+              }`}
+            >
+              {label}
+            </button>
+            <button
+              type="button"
+              onClick={() => deleteAudio()}
+              className="inline-flex size-8 items-center justify-center rounded-lg text-ng-urgent"
+              aria-label="Supprimer"
+            >
+              <IconTrash className="size-4" />
+            </button>
+          </div>
+          <audio
+            key={audioUrl}
+            controls
+            preload="auto"
+            playsInline
+            className="w-full"
+            src={audioUrl}
+          />
         </div>
       ) : (
         <button
           type="button"
           onClick={() => void startRecording()}
-          className={`inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold ${btnBase}`}
+          className={`inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border px-3 text-sm font-semibold ${btnBase}`}
           aria-label={label}
         >
           <IconMic className="size-5 shrink-0" />

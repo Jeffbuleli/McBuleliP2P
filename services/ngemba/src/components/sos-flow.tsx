@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AudioUploadButton } from "@/components/audio-upload-button";
 import { ComposePhotos } from "@/components/compose-photos";
 import { IconEye, IconShield, IconSpark } from "@/components/icons";
 import { PolishButton } from "@/components/polish-button";
+import { SosAudioPanel } from "@/components/sos-audio-panel";
 import { TrustedContactsEditor } from "@/components/trusted-contacts-editor";
 import { useCitizenLocale } from "@/hooks/use-citizen-locale";
 import { COMPOSE_MAX_CHARS } from "@/lib/compose/limits";
@@ -311,8 +311,10 @@ export function SosFlow({
             </span>
           </div>
           <div className="flex flex-col gap-3">
-            <AudioUploadButton
-              label={t.voice}
+            <SosAudioPanel
+              recordLabel={t.voiceRecord}
+              listeningLabel={t.voiceListening}
+              importLabel={t.voiceImport}
               changeLabel={t.voiceChange}
               tooLargeLabel={t.voiceTooLarge}
               unsupportedLabel={t.voiceUnsupported}
