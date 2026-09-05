@@ -139,12 +139,18 @@ export function SchoolFlow({ initialLocale }: { initialLocale?: string }) {
         setBusy(false);
         return;
       }
-      await uploadPendingMedia({
+      void uploadPendingMedia({
         sessionId: data.id,
         audio: audioBlob,
         photos,
       });
-      router.push(href(`/session/${data.id}`));
+      const dest = href(`/session/${data.id}`);
+      router.push(dest);
+      window.setTimeout(() => {
+        if (!window.location.pathname.includes(`/session/${data.id}`)) {
+          window.location.assign(dest);
+        }
+      }, 1200);
     } catch {
       setError(t.errorGeneric);
       setBusy(false);

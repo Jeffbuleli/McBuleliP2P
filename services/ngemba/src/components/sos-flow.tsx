@@ -159,13 +159,22 @@ export function SosFlow({
         setBusy(false);
         return;
       }
-      await uploadPendingMedia({
+      // Never block confirmation on media upload (large audio / nginx).
+      void uploadPendingMedia({
         sessionId: data.id,
         audio: audioBlob,
         photos,
       });
       if (discrete) vibrateDiscreteConfirm();
-      router.push(`${href(`/session/${data.id}`)}${discrete ? "&discrete=1" : ""}`);
+      const dest = discrete
+        ? `${href(`/session/${data.id}`)}&discrete=1`
+        : href(`/session/${data.id}`);
+      router.push(dest);
+      window.setTimeout(() => {
+        if (!window.location.pathname.includes(`/session/${data.id}`)) {
+          window.location.assign(dest);
+        }
+      }, 1200);
     } catch {
       setError(t.errorGeneric);
       setBusy(false);
@@ -450,15 +459,15 @@ export function SosFlow({
               }
               className="min-h-12 rounded-2xl border border-[var(--ng-border)] bg-ng-surface px-4 text-sm font-semibold text-ng-primary disabled:opacity-50"
             >
-              {t.usePlace}
+              {busy ? t.sending : t.usePlace}
             </button>
             <button
               type="button"
               disabled={busy}
               onClick={() => void submit({})}
-              className="min-h-11 text-sm font-medium text-ng-muted"
+              className="min-h-11 text-sm font-medium text-ng-muted disabled:opacity-50"
             >
-              {t.skipGps}
+              {busy ? t.sending : t.skipGps}
             </button>
           </div>
         </section>

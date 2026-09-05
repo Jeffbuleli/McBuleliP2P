@@ -1,9 +1,12 @@
-/** Upload local audio + photos right after alert creation. */
+/** Upload local audio + photos right after alert creation (best-effort). */
 export async function uploadPendingMedia(opts: {
   sessionId: string;
   audio: Blob | null;
   photos: File[];
+  /** Per-file timeout ms (default 45s). */
+  timeoutMs?: number;
 }): Promise<void> {
+  const timeoutMs = opts.timeoutMs ?? 45_000;
   const files: File[] = [];
   if (opts.audio) {
     const type = (opts.audio.type || "").toLowerCase();
@@ -47,14 +50,19 @@ export async function uploadPendingMedia(opts: {
   for (const file of files) {
     const fd = new FormData();
     fd.append("file", file);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
       await fetch(`/api/alerts/${opts.sessionId}/media`, {
         method: "POST",
         body: fd,
         credentials: "include",
+        signal: controller.signal,
       });
     } catch {
-      // Session is already created - media is best-effort.
+      // Session already exists - media must never block citizen flow.
+    } finally {
+      clearTimeout(timer);
     }
   }
 }
