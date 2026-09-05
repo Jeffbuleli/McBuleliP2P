@@ -12,7 +12,7 @@ const DISMISS_KEY = "ngemba_pwa_install_dismiss_until";
 /** Soft dismiss — remind again after 3 days. */
 const DISMISS_MS = 3 * 24 * 60 * 60 * 1000;
 /** Let the browser show its own install UI first. */
-const REMINDER_DELAY_MS = 8_000;
+const REMINDER_DELAY_MS = 2_000;
 
 function isStandalone(): boolean {
   if (typeof window === "undefined") return false;
@@ -42,15 +42,17 @@ function dismiss(): void {
 }
 
 /**
- * Soft install reminder — only if not already installed / dismissed.
- * Relies on the browser install prompt when available; no permanent footer CTA.
+ * Soft install reminder — McBuleli-style fixed bottom dock.
+ * Only if not already installed / dismissed.
  */
 export function PwaInstallReminder({
+  title,
   reminder,
   installLabel,
   laterLabel,
   iosHint,
 }: {
+  title: string;
   reminder: string;
   installLabel: string;
   laterLabel: string;
@@ -100,42 +102,70 @@ export function PwaInstallReminder({
 
   return (
     <div
-      role="status"
-      className="mx-auto w-full max-w-md rounded-xl border border-[var(--ng-border)] bg-ng-surface px-3 py-2.5 shadow-sm"
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-[60] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2"
+      role="dialog"
+      aria-label={title}
     >
-      <p className="text-[12px] leading-snug text-ng-text">{reminder}</p>
-      {ios && !deferred ? (
-        <p className="mt-1 text-[11px] leading-snug text-ng-muted">{iosHint}</p>
-      ) : null}
-      <div className="mt-2 flex items-center justify-end gap-3">
-        <button
-          type="button"
-          className="text-[11px] font-medium text-ng-muted hover:text-ng-text"
-          onClick={() => {
-            dismiss();
-            setVisible(false);
-          }}
-        >
-          {laterLabel}
-        </button>
-        {deferred ? (
+      <div className="pointer-events-auto mx-auto max-w-md rounded-2xl border border-ng-primary/30 bg-ng-surface p-4 shadow-lg shadow-black/10">
+        <div className="flex items-start gap-3">
+          <span
+            className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-ng-primary-muted"
+            aria-hidden
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/icons/icon-192.png"
+              alt=""
+              width={40}
+              height={40}
+              className="size-10 object-cover"
+            />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-ng-primary">{title}</p>
+            <p className="mt-1 text-xs leading-relaxed text-ng-muted">
+              {reminder}
+            </p>
+            {ios && !deferred ? (
+              <p className="mt-1.5 text-[11px] leading-snug text-ng-muted">
+                {iosHint}
+              </p>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          {deferred ? (
+            <button
+              type="button"
+              className="inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl bg-ng-primary px-4 text-sm font-semibold text-white active:scale-[0.99]"
+              onClick={() => {
+                void (async () => {
+                  await deferred.prompt();
+                  await deferred.userChoice;
+                  setDeferred(null);
+                  dismiss();
+                  setVisible(false);
+                })();
+              }}
+            >
+              <IconDownload className="size-4" />
+              {installLabel}
+            </button>
+          ) : null}
           <button
             type="button"
-            className="inline-flex items-center gap-1 rounded-lg bg-ng-primary px-2.5 py-1.5 text-[11px] font-bold text-white"
+            className={`min-h-11 rounded-xl border border-[var(--ng-border)] bg-ng-bg px-4 text-sm font-semibold text-ng-text active:scale-[0.99] ${
+              deferred ? "sm:min-w-[7.5rem]" : "flex-1"
+            }`}
             onClick={() => {
-              void (async () => {
-                await deferred.prompt();
-                await deferred.userChoice;
-                setDeferred(null);
-                dismiss();
-                setVisible(false);
-              })();
+              dismiss();
+              setVisible(false);
             }}
           >
-            <IconDownload className="size-3.5" />
-            {installLabel}
+            {laterLabel}
           </button>
-        ) : null}
+        </div>
       </div>
     </div>
   );

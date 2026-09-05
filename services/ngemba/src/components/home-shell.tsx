@@ -9,7 +9,6 @@ import {
   IconGraduation,
   IconHeart,
   IconShield,
-  IconSpark,
   IconUsers,
 } from "@/components/icons";
 import { PoweredByMcbuleli } from "@/components/powered-by-mcbuleli";
@@ -149,7 +148,7 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
       <section className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center py-6">
         <Link
           href={href("/sos")}
-          aria-label={t.sos}
+          aria-label={`${t.sos} - ${t.sosHint}`}
           className={`ng-sos-pulse relative mx-auto flex ${sosButtonSize(device)} flex-col items-center justify-center rounded-full bg-ng-urgent text-white`}
         >
           <IconShield className={`mb-1.5 ${sosIconSize(device)} text-white/90`} />
@@ -158,11 +157,14 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
           >
             {t.sos}
           </span>
+          <span
+            className={`mt-1.5 font-medium opacity-90 ${
+              device === "desktop" ? "text-xs" : "text-[10px]"
+            }`}
+          >
+            {t.sosHint}
+          </span>
         </Link>
-        <p className="mt-5 flex max-w-xs items-center justify-center gap-1.5 text-center text-sm text-ng-muted">
-          <IconSpark className="size-4 shrink-0 text-ng-primary" />
-          <span>{t.line}</span>
-        </p>
       </section>
 
       {/* Secondary actions — pushed toward bottom; SOS keeps vertical center */}
@@ -218,21 +220,22 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
           <Link href={href("/legal/confidentialite")} className="underline">
             {t.privacyLink}
           </Link>
-          <span aria-hidden>·</span>
+          <span aria-hidden>-</span>
           <Link href={href("/legal/cgu")} className="underline">
             {t.cguLink}
           </Link>
         </p>
 
-        <PwaInstallReminder
-          reminder={t.installReminder}
-          installLabel={t.installApp}
-          laterLabel={t.installLater}
-          iosHint={t.installIos}
-        />
-
         <PoweredByMcbuleli className="pt-1" />
       </section>
+
+      <PwaInstallReminder
+        title={t.installApp}
+        reminder={t.installReminder}
+        installLabel={t.installApp}
+        laterLabel={t.installLater}
+        iosHint={t.installIos}
+      />
     </main>
   );
 }
