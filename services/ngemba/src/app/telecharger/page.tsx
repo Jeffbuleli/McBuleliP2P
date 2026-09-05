@@ -30,7 +30,7 @@ export default function TelechargerPage() {
               <h1 className="text-xl font-extrabold tracking-tight text-ng-primary">
                 Installer NGEMBA RDC
               </h1>
-              <p className="text-sm text-ng-muted">Android · APK officiel</p>
+              <p className="text-sm text-ng-muted">Android · APK officiel v0.3.5</p>
             </div>
           </div>
 

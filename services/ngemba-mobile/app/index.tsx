@@ -73,8 +73,11 @@ export default function HomeScreen() {
   }, [router]);
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <ScrollView contentContainerStyle={styles.scroll}>
+    <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        contentInsetAdjustmentBehavior="automatic"
+      >
         <View style={styles.header}>
           <View style={styles.brandRow}>
             <Pressable
@@ -126,20 +129,22 @@ export default function HomeScreen() {
           </View>
           <Text style={styles.line}>{t.line}</Text>
 
-          <Link href="/sos" asChild>
-            <Pressable
-              onPress={() => void hapticTap()}
-              style={({ pressed }) => [
-                styles.sosBtn,
-                pressed && { transform: [{ scale: 0.98 }] },
-              ]}
-              accessibilityLabel={`${t.sos} - ${t.sosHint}`}
-            >
-              <IconShield size={22} color="#fff" />
-              <Text style={styles.sosBtnTitle}>{t.sos}</Text>
-              <Text style={styles.sosBtnHint}>{t.sosHint}</Text>
-            </Pressable>
-          </Link>
+          <Pressable
+            onPress={() => {
+              void hapticTap();
+              router.push("/sos");
+            }}
+            style={({ pressed }) => [
+              styles.sosBtn,
+              pressed && { transform: [{ scale: 0.98 }], opacity: 0.92 },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel={`${t.sos} - ${t.sosHint}`}
+          >
+            <IconShield size={22} color="#fff" />
+            <Text style={styles.sosBtnTitle}>{t.sos}</Text>
+            <Text style={styles.sosBtnHint}>{t.sosHint}</Text>
+          </Pressable>
         </View>
 
         <View style={styles.actions}>
@@ -185,13 +190,14 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   scroll: {
     paddingHorizontal: 20,
-    paddingBottom: 32,
+    paddingTop: 12,
+    paddingBottom: 40,
     maxWidth: 480,
     width: "100%",
     alignSelf: "center",
   },
   header: {
-    marginTop: 8,
+    marginTop: 4,
     gap: 12,
   },
   brandRow: {
@@ -200,16 +206,16 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   logoWrap: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: "#ffffff",
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
     borderWidth: 1,
     borderColor: "rgba(15,35,70,0.18)",
-    padding: 8,
+    padding: 6,
     shadowColor: "#0b1020",
     shadowOpacity: 0.18,
     shadowRadius: 10,
@@ -240,7 +246,7 @@ const styles = StyleSheet.create({
   langBtnActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   langBtnText: { fontSize: 10, fontWeight: "600", color: colors.muted },
   langBtnTextActive: { color: "#fff" },
-  hero: { marginTop: 36, alignItems: "center", gap: 12 },
+  hero: { marginTop: 28, alignItems: "center", gap: 12 },
   aiRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   powered: { fontSize: 14, fontWeight: "700", color: colors.primary },
   line: {
@@ -256,13 +262,14 @@ const styles = StyleSheet.create({
     width: 132,
     height: 132,
     borderRadius: 999,
-    backgroundColor: colors.urgent,
+    backgroundColor: "#c41e3a",
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: colors.urgent,
-    shadowOpacity: 0.35,
+    shadowColor: "#c41e3a",
+    shadowOpacity: 0.4,
     shadowRadius: 16,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 8,
   },
   sosBtnTitle: { color: "#fff", fontSize: 20, fontWeight: "800", marginTop: 4 },
   sosBtnHint: { color: "rgba(255,255,255,0.9)", fontSize: 10, marginTop: 2 },
