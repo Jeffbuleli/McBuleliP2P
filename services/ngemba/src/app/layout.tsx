@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Poppins } from "next/font/google";
+import { PwaRegister } from "@/components/pwa-register";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -38,6 +39,7 @@ export default function RootLayout({
   return (
     <html lang="fr" className={poppins.variable}>
       <body className="min-h-dvh font-sans antialiased text-ng-text">
+        <PwaRegister />
         {children}
       </body>
     </html>

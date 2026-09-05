@@ -13,8 +13,9 @@ import {
   IconUsers,
 } from "@/components/icons";
 import { PoweredByMcbuleli } from "@/components/powered-by-mcbuleli";
+import { PwaInstallButton } from "@/components/pwa-install";
 import { useCitizenLocale } from "@/hooks/use-citizen-locale";
-import { ngembaApkUrl } from "@/lib/apk";
+import { ngembaInstallUrl } from "@/lib/install";
 import {
   localeLabels,
   locales,
@@ -218,15 +219,14 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
         </p>
 
         <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-[10px] text-ng-muted md:text-[11px]">
-          <a
-            href={ngembaApkUrl()}
-            target="_blank"
-            rel="noopener noreferrer"
+          <PwaInstallButton label={t.installApp} iosHint={t.installIos} />
+          <Link
+            href={ngembaInstallUrl()}
             className="inline-flex items-center gap-1 font-semibold text-ng-primary hover:underline"
           >
             <IconDownload className="size-3.5" />
             {t.installAndroid}
-          </a>
+          </Link>
           <span aria-hidden>·</span>
           <Link href={href("/legal/confidentialite")} className="underline">
             {t.privacyLink}

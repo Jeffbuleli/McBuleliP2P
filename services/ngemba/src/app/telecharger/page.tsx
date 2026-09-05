@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { NGEMBA_APK_BUILD_PAGE, NGEMBA_APK_DIRECT } from "@/lib/apk";
+import { PwaInstallButton } from "@/components/pwa-install";
 
 export const metadata: Metadata = {
-  title: "Installer NGEMBA RDC (Android)",
-  description: "Télécharger l'application Android NGEMBA RDC - sécurité citoyenne.",
+  title: "Installer NGEMBA RDC",
+  description:
+    "Installer NGEMBA RDC sur l'écran d'accueil (PWA) — même expérience que le site.",
 };
 
-/** Install guide - own-domain APK reduces third-party “dangerous link” flags. */
+/** Install guide — PWA only (no APK). */
 export default function TelechargerPage() {
   return (
     <main className="min-h-dvh bg-ng-bg px-4 py-10 text-ng-text">
@@ -30,44 +31,34 @@ export default function TelechargerPage() {
               <h1 className="text-xl font-extrabold tracking-tight text-ng-primary">
                 Installer NGEMBA RDC
               </h1>
-              <p className="text-sm text-ng-muted">Android · APK officiel v0.3.5</p>
+              <p className="text-sm text-ng-muted">Application web (PWA)</p>
             </div>
           </div>
 
           <p className="mt-4 text-sm leading-relaxed text-ng-muted">
-            Android peut afficher un avertissement (« fichier dangereux » ou
-            « source inconnue ») pour toute application installée hors Play Store.
-            C&apos;est normal pour un APK pilote signé par NGEMBA.
+            Ajoutez NGEMBA à l&apos;écran d&apos;accueil de votre téléphone. Vous
+            ouvrez la même expérience que sur{" "}
+            <span className="font-semibold text-ng-primary">ngemba-rdc.org</span>
+            , sans télécharger d&apos;APK.
           </p>
 
           <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm leading-relaxed text-ng-text">
-            <li>Téléchargez l&apos;APK depuis ce site (lien ci-dessous).</li>
-            <li>Ouvrez le fichier dans vos Téléchargements.</li>
-            <li>Autorisez l&apos;installation si Android le demande.</li>
-            <li>Ouvrez <strong>Ngemba RDC</strong> et acceptez la localisation si proposé.</li>
+            <li>
+              Android (Chrome) : menu ⋮ → <strong>Installer l&apos;application</strong>{" "}
+              (ou le bouton ci-dessous).
+            </li>
+            <li>
+              iPhone (Safari) : Partager → <strong>Sur l&apos;écran d&apos;accueil</strong>.
+            </li>
+            <li>Ouvrez l&apos;icône <strong>Ngemba RDC</strong> comme une app.</li>
           </ol>
 
-          <a
-            href={NGEMBA_APK_DIRECT}
-            download="ngemba-rdc.apk"
-            className="mt-6 flex min-h-12 w-full items-center justify-center rounded-xl bg-ng-primary px-4 text-sm font-bold text-white"
-          >
-            Télécharger l&apos;APK NGEMBA
-          </a>
-
-          <p className="mt-3 text-center text-xs text-ng-muted">
-            Fichier hébergé sur{" "}
-            <span className="font-semibold text-ng-primary">ngemba-rdc.org</span>
-            {" · "}
-            <a
-              href={NGEMBA_APK_BUILD_PAGE}
-              className="underline"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              détails du build
-            </a>
-          </p>
+          <PwaInstallButton
+            variant="primary"
+            label="Installer NGEMBA"
+            iosHint="Sur iPhone : ouvrez ce site dans Safari, puis Partager → Sur l'écran d'accueil."
+            manualHint="Si le bouton d'installation n'apparaît pas, utilisez le menu du navigateur → Installer l'application / Ajouter à l'écran d'accueil."
+          />
         </div>
       </div>
     </main>

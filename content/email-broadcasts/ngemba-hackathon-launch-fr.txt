@@ -26,7 +26,7 @@ NOUS APPELONS TOUTES LES COUCHES
 - Ceux qui n'étaient pas au Hackathon
 
 Ouvrir NGEMBA : https://ngemba-rdc.org/?utm_source=email&utm_medium=broadcast&utm_campaign=ngemba_hackathon_launch
-APK Android : https://ngemba-rdc.org/telecharger
+Installer l'app (PWA) : https://ngemba-rdc.org/telecharger
 OPS : https://ngemba-rdc.org/ops/login
 
 La paix se construit aussi avec le numérique.

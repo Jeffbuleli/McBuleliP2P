@@ -19,5 +19,6 @@ npm-debug.log*
 # Brand assets (repo root ignores *.png)
 !public/brand/ngemba-logo.png
 
-# Large APK binaries (deployed via rsync, not git)
-/public/downloads/*.apk
+# APK binaries — distribution dropped in favour of PWA; never commit APKs
+/public/downloads/*
+!/public/downloads/.gitkeep
