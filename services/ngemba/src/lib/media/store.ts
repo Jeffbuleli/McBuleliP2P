@@ -17,18 +17,38 @@ import {
 const MEDIA_ROOT = path.join(process.cwd(), "data", "media");
 
 function kindFromMime(mime: string): MediaKind | null {
+  const normalized =
+    mime === "audio/mp3" ? "audio/mpeg" : mime === "audio/x-wav" ? "audio/wav" : mime;
   for (const [kind, cfg] of Object.entries(ALLOWED_MEDIA) as [
     MediaKind,
     (typeof ALLOWED_MEDIA)[MediaKind],
   ][]) {
-    if (cfg.mimes.includes(mime)) return kind;
+    if (cfg.mimes.includes(normalized)) return kind;
   }
   return null;
 }
 
+function mimeFromFileName(name: string): string | null {
+  const lower = name.toLowerCase();
+  if (lower.endsWith(".mp3")) return "audio/mpeg";
+  if (lower.endsWith(".m4a")) return "audio/mp4";
+  if (lower.endsWith(".wav")) return "audio/wav";
+  if (lower.endsWith(".webm")) return "audio/webm";
+  if (lower.endsWith(".ogg")) return "audio/ogg";
+  if (lower.endsWith(".aac")) return "audio/aac";
+  if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
+  if (lower.endsWith(".png")) return "image/png";
+  if (lower.endsWith(".webp")) return "image/webp";
+  if (lower.endsWith(".mp4")) return "video/mp4";
+  if (lower.endsWith(".mov")) return "video/quicktime";
+  return null;
+}
+
 function extFromMime(mime: string): string {
+  const normalized =
+    mime === "audio/mp3" ? "audio/mpeg" : mime === "audio/x-wav" ? "audio/wav" : mime;
   for (const cfg of Object.values(ALLOWED_MEDIA)) {
-    const i = cfg.mimes.indexOf(mime);
+    const i = cfg.mimes.indexOf(normalized);
     if (i >= 0) return cfg.exts[i] ?? ".bin";
   }
   return ".bin";
@@ -42,7 +62,11 @@ export async function saveMedia(params: {
   sessionId: string;
   file: File;
 }): Promise<MediaAttachment> {
-  const mime = params.file.type || "application/octet-stream";
+  const rawMime = params.file.type || "";
+  const mime =
+    (rawMime === "audio/mp3" ? "audio/mpeg" : rawMime) ||
+    mimeFromFileName(params.file.name) ||
+    "application/octet-stream";
   const kind = kindFromMime(mime);
   if (!kind) {
     throw new Error("unsupported_media_type");

@@ -290,6 +290,28 @@ export function IconDownload({ title, className = "size-6", ...rest }: IconProps
   );
 }
 
+/** Upload arrow (chevron up into tray). */
+export function IconUpload({ title, className = "size-6", ...rest }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden={title ? undefined : true}
+      className={className}
+      {...rest}
+    >
+      {title ? <title>{title}</title> : null}
+      <path
+        d="M12 14V4M8.5 7.5 12 4l3.5 3.5M5 18.5h14"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function IconPlay({ title, className = "size-6", ...rest }: IconProps) {
   return (
     <svg

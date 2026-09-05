@@ -1,11 +1,35 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { IconDownload, IconWaveform } from "@/components/icons";
+import { IconUpload, IconWaveform } from "@/components/icons";
 import { AUDIO_MAX_BYTES } from "@/lib/media/types";
 
 const ACCEPT =
-  "audio/mpeg,audio/mp4,audio/wav,audio/webm,audio/ogg,audio/aac,audio/x-m4a,.mp3,.m4a,.wav,.webm,.ogg,.aac";
+  "audio/mpeg,audio/mp3,audio/mp4,audio/wav,audio/x-wav,audio/webm,audio/ogg,audio/aac,audio/x-m4a,.mp3,.m4a,.wav,.webm,.ogg,.aac";
+
+function mimeFromName(name: string): string | null {
+  const lower = name.toLowerCase();
+  if (lower.endsWith(".mp3")) return "audio/mpeg";
+  if (lower.endsWith(".m4a")) return "audio/mp4";
+  if (lower.endsWith(".wav")) return "audio/wav";
+  if (lower.endsWith(".webm")) return "audio/webm";
+  if (lower.endsWith(".ogg")) return "audio/ogg";
+  if (lower.endsWith(".aac")) return "audio/aac";
+  return null;
+}
+
+function normalizeAudioFile(file: File): File {
+  const fromName = mimeFromName(file.name);
+  const mime = (file.type || "").toLowerCase();
+  const resolved =
+    mime === "audio/mp3" || mime === "audio/mpeg"
+      ? "audio/mpeg"
+      : mime.startsWith("audio/")
+        ? mime
+        : fromName || "audio/mpeg";
+  if (file.type === resolved) return file;
+  return new File([file], file.name, { type: resolved, lastModified: file.lastModified });
+}
 
 type Props = {
   label: string;
@@ -28,19 +52,26 @@ export function AudioUploadButton({
 }: Props) {
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
+  const urlRef = useRef<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sizeLabel, setSizeLabel] = useState<string | null>(null);
 
+  function revokeUrl() {
+    if (urlRef.current) {
+      URL.revokeObjectURL(urlRef.current);
+      urlRef.current = null;
+    }
+  }
+
   useEffect(() => {
-    return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
-    };
-  }, [previewUrl]);
+    return () => revokeUrl();
+  }, []);
 
   function clear() {
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    revokeUrl();
     setPreviewUrl(null);
     setFileName(null);
     setSizeLabel(null);
@@ -49,37 +80,50 @@ export function AudioUploadButton({
     if (inputRef.current) inputRef.current.value = "";
   }
 
-  function onPick(file: File | null) {
+  function onPick(raw: File | null) {
     setError(null);
-    if (!file) {
+    if (!raw) {
       clear();
       return;
     }
 
-    const mime = (file.type || "").toLowerCase();
+    const mime = (raw.type || "").toLowerCase();
     const okMime =
       !mime ||
       mime.startsWith("audio/") ||
-      /\.(mp3|m4a|wav|webm|ogg|aac)$/i.test(file.name);
+      Boolean(mimeFromName(raw.name));
     if (!okMime) {
       setError(unsupportedLabel);
       clear();
       return;
     }
 
-    if (file.size > AUDIO_MAX_BYTES) {
+    if (raw.size > AUDIO_MAX_BYTES) {
       setError(tooLargeLabel);
       clear();
       return;
     }
 
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    const file = normalizeAudioFile(raw);
+    revokeUrl();
     const url = URL.createObjectURL(file);
+    urlRef.current = url;
     setPreviewUrl(url);
     setFileName(file.name);
     const mb = file.size / (1024 * 1024);
-    setSizeLabel(mb >= 1 ? `${mb.toFixed(1)} Mo` : `${Math.max(1, Math.round(file.size / 1024))} Ko`);
+    setSizeLabel(
+      mb >= 1
+        ? `${mb.toFixed(1)} Mo`
+        : `${Math.max(1, Math.round(file.size / 1024))} Ko`,
+    );
     onAudioChange(file);
+
+    // Force metadata load after DOM paints (helps large mp3 / Safari).
+    requestAnimationFrame(() => {
+      const el = audioRef.current;
+      if (!el) return;
+      el.load();
+    });
   }
 
   const btnClass = discrete
@@ -102,7 +146,7 @@ export function AudioUploadButton({
           htmlFor={inputId}
           className={`inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-2xl border px-4 text-sm font-semibold transition ${btnClass}`}
         >
-          <IconDownload className="size-5 shrink-0" />
+          <IconUpload className="size-5 shrink-0" />
           <span>{label}</span>
         </label>
       ) : (
@@ -147,7 +191,9 @@ export function AudioUploadButton({
               type="button"
               onClick={clear}
               className={`inline-flex size-8 items-center justify-center rounded-lg ${
-                discrete ? "text-[#c9a0bc] hover:bg-white/10" : "text-ng-muted hover:bg-ng-primary-muted"
+                discrete
+                  ? "text-[#c9a0bc] hover:bg-white/10"
+                  : "text-ng-muted hover:bg-ng-primary-muted"
               }`}
               aria-label="Retirer"
             >
@@ -162,10 +208,16 @@ export function AudioUploadButton({
             </button>
           </div>
           <audio
+            key={previewUrl}
+            ref={audioRef}
             controls
-            preload="metadata"
+            preload="auto"
+            playsInline
             className="mt-2 w-full"
             src={previewUrl}
+            onError={() =>
+              setError("Lecture audio impossible - reessayez un autre fichier")
+            }
           />
         </div>
       )}

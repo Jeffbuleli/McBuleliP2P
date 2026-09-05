@@ -6,14 +6,37 @@ export async function uploadPendingMedia(opts: {
 }): Promise<void> {
   const files: File[] = [];
   if (opts.audio) {
-    const ext = opts.audio.type.includes("wav")
-      ? "wav"
-      : opts.audio.type.includes("mp4")
-        ? "m4a"
-        : "webm";
+    const type = (opts.audio.type || "").toLowerCase();
+    const name =
+      opts.audio instanceof File ? opts.audio.name.toLowerCase() : "";
+    let ext = "webm";
+    let mime = type || "audio/webm";
+    if (type.includes("mpeg") || type === "audio/mp3" || name.endsWith(".mp3")) {
+      ext = "mp3";
+      mime = "audio/mpeg";
+    } else if (type.includes("wav") || name.endsWith(".wav")) {
+      ext = "wav";
+      mime = "audio/wav";
+    } else if (
+      type.includes("mp4") ||
+      type.includes("m4a") ||
+      name.endsWith(".m4a")
+    ) {
+      ext = "m4a";
+      mime = "audio/mp4";
+    } else if (type.includes("ogg") || name.endsWith(".ogg")) {
+      ext = "ogg";
+      mime = "audio/ogg";
+    } else if (type.includes("aac") || name.endsWith(".aac")) {
+      ext = "aac";
+      mime = "audio/aac";
+    } else if (type.includes("webm") || name.endsWith(".webm")) {
+      ext = "webm";
+      mime = "audio/webm";
+    }
     files.push(
       new File([opts.audio], `voice-${Date.now()}.${ext}`, {
-        type: opts.audio.type || "audio/webm",
+        type: mime,
       }),
     );
   }

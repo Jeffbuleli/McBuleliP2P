@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AudioUploadButton } from "@/components/audio-upload-button";
 import { ComposePhotos } from "@/components/compose-photos";
 import { IconEye, IconShield, IconSpark } from "@/components/icons";
@@ -67,16 +67,27 @@ export function SosFlow({
   const [provinceId, setProvinceId] = useState("");
   const [cityId, setCityId] = useState("");
   const [gpsHint, setGpsHint] = useState<string | null>(null);
+  const audioPreviewRef = useRef<string | null>(null);
   const [audioPreviewUrl, setAudioPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
+    if (audioPreviewRef.current) {
+      URL.revokeObjectURL(audioPreviewRef.current);
+      audioPreviewRef.current = null;
+    }
     if (!audioBlob) {
       setAudioPreviewUrl(null);
       return;
     }
     const url = URL.createObjectURL(audioBlob);
+    audioPreviewRef.current = url;
     setAudioPreviewUrl(url);
-    return () => URL.revokeObjectURL(url);
+    return () => {
+      if (audioPreviewRef.current === url) {
+        URL.revokeObjectURL(url);
+        audioPreviewRef.current = null;
+      }
+    };
   }, [audioBlob]);
 
   const cities = useMemo(() => {

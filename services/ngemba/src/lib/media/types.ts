@@ -32,13 +32,15 @@ export const ALLOWED_MEDIA: Record<
     mimes: [
       "audio/webm",
       "audio/mpeg",
+      "audio/mp3",
       "audio/wav",
+      "audio/x-wav",
       "audio/mp4",
       "audio/ogg",
       "audio/aac",
       "audio/x-m4a",
     ],
-    exts: [".webm", ".mp3", ".wav", ".m4a", ".ogg", ".aac", ".m4a"],
+    exts: [".webm", ".mp3", ".mp3", ".wav", ".wav", ".m4a", ".ogg", ".aac", ".m4a"],
   },
   video: {
     mimes: ["video/mp4", "video/webm", "video/quicktime"],
