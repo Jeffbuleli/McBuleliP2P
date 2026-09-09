@@ -141,24 +141,44 @@ export function SessionView({
 
   useEffect(() => {
     let cancelled = false;
-    void (async () => {
+    let attempts = 0;
+
+    async function load() {
+      attempts += 1;
       try {
         const res = await fetch(`/api/alerts/${id}`, {
           credentials: "include",
+          cache: "no-store",
         });
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         if (!res.ok || !data.session) {
+          // Mobile: cookie ops / race persist - un retry court
+          if (attempts < 3 && !cancelled) {
+            window.setTimeout(() => {
+              if (!cancelled) void load();
+            }, 400 * attempts);
+            return;
+          }
           if (!cancelled) setError(true);
           return;
         }
         if (!cancelled) {
+          setError(false);
           setSession(data.session);
           setMedia(data.session.media ?? []);
         }
       } catch {
+        if (attempts < 3 && !cancelled) {
+          window.setTimeout(() => {
+            if (!cancelled) void load();
+          }, 400 * attempts);
+          return;
+        }
         if (!cancelled) setError(true);
       }
-    })();
+    }
+
+    void load();
     return () => {
       cancelled = true;
     };

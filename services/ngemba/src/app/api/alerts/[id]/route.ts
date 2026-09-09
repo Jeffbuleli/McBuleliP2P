@@ -49,11 +49,7 @@ export async function GET(req: Request, ctx: Ctx) {
   const cookieToken = await readOpsTokenFromCookie();
   const actor = resolveOpsActor(bearer || cookieToken);
 
-  if (actor) {
-    if (!roleHasPermission(actor.role, "alerts.view")) {
-      return NextResponse.json({ error: "forbidden" }, { status: 403 });
-    }
-
+  if (actor && roleHasPermission(actor.role, "alerts.view")) {
     const live = applySlaEscalationIfNeeded(session);
     const decision = decideIncidentAccess(actor, live, "operational");
     logAccess({
@@ -67,106 +63,103 @@ export async function GET(req: Request, ctx: Ctx) {
       ipHash: hashIp(clientIp(req)),
     });
 
-    if (!decision.allowed) {
-      return NextResponse.json(
-        { error: "forbidden", reason: decision.reason },
-        { status: 403 },
+    // Cookie OPS présent mais hors périmètre : ne pas bloquer la vue citoyenne
+    // (souvent le cas sur mobile après un login ops dans le même navigateur).
+    if (decision.allowed) {
+      const routingMeta =
+        live.routingMeta ??
+        buildRoutingMeta({
+          commune: live.commune,
+          locationLabel: live.locationLabel,
+          category: live.category,
+        });
+      const suggestedPartners = partnersForSessionDisplay({
+        ...live,
+        routingMeta,
+      }).map((p) => ({
+        id: p.id,
+        name: p.name,
+        contactHint: p.contactHint ?? null,
+        nationalFallback: p.nationalFallback,
+      }));
+
+      const relatedAlerts: RelatedAlertSummary[] = live.citizenToken
+        ? listSessionsByCitizen(live.citizenToken, 10)
+            .filter((s) => s.id !== live.id)
+            .map((s) => ({
+              id: s.id,
+              status: s.status,
+              urgency: s.urgency,
+              createdAt: s.createdAt,
+              source: s.source,
+            }))
+        : [];
+
+      const opsSession = sanitizeOpsSessionForActor(
+        { ...live, routingMeta },
+        actor,
       );
+
+      const events = await listIncidentEvents(id, 100);
+
+      let referrals = getReferrals(id);
+      if (!referrals) {
+        const built = buildReferrals({
+          requiredServices: live.aiPayload?.required_services ?? [],
+          commune: live.commune,
+          locationLabel: live.locationLabel,
+          category: live.category,
+        });
+        referrals = saveReferrals({
+          sessionId: id,
+          matches: built.matches,
+          unmatched: built.unmatched,
+        });
+      }
+
+      return NextResponse.json({
+        session: opsSession,
+        relatedAlerts: actor.role === "partner" ? [] : relatedAlerts,
+        relatedCount: actor.role === "partner" ? 0 : relatedAlerts.length,
+        sla: slaUiState(live),
+        role: actor.role,
+        actor: {
+          id: actor.id,
+          organizationId: actor.organizationId,
+          scopes: actor.accreditation.scopes,
+          level: actor.accreditation.level,
+        },
+        partner: actor.partner
+          ? { id: actor.partner.id, name: actor.partner.name }
+          : null,
+        suggestedPartners,
+        referrals: {
+          requiredServices: live.aiPayload?.required_services ?? [],
+          matches: referrals.matches,
+          unmatched: referrals.unmatched,
+        },
+        unitMatches: matchUnitsForIncident({
+          requiredServices: live.aiPayload?.required_services ?? [],
+          commune: live.commune,
+          locationLabel: live.locationLabel,
+          lat: live.lat,
+          lng: live.lng,
+        }).map((m) => ({
+          id: m.unit.id,
+          name: m.unit.name,
+          unitType: m.unit.unitType,
+          status: m.unit.status,
+          organizationName: m.unit.organizationName,
+          locationLabel: m.unit.locationLabel,
+          capabilities: m.unit.capabilities,
+          score: m.score,
+          reason: m.reason,
+          matchedCapabilities: m.matchedCapabilities,
+          etaMinutes: m.unit.etaMinutes,
+        })),
+        events,
+      });
     }
-
-    const routingMeta =
-      live.routingMeta ??
-      buildRoutingMeta({
-        commune: live.commune,
-        locationLabel: live.locationLabel,
-        category: live.category,
-      });
-    const suggestedPartners = partnersForSessionDisplay({
-      ...live,
-      routingMeta,
-    }).map((p) => ({
-      id: p.id,
-      name: p.name,
-      contactHint: p.contactHint ?? null,
-      nationalFallback: p.nationalFallback,
-    }));
-
-    const relatedAlerts: RelatedAlertSummary[] = live.citizenToken
-      ? listSessionsByCitizen(live.citizenToken, 10)
-          .filter((s) => s.id !== live.id)
-          .map((s) => ({
-            id: s.id,
-            status: s.status,
-            urgency: s.urgency,
-            createdAt: s.createdAt,
-            source: s.source,
-          }))
-      : [];
-
-    const opsSession = sanitizeOpsSessionForActor(
-      { ...live, routingMeta },
-      actor,
-    );
-
-    const events = await listIncidentEvents(id, 100);
-
-    let referrals = getReferrals(id);
-    if (!referrals) {
-      const built = buildReferrals({
-        requiredServices: live.aiPayload?.required_services ?? [],
-        commune: live.commune,
-        locationLabel: live.locationLabel,
-        category: live.category,
-      });
-      referrals = saveReferrals({
-        sessionId: id,
-        matches: built.matches,
-        unmatched: built.unmatched,
-      });
-    }
-
-    return NextResponse.json({
-      session: opsSession,
-      relatedAlerts: actor.role === "partner" ? [] : relatedAlerts,
-      relatedCount: actor.role === "partner" ? 0 : relatedAlerts.length,
-      sla: slaUiState(live),
-      role: actor.role,
-      actor: {
-        id: actor.id,
-        organizationId: actor.organizationId,
-        scopes: actor.accreditation.scopes,
-        level: actor.accreditation.level,
-      },
-      partner: actor.partner
-        ? { id: actor.partner.id, name: actor.partner.name }
-        : null,
-      suggestedPartners,
-      referrals: {
-        requiredServices: live.aiPayload?.required_services ?? [],
-        matches: referrals.matches,
-        unmatched: referrals.unmatched,
-      },
-      unitMatches: matchUnitsForIncident({
-        requiredServices: live.aiPayload?.required_services ?? [],
-        commune: live.commune,
-        locationLabel: live.locationLabel,
-        lat: live.lat,
-        lng: live.lng,
-      }).map((m) => ({
-        id: m.unit.id,
-        name: m.unit.name,
-        unitType: m.unit.unitType,
-        status: m.unit.status,
-        organizationName: m.unit.organizationName,
-        locationLabel: m.unit.locationLabel,
-        capabilities: m.unit.capabilities,
-        score: m.score,
-        reason: m.reason,
-        matchedCapabilities: m.matchedCapabilities,
-        etaMinutes: m.unit.etaMinutes,
-      })),
-      events,
-    });
   }
 
   return NextResponse.json({

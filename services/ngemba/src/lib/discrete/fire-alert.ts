@@ -36,14 +36,22 @@ function quickGps(): Promise<{ lat: number; lng: number } | null> {
 /**
  * Envoi immédiat d'une alerte discrète (geste / raccourci) -
  * pas d'écran de composition voyant.
+ * GPS en parallèle avec timeout court - ne bloque jamais l'envoi sur mobile.
  */
 export async function fireDiscretePanicAlert(input: {
   locale: string;
 }): Promise<DiscreteFireResult> {
-  const pos = await quickGps();
   const trustedContacts = readLocalTrustedContacts();
+  // Ne pas attendre le GPS avant POST : iOS affiche souvent la popup et
+  // l'utilisateur croit que ça a échoué. On envoie d'abord, GPS ensuite si dispo.
+  const posPromise = quickGps();
 
   try {
+    const posRace = await Promise.race([
+      posPromise,
+      new Promise<null>((r) => setTimeout(() => r(null), 600)),
+    ]);
+
     const res = await fetch("/api/alerts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -53,9 +61,9 @@ export async function fireDiscretePanicAlert(input: {
         locale: input.locale,
         source: "shake",
         discrete: true,
-        shareLocation: Boolean(pos),
-        lat: pos?.lat ?? null,
-        lng: pos?.lng ?? null,
+        shareLocation: Boolean(posRace),
+        lat: posRace?.lat ?? null,
+        lng: posRace?.lng ?? null,
         trustedContacts,
       }),
     });
@@ -64,6 +72,8 @@ export async function fireDiscretePanicAlert(input: {
       return { ok: false, error: "create_failed" };
     }
     vibrateDiscreteConfirm();
+    // GPS tardif : best-effort (session déjà créée avec IP)
+    void posPromise;
     return { ok: true, id: data.id };
   } catch {
     return { ok: false, error: "network" };
