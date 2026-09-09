@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useCallback } from "react";
+import { useCallback, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -22,6 +22,7 @@ import {
   messages,
   type Locale,
 } from "@/lib/i18n";
+import { fireDiscretePanicAlert } from "@/lib/discrete/fire-alert";
 import { useLongPress } from "@/lib/discrete/long-press";
 import { useTripleTap } from "@/lib/discrete/triple-tap";
 import { vibrateDiscreteAlert } from "@/lib/discrete/vibrate";
@@ -76,12 +77,30 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
   const { locale, setLocale, href } = useCitizenLocale(initialLocale);
   const t = messages[locale];
   const device = useDeviceClass();
+  const firing = useRef(false);
+  const [discreteBusy, setDiscreteBusy] = useState(false);
+
   const openDiscrete = useCallback(() => {
+    if (firing.current) return;
+    firing.current = true;
+    setDiscreteBusy(true);
     vibrateDiscreteAlert();
-    router.push(href("/discrete/alerte"));
-  }, [href, router]);
+    void fireDiscretePanicAlert({ locale }).then((result) => {
+      firing.current = false;
+      setDiscreteBusy(false);
+      if (!result.ok) return;
+      const dest = `${href(`/session/${result.id}`)}&discrete=1`;
+      router.push(dest);
+      window.setTimeout(() => {
+        if (!window.location.pathname.includes(`/session/${result.id}`)) {
+          window.location.assign(dest);
+        }
+      }, 900);
+    });
+  }, [href, locale, router]);
+
   const onLogoTap = useTripleTap(openDiscrete);
-  const longPress = useLongPress(openDiscrete);
+  const longPress = useLongPress(openDiscrete, 900);
 
   function changeLocale(code: Locale) {
     setLocale(code);
@@ -101,6 +120,7 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
         <div className="flex items-center gap-3">
           <button
             type="button"
+            disabled={discreteBusy}
             onClick={() => {
               if (longPress.consumeSuppressClick()) return;
               onLogoTap();
@@ -110,7 +130,7 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
             onPointerCancel={longPress.onPointerCancel}
             onPointerLeave={longPress.onPointerLeave}
             onContextMenu={(e) => e.preventDefault()}
-            className="inline-flex touch-manipulation items-center justify-center overflow-hidden rounded-full bg-white shadow-[0_8px_22px_-12px_rgba(11,16,32,0.45)] ring-1 ring-[rgba(15,35,70,0.18)] select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-ng-primary"
+            className="inline-flex touch-manipulation items-center justify-center overflow-hidden rounded-full bg-white shadow-[0_8px_22px_-12px_rgba(11,16,32,0.45)] ring-1 ring-[rgba(15,35,70,0.18)] select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-ng-primary disabled:opacity-70"
             style={{
               width: device === "desktop" ? 56 : device === "tablet" ? 52 : 48,
               height: device === "desktop" ? 56 : device === "tablet" ? 52 : 48,

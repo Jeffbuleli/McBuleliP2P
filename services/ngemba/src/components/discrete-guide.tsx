@@ -236,9 +236,9 @@ export function DiscreteGuideView({
             {t.discrete}
           </h1>
           <p className="mt-2.5 text-sm leading-relaxed text-ng-muted">
-            {isFr
-              ? "En danger extrême, utilisez l’un de ces gestes sur l’accueil pour ouvrir l’alerte sobre (sans flash rouge). Ce lien explique seulement comment faire."
-              : "In extreme danger, use one of these home-screen gestures to open the sober alert (no red flash). This page only explains how."}
+              {isFr
+                ? "En danger extrême, un geste sur l’accueil envoie l’alerte tout de suite aux partenaires ops (vibration, pas de formulaire voyant). Cette page explique seulement comment faire."
+                : "In extreme danger, a home-screen gesture sends the alert immediately to ops partners (vibration, no visible form). This page only explains how."}
           </p>
         </div>
       </div>

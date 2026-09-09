@@ -51,9 +51,9 @@ export default function TelechargerPage() {
             </li>
             <li>Ouvrez l&apos;icône <strong>Ngemba RDC</strong> comme une app.</li>
             <li>
-              Mode discret : ce lien explique les gestes. L&apos;alerte s&apos;ouvre
-              via triple appui / appui long sur le logo, coins
-              bas-gauche → bas-droit → haut-gauche, ou raccourci PWA.
+              Mode discret : le lien explique les gestes. Un geste (logo /
+              coins) ou le raccourci PWA envoie l&apos;alerte immédiatement
+              aux partenaires - sans formulaire voyant.
             </li>
           </ol>
 
