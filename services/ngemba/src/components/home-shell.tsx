@@ -230,6 +230,10 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
           <Link href={href("/legal/cgu")} className="underline">
             {t.cguLink}
           </Link>
+          <span aria-hidden>-</span>
+          <Link href={href("/partenaires")} className="underline">
+            {t.partnersLink}
+          </Link>
         </p>
 
         <PoweredByMcbuleli className="pt-1" />

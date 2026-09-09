@@ -50,6 +50,10 @@ export function StaticPageShell({
           Conditions d&apos;utilisation
         </Link>
         {" · "}
+        <Link href="/partenaires" className="text-ng-primary">
+          Nos partenaires
+        </Link>
+        {" · "}
         <Link href="/legal/charte-ong" className="text-ng-primary">
           Charte partenaires
         </Link>

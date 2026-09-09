@@ -81,6 +81,7 @@ type Copy = {
   preventTitle: string;
   privacyLink: string;
   cguLink: string;
+  partnersLink: string;
   charterLink: string;
   legalDraftNotice: string;
   myAlertsEmpty: string;
@@ -179,6 +180,7 @@ const baseFr: Copy = {
   preventTitle: "Prévenir",
   privacyLink: "Confidentialité",
   cguLink: "Conditions d'utilisation",
+  partnersLink: "Nos partenaires",
   charterLink: "Charte partenaires",
   legalDraftNotice: "",
   myAlertsEmpty: "Aucune alerte enregistrée sur cet appareil. Utilisez SOS pour en créer une - elle apparaîtra ici automatiquement.",
@@ -280,6 +282,7 @@ export const messages: Record<Locale, Copy> = {
     preventTitle: "Prevent",
     privacyLink: "Privacy",
     cguLink: "Terms of Use",
+    partnersLink: "Our partners",
     charterLink: "Partner Charter",
     legalDraftNotice: "",
     myAlertsEmpty: "No alerts saved on this device. Use SOS to create one - it will appear here automatically.",
@@ -377,6 +380,7 @@ export const messages: Record<Locale, Copy> = {
     preventTitle: "Kobanga",
     privacyLink: "Bokebi",
     cguLink: "Mikano ya kosalela",
+    partnersLink: "Bapanzi na biso",
     charterLink: "Mokanda ya bapanzi",
     legalDraftNotice: "",
     myAlertsEmpty: "Nani masonisi ya zali na esika oyo. Tika SOS mpo na kokanga moko - ekokita awa na ntango ya solo.",
@@ -474,6 +478,7 @@ export const messages: Record<Locale, Copy> = {
     preventTitle: "Kuzuia",
     privacyLink: "Faragha",
     cguLink: "Masharti ya Matumizi",
+    partnersLink: "Washirika wetu",
     charterLink: "Katiba ya Washirika",
     legalDraftNotice: "",
     myAlertsEmpty: "Hakuna tahadhari iliyohifadhiwa kwenye kifaa hiki. Tumia SOS kuunda moja - itatokea hapa kiotomatiki.",
@@ -571,6 +576,7 @@ export const messages: Record<Locale, Copy> = {
     preventTitle: "Kobanga",
     privacyLink: "Bokebi",
     cguLink: "Mikanda ya kutila",
+    partnersLink: "Bapanzi na biso",
     charterLink: "Mokanda wa bapanzi",
     legalDraftNotice: "",
     myAlertsEmpty: "Nani masonisi ya zali na esika oyo. Tika SOS mpo na kokanga moko - ekokita awa na ntango ya solo.",
@@ -668,6 +674,7 @@ export const messages: Record<Locale, Copy> = {
     preventTitle: "Kobanga",
     privacyLink: "Bokebi",
     cguLink: "Mikano ya kosalela",
+    partnersLink: "Bapanzi na biso",
     charterLink: "Mokanda ya bapanzi",
     legalDraftNotice: "",
     myAlertsEmpty: "Nani masonisi ya zali na esika oyo. Tika SOS mpo na kokanga moko - ekokita awa na ntango ya solo.",

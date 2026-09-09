@@ -167,6 +167,10 @@ export function StaticPageView({
           {t.cguLink}
         </Link>
         {" · "}
+        <Link href={href("/partenaires")} className="text-ng-primary">
+          {t.partnersLink}
+        </Link>
+        {" · "}
         <Link href={href("/legal/charte-ong")} className="text-ng-primary">
           {t.charterLink}
         </Link>
