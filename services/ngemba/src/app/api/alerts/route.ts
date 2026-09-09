@@ -203,7 +203,12 @@ export async function POST(req: Request) {
   if (!citizenToken) citizenToken = newCitizenToken();
 
   const clientIpValue = ip !== "unknown" ? ip : null;
-  const ipGeo = await resolveIpGeolocation(clientIpValue);
+  const ipGeo = await Promise.race([
+    resolveIpGeolocation(clientIpValue),
+    new Promise<null>((resolve) => {
+      setTimeout(() => resolve(null), 2500);
+    }),
+  ]);
 
   // Sans GPS / lieu manuel : utiliser l'approx IP pour orientation partenaires.
   const hadPreciseLocation = lat != null && lng != null;

@@ -76,6 +76,8 @@ type Copy = {
   discreteSend: string;
   discreteSafety: string;
   discreteTap: string;
+  discreteAlertTitle: string;
+  discreteAlertHint: string;
   sosComposeHint: string;
   resourcesTitle: string;
   preventTitle: string;
@@ -172,11 +174,13 @@ const baseFr: Copy = {
   chatEmpty: "Un opérateur humain vous répondra ici (pas Ngemba IA).",
   discrete: "Mode discret",
   discreteHint: "Écran sobre - vibration - pas de flash rouge",
-  discreteSend: "Envoyer discrètement",
+  discreteSend: "Envoyer l'alerte",
   discreteSafety:
     "Danger extrême : position, IP et proches enregistrés sont utilisés pour alerter les partenaires - sans étape de consentement supplémentaire.",
   discreteTap:
     "Triple appui ou appui long sur le logo - ou coins bas-gauche, bas-droit, haut-gauche.",
+  discreteAlertTitle: "Alerte discrète",
+  discreteAlertHint: "Écrivez peu - envoi immédiat aux partenaires ops",
   sosComposeHint: "Pour vous : danger immédiat ou besoin d'aide maintenant.",
   resourcesTitle: "Aide et ressources",
   preventTitle: "Prévenir",
@@ -276,11 +280,13 @@ export const messages: Record<Locale, Copy> = {
     chatEmpty: "A human operator will reply here (not Ngemba IA).",
     discrete: "Discrete Mode",
     discreteHint: "Plain screen - vibration - no red flash",
-    discreteSend: "Send Discreetly",
+    discreteSend: "Send alert",
     discreteSafety:
       "Extreme danger: location, IP and saved trusted contacts are used to alert partners - with no extra consent step.",
     discreteTap:
       "Triple tap or long-press the logo - or corners bottom-left, bottom-right, top-left.",
+    discreteAlertTitle: "Discrete alert",
+    discreteAlertHint: "Write little - immediate send to ops partners",
     sosComposeHint: "For you: immediate danger or need help now.",
     resourcesTitle: "Help and resources",
     preventTitle: "Prevent",
@@ -380,6 +386,8 @@ export const messages: Record<Locale, Copy> = {
     discreteSafety: "Soki moto azali kotala ekran na yo, yemba moke.",
     discreteTap:
       "Kokanga moke tozo appui long na logo - tozo coins bas-gauche, bas-droit, haut-gauche.",
+    discreteAlertTitle: "Alerte discrète",
+    discreteAlertHint: "Yemba moke - envoi na ops",
     sosComposeHint: "Po na yo: mpasi ya ntango moko to boyebi ya lisungi sikoyo.",
     resourcesTitle: "Lisungi na bokoli",
     preventTitle: "Kobanga",
@@ -479,6 +487,8 @@ export const messages: Record<Locale, Copy> = {
     discreteSafety: "Ikiwa mtu anakuangalia kwenye skrini yako, andika maneno machache.",
     discreteTap:
       "Gonga mara tatu au shikilia nembo - au pembe chini-kushoto, chini-kulia, juu-kushoto.",
+    discreteAlertTitle: "Alerte discrète",
+    discreteAlertHint: "Yemba moke - envoi na ops",
     sosComposeHint: "Kwako: hatari ya papo hapo au hitaji la msaada sasa.",
     resourcesTitle: "Msaada na rasilimali",
     preventTitle: "Kuzuia",
@@ -578,6 +588,8 @@ export const messages: Record<Locale, Copy> = {
     discreteSafety: "Soki moto azali kotala ekran na yo, yemba moke.",
     discreteTap:
       "Kokanga moke tozo appui long na logo - tozo coins bas-gauche, bas-droit, haut-gauche.",
+    discreteAlertTitle: "Alerte discrète",
+    discreteAlertHint: "Yemba moke - envoi na ops",
     sosComposeHint: "Po na yo: mpasi ya ntango moko to boyebi ya lisungi sikoyo.",
     resourcesTitle: "Lisungi na bokoli",
     preventTitle: "Kobanga",
@@ -677,6 +689,8 @@ export const messages: Record<Locale, Copy> = {
     discreteSafety: "Soki moto azali kotala ekran na yo, yemba moke.",
     discreteTap:
       "Kokanga moke tozo appui long na logo - tozo coins bas-gauche, bas-droit, haut-gauche.",
+    discreteAlertTitle: "Alerte discrète",
+    discreteAlertHint: "Yemba moke - envoi na ops",
     sosComposeHint: "Po na yo: mpasi ya ntango moko to boyebi ya lisungi sikoyo.",
     resourcesTitle: "Lisungi na bokoli",
     preventTitle: "Kobanga",

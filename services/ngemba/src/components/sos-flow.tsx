@@ -43,7 +43,11 @@ export function SosFlow({
   const t = messages[locale];
   const device = useDeviceClass();
   const isWitness = source === "witness";
-  const modeLabel = discrete ? t.discrete : isWitness ? t.witness : t.sos;
+  const modeLabel = discrete
+    ? t.discreteAlertTitle
+    : isWitness
+      ? t.witness
+      : t.sos;
   const modeTitle = discrete
     ? t.tell
     : isWitness
@@ -194,27 +198,48 @@ export function SosFlow({
     }
   }
 
-  /** Mode discret = danger extrême : GPS sans étape de consentement NGEMBA. */
-  function submitDiscreteUrgent() {
+  /** Mode discret = danger extrême : GPS rapide sans bloquer l'envoi / l'email ops. */
+  async function submitDiscreteUrgent() {
     setBusy(true);
     setError(null);
-    if (!navigator.geolocation) {
-      void submit({ shareLocation: false });
+    const pos = await new Promise<{ lat: number; lng: number } | null>(
+      (resolve) => {
+        if (!navigator.geolocation) {
+          resolve(null);
+          return;
+        }
+        let settled = false;
+        const finish = (value: { lat: number; lng: number } | null) => {
+          if (settled) return;
+          settled = true;
+          window.clearTimeout(timer);
+          resolve(value);
+        };
+        const timer = window.setTimeout(() => finish(null), 2500);
+        navigator.geolocation.getCurrentPosition(
+          (p) =>
+            finish({
+              lat: p.coords.latitude,
+              lng: p.coords.longitude,
+            }),
+          () => finish(null),
+          {
+            enableHighAccuracy: false,
+            timeout: 2200,
+            maximumAge: 60_000,
+          },
+        );
+      },
+    );
+    if (pos) {
+      await submit({
+        shareLocation: true,
+        lat: pos.lat,
+        lng: pos.lng,
+      });
       return;
     }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        void submit({
-          shareLocation: true,
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-        });
-      },
-      () => {
-        void submit({ shareLocation: false });
-      },
-      { enableHighAccuracy: true, timeout: 8000, maximumAge: 15_000 },
-    );
+    await submit({ shareLocation: false });
   }
 
   function requestGps() {
@@ -309,7 +334,7 @@ export function SosFlow({
       >
         {modeBanner}
         {discrete ? (
-          <span className="mt-1 block opacity-90">{t.discreteHint}</span>
+          <span className="mt-1 block opacity-90">{t.discreteAlertHint}</span>
         ) : null}
       </p>
 
