@@ -78,7 +78,7 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
   const device = useDeviceClass();
   const openDiscrete = useCallback(() => {
     vibrateDiscreteAlert();
-    router.push(href("/discrete"));
+    router.push(href("/discrete/alerte"));
   }, [href, router]);
   const onLogoTap = useTripleTap(openDiscrete);
   const longPress = useLongPress(openDiscrete);

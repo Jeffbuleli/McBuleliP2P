@@ -154,8 +154,8 @@ export function SosFlow({
         body: JSON.stringify({
           message: composeMessage(),
           locale,
-          source,
-          shareLocation: Boolean(opts.shareLocation),
+          source: discrete ? "shake" : source,
+          shareLocation: Boolean(opts.shareLocation) || discrete,
           lat: opts.lat ?? null,
           lng: opts.lng ?? null,
           provinceId: opts.provinceId || null,
@@ -192,6 +192,29 @@ export function SosFlow({
       setError(t.errorGeneric);
       setBusy(false);
     }
+  }
+
+  /** Mode discret = danger extrême : GPS sans étape de consentement NGEMBA. */
+  function submitDiscreteUrgent() {
+    setBusy(true);
+    setError(null);
+    if (!navigator.geolocation) {
+      void submit({ shareLocation: false });
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        void submit({
+          shareLocation: true,
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        });
+      },
+      () => {
+        void submit({ shareLocation: false });
+      },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 15_000 },
+    );
   }
 
   function requestGps() {
@@ -367,7 +390,9 @@ export function SosFlow({
           <button
             type="button"
             disabled={!canSend || busy}
-            onClick={() => (discrete ? void submit({}) : setStep("place"))}
+            onClick={() =>
+              discrete ? void submitDiscreteUrgent() : setStep("place")
+            }
             className={`mt-auto min-h-12 rounded-2xl px-4 text-sm font-semibold text-white disabled:opacity-50 ${
               discrete
                 ? "ng-discrete-btn"

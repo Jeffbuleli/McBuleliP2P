@@ -105,6 +105,9 @@ async function sendOpsWebhook(session: AlertSessionRecord) {
         summary: session.aiSummary,
         opsUrl: `${appUrl()}/ops/login?next=${encodeURIComponent(`/ops/${session.id}`)}`,
         createdAt: session.createdAt,
+        discreteMode: session.discreteMode,
+        immediateDanger: session.immediateDanger,
+        clientIp: session.clientIp,
       }),
     });
   } catch (err) {
@@ -140,18 +143,28 @@ async function sendOpsEmail(session: AlertSessionRecord) {
     session.routingMeta?.provinceId ||
     null;
 
-  const subject = `[NGEMBA] ${urgency} · ${category} · ${place}`;
+  const subject = session.discreteMode
+    ? `[NGEMBA] DANGER EXTRÊME · MODE DISCRET · ${category} · ${place}`
+    : `[NGEMBA] ${urgency} · ${category} · ${place}`;
 
   const { html, text } = renderOpsAlertEmail({
-    title: `${category} — ${place}`,
-    preheader: `${urgency} · ${source} · ouvrir le dossier ${shortId}`,
+    title: session.discreteMode
+      ? `DANGER EXTRÊME — ${place}`
+      : `${category} — ${place}`,
+    preheader: session.discreteMode
+      ? `Mode discret · ${urgency} · ouvrir le dossier ${shortId} immédiatement`
+      : `${urgency} · ${source} · ouvrir le dossier ${shortId}`,
     greeting: "Bonjour opérateur·rice,",
-    body:
-      "Une personne a signalé une situation via NGEMBA. " +
-      "Ouvrez le dossier, vérifiez le résumé IA, puis prenez en charge ou orientez. " +
-      "NGEMBA n’est pas un substitut police / SAMU.",
-    tone,
-    badge: urgency,
+    body: session.discreteMode
+      ? "Alerte MODE DISCRET : la personne a signalé un danger extrême. " +
+        "Position / IP / proches peuvent être utilisés sans consentement supplémentaire. " +
+        "Prenez en charge immédiatement, orientez le partenaire local, et contactez les proches si utile. " +
+        "NGEMBA n’est pas un substitut police / SAMU."
+      : "Une personne a signalé une situation via NGEMBA. " +
+        "Ouvrez le dossier, vérifiez le résumé IA, puis prenez en charge ou orientez. " +
+        "NGEMBA n’est pas un substitut police / SAMU.",
+    tone: session.discreteMode ? "critical" : tone,
+    badge: session.discreteMode ? "DANGER EXTRÊME" : urgency,
     messageExcerpt: message,
     summary: session.aiSummary,
     actionUrl: link,
@@ -169,7 +182,12 @@ async function sendOpsEmail(session: AlertSessionRecord) {
       { label: "Langue", value: session.locale.toUpperCase() },
       { label: "Dossier", value: shortId },
       ...(session.discreteMode
-        ? [{ label: "Mode", value: "Discret (vibration)" }]
+        ? [
+            {
+              label: "Mode",
+              value: "Discret · danger extrême (GPS/IP/proches autorisés)",
+            },
+          ]
         : []),
       ...(session.schoolContext
         ? [

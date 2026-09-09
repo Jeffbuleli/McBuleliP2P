@@ -173,7 +173,8 @@ const baseFr: Copy = {
   discrete: "Mode discret",
   discreteHint: "Écran sobre - vibration - pas de flash rouge",
   discreteSend: "Envoyer discrètement",
-  discreteSafety: "Si quelqu'un surveille votre écran, écrivez peu de mots.",
+  discreteSafety:
+    "Danger extrême : position, IP et proches enregistrés sont utilisés pour alerter les partenaires - sans étape de consentement supplémentaire.",
   discreteTap:
     "Triple appui ou appui long sur le logo - ou coins bas-gauche, bas-droit, haut-gauche.",
   sosComposeHint: "Pour vous : danger immédiat ou besoin d'aide maintenant.",
@@ -276,7 +277,8 @@ export const messages: Record<Locale, Copy> = {
     discrete: "Discrete Mode",
     discreteHint: "Plain screen - vibration - no red flash",
     discreteSend: "Send Discreetly",
-    discreteSafety: "If someone is watching your screen, write few words.",
+    discreteSafety:
+      "Extreme danger: location, IP and saved trusted contacts are used to alert partners - with no extra consent step.",
     discreteTap:
       "Triple tap or long-press the logo - or corners bottom-left, bottom-right, top-left.",
     sosComposeHint: "For you: immediate danger or need help now.",

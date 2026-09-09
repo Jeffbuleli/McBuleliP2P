@@ -8,6 +8,7 @@ import {
   readCitizenToken,
 } from "@/lib/citizen/token";
 import { runTriage } from "@/lib/ai/triage";
+import { evaluateResponse } from "@/lib/response-engine";
 import { isLocale } from "@/lib/i18n";
 import {
   resolveCommuneOnly,
@@ -18,6 +19,7 @@ import { opsSummaryFr } from "@/lib/labels";
 import { buildReferrals } from "@/lib/directory/referral";
 import { saveReferrals } from "@/lib/directory/store";
 import { notifyNewAlert } from "@/lib/ops/notify";
+import { notifyTrustedContacts } from "@/lib/ops/notify-trusted-contacts";
 import { requireOpsAuth } from "@/lib/ops/auth";
 import { sessionVisibleToActor } from "@/lib/ops/visibility";
 import { applySlaEscalationIfNeeded } from "@/lib/ops/sla-engine";
@@ -77,6 +79,7 @@ export async function POST(req: Request) {
 
   const body = parsed.data;
   const locale = isLocale(body.locale) ? body.locale : "fr";
+  const discreteExtreme = Boolean(body.discrete);
   const trustedContacts = normalizeTrustedContacts(body.trustedContacts) ?? [];
   const schoolContext =
     body.source === "school"
@@ -93,8 +96,14 @@ export async function POST(req: Request) {
   let locationSource: string | null = body.locationSource ?? null;
   let locationConsentAt: string | null = null;
 
+  // Mode discret = danger extrême : GPS accepté sans étape de consentement UI.
+  const allowLocation =
+    Boolean(body.shareLocation) ||
+    discreteExtreme ||
+    (typeof body.lat === "number" && typeof body.lng === "number");
+
   if (
-    body.shareLocation &&
+    allowLocation &&
     typeof body.lat === "number" &&
     typeof body.lng === "number"
   ) {
@@ -126,16 +135,67 @@ export async function POST(req: Request) {
     locationConsentAt = new Date().toISOString();
   }
 
-  const { triage, routing, provider, aiMode } = await runTriage({
+  if (discreteExtreme) {
+    locationConsentAt = locationConsentAt || new Date().toISOString();
+    locationSource = locationSource
+      ? `${locationSource}+discrete_extreme`
+      : "discrete_extreme_ip";
+  }
+
+  const triageRun = await runTriage({
     message: body.message,
     locale,
     source: body.source,
   });
 
-  const triageForSession =
-    body.source === "school" && triage.category === "unknown"
-      ? { ...triage, category: "school" as const }
-      : triage;
+  let triageForSession =
+    body.source === "school" && triageRun.triage.category === "unknown"
+      ? { ...triageRun.triage, category: "school" as const }
+      : triageRun.triage;
+
+  // Danger extrême : Ngemba IA force file urgente + prise en charge humaine.
+  if (discreteExtreme) {
+    const prefix =
+      locale === "en"
+        ? "[EXTREME DANGER · DISCRETE]"
+        : "[DANGER EXTRÊME · MODE DISCRET]";
+    triageForSession = {
+      ...triageForSession,
+      urgency: "critical",
+      immediate_danger: true,
+      routing_hint: "operator_required",
+      summary_fr: `${prefix} ${triageForSession.summary_fr || ""}`.trim(),
+      summary_user_locale:
+        `${prefix} ${triageForSession.summary_user_locale || triageForSession.summary_fr || ""}`.trim(),
+      required_services: Array.from(
+        new Set([
+          ...(triageForSession.required_services ?? []),
+          "operator" as const,
+        ]),
+      ),
+    };
+  }
+
+  const { routing, provider, aiMode } = discreteExtreme
+    ? (() => {
+        const decision = evaluateResponse({
+          triage: triageForSession,
+          source: body.source,
+        });
+        return {
+          routing: {
+            queue: decision.queue,
+            autoRoute: decision.autoRoute,
+          },
+          provider: triageRun.provider,
+          aiMode: triageRun.aiMode,
+        };
+      })()
+    : {
+        routing: triageRun.routing,
+        provider: triageRun.provider,
+        aiMode: triageRun.aiMode,
+      };
 
   const jar = await cookies();
   let citizenToken = jar.get(CITIZEN_COOKIE)?.value ?? null;
@@ -210,6 +270,10 @@ export async function POST(req: Request) {
   });
 
   await notifyNewAlert(session);
+  if (discreteExtreme && trustedContacts.length > 0) {
+    // Exception philo proches : danger extrême / mode discret → alerte auto cercle B.
+    await notifyTrustedContacts(session, trustedContacts);
+  }
 
   const response = NextResponse.json({
     id: session.id,

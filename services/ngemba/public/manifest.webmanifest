@@ -56,8 +56,8 @@
     {
       "name": "Mode discret",
       "short_name": "Discret",
-      "url": "/discrete?source=shortcut",
-      "description": "Alerte sobre - sans ecran voyant",
+      "url": "/discrete/alerte?source=shortcut",
+      "description": "Alerte sobre - danger extreme",
       "icons": [
         {
           "src": "/icons/icon-192.png",
