@@ -33,12 +33,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "invalid_body" }, { status: 400 });
   }
 
-  const ctx = resolveOpsContext(parsed.data.token);
+  const token = parsed.data.token.trim().replace(/\s+/g, "");
+  const ctx = resolveOpsContext(token);
   if (!ctx.role) {
     return NextResponse.json({ error: "invalid_token" }, { status: 401 });
   }
 
-  const actor = resolveOpsActor(parsed.data.token);
+  const actor = resolveOpsActor(token);
   const secure =
     process.env.NODE_ENV === "production" || req.url.startsWith("https://");
   const res = NextResponse.json({
@@ -48,7 +49,7 @@ export async function POST(req: Request) {
     partner: ctx.partner
       ? { id: ctx.partner.id, name: ctx.partner.name, slug: ctx.partner.slug }
       : null,
-    actor: opsActorLabel(parsed.data.token),
+    actor: opsActorLabel(token),
     access: actor
       ? {
           id: actor.id,
@@ -59,7 +60,7 @@ export async function POST(req: Request) {
         }
       : null,
   });
-  res.cookies.set(OPS_COOKIE, parsed.data.token, opsCookieOptions(secure));
+  res.cookies.set(OPS_COOKIE, token, opsCookieOptions(secure));
   res.cookies.set(OPS_ROLE_COOKIE, ctx.role, opsCookieOptions(secure));
   return res;
 }

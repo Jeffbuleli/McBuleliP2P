@@ -89,7 +89,7 @@ Il n’y a **pas** de self-reset sur `/ops/login` (le code = secret serveur `NGE
 
 **Bonnes pratiques côté BCA :** 1–2 opérateurs max · code dans un gestionnaire / note sécurisée · ne pas poster sur Facebook/WhatsApp de groupe.
 
-**Évolution prévue (pas encore livrée) :** lien magique / OTP envoyé uniquement à l’email partenaire enregistré + révocation admin depuis `/ops/partners`.
+**Évolution livrée (v1) :** formulaire « Demander un nouveau code » sur `/ops/login` → email McBuleli (`/api/ops/auth/recover`). Pas d’auto-reset : rotation manuelle après vérif.
 
 ---
 
