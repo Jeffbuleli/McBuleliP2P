@@ -8,7 +8,11 @@ import {
   DaySparkline,
 } from "@/components/charts/ops-charts";
 import { urgencyLabelFr } from "@/lib/labels";
-import { shellMaxWidth, useDeviceClass } from "@/lib/ui/device";
+import {
+  opsPagePad,
+  opsShellMaxWidth,
+  useDeviceClass,
+} from "@/lib/ui/device";
 
 const ObservatoryMap = dynamic(
   () =>
@@ -145,7 +149,7 @@ export default function ObservatoryPage() {
 
   return (
     <main
-      className={`ng-shell mx-auto min-h-dvh py-6 pb-16 ${shellMaxWidth(device)}`}
+      className={`ng-shell mx-auto min-h-dvh ${opsPagePad(device)} ${opsShellMaxWidth(device)}`}
     >
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div>

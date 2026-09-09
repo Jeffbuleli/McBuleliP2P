@@ -2,7 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { shellMaxWidth, useDeviceClass } from "@/lib/ui/device";
+import {
+  opsPagePad,
+  opsShellMaxWidth,
+  partnerGridClass,
+  useDeviceClass,
+} from "@/lib/ui/device";
 
 type PartnerRow = {
   id: string;
@@ -28,7 +33,7 @@ export default function OpsPartnersPage() {
         if (!r.ok) {
           setError(
             r.status === 403
-              ? "Acces reserve aux administrateurs."
+              ? "Accès réservé aux administrateurs."
               : "Impossible de charger l'annuaire.",
           );
           return;
@@ -40,23 +45,27 @@ export default function OpsPartnersPage() {
 
   return (
     <main
-      className={`ng-shell mx-auto min-h-dvh py-6 pb-16 ${shellMaxWidth(device)}`}
+      className={`ng-shell mx-auto min-h-dvh ${opsPagePad(device)} ${opsShellMaxWidth(device)}`}
     >
-      <Link href="/ops" className="text-sm text-ng-muted">
+      <Link href="/ops" className="text-sm text-ng-muted hover:text-ng-primary">
         ← File ops
       </Link>
-      <h1 className="mt-2 text-lg font-semibold text-ng-text">
+      <h1
+        className={`mt-2 font-semibold tracking-tight text-ng-text ${
+          device === "desktop" ? "text-2xl" : "text-lg"
+        }`}
+      >
         Annuaire partenaires
       </h1>
       <p className="mt-1 text-xs text-ng-muted">
-        Couverture par province / commune - orientation par proximite
+        Couverture par province / commune — orientation par proximité
       </p>
 
       {error ? (
         <p className="mt-6 text-sm font-medium text-ng-urgent">{error}</p>
       ) : null}
 
-      <ul className="mt-6 space-y-3">
+      <ul className={`mt-6 ${partnerGridClass(device)}`}>
         {partners.map((p) => (
           <li
             key={p.id}

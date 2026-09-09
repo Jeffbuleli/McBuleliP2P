@@ -170,7 +170,13 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
       {/* Secondary actions - pushed toward bottom; SOS keeps vertical center */}
       <section className="relative z-10 mt-auto flex w-full flex-col items-center gap-6 pt-4 pb-1">
         <nav
-          className="flex w-full max-w-md items-start justify-center gap-1 sm:max-w-lg"
+          className={`flex w-full items-start justify-center gap-1 ${
+            device === "desktop"
+              ? "max-w-lg gap-3"
+              : device === "tablet"
+                ? "max-w-md gap-2"
+                : "max-w-md"
+          }`}
           aria-label="Actions"
         >
           <IconLink

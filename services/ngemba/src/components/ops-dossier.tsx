@@ -19,7 +19,7 @@ import {
 import { SCHOOL_CONCERN_LABELS_FR } from "@/lib/school/types";
 import type { StatusHistoryEntry } from "@/lib/sessions/store";
 import type { TrustedContact } from "@/lib/trusted-contacts/types";
-import { shellMaxWidth, useDeviceClass } from "@/lib/ui/device";
+import { opsPagePad, opsShellMaxWidth, useDeviceClass } from "@/lib/ui/device";
 
 type Session = {
   id: string;
@@ -319,7 +319,7 @@ export function OpsDossierView({ id }: { id: string }) {
 
   if (error) {
     return (
-      <main className={`ng-shell mx-auto py-10 ${shellMaxWidth(device)}`}>
+      <main className={`ng-shell mx-auto ${opsPagePad(device)} ${opsShellMaxWidth(device)}`}>
         <Link href="/ops" className="text-sm text-ng-muted">
           ← File ops
         </Link>
@@ -344,7 +344,7 @@ export function OpsDossierView({ id }: { id: string }) {
 
   if (!session) {
     return (
-      <main className={`ng-shell mx-auto space-y-4 py-8 ${shellMaxWidth(device)}`}>
+      <main className={`ng-shell mx-auto space-y-4 ${opsPagePad(device)} ${opsShellMaxWidth(device)}`}>
         <div className="h-4 w-24 animate-pulse rounded bg-ng-primary-muted" />
         <div className="h-28 animate-pulse rounded-2xl bg-ng-primary-muted/70" />
         <div className="h-40 animate-pulse rounded-2xl bg-ng-primary-muted/50" />
@@ -364,7 +364,7 @@ export function OpsDossierView({ id }: { id: string }) {
 
   return (
     <main
-      className={`ng-shell mx-auto min-h-dvh space-y-4 py-5 pb-28 ${shellMaxWidth(device)}`}
+      className={`ng-shell mx-auto min-h-dvh space-y-4 pb-28 ${opsPagePad(device)} ${opsShellMaxWidth(device)}`}
     >
       <header className="overflow-hidden rounded-2xl border border-[var(--ng-border)] bg-ng-surface shadow-[0_12px_32px_-24px_rgba(6,64,43,0.4)]">
         <div className={`h-1.5 ${urgencyBar(session.urgency)}`} />
@@ -426,6 +426,8 @@ export function OpsDossierView({ id }: { id: string }) {
         </p>
       ) : null}
 
+      <div className="ng-ops-dossier-grid">
+        <div className="space-y-4">
       <Section title="1 · Situation" accent>
         <p className="whitespace-pre-wrap text-sm leading-relaxed text-ng-text">
           {session.message === "·"
@@ -658,7 +660,9 @@ export function OpsDossierView({ id }: { id: string }) {
           />
         </Section>
       ) : null}
+        </div>
 
+        <div className="space-y-4">
       <SessionChat
         sessionId={session.id}
         viewerRole="operator"
@@ -704,6 +708,8 @@ export function OpsDossierView({ id }: { id: string }) {
               ))}
         </ul>
       </Section>
+        </div>
+      </div>
 
       <button
         type="button"
