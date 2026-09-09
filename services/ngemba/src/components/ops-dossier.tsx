@@ -766,11 +766,14 @@ export function OpsDossierView({ id }: { id: string }) {
       <SessionChat
         sessionId={session.id}
         viewerRole="operator"
+        onMediaChange={() => void load()}
         labels={{
           chatTitle: "Chat citoyen",
-          chatPlaceholder: "Répondre…",
+          chatPlaceholder:
+            "Clarifier, orienter… Joindre une pièce si besoin",
           chatSend: "Envoyer",
-          chatEmpty: "Aucun message. Écrivez pour orienter.",
+          chatEmpty:
+            "Aucun message. Écrivez ou joignez une pièce pour clarifier.",
         }}
       />
 

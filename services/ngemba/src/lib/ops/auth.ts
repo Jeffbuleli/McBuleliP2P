@@ -1,10 +1,8 @@
-import { createHmac } from "crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { decidePermission } from "@/lib/access/abac";
 import { resolveOpsActor } from "@/lib/access/bridge";
 import type { OpsActor } from "@/lib/access/types";
-import { readEnvKey } from "@/lib/env";
 import {
   OPS_COOKIE,
   OPS_ROLE_COOKIE,
@@ -13,6 +11,7 @@ import {
   resolveOpsRole,
 } from "@/lib/ops/auth-tokens";
 import {
+  OPS_ROLE_LABELS,
   type OpsPermission,
   type OpsRole,
   roleHasPermission,
@@ -75,27 +74,29 @@ export function opsCookieSecureFromRequest(req: Request): boolean {
   return req.url.startsWith("https://");
 }
 
+/**
+ * Label humain pour chat / chronologie (pas de hash technique type mcbuleli-7d1428).
+ * Ex. "McBuleli NGEMBA (national) · Administrateur"
+ */
+export function formatOpsActorLabel(actor: OpsActor): string {
+  const roleLabel = OPS_ROLE_LABELS[actor.role];
+  const org =
+    actor.partner?.name?.trim() ||
+    actor.organizationName?.trim() ||
+    actor.displayName?.trim() ||
+    null;
+  if (org && org !== roleLabel) return `${org} · ${roleLabel}`;
+  return roleLabel;
+}
+
 export function opsActorLabel(token: string): string {
   const actor = resolveOpsActor(token);
-  if (actor) {
-    const short = actor.id.replace(/^legacy:[^:]+:/, "").slice(0, 6);
-    const prefix = actor.partner?.slug ?? actor.role;
-    return `${prefix}-${short}`;
-  }
+  if (actor) return formatOpsActorLabel(actor);
   const ctx = resolveOpsContext(token);
-  const role = ctx.role;
-  if (!role) return "ops";
-  const prefix = ctx.partner?.slug ?? role;
-  const secret =
-    opsTokenForRole(role) ||
-    readEnvKey("NGEMBA_OPS_TOKEN") ||
-    process.env.NGEMBA_OPS_TOKEN ||
-    "ngemba";
-  const hash = createHmac("sha256", secret)
-    .update(token)
-    .digest("hex")
-    .slice(0, 6);
-  return `${prefix}-${hash}`;
+  if (!ctx.role) return "Opérateur";
+  const roleLabel = OPS_ROLE_LABELS[ctx.role];
+  if (ctx.partner?.name) return `${ctx.partner.name} · ${roleLabel}`;
+  return roleLabel;
 }
 
 export type OpsAuthOk = {

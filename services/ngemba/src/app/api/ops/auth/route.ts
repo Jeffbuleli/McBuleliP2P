@@ -4,6 +4,7 @@ import {
   OPS_COOKIE,
   OPS_ROLE_COOKIE,
   opsActorLabel,
+  formatOpsActorLabel,
   opsCookieOptions,
   opsCookieSecureFromRequest,
   readOpsSession,
@@ -49,7 +50,7 @@ export async function POST(req: Request) {
     partner: ctx.partner
       ? { id: ctx.partner.id, name: ctx.partner.name, slug: ctx.partner.slug }
       : null,
-    actor: opsActorLabel(token),
+    actor: actor ? formatOpsActorLabel(actor) : opsActorLabel(token),
     access: actor
       ? {
           id: actor.id,

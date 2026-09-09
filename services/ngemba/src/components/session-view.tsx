@@ -3,10 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { SessionChat } from "@/components/session-chat";
-import {
-  SessionMediaList,
-  SessionMediaUpload,
-} from "@/components/session-media";
+import { SessionMediaList } from "@/components/session-media";
 import { IconShield, IconSpark } from "@/components/icons";
 import { useCitizenLocale } from "@/hooks/use-citizen-locale";
 import { messages } from "@/lib/i18n";
@@ -131,7 +128,6 @@ export function SessionView({
   const [session, setSession] = useState<SessionPayload | null>(null);
   const [media, setMedia] = useState<SessionPayload["media"]>([]);
   const [error, setError] = useState(false);
-  const [showUpload, setShowUpload] = useState(false);
 
   useEffect(() => {
     if (!discrete) return;
@@ -349,41 +345,20 @@ export function SessionView({
             </div>
           ) : null}
 
-          <div className="shrink-0">
-            {showUpload ? (
-              <SessionMediaUpload
-                sessionId={id}
-                labels={{
-                  addMedia: t.addMedia,
-                  mediaHint: t.mediaHint,
-                  mediaUploading: t.mediaUploading,
-                }}
-                onUploaded={(items) => {
-                  setMedia(items);
-                  setShowUpload(false);
-                }}
-              />
-            ) : (
-              <button
-                type="button"
-                onClick={() => setShowUpload(true)}
-                className={`w-full rounded-xl border border-dashed px-3 py-2.5 text-xs font-semibold transition active:scale-[0.99] ${
-                  discrete
-                    ? "border-white/20 text-[#c9a0bc]"
-                    : "border-[var(--ng-border)] text-ng-primary hover:bg-ng-primary-muted/40"
-                }`}
-              >
-                + {t.addMedia}
-              </button>
-            )}
-          </div>
-
           <div className="min-h-0 flex-1">
             <SessionChat
               sessionId={id}
               viewerRole="citizen"
               discrete={discrete}
               locale={locale}
+              onMediaChange={() => {
+                void fetch(`/api/alerts/${id}`, { credentials: "include" })
+                  .then((r) => r.json())
+                  .then((d) => {
+                    if (d.session?.media) setMedia(d.session.media);
+                  })
+                  .catch(() => undefined);
+              }}
               labels={{
                 chatTitle: t.chatTitle,
                 chatPlaceholder: t.chatPlaceholder,

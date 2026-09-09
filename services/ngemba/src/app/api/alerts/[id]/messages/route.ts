@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { readCitizenToken } from "@/lib/citizen/token";
-import { opsActorLabel, readOpsTokenFromCookie, requireOpsAuth } from "@/lib/ops/auth";
+import { formatOpsActorLabel, requireOpsAuth } from "@/lib/ops/auth";
 import { emitOpsEvent } from "@/lib/ops/events";
 import { addSessionChatMessage, getSession } from "@/lib/sessions/store";
 import { createChatMessage } from "@/lib/sessions/chat";
@@ -9,9 +9,14 @@ import { clientIp, rateLimit, rateLimitResponse } from "@/lib/security/rate-limi
 
 type Ctx = { params: Promise<{ id: string }> };
 
-const bodySchema = z.object({
-  body: z.string().trim().min(1).max(2000),
-});
+const bodySchema = z
+  .object({
+    body: z.string().trim().max(2000).optional().default(""),
+    mediaId: z.string().uuid().optional(),
+  })
+  .refine((d) => Boolean(d.body?.length) || Boolean(d.mediaId), {
+    message: "body_or_media_required",
+  });
 
 export async function GET(req: Request, ctx: Ctx) {
   const { id } = await ctx.params;
@@ -54,21 +59,53 @@ export async function POST(req: Request, ctx: Ctx) {
     return NextResponse.json({ error: "invalid_body" }, { status: 400 });
   }
 
+  let mediaId: string | null = parsed.data.mediaId ?? null;
+  let mediaKind: "photo" | "audio" | "video" | null = null;
+  let mediaFileName: string | null = null;
+  if (mediaId) {
+    const att = session.media.find((m) => m.id === mediaId);
+    if (!att) {
+      return NextResponse.json({ error: "media_not_found" }, { status: 400 });
+    }
+    mediaKind = att.kind;
+    mediaFileName = att.fileName;
+  }
+
+  let caption = parsed.data.body?.trim() || "";
+  if (!caption && mediaFileName) {
+    caption =
+      mediaKind === "photo"
+        ? `Photo · ${mediaFileName}`
+        : mediaKind === "audio"
+          ? `Audio · ${mediaFileName}`
+          : mediaKind === "video"
+            ? `Vidéo · ${mediaFileName}`
+            : mediaFileName;
+  }
+
   const auth = await requireOpsAuth(req);
   let message;
   if (!(auth instanceof NextResponse)) {
-    const token = (await readOpsTokenFromCookie()) || "ops";
     message = createChatMessage({
       role: "operator",
-      body: parsed.data.body,
-      actor: opsActorLabel(token),
+      body: caption,
+      actor: formatOpsActorLabel(auth.actor),
+      mediaId,
+      mediaKind,
+      mediaFileName,
     });
   } else {
     const citizen = await readCitizenToken();
     if (!citizen || session.citizenToken !== citizen) {
       return NextResponse.json({ error: "forbidden" }, { status: 403 });
     }
-    message = createChatMessage({ role: "citizen", body: parsed.data.body });
+    message = createChatMessage({
+      role: "citizen",
+      body: caption,
+      mediaId,
+      mediaKind,
+      mediaFileName,
+    });
   }
 
   const updated = addSessionChatMessage(id, message);
