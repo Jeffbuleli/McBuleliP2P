@@ -50,6 +50,11 @@ export default function TelechargerPage() {
               iPhone (Safari) : Partager → <strong>Sur l&apos;écran d&apos;accueil</strong>.
             </li>
             <li>Ouvrez l&apos;icône <strong>Ngemba RDC</strong> comme une app.</li>
+            <li>
+              Mode discret : appui long sur l&apos;icône de l&apos;app →{" "}
+              <strong>Mode discret</strong>, ou sur l&apos;accueil : triple appui /
+              appui long sur le logo, ou coins bas-gauche → bas-droit → haut-gauche.
+            </li>
           </ol>
 
           <PwaInstallButton

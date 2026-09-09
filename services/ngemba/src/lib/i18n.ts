@@ -174,7 +174,8 @@ const baseFr: Copy = {
   discreteHint: "Écran sobre - vibration - pas de flash rouge",
   discreteSend: "Envoyer discrètement",
   discreteSafety: "Si quelqu'un surveille votre écran, écrivez peu de mots.",
-  discreteTap: "Un triple appui sur le logo NGEMBA ouvre le mode discret.",
+  discreteTap:
+    "Triple appui ou appui long sur le logo - ou coins bas-gauche, bas-droit, haut-gauche.",
   sosComposeHint: "Pour vous : danger immédiat ou besoin d'aide maintenant.",
   resourcesTitle: "Aide et ressources",
   preventTitle: "Prévenir",
@@ -276,7 +277,8 @@ export const messages: Record<Locale, Copy> = {
     discreteHint: "Plain screen - vibration - no red flash",
     discreteSend: "Send Discreetly",
     discreteSafety: "If someone is watching your screen, write few words.",
-    discreteTap: "A triple tap on the NGEMBA logo opens discrete mode.",
+    discreteTap:
+      "Triple tap or long-press the logo - or corners bottom-left, bottom-right, top-left.",
     sosComposeHint: "For you: immediate danger or need help now.",
     resourcesTitle: "Help and resources",
     preventTitle: "Prevent",
@@ -374,7 +376,8 @@ export const messages: Record<Locale, Copy> = {
     discreteHint: "Ekran ya solo - vibra - te flash ya mɔkɔ",
     discreteSend: "Tindika na libomba",
     discreteSafety: "Soki moto azali kotala ekran na yo, yemba moke.",
-    discreteTap: "Kokanga moke na logo ya NGEMBA ekotisa nzela ya libomba.",
+    discreteTap:
+      "Kokanga moke tozo appui long na logo - tozo coins bas-gauche, bas-droit, haut-gauche.",
     sosComposeHint: "Po na yo: mpasi ya ntango moko to boyebi ya lisungi sikoyo.",
     resourcesTitle: "Lisungi na bokoli",
     preventTitle: "Kobanga",
@@ -472,7 +475,8 @@ export const messages: Record<Locale, Copy> = {
     discreteHint: "Kio cha kawaida - kutikisa - hakuna mwanga mwekundu",
     discreteSend: "Tuma kwa siri",
     discreteSafety: "Ikiwa mtu anakuangalia kwenye skrini yako, andika maneno machache.",
-    discreteTap: "Gonga mara tatu kwenye nembo ya NGEMBA kufungua njia ya siri.",
+    discreteTap:
+      "Gonga mara tatu au shikilia nembo - au pembe chini-kushoto, chini-kulia, juu-kushoto.",
     sosComposeHint: "Kwako: hatari ya papo hapo au hitaji la msaada sasa.",
     resourcesTitle: "Msaada na rasilimali",
     preventTitle: "Kuzuia",
@@ -570,7 +574,8 @@ export const messages: Record<Locale, Copy> = {
     discreteHint: "Ekran ya solo - vibra - te flash ya mɔkɔ",
     discreteSend: "Tindika na kubomba",
     discreteSafety: "Soki moto azali kotala ekran na yo, yemba moke.",
-    discreteTap: "Kokanga moke na logo ya NGEMBA ekotisa nzela ya kubomba.",
+    discreteTap:
+      "Kokanga moke tozo appui long na logo - tozo coins bas-gauche, bas-droit, haut-gauche.",
     sosComposeHint: "Po na yo: mpasi ya ntango moko to boyebi ya lisungi sikoyo.",
     resourcesTitle: "Lisungi na bokoli",
     preventTitle: "Kobanga",
@@ -668,7 +673,8 @@ export const messages: Record<Locale, Copy> = {
     discreteHint: "Ekran ya solo - vibra - te flash ya mɔkɔ",
     discreteSend: "Tindika na kubomba",
     discreteSafety: "Soki moto azali kotala ekran na yo, yemba moke.",
-    discreteTap: "Kokanga moke na logo ya NGEMBA ekotisa nzila ya kubomba.",
+    discreteTap:
+      "Kokanga moke tozo appui long na logo - tozo coins bas-gauche, bas-droit, haut-gauche.",
     sosComposeHint: "Po na yo: mpasi ya ntango moko to boyebi ya lisungi sikoyo.",
     resourcesTitle: "Lisungi na bokoli",
     preventTitle: "Kobanga",

@@ -42,13 +42,29 @@
   "shortcuts": [
     {
       "name": "SOS",
-      "url": "/sos",
-      "description": "Danger - alerte urgente"
+      "short_name": "SOS",
+      "url": "/sos?source=shortcut",
+      "description": "Danger - alerte urgente",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     },
     {
       "name": "Mode discret",
-      "url": "/discrete",
-      "description": "Alerte sans ecran voyant"
+      "short_name": "Discret",
+      "url": "/discrete?source=shortcut",
+      "description": "Alerte sobre - sans ecran voyant",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }

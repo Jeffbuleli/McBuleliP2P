@@ -1,16 +1,12 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useRef } from "react";
 
-/** Triple-tap dans une fenêtre courte - déclencheur discret (web). */
-export function useTripleTap(onTrigger: () => void, windowMs = 700) {
+/** Triple-tap dans une fenêtre courte - déclencheur discret (web / PWA). */
+export function useTripleTap(onTrigger: () => void, windowMs = 900) {
   const taps = useRef<number[]>([]);
 
-  useEffect(() => {
-    taps.current = [];
-  }, []);
-
-  return function registerTap() {
+  return useCallback(() => {
     const now = Date.now();
     taps.current = taps.current.filter((t) => now - t < windowMs);
     taps.current.push(now);
@@ -18,5 +14,5 @@ export function useTripleTap(onTrigger: () => void, windowMs = 700) {
       taps.current = [];
       onTrigger();
     }
-  };
+  }, [onTrigger, windowMs]);
 }

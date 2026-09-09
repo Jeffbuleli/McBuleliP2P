@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -11,6 +12,7 @@ import {
   IconShield,
   IconUsers,
 } from "@/components/icons";
+import { DiscreteCornerPads } from "@/components/discrete-corner-pads";
 import { PoweredByMcbuleli } from "@/components/powered-by-mcbuleli";
 import { PwaInstallReminder } from "@/components/pwa-install";
 import { useCitizenLocale } from "@/hooks/use-citizen-locale";
@@ -20,7 +22,9 @@ import {
   messages,
   type Locale,
 } from "@/lib/i18n";
+import { useLongPress } from "@/lib/discrete/long-press";
 import { useTripleTap } from "@/lib/discrete/triple-tap";
+import { vibrateDiscreteAlert } from "@/lib/discrete/vibrate";
 import {
   citizenPagePad,
   citizenShellMaxWidth,
@@ -72,9 +76,12 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
   const { locale, setLocale, href } = useCitizenLocale(initialLocale);
   const t = messages[locale];
   const device = useDeviceClass();
-  const onLogoTap = useTripleTap(() => {
+  const openDiscrete = useCallback(() => {
+    vibrateDiscreteAlert();
     router.push(href("/discrete"));
-  });
+  }, [href, router]);
+  const onLogoTap = useTripleTap(openDiscrete);
+  const longPress = useLongPress(openDiscrete);
 
   function changeLocale(code: Locale) {
     setLocale(code);
@@ -84,6 +91,7 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
     <main
       className={`ng-shell relative mx-auto flex min-h-dvh flex-col ${citizenPagePad(device)} ${citizenShellMaxWidth(device)}`}
     >
+      <DiscreteCornerPads onTrigger={openDiscrete} />
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-[radial-gradient(ellipse_at_top,_rgba(136,35,100,0.08),_transparent_60%)]"
         aria-hidden
@@ -93,8 +101,16 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={onLogoTap}
-            className="inline-flex items-center justify-center overflow-hidden rounded-full bg-white shadow-[0_8px_22px_-12px_rgba(11,16,32,0.45)] ring-1 ring-[rgba(15,35,70,0.18)] focus:outline-none focus-visible:ring-2 focus-visible:ring-ng-primary"
+            onClick={() => {
+              if (longPress.consumeSuppressClick()) return;
+              onLogoTap();
+            }}
+            onPointerDown={longPress.onPointerDown}
+            onPointerUp={longPress.onPointerUp}
+            onPointerCancel={longPress.onPointerCancel}
+            onPointerLeave={longPress.onPointerLeave}
+            onContextMenu={(e) => e.preventDefault()}
+            className="inline-flex touch-manipulation items-center justify-center overflow-hidden rounded-full bg-white shadow-[0_8px_22px_-12px_rgba(11,16,32,0.45)] ring-1 ring-[rgba(15,35,70,0.18)] select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-ng-primary"
             style={{
               width: device === "desktop" ? 56 : device === "tablet" ? 52 : 48,
               height: device === "desktop" ? 56 : device === "tablet" ? 52 : 48,
@@ -107,7 +123,7 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
               alt="Ngemba RDC"
               width={40}
               height={40}
-              className="size-[70%] object-contain"
+              className="pointer-events-none size-[70%] object-contain"
               draggable={false}
             />
           </button>
