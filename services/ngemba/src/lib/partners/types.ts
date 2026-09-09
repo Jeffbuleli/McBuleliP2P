@@ -31,4 +31,15 @@ export type SessionRoutingMeta = {
   matchedPartnerIds: string[];
   scope: RoutingScope;
   note: string;
+  /** Lieu approx dérivé de l'IP citoyenne (ops track). */
+  ipGeo?: {
+    label: string;
+    city: string | null;
+    region: string | null;
+    country: string | null;
+    countryCode: string | null;
+    lat: number | null;
+    lng: number | null;
+    source: "geoapify_ip" | "ipwho";
+  } | null;
 };

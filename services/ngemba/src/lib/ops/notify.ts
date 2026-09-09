@@ -179,6 +179,17 @@ async function sendOpsEmail(session: AlertSessionRecord) {
       { label: "Source", value: source },
       { label: "Lieu", value: place },
       ...(province ? [{ label: "Province", value: String(province) }] : []),
+      ...(session.routingMeta?.ipGeo?.label
+        ? [
+            {
+              label: "Lieu IP ≈",
+              value: session.routingMeta.ipGeo.label,
+            },
+          ]
+        : []),
+      ...(session.clientIp
+        ? [{ label: "IP citoyenne", value: session.clientIp }]
+        : []),
       { label: "Langue", value: session.locale.toUpperCase() },
       { label: "Dossier", value: shortId },
       ...(session.discreteMode

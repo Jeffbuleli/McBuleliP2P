@@ -75,6 +75,16 @@ type Session = {
     matchedPartnerIds: string[];
     scope: "local" | "national_fallback" | "unassigned";
     note: string;
+    ipGeo?: {
+      label: string;
+      city: string | null;
+      region: string | null;
+      country: string | null;
+      countryCode: string | null;
+      lat: number | null;
+      lng: number | null;
+      source: string;
+    } | null;
   } | null;
   schoolContext?: {
     concernType: string;
@@ -253,6 +263,15 @@ export function OpsDossierView({ id }: { id: string }) {
     }>
   >([]);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [ipGeoLive, setIpGeoLive] = useState<{
+    label: string;
+    city: string | null;
+    region: string | null;
+    country: string | null;
+    lat: number | null;
+    lng: number | null;
+    source: string;
+  } | null>(null);
   const device = useDeviceClass();
 
   const load = useCallback(async () => {
@@ -287,6 +306,30 @@ export function OpsDossierView({ id }: { id: string }) {
       })
       .catch(() => undefined);
   }, [load]);
+
+  useEffect(() => {
+    if (!session?.clientIp) {
+      setIpGeoLive(null);
+      return;
+    }
+    if (session.routingMeta?.ipGeo?.label) {
+      setIpGeoLive(session.routingMeta.ipGeo);
+      return;
+    }
+    let cancelled = false;
+    void fetch(
+      `/api/ops/ip-geo?ip=${encodeURIComponent(session.clientIp)}`,
+      { credentials: "include" },
+    )
+      .then((r) => r.json())
+      .then((d) => {
+        if (!cancelled && d.geo) setIpGeoLive(d.geo);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.clientIp, session?.routingMeta?.ipGeo]);
 
   async function patch(body: Record<string, unknown>) {
     setBusy(true);
@@ -360,6 +403,11 @@ export function OpsDossierView({ id }: { id: string }) {
   const maps =
     session.lat != null && session.lng != null
       ? `https://maps.google.com/?q=${session.lat},${session.lng}`
+      : null;
+  const ipGeo = ipGeoLive || session.routingMeta?.ipGeo || null;
+  const ipMaps =
+    ipGeo?.lat != null && ipGeo?.lng != null
+      ? `https://maps.google.com/?q=${ipGeo.lat},${ipGeo.lng}`
       : null;
 
   return (
@@ -456,6 +504,21 @@ export function OpsDossierView({ id }: { id: string }) {
               GPS {session.lat!.toFixed(4)}, {session.lng!.toFixed(4)} ↗
             </a>
           ) : null}
+          {ipGeo ? (
+            <span className="rounded-lg bg-amber-50 px-2 py-1 font-medium text-amber-900">
+              IP ≈ {ipGeo.label}
+            </span>
+          ) : null}
+          {ipMaps ? (
+            <a
+              href={ipMaps}
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-lg bg-amber-50 px-2 py-1 font-medium text-amber-900"
+            >
+              Carte IP ↗
+            </a>
+          ) : null}
         </div>
         {session.schoolContext ? (
           <p className="mt-3 text-xs text-ng-muted">
@@ -511,9 +574,9 @@ export function OpsDossierView({ id }: { id: string }) {
           Identité citoyenne non demandée. Dossier anonyme — IP / appareil
           réservés à une investigation si besoin.
         </p>
-        <details className="mt-3 rounded-xl bg-ng-bg px-3 py-2">
+        <details className="mt-3 rounded-xl bg-ng-bg px-3 py-2" open>
           <summary className="cursor-pointer text-xs font-semibold text-ng-muted">
-            Investigation technique
+            Track IP · lieu approximatif
           </summary>
           <p className="mt-2 break-all font-mono text-[11px] text-ng-muted">
             IP {session.clientIp || "—"}
@@ -521,6 +584,44 @@ export function OpsDossierView({ id }: { id: string }) {
               ? ` · ${session.userAgent.slice(0, 120)}${session.userAgent.length > 120 ? "…" : ""}`
               : ""}
           </p>
+          {ipGeo ? (
+            <div className="mt-2 space-y-1 text-xs text-ng-text">
+              <p>
+                <span className="font-semibold text-ng-primary">Lieu IP ≈</span>{" "}
+                {ipGeo.label}
+                <span className="text-ng-muted">
+                  {" "}
+                  · {locationSourceLabelFr(ipGeo.source)}
+                </span>
+              </p>
+              {ipGeo.lat != null && ipGeo.lng != null ? (
+                <p className="text-ng-muted">
+                  Coords ≈ {ipGeo.lat.toFixed(3)}, {ipGeo.lng.toFixed(3)}
+                  {ipMaps ? (
+                    <>
+                      {" · "}
+                      <a
+                        href={ipMaps}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="font-medium text-ng-primary underline-offset-2 hover:underline"
+                      >
+                        Ouvrir la carte
+                      </a>
+                    </>
+                  ) : null}
+                </p>
+              ) : null}
+              <p className="text-[10px] leading-relaxed text-ng-muted">
+                Estimation ville / région via IP (pas une adresse exacte). Utile
+                si GPS refusé ou indisponible.
+              </p>
+            </div>
+          ) : session.clientIp ? (
+            <p className="mt-2 text-[11px] text-ng-muted">
+              Résolution IP en cours ou indisponible pour cette adresse.
+            </p>
+          ) : null}
         </details>
         {relatedAlerts.length > 0 ? (
           <ul className="mt-3 space-y-1.5">

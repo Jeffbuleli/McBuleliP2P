@@ -59,6 +59,11 @@ const LOCATION_SOURCE_FR: Record<string, string> = {
   geoapify: "GPS (Geoapify)",
   gps_offline: "GPS (estimation)",
   place: "Choix manuel",
+  geoapify_ip: "IP (Geoapify ≈ ville)",
+  ipwho: "IP (approx ville)",
+  ip_geo: "IP (approx)",
+  discrete_extreme_ip: "Mode discret (IP)",
+  discrete_extreme: "Mode discret",
 };
 
 const URGENCY_I18N: Record<Locale, Record<TriageResult["urgency"], string>> = {
@@ -129,7 +134,11 @@ export function routingLabelFr(queue: string): string {
 
 export function locationSourceLabelFr(source: string | null): string {
   if (!source) return "";
-  return LOCATION_SOURCE_FR[source] ?? source;
+  if (LOCATION_SOURCE_FR[source]) return LOCATION_SOURCE_FR[source];
+  return source
+    .split("+")
+    .map((part) => LOCATION_SOURCE_FR[part] ?? part)
+    .join(" · ");
 }
 
 export function providerLabelFr(provider: string): string {

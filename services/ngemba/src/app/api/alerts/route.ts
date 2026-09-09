@@ -15,6 +15,7 @@ import {
   resolveManualPlace,
   reverseGeocode,
 } from "@/lib/location/geoapify";
+import { resolveIpGeolocation } from "@/lib/location/ip-geo";
 import { opsSummaryFr } from "@/lib/labels";
 import { buildReferrals } from "@/lib/directory/referral";
 import { saveReferrals } from "@/lib/directory/store";
@@ -201,11 +202,46 @@ export async function POST(req: Request) {
   let citizenToken = jar.get(CITIZEN_COOKIE)?.value ?? null;
   if (!citizenToken) citizenToken = newCitizenToken();
 
-  const routingMeta = buildRoutingMeta({
-    commune,
-    locationLabel,
-    category: triageForSession.category,
-  });
+  const clientIpValue = ip !== "unknown" ? ip : null;
+  const ipGeo = await resolveIpGeolocation(clientIpValue);
+
+  // Sans GPS / lieu manuel : utiliser l'approx IP pour orientation partenaires.
+  const hadPreciseLocation = lat != null && lng != null;
+  if (!hadPreciseLocation && ipGeo) {
+    if (ipGeo.lat != null && ipGeo.lng != null) {
+      lat = ipGeo.lat;
+      lng = ipGeo.lng;
+    }
+    if (!locationLabel) {
+      locationLabel = `≈ ${ipGeo.label} (IP)`;
+    }
+    if (!commune && ipGeo.city) {
+      commune = ipGeo.city;
+    }
+    locationSource = locationSource
+      ? `${locationSource}+${ipGeo.source}`
+      : ipGeo.source;
+  }
+
+  const routingMeta = {
+    ...buildRoutingMeta({
+      commune,
+      locationLabel,
+      category: triageForSession.category,
+    }),
+    ipGeo: ipGeo
+      ? {
+          label: ipGeo.label,
+          city: ipGeo.city,
+          region: ipGeo.region,
+          country: ipGeo.country,
+          countryCode: ipGeo.countryCode,
+          lat: ipGeo.lat,
+          lng: ipGeo.lng,
+          source: ipGeo.source,
+        }
+      : null,
+  };
 
   let partnerSla: number | null = null;
   for (const id of routingMeta.matchedPartnerIds) {
@@ -248,7 +284,7 @@ export async function POST(req: Request) {
     aiMode,
     status: "active",
     citizenToken,
-    clientIp: ip !== "unknown" ? ip : null,
+    clientIp: clientIpValue,
     userAgent: req.headers.get("user-agent")?.slice(0, 300) || null,
     discreteMode: Boolean(body.discrete),
     trustedContacts,
