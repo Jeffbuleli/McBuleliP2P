@@ -27,49 +27,55 @@ function PartnerCard({
   const initials = publicPartnerInitials(p.name);
 
   const inner = (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-      <div className="flex shrink-0 items-center justify-center sm:w-[7.5rem]">
-        {p.logoUrl ? (
-          <span className="inline-flex size-[4.5rem] items-center justify-center overflow-hidden rounded-2xl bg-white ring-1 ring-[var(--ng-border)] sm:size-24">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={p.logoUrl}
-              alt={p.name}
-              className="size-full object-contain p-1.5"
-            />
+    <div className="relative">
+      <div className="absolute top-0 right-0 z-10">
+        {p.opsActive ? (
+          <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800">
+            {isFr ? "Ops actif" : "Ops live"}
           </span>
         ) : (
-          <span className="inline-flex size-[4.5rem] items-center justify-center rounded-2xl bg-ng-primary-muted text-lg font-extrabold tracking-tight text-ng-primary sm:size-24 sm:text-xl">
-            {initials}
+          <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-[10px] font-bold text-amber-800">
+            {isFr ? "En cours" : "Pending"}
           </span>
         )}
       </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-col gap-3 pr-16 sm:flex-row sm:items-center sm:pr-20">
+        <div className="flex shrink-0 items-center justify-center sm:w-[7.5rem]">
+          {p.logoUrl ? (
+            <span className="inline-flex size-[4.5rem] items-center justify-center overflow-hidden rounded-2xl bg-white ring-1 ring-[var(--ng-border)] sm:size-24">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={p.logoUrl}
+                alt={p.name}
+                className="size-full object-contain p-1.5"
+              />
+            </span>
+          ) : (
+            <span className="inline-flex size-[4.5rem] items-center justify-center rounded-2xl bg-ng-primary-muted text-lg font-extrabold tracking-tight text-ng-primary sm:size-24 sm:text-xl">
+              {initials}
+            </span>
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
           <p className="text-[10px] font-extrabold tracking-[0.14em] text-ng-primary uppercase">
             {role}
           </p>
-          {p.opsActive ? (
-            <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
-              {isFr ? "Ops actif" : "Ops live"}
-            </span>
-          ) : null}
+          <p className="mt-1 break-words text-base font-extrabold text-ng-text">
+            {p.name}
+          </p>
+          <p className="mt-1 break-words text-sm leading-relaxed text-ng-muted">
+            {blurb}
+          </p>
+          <p className="mt-2 break-words text-xs font-bold text-ng-primary">
+            {meta}
+            {href ? (
+              <span className="font-semibold text-ng-muted">
+                {" "}
+                · {href.replace(/^https?:\/\//, "").split("/")[0]}
+              </span>
+            ) : null}
+          </p>
         </div>
-        <p className="mt-1 break-words text-base font-extrabold text-ng-text">
-          {p.name}
-        </p>
-        <p className="mt-1 break-words text-sm leading-relaxed text-ng-muted">
-          {blurb}
-        </p>
-        <p className="mt-2 break-words text-xs font-bold text-ng-primary">
-          {meta}
-          {href ? (
-            <span className="font-semibold text-ng-muted">
-              {" "}
-              · {href.replace(/^https?:\/\//, "").split("/")[0]}
-            </span>
-          ) : null}
-        </p>
       </div>
     </div>
   );
