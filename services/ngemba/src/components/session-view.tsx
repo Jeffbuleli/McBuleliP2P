@@ -296,18 +296,6 @@ export function SessionView({
             </div>
           </div>
 
-          {session.immediateDanger ? (
-            <p
-              className={`rounded-xl px-3 py-2.5 text-xs font-semibold leading-relaxed ${
-                discrete
-                  ? "bg-white/10 text-[#e8d4e3] ring-1 ring-white/15"
-                  : "border border-red-200 bg-red-50 text-ng-urgent"
-              }`}
-            >
-              {t.emergencyHint}
-            </p>
-          ) : null}
-
           <article
             className={`shrink-0 rounded-2xl border ${
               discrete
@@ -351,13 +339,6 @@ export function SessionView({
                     </li>
                   ))}
                 </ul>
-              ) : null}
-              {!session.immediateDanger ? (
-                <p
-                  className={`text-xs leading-relaxed ${discrete ? "ng-discrete-muted" : "text-ng-muted"}`}
-                >
-                  {t.emergencyHint}
-                </p>
               ) : null}
             </div>
           </article>

@@ -45,7 +45,6 @@ type Copy = {
   alertOk: string;
   humanSoon: string;
   urgency: string;
-  emergencyHint: string;
   home: string;
   errorGeneric: string;
   province: string;
@@ -146,7 +145,6 @@ const baseFr: Copy = {
   alertOk: "Alerte reçue",
   humanSoon: "Orientation en cours",
   urgency: "Urgence",
-  emergencyHint: "Si danger immédiat - appelez aussi les secours locaux",
   home: "Accueil",
   errorGeneric: "Erreur - réessayez",
   province: "Province",
@@ -252,7 +250,6 @@ export const messages: Record<Locale, Copy> = {
     alertOk: "Alert received",
     humanSoon: "Orientation in progress",
     urgency: "Urgency",
-    emergencyHint: "If immediate danger - also call local emergency services",
     home: "Home",
     errorGeneric: "Error - please try again",
     province: "Province",
@@ -354,7 +351,6 @@ export const messages: Record<Locale, Copy> = {
     alertOk: "Nsango ekozali",
     humanSoon: "Orientation ezali na nzela",
     urgency: "Urgence",
-    emergencyHint: "Soki likama ezali ya mabe - benga mpe ba secours ya lokal",
     home: "Mboka",
     errorGeneric: "Mabe - soki te, bonga lisusu",
     province: "Bokoli",
@@ -455,7 +451,6 @@ export const messages: Record<Locale, Copy> = {
     alertOk: "Tahadhari imepokelewa",
     humanSoon: "Mwelekeo unaendelea",
     urgency: "Uharaka",
-    emergencyHint: "Ikiwa hatari ya papo hapo - pia piga huduma za dharura za eneo",
     home: "Nyumbani",
     errorGeneric: "Kosa - tafadhali jaribu tena",
     province: "Mkoa",
@@ -556,7 +551,6 @@ export const messages: Record<Locale, Copy> = {
     alertOk: "Nsango ekozali",
     humanSoon: "Orientation ezali na nzela",
     urgency: "Uharaka",
-    emergencyHint: "Soki likama ezali ya mabe - benga mpe ba secours ya lokal",
     home: "Mboka",
     errorGeneric: "Mabe - soki te, bonga lisusu",
     province: "Bokoli",
@@ -657,7 +651,6 @@ export const messages: Record<Locale, Copy> = {
     alertOk: "Nsango ekozali",
     humanSoon: "Orientation ezali na nzela",
     urgency: "Uharaka",
-    emergencyHint: "Soki likama ezali ya mabe - benga mpe ba secours ya lokal",
     home: "Mboka",
     errorGeneric: "Mabe - soki te, bonga lisusu",
     province: "Bokoli",

@@ -20,7 +20,6 @@ const RESOURCES: Record<Locale, PageCopy> = {
           "Police : 112 ou commissariat le plus proche",
           "Pompiers : selon votre ville",
           "Urgence médicale : hôpital ou centre de santé le plus proche",
-          "En danger immédiat : appelez d'abord les secours, puis NGEMBA si possible.",
         ],
       },
       {
@@ -44,7 +43,6 @@ const RESOURCES: Record<Locale, PageCopy> = {
         body: [
           "Signalement protégé via le module École - identité protégée.",
           "Le référent école reçoit la file dédiée, séparée des dossiers adultes.",
-          "Danger immédiat : appelez aussi les secours locaux.",
         ],
       },
       {
@@ -66,7 +64,6 @@ const RESOURCES: Record<Locale, PageCopy> = {
           "Police: 112 or nearest police station",
           "Firefighters: depending on your city",
           "Medical emergency: nearest hospital or health center",
-          "In immediate danger: call for help first, then NGEMBA if possible.",
         ],
       },
       {
@@ -90,7 +87,6 @@ const RESOURCES: Record<Locale, PageCopy> = {
         body: [
           "Protected report via the School module - your identity is protected.",
           "The school referent receives a dedicated queue, separate from adult cases.",
-          "Immediate danger: also call local emergency services.",
         ],
       },
       {
@@ -112,7 +108,6 @@ const RESOURCES: Record<Locale, PageCopy> = {
           "Polis : 112 to komisi ya liboso",
           "Bompoko : ndenge na yo",
           "Nzela ya bokoko : hopital to centre ya santé ya liboso",
-          "Na esengo ya mbala : yebisa liboso ba secours, na nsima NGEMBA soki ezali na possibilité.",
         ],
       },
       {
@@ -136,7 +131,6 @@ const RESOURCES: Record<Locale, PageCopy> = {
         body: [
           "Kokoma na nzela ya module Ékole - identité ezali na protection.",
           "Referent ya Ékole azwa file ya sika, eza na séparation na ba dosye ya mibali.",
-          "Danger ya ntango moko : yebisa mpe ba secours ya libanda.",
         ],
       },
       {
@@ -230,7 +224,6 @@ const RESOURCES: Record<Locale, PageCopy> = {
         body: [
           "Kusanga kwikala mu mposo ya Ékole - ntu ya kusanga ikala mu mposo.",
           "Mokambi ya ékole akokuta file ya mposo, eza na mposo ya bana.",
-          "Kizanga ya ntete: yebisa mpe ba secours ya mabele.",
         ],
       },
       {
@@ -277,7 +270,6 @@ const RESOURCES: Record<Locale, PageCopy> = {
         body: [
           "Kukangisa na nzela ya module Sukulu - ntina ya kukangisa eza na nzela ya nzela.",
           "Mokambi ya sukulu akokisi file ya sika, eza na esika ya ba dossier ya mibali.",
-          "Bango ya mpasi ya ntango ya sika : yebisa mpe ba secours ya lokasa.",
         ],
       },
       {
@@ -301,7 +293,6 @@ const PREVENT: Record<Locale, PageCopy> = {
         title: "Avant qu'il soit trop tard",
         body: [
           "Identifiez un contact de confiance à prévenir en cas de danger.",
-          "Mémorisez les numéros d'urgence locaux.",
           "Parlez des situations inquiétantes tôt - ne restez pas isolé.",
         ],
       },
@@ -338,7 +329,6 @@ const PREVENT: Record<Locale, PageCopy> = {
         title: "Before It's Too Late",
         body: [
           "Identify a trusted contact to alert in case of danger.",
-          "Memorize local emergency numbers.",
           "Talk about concerning situations early - do not stay isolated.",
         ],
       },
@@ -721,7 +711,6 @@ const CGU: Record<Locale, PageCopy> = {
         title: "Service limits",
         body: [
           "NGEMBA is not a direct emergency service (police, firefighters, ambulance).",
-          "In immediate danger, call local emergency numbers first, then NGEMBA if you can.",
           "McBuleli may limit abusive use, without ever automatically blocking a critical emergency.",
         ],
       },

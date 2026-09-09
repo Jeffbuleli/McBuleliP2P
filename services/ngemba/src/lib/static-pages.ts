@@ -8,7 +8,6 @@ export const EMERGENCY_NUMBERS: StaticSection = {
     "Police : 112 ou commissariat le plus proche",
     "Pompiers : selon votre ville (renseignez-vous localement)",
     "Urgence médicale : hôpital ou centre de santé le plus proche",
-    "En danger immédiat : appelez d'abord les services d'urgence, puis NGEMBA si vous le pouvez.",
   ],
 };
 
@@ -46,7 +45,6 @@ export const PREVENT_SECTIONS: StaticSection[] = [
     body: [
       "Ne vous mettez jamais en danger pour filmer ou intervenir.",
       "Signalez via Témoin avec des mots simples : lieu, type de situation, heure approximative.",
-      "Appelez les urgences si une vie est en danger immédiat.",
     ],
   },
   {
@@ -129,7 +127,6 @@ export const CGU_SECTIONS: StaticSection[] = [
     title: "Limites du service",
     body: [
       "NGEMBA n'est pas un service d'urgence directe (police, pompiers, SAMU).",
-      "En danger immédiat, appelez d'abord les numéros d'urgence locaux, puis NGEMBA si vous le pouvez.",
       "McBuleli peut limiter un usage abusif, sans jamais bloquer automatiquement une urgence critique.",
     ],
   },

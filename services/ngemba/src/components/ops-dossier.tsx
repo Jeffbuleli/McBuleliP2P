@@ -464,8 +464,7 @@ export function OpsDossierView({ id }: { id: string }) {
 
       {session.immediateDanger ? (
         <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-xs font-semibold text-ng-urgent">
-          Danger immédiat signalé — prioriser la sécurité et les numéros
-          d&apos;urgence locaux.
+          Danger immédiat signalé - prioriser la sécurité.
         </p>
       ) : null}
       {session.escalation ? (
