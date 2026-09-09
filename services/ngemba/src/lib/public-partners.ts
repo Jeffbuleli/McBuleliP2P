@@ -1,5 +1,5 @@
 /**
- * Annuaire public « Nos partenaires » (citoyen) — cartes détaillées.
+ * Annuaire public « Nos partenaires » (citoyen) - cartes détaillées.
  * Ops seed + ONG réseau NGEMBA (sans contacts privés / emails ops).
  */
 
@@ -39,9 +39,9 @@ export const PUBLIC_PARTNERS: PublicPartner[] = [
     roleFr: "Partenaire ops · Sud-Kivu · paix & enfance",
     roleEn: "Ops partner · South Kivu · peace & children",
     blurbFr:
-      "Synergie citoyenne pour la paix (Amani), la citoyenneté et le développement communautaire. File ops Sud-Kivu (Bukavu, Uvira) — enfants en danger, école, orientation.",
+      "Synergie citoyenne pour la paix (Amani), la citoyenneté et le développement communautaire. File ops Sud-Kivu (Bukavu, Uvira) - enfants en danger, école, orientation.",
     blurbEn:
-      "Civic synergy for peace (Amani), citizenship and community development. South Kivu ops queue (Bukavu, Uvira) — child protection, school, referral.",
+      "Civic synergy for peace (Amani), citizenship and community development. South Kivu ops queue (Bukavu, Uvira) - child protection, school, referral.",
     zone: "Sud-Kivu · Bukavu / Uvira",
     angle: "Paix · enfant · communauté",
     website: "https://www.facebook.com/profile.php?id=61593232664992",
@@ -106,9 +106,9 @@ export const PUBLIC_PARTNERS: PublicPartner[] = [
     roleFr: "Femmes & enfants · Bukavu",
     roleEn: "Women & children · Bukavu",
     blurbFr:
-      "Accompagnement des femmes et enfants à Bukavu — écoute, protection et renforcement communautaire.",
+      "Accompagnement des femmes et enfants à Bukavu - écoute, protection et renforcement communautaire.",
     blurbEn:
-      "Support for women and children in Bukavu — listening, protection and community strengthening.",
+      "Support for women and children in Bukavu - listening, protection and community strengthening.",
     zone: "Bukavu · Sud-Kivu",
     angle: "Femmes · enfants",
     website: "https://olamerdc.org",
@@ -158,9 +158,9 @@ export const PUBLIC_PARTNERS: PublicPartner[] = [
     roleFr: "Éducation · santé · protection",
     roleEn: "Education · health · protection",
     blurbFr:
-      "Éducation, santé et protection — ancrage Sud-Kivu et accompagnement des populations vulnérables.",
+      "Éducation, santé et protection - ancrage Sud-Kivu et accompagnement des populations vulnérables.",
     blurbEn:
-      "Education, health and protection — South Kivu footprint and support for vulnerable populations.",
+      "Education, health and protection - South Kivu footprint and support for vulnerable populations.",
     zone: "Sud-Kivu",
     angle: "Éducation · protection",
     website: "https://remeddrc.org",
@@ -184,9 +184,9 @@ export const PUBLIC_PARTNERS: PublicPartner[] = [
     roleFr: "Genre · paix",
     roleEn: "Gender · peace",
     blurbFr:
-      "Engagement genre et paix à l’Est — sensibilisation et appui communautaire.",
+      "Engagement genre et paix à l’Est - sensibilisation et appui communautaire.",
     blurbEn:
-      "Gender and peace engagement in the East — awareness and community support.",
+      "Gender and peace engagement in the East - awareness and community support.",
     zone: "Est RDC",
     angle: "Genre · paix",
     website: "https://clubzaidacatalan.org",
@@ -197,9 +197,9 @@ export const PUBLIC_PARTNERS: PublicPartner[] = [
     roleFr: "Femmes autochtones",
     roleEn: "Indigenous women",
     blurbFr:
-      "Droits et empowerment des femmes autochtones — voix, protection et plaidoyer.",
+      "Droits et empowerment des femmes autochtones - voix, protection et plaidoyer.",
     blurbEn:
-      "Rights and empowerment of indigenous women — voice, protection and advocacy.",
+      "Rights and empowerment of indigenous women - voice, protection and advocacy.",
     zone: "RDC",
     angle: "Femmes autochtones",
     website: "https://iwhe-ong.org",
@@ -236,9 +236,9 @@ export const PUBLIC_PARTNERS: PublicPartner[] = [
     roleFr: "OSC · Bukavu",
     roleEn: "CSO · Bukavu",
     blurbFr:
-      "Organisation de la société civile à Bukavu — développement et action citoyenne.",
+      "Organisation de la société civile à Bukavu - développement et action citoyenne.",
     blurbEn:
-      "Civil society organization in Bukavu — development and civic action.",
+      "Civil society organization in Bukavu - development and civic action.",
     zone: "Bukavu",
     angle: "OSC · communauté",
   },
@@ -248,9 +248,9 @@ export const PUBLIC_PARTNERS: PublicPartner[] = [
     roleFr: "Prévention · jeunesse",
     roleEn: "Prevention · youth",
     blurbFr:
-      "Prévention et accompagnement des jeunes — réseau World Federation Against Drugs en RDC.",
+      "Prévention et accompagnement des jeunes - réseau World Federation Against Drugs en RDC.",
     blurbEn:
-      "Youth prevention and support — World Federation Against Drugs network in DRC.",
+      "Youth prevention and support - World Federation Against Drugs network in DRC.",
     zone: "RDC",
     angle: "Jeunesse · prévention",
     website: "https://wfad.se",
@@ -273,9 +273,9 @@ export const PUBLIC_PARTNERS: PublicPartner[] = [
     roleFr: "Femmes · filles",
     roleEn: "Women · girls",
     blurbFr:
-      "Accompagnement des femmes et filles — dignité, droits et autonomisation.",
+      "Accompagnement des femmes et filles - dignité, droits et autonomisation.",
     blurbEn:
-      "Support for women and girls — dignity, rights and empowerment.",
+      "Support for women and girls - dignity, rights and empowerment.",
     zone: "RDC",
     angle: "Femmes · filles",
     website: "https://mwanamkekesho.org",
