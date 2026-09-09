@@ -5,6 +5,7 @@ import {
   OPS_ROLE_COOKIE,
   opsActorLabel,
   opsCookieOptions,
+  opsCookieSecureFromRequest,
   readOpsSession,
 } from "@/lib/ops/auth";
 import { resolveOpsActor } from "@/lib/access/bridge";
@@ -40,8 +41,7 @@ export async function POST(req: Request) {
   }
 
   const actor = resolveOpsActor(token);
-  const secure =
-    process.env.NODE_ENV === "production" || req.url.startsWith("https://");
+  const secure = opsCookieSecureFromRequest(req);
   const res = NextResponse.json({
     ok: true,
     role: ctx.role,
@@ -65,20 +65,22 @@ export async function POST(req: Request) {
   return res;
 }
 
-export async function DELETE() {
+export async function DELETE(req: Request) {
   const res = NextResponse.json({ ok: true });
-  const expired = { ...opsCookieOptions(true), maxAge: 0 };
+  const secure = opsCookieSecureFromRequest(req);
+  const expired = { ...opsCookieOptions(secure), maxAge: 0 };
   res.cookies.set(OPS_COOKIE, "", expired);
   res.cookies.set(OPS_ROLE_COOKIE, "", expired);
   return res;
 }
 
-export async function GET() {
-  const { role, partner, actor } = await readOpsSession();
-  if (!role) {
+export async function GET(req: Request) {
+  const { role, partner, actor, token } = await readOpsSession();
+  if (!role || !token) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-  return NextResponse.json({
+  const secure = opsCookieSecureFromRequest(req);
+  const res = NextResponse.json({
     role,
     roleLabel: OPS_ROLE_LABELS[role],
     partner: partner
@@ -94,4 +96,8 @@ export async function GET() {
         }
       : null,
   });
+  // Sliding refresh aussi via GET /api/ops/auth
+  res.cookies.set(OPS_COOKIE, token, opsCookieOptions(secure));
+  res.cookies.set(OPS_ROLE_COOKIE, role, opsCookieOptions(secure));
+  return res;
 }

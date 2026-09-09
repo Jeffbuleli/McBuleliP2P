@@ -103,7 +103,8 @@ function LoginForm() {
         <>
           <h1 className="text-xl font-semibold text-ng-text">Connexion</h1>
           <p className="mt-2 text-sm text-ng-muted">
-            Accès réservé aux opérateurs et partenaires accrédités.
+            Accès réservé aux opérateurs et partenaires accrédités. La session
+            reste active 14 jours (renouvelée à chaque visite OPS).
           </p>
 
           <form onSubmit={submit} className="mt-8 space-y-4">

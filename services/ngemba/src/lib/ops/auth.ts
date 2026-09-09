@@ -61,9 +61,18 @@ export function opsCookieOptions(secure: boolean) {
     httpOnly: true,
     secure,
     sameSite: "lax" as const,
+    // Partagé sur tout le site (citoyen + ops) - path /ops casserait /api/ops/*
     path: "/",
-    maxAge: 60 * 60 * 8,
+    // 14 jours - renouvelé (sliding) à chaque visite /ops
+    maxAge: 60 * 60 * 24 * 14,
   };
+}
+
+export function opsCookieSecureFromRequest(req: Request): boolean {
+  if (process.env.NODE_ENV === "production") return true;
+  const xfProto = req.headers.get("x-forwarded-proto");
+  if (xfProto === "https") return true;
+  return req.url.startsWith("https://");
 }
 
 export function opsActorLabel(token: string): string {
@@ -115,11 +124,6 @@ export async function requireOpsAuth(
   const role = actor?.role ?? null;
 
   if (!role || !token || !actor) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  }
-
-  const roleCookie = jar.get(OPS_ROLE_COOKIE)?.value;
-  if (cookieToken && roleCookie && roleCookie !== role) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
