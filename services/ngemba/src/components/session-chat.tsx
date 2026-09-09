@@ -116,16 +116,30 @@ export function SessionChat({
     : "border-[var(--ng-border)] bg-ng-surface";
   const headerMuted = discrete ? "text-[#c9a0bc]" : "text-ng-muted";
   const titleCls = discrete ? "text-[#e8d4e3]" : "text-ng-primary";
+  const hint =
+    locale === "en"
+      ? "Enter = send · Shift+Enter = new line"
+      : "Entrée = envoyer · Maj+Entrée = nouvelle ligne";
 
   return (
     <section
       className={`flex h-[min(58vh,520px)] min-h-[340px] flex-col overflow-hidden rounded-2xl border shadow-[0_10px_28px_-18px_rgba(6,64,43,0.35)] ${shell}`}
     >
       <header className="shrink-0 border-b border-[var(--ng-border)] px-4 py-2.5">
-        <p className={`text-sm font-bold ${titleCls}`}>{labels.chatTitle}</p>
-        <p className={`text-[11px] ${headerMuted}`}>
-          Entree = envoyer · Maj+Entree = nouvelle ligne
-        </p>
+        <div className="flex items-center justify-between gap-2">
+          <p className={`text-sm font-bold ${titleCls}`}>{labels.chatTitle}</p>
+          <span
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+              discrete
+                ? "bg-white/10 text-[#c9a0bc]"
+                : "bg-ng-primary-muted text-ng-primary"
+            }`}
+          >
+            <span className="size-1.5 animate-pulse rounded-full bg-current" />
+            Live
+          </span>
+        </div>
+        <p className={`text-[11px] ${headerMuted}`}>{hint}</p>
       </header>
 
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-3 py-3">
@@ -138,7 +152,7 @@ export function SessionChat({
             const mine = m.role === viewerRole;
             const peerLabel =
               m.role === "operator"
-                ? m.actor?.trim() || "Operateur"
+                ? m.actor?.trim() || "Opérateur"
                 : "Citoyen";
             return (
               <div
