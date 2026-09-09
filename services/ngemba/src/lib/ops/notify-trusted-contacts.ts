@@ -1,6 +1,7 @@
 import type { AlertSessionRecord } from "@/lib/sessions/store";
 import type { TrustedContact } from "@/lib/trusted-contacts/types";
-import { NGEMBA_EMAIL_FROM } from "@/lib/email/brand";
+import { NGEMBA_EMAIL_ASSETS, NGEMBA_EMAIL_FROM } from "@/lib/email/brand";
+import { renderOpsAlertEmail, toneFromUrgency } from "@/lib/email/ops-alert-layout";
 import { readEnvKey } from "@/lib/env";
 import { urgencyLabelFr } from "@/lib/labels";
 
@@ -13,7 +14,7 @@ function appUrl(): string {
 }
 
 function contactMessage(session: AlertSessionRecord, contactName: string) {
-  const place = session.locationLabel || session.commune || "lieu non precise";
+  const place = session.locationLabel || session.commune || "lieu non précisé";
   const urgency = urgencyLabelFr(session.urgency);
   const maps =
     session.lat != null && session.lng != null
@@ -21,14 +22,14 @@ function contactMessage(session: AlertSessionRecord, contactName: string) {
       : null;
 
   const lines = [
-    `NGEMBA - alerte de ${contactName}`,
+    `NGEMBA — alerte de ${contactName}`,
     "",
-    `Une personne de votre cercle de confiance a envoye une alerte (${urgency}).`,
+    `Une personne de votre cercle de confiance a envoyé une alerte (${urgency}).`,
     `Lieu : ${place}`,
     session.message ? `Message : ${session.message.slice(0, 200)}` : null,
     maps ? `Position : ${maps}` : null,
     "",
-    "Les operateurs NGEMBA sont informes. Contactez cette personne si vous le pouvez.",
+    "Les opérateurs NGEMBA sont informés. Contactez cette personne si vous le pouvez.",
     `Plus d'infos : ${appUrl()}`,
   ].filter(Boolean);
 
@@ -44,8 +45,36 @@ async function sendContactEmail(
   if (!apiKey || !email) return;
 
   const from = readEnvKey("NGEMBA_OPS_EMAIL_FROM") || NGEMBA_EMAIL_FROM;
-  const text = contactMessage(session, contact.name);
-  const subject = `NGEMBA - ${contact.name} a besoin d'aide`;
+  const place = session.locationLabel || session.commune || "Lieu non précisé";
+  const urgency = urgencyLabelFr(session.urgency);
+  const maps =
+    session.lat != null && session.lng != null
+      ? `https://maps.google.com/?q=${session.lat},${session.lng}`
+      : null;
+  const tone = toneFromUrgency(session.urgency);
+
+  const { html, text } = renderOpsAlertEmail({
+    title: `${contact.name} a besoin d’aide`,
+    preheader: `Alerte ${urgency} · ${place}`,
+    greeting: "Bonjour,",
+    body:
+      "Une personne de votre cercle de confiance a envoyé une alerte via NGEMBA. " +
+      "Les opérateurs sont informés. Contactez-la si vous le pouvez en sécurité.",
+    tone,
+    badge: urgency,
+    messageExcerpt: session.message
+      ? session.message.slice(0, 400)
+      : undefined,
+    actionUrl: maps || appUrl(),
+    cta: maps ? "Voir la position" : "Ouvrir NGEMBA",
+    footerNote:
+      "Cet email ne remplace pas les numéros d’urgence. En danger immédiat, appelez les services locaux.",
+    detailRows: [
+      { label: "Contact", value: contact.name },
+      { label: "Urgence", value: urgency },
+      { label: "Lieu", value: place },
+    ],
+  });
 
   try {
     const res = await fetch("https://api.resend.com/emails", {
@@ -57,8 +86,10 @@ async function sendContactEmail(
       body: JSON.stringify({
         from,
         to: [email],
-        subject,
-        text,
+        reply_to: NGEMBA_EMAIL_ASSETS.supportEmail,
+        subject: `[NGEMBA] ${contact.name} — alerte ${urgency}`,
+        text: text || contactMessage(session, contact.name),
+        html,
         headers: { "X-Entity-Ref-ID": `tc-${session.id}` },
       }),
     });

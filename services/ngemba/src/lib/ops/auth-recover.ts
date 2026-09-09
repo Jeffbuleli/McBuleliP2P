@@ -7,6 +7,7 @@ import {
   NGEMBA_OPS_BCC_DEFAULT,
   NGEMBA_OPS_EMAIL_DEFAULT,
 } from "@/lib/email/brand";
+import { renderOpsAlertEmail } from "@/lib/email/ops-alert-layout";
 import { readEnvKey } from "@/lib/env";
 import { listPartners } from "@/lib/partners/directory";
 
@@ -37,13 +38,6 @@ function matchPartnerHint(email: string, organization: string): string | null {
   return null;
 }
 
-function escLine(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
-
 export async function sendOpsRecoverRequest(
   input: OpsRecoverRequest,
   meta: { ip: string },
@@ -65,29 +59,38 @@ export async function sendOpsRecoverRequest(
     .filter(Boolean);
   const from = readEnvKey("NGEMBA_OPS_EMAIL_FROM") || NGEMBA_EMAIL_FROM;
   const replyTo =
+    input.email.trim() ||
     readEnvKey("NGEMBA_OPS_EMAIL_REPLY_TO") ||
     NGEMBA_EMAIL_ASSETS.supportEmail;
 
-  const lines = [
-    "NGEMBA OPS — demande de nouveau code opérateur",
-    "",
-    `Organisation : ${input.organization}`,
-    `Email déclaré : ${input.email}`,
-    `Téléphone : ${input.phone?.trim() || "—"}`,
-    `Référent : ${input.referent?.trim() || "—"}`,
-    `Note : ${input.note?.trim() || "—"}`,
-    `Match annuaire : ${matched || "aucun (vérifier manuellement)"}`,
-    `IP : ${meta.ip}`,
-    `Horodatage : ${new Date().toISOString()}`,
-    "",
-    "Action : vérifier l'identité, openssl rand -hex 20,",
-    "mettre à jour NGEMBA_OPS_TOKEN_NGO_* sur le VPS, renvoyer l'email d'accès.",
-  ];
-
-  const text = lines.join("\n");
-  const html = `<pre style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;line-height:1.5;white-space:pre-wrap;">${lines
-    .map((line) => escLine(line))
-    .join("\n")}</pre>`;
+  const { html, text } = renderOpsAlertEmail({
+    title: `Nouveau code demandé — ${input.organization}`,
+    preheader: `Vérifier ${input.email} puis régénérer le token ops`,
+    greeting: "Bonjour McBuleli,",
+    body:
+      "Un opérateur a demandé un nouveau code depuis /ops/login. " +
+      "Vérifiez l’identité (email / téléphone / référent), générez un nouveau token, " +
+      "mettez à jour le VPS, puis renvoyez l’email d’accès.",
+    tone: "info",
+    badge: "Accès",
+    actionUrl: `${NGEMBA_EMAIL_ASSETS.site}/ops/partners`,
+    cta: "Ouvrir l’annuaire partenaires",
+    footerNote:
+      "Action : openssl rand -hex 20 → NGEMBA_OPS_TOKEN_NGO_* → redeploy → email accès.",
+    detailRows: [
+      { label: "Organisation", value: input.organization },
+      { label: "Email", value: input.email },
+      { label: "Téléphone", value: input.phone?.trim() || "—" },
+      { label: "Référent", value: input.referent?.trim() || "—" },
+      { label: "Note", value: input.note?.trim() || "—" },
+      {
+        label: "Match annuaire",
+        value: matched || "aucun — vérifier manuellement",
+      },
+      { label: "IP", value: meta.ip },
+      { label: "Horodatage", value: new Date().toISOString() },
+    ],
+  });
 
   try {
     const res = await fetch("https://api.resend.com/emails", {
@@ -100,8 +103,8 @@ export async function sendOpsRecoverRequest(
         from,
         to,
         bcc: bcc.length ? bcc : undefined,
-        reply_to: input.email.trim() || replyTo,
-        subject: `[NGEMBA] Demande nouveau code ops — ${input.organization.slice(0, 60)}`,
+        reply_to: replyTo,
+        subject: `[NGEMBA] Nouveau code ops — ${input.organization.slice(0, 60)}`,
         text,
         html,
       }),

@@ -1,9 +1,11 @@
 import type { AlertSessionRecord } from "@/lib/sessions/store";
 import {
+  NGEMBA_EMAIL_ASSETS,
   NGEMBA_EMAIL_FROM,
   NGEMBA_OPS_BCC_DEFAULT,
   NGEMBA_OPS_EMAIL_DEFAULT,
 } from "@/lib/email/brand";
+import { renderOpsAlertEmail } from "@/lib/email/ops-alert-layout";
 import { readEnvKey } from "@/lib/env";
 import { categoryLabelFr, urgencyLabelFr } from "@/lib/labels";
 
@@ -62,19 +64,43 @@ async function sendEscalationEmail(session: AlertSessionRecord) {
     .filter(Boolean);
 
   const from = readEnvKey("NGEMBA_OPS_EMAIL_FROM") || NGEMBA_EMAIL_FROM;
-  const place = session.locationLabel || session.commune || "Lieu non precise";
-  const reason = session.escalation?.reason ?? "SLA depasse";
-  const text = [
-    "NGEMBA - ESCALADE SLA",
-    "",
-    reason,
-    `Urgence : ${urgencyLabelFr(session.urgency)}`,
-    `Type : ${categoryLabelFr(session.category)}`,
-    `Lieu : ${place}`,
-    `Dossier : ${appUrl()}/ops/${session.id}`,
-    "",
-    "Prendre en charge des maintenant (file nationale / admin).",
-  ].join("\n");
+  const replyTo =
+    readEnvKey("NGEMBA_OPS_EMAIL_REPLY_TO") ||
+    NGEMBA_EMAIL_ASSETS.supportEmail;
+  const place = session.locationLabel || session.commune || "Lieu non précisé";
+  const reason = session.escalation?.reason ?? "SLA dépassé";
+  const urgency = urgencyLabelFr(session.urgency);
+  const category = categoryLabelFr(session.category);
+  const shortId = session.id.slice(0, 8).toUpperCase();
+  const link = `${appUrl()}/ops/login?next=${encodeURIComponent(`/ops/${session.id}`)}`;
+
+  const { html, text } = renderOpsAlertEmail({
+    title: `Escalade SLA — ${place}`,
+    preheader: `${urgency} · ${reason} · dossier ${shortId}`,
+    greeting: "Bonjour,",
+    body:
+      "Cette alerte n’a pas été prise en charge dans les délais. " +
+      "Merci d’intervenir immédiatement (file nationale / admin).",
+    tone: "critical",
+    badge: "Escalade",
+    messageExcerpt: session.message.slice(0, 600) || undefined,
+    summary: session.aiSummary || undefined,
+    actionUrl: link,
+    cta: "Prendre en charge maintenant",
+    secondaryUrl: `${appUrl()}/ops`,
+    secondaryLabel: "Ouvrir la file ops",
+    footerNote: `Motif : ${reason}`,
+    detailRows: [
+      { label: "Urgence", value: urgency },
+      { label: "Type", value: category },
+      { label: "Lieu", value: place },
+      { label: "Dossier", value: shortId },
+      { label: "Motif", value: reason },
+      ...(session.routingMeta?.scope
+        ? [{ label: "Routage", value: session.routingMeta.scope }]
+        : []),
+    ],
+  });
 
   try {
     const res = await fetch("https://api.resend.com/emails", {
@@ -87,8 +113,10 @@ async function sendEscalationEmail(session: AlertSessionRecord) {
         from,
         to,
         bcc: bcc.length ? bcc : undefined,
-        subject: `NGEMBA ESCALADE - ${urgencyLabelFr(session.urgency)} - ${place}`,
+        reply_to: replyTo,
+        subject: `[NGEMBA ESCALADE] ${urgency} · ${place}`,
         text,
+        html,
         headers: { "X-Entity-Ref-ID": `esc-${session.id}` },
       }),
     });

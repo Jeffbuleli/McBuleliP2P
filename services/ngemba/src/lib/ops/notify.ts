@@ -5,7 +5,7 @@ import {
   NGEMBA_OPS_BCC_DEFAULT,
   NGEMBA_OPS_EMAIL_DEFAULT,
 } from "@/lib/email/brand";
-import { renderOpsAlertEmail } from "@/lib/email/ops-alert-layout";
+import { renderOpsAlertEmail, toneFromUrgency } from "@/lib/email/ops-alert-layout";
 import { readEnvKey } from "@/lib/env";
 import {
   categoryLabelFr,
@@ -128,40 +128,46 @@ async function sendOpsEmail(session: AlertSessionRecord) {
     readEnvKey("NGEMBA_OPS_EMAIL_REPLY_TO") ||
     NGEMBA_EMAIL_ASSETS.supportEmail;
   const link = `${appUrl()}/ops/login?next=${encodeURIComponent(`/ops/${session.id}`)}`;
-  const place = session.locationLabel || session.commune || "Sans lieu";
+  const place = session.locationLabel || session.commune || "Lieu non précisé";
   const urgency = urgencyLabelFr(session.urgency);
   const category = categoryLabelFr(session.category);
   const source = sourceLabelFr(session.source);
   const message = session.message.slice(0, 800);
+  const tone = toneFromUrgency(session.urgency);
+  const shortId = session.id.slice(0, 8).toUpperCase();
+  const province =
+    session.routingMeta?.provinceName ||
+    session.routingMeta?.provinceId ||
+    null;
 
-  const subject = `NGEMBA - nouvelle alerte (${urgency})`;
+  const subject = `[NGEMBA] ${urgency} · ${category} · ${place}`;
 
   const { html, text } = renderOpsAlertEmail({
-    title: "Nouvelle alerte citoyenne",
-    preheader: `${urgency} - ${category} - ${place}`,
-    greeting: "Bonjour,",
+    title: `${category} — ${place}`,
+    preheader: `${urgency} · ${source} · ouvrir le dossier ${shortId}`,
+    greeting: "Bonjour opérateur·rice,",
     body:
       "Une personne a signalé une situation via NGEMBA. " +
-      "Merci de consulter le dossier et de la prendre en charge si nécessaire.",
+      "Ouvrez le dossier, vérifiez le résumé IA, puis prenez en charge ou orientez. " +
+      "NGEMBA n’est pas un substitut police / SAMU.",
+    tone,
+    badge: urgency,
     messageExcerpt: message,
     summary: session.aiSummary,
     actionUrl: link,
     cta: "Ouvrir le dossier",
+    secondaryUrl: `${appUrl()}/ops`,
+    secondaryLabel: "Voir toute la file ops",
     partnerLine: pilotPartnerLine(),
+    footerNote: `Réf. dossier ${shortId} · répondre sous SLA selon l’urgence.`,
     detailRows: [
       { label: "Urgence", value: urgency },
       { label: "Type", value: category },
       { label: "Source", value: source },
       { label: "Lieu", value: place },
+      ...(province ? [{ label: "Province", value: String(province) }] : []),
       { label: "Langue", value: session.locale.toUpperCase() },
-      ...(session.clientIp
-        ? [
-            {
-              label: "IP (investigation)",
-              value: `${session.clientIp} - identité citoyenne non demandée`,
-            },
-          ]
-        : []),
+      { label: "Dossier", value: shortId },
       ...(session.discreteMode
         ? [{ label: "Mode", value: "Discret (vibration)" }]
         : []),
@@ -169,7 +175,8 @@ async function sendOpsEmail(session: AlertSessionRecord) {
         ? [
             {
               label: "Safe School",
-              value: SCHOOL_CONCERN_LABELS_FR[session.schoolContext.concernType] ??
+              value:
+                SCHOOL_CONCERN_LABELS_FR[session.schoolContext.concernType] ??
                 session.schoolContext.concernType,
             },
             ...(session.schoolContext.establishmentHint
