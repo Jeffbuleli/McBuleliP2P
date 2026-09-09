@@ -77,6 +77,19 @@ function LoginForm() {
         </button>
       </form>
 
+      <p className="mt-6 text-center text-sm text-ng-muted">
+        Code perdu ?{" "}
+        <a
+          href="mailto:hi@mcbuleli.org?subject=NGEMBA%20ops%20-%20demande%20nouveau%20code&body=Organisation%20%3A%0AEmail%20partenaire%20enregistr%C3%A9%20%3A%0ANom%20r%C3%A9f%C3%A9rent%20%3A%0AT%C3%A9l%C3%A9phone%20%3A%0A"
+          className="font-medium text-ng-primary underline-offset-2 hover:underline"
+        >
+          Demander un nouveau code
+        </a>
+        <span className="block mt-1 text-xs">
+          Réponse sous 24–48 h ouvrable · hi@mcbuleli.org
+        </span>
+      </p>
+
       <Link href="/" className="mt-8 text-center text-sm text-ng-muted">
         Retour app citoyenne
       </Link>

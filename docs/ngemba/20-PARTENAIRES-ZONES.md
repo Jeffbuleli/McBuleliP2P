@@ -33,6 +33,7 @@ Voir [19-PHILO-ORIENTATION-PROCHES.md](./19-PHILO-ORIENTATION-PROCHES.md).
 |------------|------|------|----------|
 | McBuleli national | admin | national | oui |
 | JGL AFRICA | ngo | national | oui |
+| Bloc Citoyen Amani (BCA) | ngo | sud-kivu (Bukavu, Uvira…) | non |
 | Referent ecole Kinshasa | school | kinshasa | non |
 | Securite nationale | security | national | oui |
 | Infra Kinshasa | partner | kinshasa | oui |
