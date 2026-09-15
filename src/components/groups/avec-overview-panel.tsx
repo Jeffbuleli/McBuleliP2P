@@ -239,7 +239,6 @@ export function AvecOverviewPanel({
               {funds ? funds.availableUsdt.toFixed(0) : "-"}
               <span className="ml-0.5 text-xs font-bold">USDT</span>
             </p>
-            <p className="mt-1 text-[10px] text-[color:var(--fd-muted)]">{t("avec_treasury_available_hint")}</p>
           </div>
         </div>
       </div>

@@ -21,7 +21,7 @@ function isCandidateVoteType(type: GovernanceVoteMeta["proposalType"]): boolean 
 }
 
 function formatDuration(ms: number, locale: string): string {
-  if (ms <= 0) return "—";
+  if (ms <= 0) return "-";
   const h = Math.floor(ms / 3600000);
   const m = Math.floor((ms % 3600000) / 60000);
   if (h >= 48) return `${Math.floor(h / 24)}d`;
@@ -65,7 +65,7 @@ function PermChip({ role, added }: { role: string; added: boolean }) {
         added ? "bg-emerald-100 text-emerald-900" : "bg-rose-100 text-rose-900"
       }`}
     >
-      {added ? "+" : "−"}{" "}
+      {added ? "+" : "-"}{" "}
       {t(
         granularRoleI18nKey(role as "treasurer" | "credit_officer" | "secretary") as never,
       )}

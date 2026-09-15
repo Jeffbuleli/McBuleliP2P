@@ -132,8 +132,8 @@ export function buildDeterministicInsights(
 
   insights.push({
     id: "treasury",
-    textEn: `Group savings total ${snap.totalSavingsUsdt.toFixed(2)} USDT across ${snap.memberCount} members (cycle ${snap.cycleNumber}).`,
-    textFr: `Épargne du groupe : ${snap.totalSavingsUsdt.toFixed(2)} USDT pour ${snap.memberCount} membres (cycle ${snap.cycleNumber}).`,
+    textEn: `Savings ${snap.totalSavingsUsdt.toFixed(0)} USDT - ${snap.memberCount} members.`,
+    textFr: `Epargne ${snap.totalSavingsUsdt.toFixed(0)} USDT - ${snap.memberCount} membres.`,
     source: "group_wallet_ledger_entries.group_contribution_in",
     confidence: "high",
   });
@@ -141,16 +141,16 @@ export function buildDeterministicInsights(
   if (snap.activeLoans > 0) {
     insights.push({
       id: "loans_active",
-      textEn: `${snap.activeLoans} active loan(s); outstanding principal ${snap.outstandingLoansUsdt.toFixed(2)} USDT.`,
-      textFr: `${snap.activeLoans} crédit(s) actif(s) ; capital restant ${snap.outstandingLoansUsdt.toFixed(2)} USDT.`,
+      textEn: `${snap.activeLoans} active loan(s) - ${snap.outstandingLoansUsdt.toFixed(0)} USDT out.`,
+      textFr: `${snap.activeLoans} credit(s) actif(s) - ${snap.outstandingLoansUsdt.toFixed(0)} USDT restant.`,
       source: "group_avec_loans.status=disbursed",
       confidence: "high",
     });
   } else {
     insights.push({
       id: "loans_none",
-      textEn: "No active loans in this group right now.",
-      textFr: "Aucun crédit actif dans ce groupe pour le moment.",
+      textEn: "No active loans.",
+      textFr: "Aucun credit actif.",
       source: "group_avec_loans",
       confidence: "high",
     });
@@ -159,16 +159,16 @@ export function buildDeterministicInsights(
   if (snap.overdueLoans > 0) {
     insights.push({
       id: "overdue",
-      textEn: `Watch risk: ${snap.overdueLoans} loan(s) are past the penalty window.`,
-      textFr: `Risque à surveiller : ${snap.overdueLoans} crédit(s) en retard (fenêtre de pénalité).`,
+      textEn: `Watch: ${snap.overdueLoans} overdue loan(s).`,
+      textFr: `Alerte: ${snap.overdueLoans} credit(s) en retard.`,
       source: "computeLoanCharges.isOverdue",
       confidence: "high",
     });
   } else if (snap.repaidLoans > 0) {
     insights.push({
       id: "repay_ok",
-      textEn: `${snap.repaidLoans} loan(s) fully repaid; no overdue loans detected.`,
-      textFr: `${snap.repaidLoans} crédit(s) remboursé(s) ; aucun retard détecté.`,
+      textEn: `${snap.repaidLoans} repaid - no overdue.`,
+      textFr: `${snap.repaidLoans} rembourse(s) - aucun retard.`,
       source: "group_avec_loans + loan-terms",
       confidence: "high",
     });
@@ -178,14 +178,11 @@ export function buildDeterministicInsights(
     const t = snap.recentContributionTrendPct;
     insights.push({
       id: "trend",
-      textEn:
-        t >= 0
-          ? `Savings contributions rose about ${t}% vs the prior 30 days.`
-          : `Savings contributions fell about ${Math.abs(t)}% vs the prior 30 days.`,
+      textEn: t >= 0 ? `Savings up ~${t}% vs prior 30d.` : `Savings down ~${Math.abs(t)}% vs prior 30d.`,
       textFr:
         t >= 0
-          ? `Les contributions d'épargne ont augmenté d'environ ${t} % vs les 30 jours précédents.`
-          : `Les contributions d'épargne ont baissé d'environ ${Math.abs(t)} % vs les 30 jours précédents.`,
+          ? `Epargne +${t}% vs 30j.`
+          : `Epargne -${Math.abs(t)}% vs 30j.`,
       source: "ledger contributions last 60 days",
       confidence: snap.contributionCount >= 4 ? "medium" : "low",
     });
@@ -224,8 +221,8 @@ export async function getGroupFinancialInsights(args: {
   if (assistantOpenAiEnabled()) {
     try {
       const raw = await completeChatJson({
-        systemPrompt: `You are eAVEC Financial AI. You ONLY rephrase provided JSON facts into short committee insights.
-Never invent numbers or names. Return JSON: {"extras":[{"id":"string","textEn":"...","textFr":"...","confidence":"high|medium|low"}]}
+        systemPrompt: `You are eAVEC Financial AI. Rephrase provided JSON facts into short committee insights (max 12 words each).
+Never invent numbers. Return JSON: {"extras":[{"id":"string","textEn":"...","textFr":"...","confidence":"high|medium|low"}]}
 Max 2 extras. No PII. No credit approval language.`,
         userMessage: JSON.stringify({
           snapshot: {

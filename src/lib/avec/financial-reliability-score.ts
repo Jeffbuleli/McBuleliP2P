@@ -158,9 +158,7 @@ export function computeFinancialReliabilityScore(
     score: Math.round(score),
     maxScore: 100,
     factors,
-    disclaimerEn:
-      "Indicative decision-aid for the group committee. Not a bank credit score. Does not auto-approve loans.",
-    disclaimerFr:
-      "Aide à la décision indicative pour le comité. Ce n'est pas un score bancaire. N'approuve pas automatiquement un crédit.",
+    disclaimerEn: "Decision aid only - not a bank score.",
+    disclaimerFr: "Aide a la decision seulement - pas un score bancaire.",
   };
 }
