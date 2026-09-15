@@ -1,75 +1,77 @@
 "use client";
 
 import { useI18n } from "@/components/i18n-provider";
+import {
+  IlluCollectiveVote,
+  IlluMeeting,
+  IlluTreasury,
+} from "@/components/groups/avec-illustrations";
 
-function IconSave({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path d="M12 4v12m0 0l-4-4m4 4l4-4M5 19h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-function IconLoan({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
-      <rect x="3" y="6" width="18" height="12" rx="2" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M3 10h18" stroke="currentColor" strokeWidth="1.8" />
-    </svg>
-  );
-}
-function IconRepay({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path d="M4 12a8 8 0 0114.5-4.5M20 12a8 8 0 01-14.5 4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M18 3v5h-5M6 21v-5h5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-function IconHistory({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
-      <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M12 8v4l3 2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  );
-}
-
+/**
+ * Single member journey on Vue - same labels as tabs (no Épargner/Crédit clash).
+ * 3 acts: save in meeting, credit in treasury, decide in dialogue.
+ */
 export function AvecMemberQuickActions({
-  groupId,
   onGoMeeting,
   onGoTreasury,
+  onGoDialogue,
+  voteLive,
 }: {
-  groupId: string;
   onGoMeeting: () => void;
   onGoTreasury: () => void;
+  onGoDialogue: () => void;
+  voteLive?: boolean;
 }) {
   const { t } = useI18n();
-  const btn =
-    "flex flex-col items-center gap-1 rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-2 py-2.5 text-center active:scale-[0.98]";
+
+  const tiles = [
+    {
+      id: "meeting",
+      label: t("avec_tab_meeting"),
+      hint: t("avec_do_save"),
+      onClick: onGoMeeting,
+      Illu: IlluMeeting,
+    },
+    {
+      id: "treasury",
+      label: t("avec_tab_treasury"),
+      hint: t("avec_do_credit"),
+      onClick: onGoTreasury,
+      Illu: IlluTreasury,
+    },
+    {
+      id: "dialogue",
+      label: t("avec_tab_dialogue"),
+      hint: voteLive ? t("avec_do_vote_live") : t("avec_do_decide"),
+      onClick: onGoDialogue,
+      Illu: IlluCollectiveVote,
+      pulse: voteLive,
+    },
+  ] as const;
 
   return (
-    <div className="grid grid-cols-4 gap-2">
-      <button type="button" className={btn} onClick={onGoMeeting}>
-        <IconSave className="h-5 w-5 text-[color:var(--fd-primary)]" />
-        <span className="text-[9px] font-bold text-[color:var(--fd-text)]">{t("avec_action_save")}</span>
-      </button>
-      <button type="button" className={btn} onClick={onGoTreasury}>
-        <IconLoan className="h-5 w-5 text-[color:var(--fd-primary)]" />
-        <span className="text-[9px] font-bold text-[color:var(--fd-text)]">{t("avec_action_loan")}</span>
-      </button>
-      <button type="button" className={btn} onClick={onGoTreasury}>
-        <IconRepay className="h-5 w-5 text-[color:var(--fd-primary)]" />
-        <span className="text-[9px] font-bold text-[color:var(--fd-text)]">{t("avec_action_repay")}</span>
-      </button>
-      <button
-        type="button"
-        className={btn}
-        onClick={() => document.getElementById("avec-passport")?.scrollIntoView({ behavior: "smooth" })}
-      >
-        <IconHistory className="h-5 w-5 text-[color:var(--fd-primary)]" />
-        <span className="text-[9px] font-bold text-[color:var(--fd-text)]">{t("avec_action_history")}</span>
-      </button>
-      <span className="sr-only">{groupId}</span>
+    <div className="grid grid-cols-3 gap-2">
+      {tiles.map((x) => (
+        <button
+          key={x.id}
+          type="button"
+          onClick={x.onClick}
+          className={`relative flex flex-col items-center gap-1 rounded-2xl border px-1.5 py-3 text-center transition active:scale-[0.98] ${
+            "pulse" in x && x.pulse
+              ? "border-violet-300 bg-violet-50/80 ring-1 ring-violet-200"
+              : "border-[color:var(--fd-border)] bg-[color:var(--fd-card)]"
+          }`}
+        >
+          {"pulse" in x && x.pulse ? (
+            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-violet-600" aria-hidden />
+          ) : null}
+          <x.Illu className="h-11 w-16 text-[color:var(--fd-primary)]" />
+          <span className="text-[10px] font-black uppercase tracking-wide text-[color:var(--fd-text)]">
+            {x.label}
+          </span>
+          <span className="text-[9px] font-semibold text-[color:var(--fd-muted)]">{x.hint}</span>
+        </button>
+      ))}
     </div>
   );
 }

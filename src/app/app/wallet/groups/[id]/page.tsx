@@ -368,7 +368,7 @@ export default function AvecDashboardPage() {
           </p>
         )}
 
-        <div className="flex gap-1 overflow-x-auto rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] p-1 scrollbar-none">
+        <div className="flex gap-1 overflow-x-auto rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] p-1.5 scrollbar-none">
           {tabs.map((x) => (
             <button
               key={x.id}
@@ -377,21 +377,21 @@ export default function AvecDashboardPage() {
                 if (x.id !== "meeting") setPayOk(false);
                 setTab(x.id);
               }}
-              className={`relative flex shrink-0 flex-col items-center gap-0.5 rounded-lg px-2 py-1.5 text-[9px] font-bold uppercase tracking-wide transition ${
+              className={`relative flex min-w-[3.4rem] shrink-0 flex-col items-center gap-1 rounded-xl px-2 py-2 text-[9px] font-bold uppercase tracking-wide transition ${
                 tab === x.id
-                  ? "bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)]"
+                  ? "bg-[color:var(--fd-mint)] text-[color:var(--fd-primary)] shadow-sm"
                   : "text-[color:var(--fd-muted)]"
               }`}
             >
               {x.dot ? (
                 <span
-                  className={`absolute right-1 top-1 h-2 w-2 rounded-full ${
+                  className={`absolute right-1.5 top-1.5 h-2 w-2 rounded-full ${
                     x.dot === "brown" ? "bg-amber-800" : "bg-violet-600"
                   }`}
                   aria-hidden
                 />
               ) : null}
-              {x.icon}
+              <span className="[&>svg]:h-5 [&>svg]:w-5">{x.icon}</span>
               <span className="max-w-[4.5rem] truncate">{x.label}</span>
             </button>
           ))}
