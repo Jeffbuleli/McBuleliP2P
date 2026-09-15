@@ -1,5 +1,7 @@
 "use client";
 
+import { AVEC_MONEY } from "@/lib/avec/display-currency";
+
 import Link from "next/link";
 import { useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
@@ -101,7 +103,7 @@ export function AvecDiscoverSheet({
             </p>
           </div>
           <p className="text-[10px] text-[color:var(--fd-muted)]">
-            {t("group_field_share_value")}: {group.shareValueUsdt.toFixed(0)} USDT
+            {t("group_field_share_value")}: {group.shareValueUsdt.toFixed(0)} {AVEC_MONEY}
           </p>
         </div>
 

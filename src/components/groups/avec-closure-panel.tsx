@@ -1,5 +1,7 @@
 "use client";
 
+import { AVEC_MONEY } from "@/lib/avec/display-currency";
+
 import { useCallback, useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { AvecGovPromptSheet } from "@/components/groups/avec-gov-sheet";
@@ -216,7 +218,7 @@ export function AvecClosurePanel({
         <div className="min-w-0 flex-1">
           <p className={avecCls.sectionTitle}>{t("avec_closure_title")}</p>
           <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-bold text-violet-900">
-            {statusLabel} · #{state?.cycleNumber ?? "—"}
+            {statusLabel} · #{state?.cycleNumber ?? "-"}
           </p>
         </div>
       </div>
@@ -241,7 +243,7 @@ export function AvecClosurePanel({
           </p>
           <p className="mt-1 text-lg font-black tabular-nums text-violet-950">
             {state.collectiveVote.distributableUsdt.toFixed(2)}{" "}
-            <span className="text-sm font-bold">USDT</span>
+            <span className="text-sm font-bold">{AVEC_MONEY}</span>
           </p>
           <p className="text-[10px] font-semibold text-violet-800">
             {t("group_gov_vote_closes_at")}:{" "}
@@ -256,7 +258,7 @@ export function AvecClosurePanel({
           </p>
           <p className="mt-1 text-lg font-black tabular-nums text-violet-950">
             {state.pending.distributableUsdt.toFixed(2)}{" "}
-            <span className="text-sm font-bold">USDT</span>
+            <span className="text-sm font-bold">{AVEC_MONEY}</span>
           </p>
           <p className="text-[10px] font-semibold text-violet-800">
             {t("group_closure_approvals_progress", {
@@ -319,7 +321,7 @@ export function AvecClosurePanel({
             </div>
           ))}
           <p className="text-center text-[10px] font-semibold text-[color:var(--fd-muted)]">
-            {snap.finalShareValueUsdt.toFixed(4)} USDT / {t("group_closure_shares_short")}
+            {snap.finalShareValueUsdt.toFixed(4)} {AVEC_MONEY} / {t("group_closure_shares_short")}
           </p>
         </div>
       ) : null}

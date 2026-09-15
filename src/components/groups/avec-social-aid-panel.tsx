@@ -1,5 +1,7 @@
 "use client";
 
+import { AVEC_MONEY } from "@/lib/avec/display-currency";
+
 import { useCallback, useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { AvecIconSolidarity } from "@/components/groups/avec-icons";
@@ -120,7 +122,7 @@ export function AvecSocialAidPanel({
           {data ? (
             <p className="mt-2 text-lg font-black tabular-nums text-amber-900">
               {data.socialBalanceUsdt.toFixed(2)}{" "}
-              <span className="text-xs font-bold">USDT</span>
+              <span className="text-xs font-bold">{AVEC_MONEY}</span>
               <span className="ml-1 text-[10px] font-semibold text-[color:var(--fd-muted)]">
                 {t("avec_fund_social")}
               </span>
@@ -225,7 +227,7 @@ export function AvecSocialAidPanel({
                 </span>
               </div>
               <p className="mt-0.5 text-sm font-black tabular-nums text-amber-900">
-                {r.amountUsdt.toFixed(2)} USDT · {t(`avec_social_aid_type_${r.aidType}` as keyof typeof t)}
+                {r.amountUsdt.toFixed(2)} {AVEC_MONEY} · {t(`avec_social_aid_type_${r.aidType}` as keyof typeof t)}
               </p>
               <p className="mt-0.5 line-clamp-2 text-[10px] text-[color:var(--fd-muted)]">
                 {r.justification}
@@ -239,7 +241,7 @@ export function AvecSocialAidPanel({
           ))}
         </ul>
       ) : (
-        <p className="mt-3 text-xs text-[color:var(--fd-muted)]">—</p>
+        <p className="mt-3 text-xs text-[color:var(--fd-muted)]">-</p>
       )}
 
       {info ? <p className="mt-2 text-xs font-semibold text-emerald-800">{info}</p> : null}

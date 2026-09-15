@@ -1,5 +1,7 @@
 "use client";
 
+import { AVEC_MONEY } from "@/lib/avec/display-currency";
+
 import { useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { ListPagination, useListPagination } from "@/components/ui/list-pagination";
@@ -175,7 +177,7 @@ export function AvecMeetingPanel({
                 value={fixSocial}
                 onChange={(e) => setFixSocial(e.target.value)}
                 inputMode="decimal"
-                placeholder={`0 – ${socialMax.toFixed(0)}`}
+                placeholder={`0 - ${socialMax.toFixed(0)}`}
                 className={`${avecCls.input} !py-1.5 flex-1 text-xs`}
               />
               <button
@@ -196,7 +198,7 @@ export function AvecMeetingPanel({
 
       <div className={avecCls.section}>
         <p className="text-[10px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
-          {t("avec_buy_shares")} · {shareValue.toFixed(2)} USDT
+          {t("avec_buy_shares")} · {shareValue.toFixed(2)} {AVEC_MONEY}
         </p>
         <div className="mt-3 flex flex-wrap justify-center gap-2">
           {Array.from({ length: maxShares }, (_, i) => i + 1).map((n) => (
@@ -224,7 +226,7 @@ export function AvecMeetingPanel({
           ) : null}
           <span className="text-[10px] font-bold text-[color:var(--fd-muted)]">=</span>
           <span className="rounded-full bg-[color:var(--fd-primary)] px-3 py-1 text-sm font-black tabular-nums text-white">
-            {meetingTotal.toFixed(2)} USDT
+            {meetingTotal.toFixed(2)} {AVEC_MONEY}
           </span>
         </div>
 
@@ -280,7 +282,7 @@ export function AvecMeetingPanel({
                     ) : null}
                   </div>
                   <p className="shrink-0 font-mono text-xs font-bold tabular-nums text-[color:var(--fd-primary)]">
-                    {row.total.toFixed(2)} USDT
+                    {row.total.toFixed(2)} {AVEC_MONEY}
                   </p>
                 </li>
               ))}

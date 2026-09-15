@@ -16,7 +16,7 @@ function base({ size = 24, className = "", ...rest }: P) {
   };
 }
 
-/** Village circle — members around shared pot */
+/** Village circle - members around shared pot */
 export function AvecHeroIllustration({ className }: { className?: string }) {
   const s = base({ size: 56, className });
   return (
@@ -93,7 +93,7 @@ export function AvecIconMembers({ className }: { className?: string }) {
   );
 }
 
-/** Loan / credit — hand + coin */
+/** Loan / credit - hand + coin */
 export function AvecIconLoan({ className }: { className?: string }) {
   const s = base({ size: 20, className });
   return (
@@ -169,7 +169,7 @@ export function AvecIconReport({ className }: { className?: string }) {
   );
 }
 
-/** Hands / community — solidarity (Africa & RDC context) */
+/** Hands / community - solidarity (Africa & RDC context) */
 export function AvecIconClosure({ className }: { className?: string }) {
   const s = base({ size: 20, className });
   return (

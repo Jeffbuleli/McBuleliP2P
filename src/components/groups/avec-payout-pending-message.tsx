@@ -1,5 +1,7 @@
 "use client";
 
+import { AVEC_MONEY } from "@/lib/avec/display-currency";
+
 import { useI18n } from "@/components/i18n-provider";
 import { AvecIconTreasury } from "@/components/groups/avec-icons";
 
@@ -29,8 +31,8 @@ export function parsePayoutPendingMeta(
     return {
       requestId: p[1] ?? "",
       amountUsdt: amount,
-      beneficiaryDisplay: p[3] ?? "—",
-      initiatedByDisplay: p[4] ?? "—",
+      beneficiaryDisplay: p[3] ?? "-",
+      initiatedByDisplay: p[4] ?? "-",
       requiredApprovals: Number.isFinite(required) ? required : 2,
       approvalCount: Number.isFinite(count) ? count : 0,
     };
@@ -73,7 +75,7 @@ export function AvecPayoutPendingMessage({
             {t("group_payout_pending_badge")}
           </p>
           <p className="truncate text-lg font-black tabular-nums text-amber-950">
-            {meta.amountUsdt.toFixed(2)} <span className="text-xs font-bold">USDT</span>
+            {meta.amountUsdt.toFixed(2)} <span className="text-xs font-bold">{AVEC_MONEY}</span>
           </p>
         </div>
       </div>

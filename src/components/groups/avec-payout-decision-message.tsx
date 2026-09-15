@@ -1,5 +1,7 @@
 "use client";
 
+import { AVEC_MONEY } from "@/lib/avec/display-currency";
+
 import { useI18n } from "@/components/i18n-provider";
 import { AvecIconTreasury } from "@/components/groups/avec-icons";
 import type { PayoutDecisionMeta } from "@/lib/group-savings-messaging";
@@ -27,7 +29,7 @@ export function AvecPayoutDecisionMessage({
   const approverNames =
     meta.approvers.length > 0
       ? meta.approvers.map((a) => a.displayName).join(" · ")
-      : "—";
+      : "-";
 
   return (
     <div className="mx-auto w-full max-w-sm rounded-2xl border-2 border-[color:var(--fd-primary)]/25 bg-gradient-to-br from-[color:var(--fd-mint)] to-[color:var(--fd-card)] p-3 shadow-sm">
@@ -48,7 +50,7 @@ export function AvecPayoutDecisionMessage({
         <div className="flex justify-between gap-2">
           <dt className="text-[color:var(--fd-muted)]">{t("group_payout_decision_amount")}</dt>
           <dd className="font-bold tabular-nums text-[color:var(--fd-primary)]">
-            {meta.amountUsdt.toFixed(2)} USDT
+            {meta.amountUsdt.toFixed(2)} {AVEC_MONEY}
           </dd>
         </div>
         <div className="flex justify-between gap-2">

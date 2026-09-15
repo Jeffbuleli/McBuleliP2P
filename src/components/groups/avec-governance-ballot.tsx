@@ -1,5 +1,7 @@
 "use client";
 
+import { AVEC_MONEY } from "@/lib/avec/display-currency";
+
 import { useI18n } from "@/components/i18n-provider";
 import { UserAvatarMark } from "@/components/profile/user-avatar-mark";
 import {
@@ -198,7 +200,7 @@ export function AvecGovernanceBallot({
           {meta.financialImpactUsdt != null ? (
             <p className="mt-0.5 text-lg font-black tabular-nums text-violet-950">
               {meta.financialImpactUsdt.toFixed(2)}{" "}
-              <span className="text-xs font-bold">USDT</span>
+              <span className="text-xs font-bold">{AVEC_MONEY}</span>
             </p>
           ) : null}
           {ballot?.impactLines?.map((line) => (

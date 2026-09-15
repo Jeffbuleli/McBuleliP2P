@@ -1,5 +1,7 @@
 "use client";
 
+import { AVEC_MONEY } from "@/lib/avec/display-currency";
+
 import { useCallback, useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { AvecIconReward } from "@/components/groups/avec-icons";
@@ -179,7 +181,7 @@ export function AvecPayoutPanel({
           </p>
           <p className="mt-2 text-lg font-black tabular-nums text-[color:var(--fd-text)]">
             {active.amountUsdt.toFixed(2)}{" "}
-            <span className="text-sm font-bold">USDT</span>
+            <span className="text-sm font-bold">{AVEC_MONEY}</span>
             <span className="text-sm font-bold text-amber-800"> → {active.beneficiaryDisplay}</span>
           </p>
           <p className="text-[10px] text-[color:var(--fd-muted)]">
@@ -261,7 +263,7 @@ export function AvecPayoutPanel({
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             inputMode="decimal"
-            placeholder="USDT"
+            placeholder={AVEC_MONEY}
             className={avecCls.input}
           />
           <button

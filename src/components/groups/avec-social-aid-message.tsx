@@ -1,5 +1,7 @@
 "use client";
 
+import { AVEC_MONEY } from "@/lib/avec/display-currency";
+
 import { useI18n } from "@/components/i18n-provider";
 import type { Messages } from "@/i18n/messages";
 import { AvecIconSolidarity } from "@/components/groups/avec-icons";
@@ -65,7 +67,7 @@ export function AvecSocialAidRequestedMessage({
         {t("avec_chat_social_aid_requested")}
       </p>
       <p className="mt-1 text-sm font-black tabular-nums text-amber-950">
-        {meta.amountUsdt.toFixed(2)} USDT
+        {meta.amountUsdt.toFixed(2)} {AVEC_MONEY}
       </p>
       {meta.requesterDisplay ? (
         <p className="mt-0.5 text-xs font-semibold text-[color:var(--fd-text)]">
@@ -109,7 +111,7 @@ export function AvecSocialAidPaidMessage({
         {t("avec_chat_social_aid_paid")}
       </p>
       <p className="mt-1 text-sm font-black tabular-nums text-emerald-950">
-        {meta.amountUsdt.toFixed(2)} USDT
+        {meta.amountUsdt.toFixed(2)} {AVEC_MONEY}
       </p>
       {meta.requesterDisplay ? (
         <p className="mt-0.5 text-xs font-semibold text-[color:var(--fd-text)]">

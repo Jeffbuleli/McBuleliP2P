@@ -1,5 +1,7 @@
 "use client";
 
+import { AVEC_MONEY } from "@/lib/avec/display-currency";
+
 import { useI18n } from "@/components/i18n-provider";
 import { AvecIconCycle } from "@/components/groups/avec-icons";
 import type { LoanDecisionMeta } from "@/lib/group-savings-messaging";
@@ -43,7 +45,7 @@ export function AvecLoanDecisionMessage({
         <div className="flex justify-between gap-2">
           <dt className="text-[color:var(--fd-muted)]">{t("group_loan_amount")}</dt>
           <dd className="font-bold tabular-nums text-cyan-900">
-            {meta.amountUsdt.toFixed(2)} USDT
+            {meta.amountUsdt.toFixed(2)} {AVEC_MONEY}
           </dd>
         </div>
         <div className="flex justify-between gap-2">
@@ -57,7 +59,7 @@ export function AvecLoanDecisionMessage({
         <div>
           <dt className="text-[color:var(--fd-muted)]">{t("group_payout_approved_by")}</dt>
           <dd className="mt-0.5 font-semibold leading-snug">
-            {meta.approvers.map((a) => a.displayName).join(" · ") || "—"}
+            {meta.approvers.map((a) => a.displayName).join(" · ") || "-"}
           </dd>
         </div>
       </dl>

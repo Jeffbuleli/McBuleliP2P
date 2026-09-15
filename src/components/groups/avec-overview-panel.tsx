@@ -1,5 +1,7 @@
 "use client";
 
+import { AVEC_MONEY } from "@/lib/avec/display-currency";
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { AvecGauge, AvecProgressRing } from "@/components/groups/avec-charts";
@@ -136,7 +138,7 @@ export function AvecOverviewPanel({
             </p>
             <p className="text-2xl font-black tabular-nums text-[color:var(--fd-primary)]">
               {(funds?.availableUsdt ?? group.balanceUsdt).toFixed(0)}
-              <span className="ml-1 text-xs font-bold">USDT</span>
+              <span className="ml-1 text-xs font-bold">{AVEC_MONEY}</span>
             </p>
           </div>
         </div>

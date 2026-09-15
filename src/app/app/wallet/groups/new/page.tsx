@@ -20,6 +20,7 @@ import {
   AVEC_MAX_SHARES_PER_MEETING,
   GROUP_SUBSCRIPTION_FEE_USDT,
 } from "@/lib/group-savings-types";
+import { AVEC_MONEY } from "@/lib/avec/display-currency";
 
 const FETCH_TIMEOUT_MS = 45_000;
 
@@ -327,7 +328,7 @@ export default function AvecCreatePage() {
               {
                 label: t("service_fee_line_mcbuleli"),
                 amount: String(GROUP_SUBSCRIPTION_FEE_USDT),
-                asset: "USDT/mo",
+                asset: `${AVEC_MONEY}/mo`,
               },
             ]}
             totalLabel={t("service_fee_total")}

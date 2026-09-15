@@ -1,5 +1,7 @@
 "use client";
 
+import { AVEC_MONEY } from "@/lib/avec/display-currency";
+
 import { useCallback, useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 
@@ -68,7 +70,7 @@ export function AvecAiInsightsCard({ groupId }: { groupId: string }) {
 
       {snapshot ? (
         <div className="mt-2 grid grid-cols-3 gap-1.5 text-center">
-          <MiniStat label="USDT" value={snapshot.totalSavingsUsdt.toFixed(0)} />
+          <MiniStat label={AVEC_MONEY} value={snapshot.totalSavingsUsdt.toFixed(0)} />
           <MiniStat label={t("avec_vue_members")} value={String(snapshot.memberCount)} />
           <MiniStat
             label={t("avec_vue_cycle")}

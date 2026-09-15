@@ -132,8 +132,8 @@ export function buildDeterministicInsights(
 
   insights.push({
     id: "treasury",
-    textEn: `Savings ${snap.totalSavingsUsdt.toFixed(0)} USDT - ${snap.memberCount} members.`,
-    textFr: `Epargne ${snap.totalSavingsUsdt.toFixed(0)} USDT - ${snap.memberCount} membres.`,
+    textEn: `Savings ${snap.totalSavingsUsdt.toFixed(0)} USD - ${snap.memberCount} members.`,
+    textFr: `Epargne ${snap.totalSavingsUsdt.toFixed(0)} USD - ${snap.memberCount} membres.`,
     source: "group_wallet_ledger_entries.group_contribution_in",
     confidence: "high",
   });
@@ -141,8 +141,8 @@ export function buildDeterministicInsights(
   if (snap.activeLoans > 0) {
     insights.push({
       id: "loans_active",
-      textEn: `${snap.activeLoans} active loan(s) - ${snap.outstandingLoansUsdt.toFixed(0)} USDT out.`,
-      textFr: `${snap.activeLoans} credit(s) actif(s) - ${snap.outstandingLoansUsdt.toFixed(0)} USDT restant.`,
+      textEn: `${snap.activeLoans} active loan(s) - ${snap.outstandingLoansUsdt.toFixed(0)} USD out.`,
+      textFr: `${snap.activeLoans} credit(s) actif(s) - ${snap.outstandingLoansUsdt.toFixed(0)} USD restant.`,
       source: "group_avec_loans.status=disbursed",
       confidence: "high",
     });

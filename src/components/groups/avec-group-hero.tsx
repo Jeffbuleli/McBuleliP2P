@@ -1,5 +1,7 @@
 "use client";
 
+import { AVEC_MONEY } from "@/lib/avec/display-currency";
+
 import { useI18n } from "@/components/i18n-provider";
 import { AvecProgressRing } from "@/components/groups/avec-charts";
 import { GroupStatusBadge } from "@/components/groups/group-status-badge";
@@ -89,7 +91,7 @@ export function AvecGroupHero({
           </p>
           <p className="mt-0.5 text-sm font-black tabular-nums text-[color:var(--fd-primary)]">
             {shareValueUsdt.toFixed(0)}
-            <span className="text-[10px]"> USDT</span>
+            <span className="text-[10px]"> {AVEC_MONEY}</span>
           </p>
         </div>
 

@@ -1,5 +1,7 @@
 "use client";
 
+import { AVEC_MONEY } from "@/lib/avec/display-currency";
+
 import { useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { groupAuditLabel } from "@/components/groups/group-audit-entry";
@@ -113,7 +115,7 @@ export function AvecReportsPanel({ groupId }: { groupId: string }) {
                     </p>
                   </div>
                   <p className="font-mono text-xs font-bold tabular-nums text-[color:var(--fd-primary)]">
-                    {Number(x.amount).toFixed(2)} USDT
+                    {Number(x.amount).toFixed(2)} {AVEC_MONEY}
                   </p>
                 </li>
               ))}
