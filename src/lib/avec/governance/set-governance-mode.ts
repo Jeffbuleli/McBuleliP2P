@@ -48,7 +48,11 @@ export async function setGroupGovernanceMode(args: {
     actorUserId: args.actorUserId,
     action: "gov_mode_changed",
     before: { governanceMode: prev },
-    after: { governanceMode: args.governanceMode },
+    after: {
+      governanceMode: args.governanceMode,
+      warning:
+        "Money routing uses amount thresholds (A/B/C); governanceMode is informational only.",
+    },
   });
 
   return { ok: true };

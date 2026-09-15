@@ -15,6 +15,9 @@ import {
 } from "@/components/groups/avec-illustrations";
 import { AvecVueGovernanceCard } from "@/components/groups/avec-vue-governance-card";
 import { AvecGovernanceHub } from "@/components/groups/avec-governance-hub";
+import { AvecAiInsightsCard } from "@/components/groups/avec-ai-insights-card";
+import { AvecFinancialPassportPanel } from "@/components/groups/avec-financial-passport-panel";
+import { AvecMemberQuickActions } from "@/components/groups/avec-member-quick-actions";
 import { avecCls } from "@/components/groups/avec-ui";
 import { p2pDisplayName } from "@/lib/p2p-display";
 import type { GovernanceVoteMeta } from "@/lib/avec/governance/types";
@@ -181,6 +184,12 @@ export function AvecOverviewPanel({
 
   return (
     <div className="space-y-3">
+      <AvecMemberQuickActions
+        groupId={groupId}
+        onGoMeeting={() => onNavigate("meeting")}
+        onGoTreasury={() => onNavigate("treasury")}
+      />
+
       {openVote ? (
         <AvecVueGovernanceCard
           groupId={groupId}
@@ -196,6 +205,14 @@ export function AvecOverviewPanel({
         canAdmin={!!canAdmin}
         onOpenDialogue={() => onNavigate("dialogue")}
       />
+
+      <AvecAiInsightsCard groupId={groupId} />
+
+      {myUserId ? (
+        <div id="avec-passport">
+          <AvecFinancialPassportPanel groupId={groupId} />
+        </div>
+      ) : null}
 
       <div className={`${avecCls.section} space-y-3`}>
         <p className="text-[9px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
@@ -219,7 +236,7 @@ export function AvecOverviewPanel({
               {t("avec_fund_available")}
             </p>
             <p className="mt-0.5 text-2xl font-black tabular-nums text-[color:var(--fd-primary)]">
-              {funds ? funds.availableUsdt.toFixed(0) : "—"}
+              {funds ? funds.availableUsdt.toFixed(0) : "-"}
               <span className="ml-0.5 text-xs font-bold">USDT</span>
             </p>
             <p className="mt-1 text-[10px] text-[color:var(--fd-muted)]">{t("avec_treasury_available_hint")}</p>

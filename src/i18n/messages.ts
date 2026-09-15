@@ -2328,6 +2328,33 @@ export const en = {
   group_trust_tier_active: "Active",
   group_trust_tier_trusted: "Trusted",
   group_trust_tier_hint: "Engagement badge - does not change vote weight.",
+  avec_ai_insights_title: "eAVEC AI insights",
+  avec_ai_mode_rules: "Rules",
+  avec_ai_mode_llm: "AI + rules",
+  avec_ai_snapshot_line: "{savings} USDT · {members} members · cycle {cycle}",
+  avec_ai_source: "Source",
+  avec_ai_insights_error: "Could not load insights.",
+  avec_ai_disclaimer:
+    "Insights use only group aggregates you can access. AI never invents figures and never decides loans.",
+  avec_passport_title: "Financial Passport",
+  avec_passport_member: "Member",
+  avec_passport_since: "Member since",
+  avec_passport_savings: "Savings",
+  avec_passport_loans: "Loans",
+  avec_passport_repaid: "Repaid",
+  avec_passport_late: "Late",
+  avec_passport_consistency: "Consistency",
+  avec_score_title: "Financial Reliability Score",
+  avec_passport_share: "Share with partner (consent)",
+  avec_passport_partner_ph: "Partner name",
+  avec_passport_grant: "Grant 30d",
+  avec_passport_revoke: "Revoke",
+  avec_passport_inactive: "inactive",
+  avec_passport_loading: "Loading passport…",
+  avec_action_save: "Save",
+  avec_action_loan: "Request loan",
+  avec_action_repay: "Repay",
+  avec_action_history: "My history",
   group_dialogue_hide: "Hide",
   group_dialogue_unhide: "Restore",
   group_dialogue_minutes_publish: "Publish meeting minutes",
@@ -4052,6 +4079,10 @@ export const en = {
   deposit_invalid_declared_amount: "Enter a valid USDT amount.",
   deposit_provider_unavailable:
     "Could not generate a deposit address right now. Please try again later or contact support.",
+  deposit_network_unsupported_provider:
+    "This network is not available right now. Use TRC20 or ERC20 (BEP20 is temporarily unavailable).",
+  withdraw_network_unsupported_provider:
+    "This network is not available for withdrawals right now. Use TRC20 or ERC20.",
   wallet_binance_error_demo_keys:
     "Binance refused the connection. Use API keys from demo.binance.com (not binance.com) and set BINANCE_ENV=demo or BINANCE_API_BASE=https://demo-api.binance.com on the server.",
   wallet_binance_error_live_keys:
@@ -4107,7 +4138,7 @@ export const en = {
   deposit_routes_load_error:
     "Could not load deposit options. Check your connection and try again.",
   deposit_binance_not_configured:
-    "USDT deposits are not configured (set BINANCE_WALLET_API_KEY and BINANCE_WALLET_API_SECRET on the server).",
+    "USDT deposits are not configured (set OKX_API_* or BINANCE_WALLET_API_* on the server).",
   deposit_binance_setup_hint:
     "USDT deposits are configured but Binance rejected the connection. Check API permissions (Reading + Withdrawals), IP whitelist, and demo vs live keys.",
   continue: "Continue",
@@ -6855,6 +6886,33 @@ export const fr: Messages = {
   group_trust_tier_active: "Actif",
   group_trust_tier_trusted: "Engagé",
   group_trust_tier_hint: "Badge de participation - ne modifie pas le poids du vote.",
+  avec_ai_insights_title: "Insights eAVEC AI",
+  avec_ai_mode_rules: "Règles",
+  avec_ai_mode_llm: "IA + règles",
+  avec_ai_snapshot_line: "{savings} USDT · {members} membres · cycle {cycle}",
+  avec_ai_source: "Source",
+  avec_ai_insights_error: "Impossible de charger les insights.",
+  avec_ai_disclaimer:
+    "Les insights n'utilisent que les agrégats du groupe auxquels vous avez accès. L'IA n'invente aucun chiffre et ne décide jamais un crédit.",
+  avec_passport_title: "Passeport financier",
+  avec_passport_member: "Membre",
+  avec_passport_since: "Membre depuis",
+  avec_passport_savings: "Épargne",
+  avec_passport_loans: "Crédits",
+  avec_passport_repaid: "Remboursés",
+  avec_passport_late: "Retards",
+  avec_passport_consistency: "Régularité",
+  avec_score_title: "Score de fiabilité financière",
+  avec_passport_share: "Partager avec un partenaire (consentement)",
+  avec_passport_partner_ph: "Nom du partenaire",
+  avec_passport_grant: "Accorder 30j",
+  avec_passport_revoke: "Révoquer",
+  avec_passport_inactive: "inactif",
+  avec_passport_loading: "Chargement du passeport…",
+  avec_action_save: "Épargner",
+  avec_action_loan: "Demander un crédit",
+  avec_action_repay: "Rembourser",
+  avec_action_history: "Mon historique",
   group_dialogue_hide: "Masquer",
   group_dialogue_unhide: "Rétablir",
   group_dialogue_minutes_publish: "Publier le PV de réunion",
@@ -8596,6 +8654,10 @@ export const fr: Messages = {
   deposit_invalid_declared_amount: "Indiquez un montant USDT valide.",
   deposit_provider_unavailable:
     "Impossible de générer l’adresse de dépôt pour le moment. Réessayez plus tard ou contactez le support.",
+  deposit_network_unsupported_provider:
+    "Ce réseau n’est pas disponible pour le moment. Utilisez TRC20 ou ERC20 (BEP20 temporairement indisponible).",
+  withdraw_network_unsupported_provider:
+    "Ce réseau n’est pas disponible pour les retraits. Utilisez TRC20 ou ERC20.",
   wallet_binance_error_demo_keys:
     "Binance a refusé la connexion. Utilisez des clés créées sur demo.binance.com (pas binance.com) et BINANCE_ENV=demo ou BINANCE_API_BASE=https://demo-api.binance.com sur le serveur.",
   wallet_binance_error_live_keys:
@@ -8651,7 +8713,7 @@ export const fr: Messages = {
   deposit_routes_load_error:
     "Impossible de charger les options de dépôt. Vérifiez la connexion.",
   deposit_binance_not_configured:
-    "Dépôt USDT non configuré (BINANCE_WALLET_API_KEY et BINANCE_WALLET_API_SECRET sur le serveur).",
+    "Dépôt USDT non configuré (OKX_API_* ou BINANCE_WALLET_API_* sur le serveur).",
   deposit_binance_setup_hint:
     "USDT est configuré mais Binance a refusé la connexion. Vérifiez les permissions API (Lecture + Retraits), la liste blanche IP et demo vs live.",
   continue: "Suivant",

@@ -13,11 +13,11 @@ Primary colours: **green** + **maroon**. **PWA**-ready.
 
 ## Agent workflow
 
-1. Open **`/admin/withdrawals`** — filter **Open + In progress**, or single status.
+1. Open **`/admin/withdrawals`** - filter **Open + In progress**, or single status.
 2. Open a row → **Take charge** → status becomes **Processing**, others see **busy**.
 3. Send funds externally → paste **TXID** → **✓ Sent**, or **✕ Refund**.
 
-## Setup (local — équipe)
+## Setup (local - équipe)
 
 1. Copy `.env.example` → `.env`. Set **`JWT_SECRET`** (≥ 16 chars).  
    **`NEXT_PUBLIC_APP_URL=http://localhost:3000`** for local preview.
@@ -25,7 +25,20 @@ Primary colours: **green** + **maroon**. **PWA**-ready.
 3. **`npm run dev`** → open **http://localhost:3000/**
 4. Optional: `npm run verify:binance`
 
-See **[docs/team-workflow.md](docs/team-workflow.md)** — local → GitHub → VPS (no laptop rsync to prod).
+See **[docs/team-workflow.md](docs/team-workflow.md)** - local → GitHub → VPS (no laptop rsync to prod).
+
+## eAVEC (community savings)
+
+Digital AVEC infrastructure (OS / AI / Passport). Architecture: **[docs/product-architecture.md](docs/product-architecture.md)**. Model notes: **[docs/avec-model.md](docs/avec-model.md)**.
+
+```bash
+npm run test:eavec          # loan terms, score, permissions
+npm run seed:eavec-umoja    # demo group AVEC Umoja (needs DATABASE_URL)
+```
+
+Env: `EAVEC_PAYMENT_MODE=wallet` (default) or `sandbox` for explicit mock payment intents. Migration: `drizzle/0127_eavec_passport_consents.sql`.
+
+**Prod note:** wallet group UI may SSO to `e-avec.org` (external fork). Port critical finance/security fixes to that repo before prod demos.
 
 ## Deploy (prod VPS)
 
@@ -54,4 +67,4 @@ Set **`DATABASE_URL`**, **`JWT_SECRET`**, wallet/KYC secrets in `ops/vps/.env` o
 
 ## License
 
-Private / your terms — adjust as needed.
+Private / your terms - adjust as needed.

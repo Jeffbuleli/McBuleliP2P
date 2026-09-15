@@ -17,8 +17,7 @@ export type DiscoverGroup = {
   maxMembers: number;
   memberCount: number;
   shareValueUsdt: number;
-  inviteCode: string | null;
-  joinHref: string | null;
+  joinHref: string;
 };
 
 export function AvecDiscoverSheet({

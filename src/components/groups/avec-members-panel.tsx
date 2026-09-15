@@ -9,6 +9,7 @@ import { p2pDisplayName } from "@/lib/p2p-display";
 import { clientErrorText } from "@/lib/client-error-text";
 import { memberRoleSummary } from "@/lib/group-role-label";
 import { AvecMemberTrustBadge } from "@/components/groups/avec-member-trust-badge";
+import { AvecFinancialPassportPanel } from "@/components/groups/avec-financial-passport-panel";
 import { KycVerifiedBadge } from "@/components/kyc/kyc-verified-badge";
 import type { AvecMemberRow } from "@/components/groups/avec-member-list";
 import { AvecGovernanceRhPanel } from "@/components/groups/avec-governance-rh-panel";
@@ -38,6 +39,7 @@ export function AvecMembersPanel({
   const [promptBusy, setPromptBusy] = useState(false);
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [passportUserId, setPassportUserId] = useState<string | null>(null);
 
   const approved = members.filter((m) => m.status === "approved");
   const pending = members.filter((m) => m.status === "pending");
@@ -201,13 +203,13 @@ export function AvecMembersPanel({
               <th>{t("avec_col_member")}</th>
               <th>{t("avec_col_role")}</th>
               <th className="text-right">{t("avec_col_saved")}</th>
-              {canAdmin ? <th /> : null}
+              <th />
             </tr>
           </thead>
           <tbody>
             {pag.slice.length === 0 ? (
               <tr>
-                <td colSpan={canAdmin ? 4 : 3} className="py-6 text-center text-xs text-[color:var(--fd-muted)]">
+                <td colSpan={4} className="py-6 text-center text-xs text-[color:var(--fd-muted)]">
                   {t("avec_members_empty")}
                 </td>
               </tr>
@@ -259,20 +261,31 @@ export function AvecMembersPanel({
                   <td className="text-right font-mono text-xs tabular-nums">
                     {(m.savedUsdt ?? 0).toFixed(2)}
                   </td>
-                  {canAdmin ? (
-                    <td className="text-right">
-                      {m.role !== "admin" ? (
-                        <button
-                          type="button"
-                          disabled={busy}
-                          onClick={() => setRevokePromptUserId(m.userId)}
-                          className="text-[10px] font-bold text-rose-600"
-                        >
-                          {t("avec_member_propose_revoke")}
-                        </button>
-                      ) : null}
-                    </td>
-                  ) : null}
+                  <td className="text-right">
+                    {(canModerate || m.userId === myUserId) ? (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setPassportUserId((cur) =>
+                            cur === m.userId ? null : m.userId,
+                          )
+                        }
+                        className="text-[10px] font-bold text-[color:var(--fd-primary)]"
+                      >
+                        {t("avec_passport_title")}
+                      </button>
+                    ) : null}
+                    {canAdmin && m.role !== "admin" ? (
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => setRevokePromptUserId(m.userId)}
+                        className="ml-2 text-[10px] font-bold text-rose-600"
+                      >
+                        {t("avec_member_propose_revoke")}
+                      </button>
+                    ) : null}
+                  </td>
                 </tr>
               ))
             )}
@@ -289,6 +302,14 @@ export function AvecMembersPanel({
           />
         </div>
       </div>
+
+      {passportUserId ? (
+        <AvecFinancialPassportPanel
+          groupId={groupId}
+          memberUserId={passportUserId}
+          compact
+        />
+      ) : null}
 
       {myUserId && approved.some((m) => m.userId === myUserId) ? (
         <AvecGovernanceRhPanel

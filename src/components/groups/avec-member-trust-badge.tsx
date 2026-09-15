@@ -23,19 +23,27 @@ export function AvecMemberTrustBadge({
   meetingsPaid,
   sharesTotal,
   kycApproved,
+  reliabilityScore,
 }: {
   meetingsPaid?: number;
   sharesTotal?: number;
   kycApproved?: boolean;
+  /** Optional Financial Reliability Score (0–100). */
+  reliabilityScore?: number;
 }) {
   const { t } = useI18n();
   const tier = memberTrustTier({ meetingsPaid, sharesTotal, kycApproved });
+  const scoreLabel =
+    typeof reliabilityScore === "number" && Number.isFinite(reliabilityScore)
+      ? ` · ${Math.round(reliabilityScore)}`
+      : "";
   return (
     <span
       className={`inline-flex shrink-0 rounded-md px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide ${TIER_CLS[tier]}`}
       title={t("group_trust_tier_hint")}
     >
       {t(TIER_KEYS[tier])}
+      {scoreLabel}
     </span>
   );
 }

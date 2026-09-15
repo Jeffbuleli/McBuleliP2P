@@ -70,12 +70,16 @@ export function requiresCommitteeLoan(amountUsdt: number): boolean {
   return classifyLoanTier(amountUsdt) === "B";
 }
 
-/** McBuleli AVEC — single platform model: large payouts → collective vote. */
+/** McBuleli AVEC - single platform model: large payouts → collective vote. */
 export function requiresCollectivePayout(amountUsdt: number): boolean {
   return amountUsdt >= DEFAULT_GOVERNANCE_RULES.criticalWithdrawalUsdt;
 }
 
-/** @deprecated Use requiresCollectivePayout — governance_mode is ignored. */
+/** @deprecated Use requiresCollectivePayout - governance_mode is ignored for money routing.
+ * Financial risk tiers (A/B/C) are driven only by amount thresholds in DEFAULT_GOVERNANCE_RULES.
+ * The `governanceMode` column remains for audit/UI labelling and must not be treated as a switch
+ * that disables collective votes on critical payouts/loans.
+ */
 export function requiresGovernancePayout(args: {
   governanceMode?: GovernanceMode | string | null;
   amountUsdt: number;

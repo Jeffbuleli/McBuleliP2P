@@ -266,6 +266,8 @@ export async function listDiscoverableGroups(args: { userId: string; limit?: num
       : undefined,
   );
 
+  // Do not select inviteCode here — discovery is public metadata only.
+  // Join requires an invite code entered by the user or shared by a manager.
   const rows = await db
     .select({
       groupId: groupSavingsGroups.id,
@@ -276,7 +278,6 @@ export async function listDiscoverableGroups(args: { userId: string; limit?: num
       publicDescription: groupSavingsGroups.publicDescription,
       maxMembers: groupSavingsGroups.maxMembers,
       contributionAmountUsdt: groupSavingsGroups.contributionAmountUsdt,
-      inviteCode: groupSavingsGroups.inviteCode,
     })
     .from(groupSavingsGroups)
     .where(whereClause)
@@ -315,10 +316,8 @@ export async function listDiscoverableGroups(args: { userId: string; limit?: num
       maxMembers: r.maxMembers,
       memberCount: memberCounts.get(r.groupId) ?? 0,
       shareValueUsdt: numFromNumeric(r.contributionAmountUsdt?.toString()),
-      inviteCode: r.inviteCode ?? null,
-      joinHref: r.inviteCode
-        ? `/app/wallet/groups/join?code=${encodeURIComponent(r.inviteCode)}`
-        : null,
+      // Join is via /app/wallet/groups/join with a code — never returned from discover.
+      joinHref: "/app/wallet/groups/join",
     })),
   };
 }

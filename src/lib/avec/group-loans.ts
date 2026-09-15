@@ -412,7 +412,7 @@ export async function executeLoanFromGovernance(args: {
   return { ok: true, executed: exec.executed };
 }
 
-/** Member (non-manager) requests a loan for themselves — managers must accept then approve 2/3. */
+/** Member (non-manager) requests a loan for themselves - managers must accept then approve 2/3. */
 export async function requestMemberLoan(args: {
   groupId: string;
   actorUserId: string;
@@ -846,36 +846,39 @@ export async function repayGroupLoan(args: {
 
   const payStr = fmtWalletAmount(pay);
   const batchId = randomUUID();
+  // Always debit the borrower's wallet (even when a manager records the repay).
+  // Crediting the group ledger without a matching user debit would mint USDT.
+  const debitUserId = loan.borrowerUserId;
 
   try {
     await db.transaction(async (tx) => {
-      if (isBorrower) {
-        const [u] = await tx
-          .select({ bal: users.balance })
-          .from(users)
-          .where(eq(users.id, args.actorUserId))
-          .limit(1);
-        if (numFromNumeric(u?.bal?.toString()) + 1e-18 < pay) {
-          throw new Error("insufficient");
-        }
-        await debitUserAsset(tx, args.actorUserId, "USDT", payStr);
-        await insertWalletLedgerLines(tx, [
-          {
-            batchId,
-            userId: args.actorUserId,
-            entryType: "group_loan_repay_out",
-            asset: "USDT",
-            amount: `-${payStr}`,
-            meta: {
-              groupId: args.groupId,
-              loanId: loan.id,
-              penaltyUsdt: alloc.toPenalty,
-              interestUsdt: alloc.toInterest,
-              principalUsdt: alloc.toPrincipal,
-            },
-          },
-        ]);
+      const [u] = await tx
+        .select({ bal: users.balance })
+        .from(users)
+        .where(eq(users.id, debitUserId))
+        .limit(1);
+      if (numFromNumeric(u?.bal?.toString()) + 1e-18 < pay) {
+        throw new Error("insufficient");
       }
+      await debitUserAsset(tx, debitUserId, "USDT", payStr);
+      await insertWalletLedgerLines(tx, [
+        {
+          batchId,
+          userId: debitUserId,
+          entryType: "group_loan_repay_out",
+          asset: "USDT",
+          amount: `-${payStr}`,
+          meta: {
+            groupId: args.groupId,
+            loanId: loan.id,
+            recordedByUserId: args.actorUserId,
+            recordedByManager: !isBorrower,
+            penaltyUsdt: alloc.toPenalty,
+            interestUsdt: alloc.toInterest,
+            principalUsdt: alloc.toPrincipal,
+          },
+        },
+      ]);
 
       const repayLines = buildLoanRepayGroupLedgerLines({
         batchId,
@@ -927,6 +930,8 @@ export async function repayGroupLoan(args: {
       penaltyUsdt: alloc.toPenalty,
       interestUsdt: alloc.toInterest,
       principalUsdt: alloc.toPrincipal,
+      borrowerUserId: debitUserId,
+      recordedByManager: !isBorrower,
     },
   });
 
