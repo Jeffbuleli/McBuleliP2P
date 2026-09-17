@@ -297,10 +297,8 @@ async function createMomoMarketOrder(args: {
       if (listing.quantity < args.quantity) {
         throw new Error("eavec_market_qty");
       }
-      const currency = listing.currency === "CDF" ? "CDF" : "USD";
-      if (currency !== "USD" && currency !== "CDF") {
-        throw new Error("eavec_market_momo_currency");
-      }
+      const currency: "USD" | "CDF" =
+        listing.currency === "CDF" ? "CDF" : "USD";
 
       const unit = Number(listing.price);
       if (!Number.isFinite(unit) || unit <= 0) throw new Error("eavec_market_bad_price");
