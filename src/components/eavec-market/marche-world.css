@@ -594,6 +594,28 @@
   object-fit: cover;
 }
 
+.mk-pdp-back {
+  position: absolute;
+  left: 0.85rem;
+  top: 0.85rem;
+  z-index: 2;
+  display: inline-flex;
+  width: 2.5rem;
+  height: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid rgba(18, 16, 14, 0.12);
+  background: rgba(247, 243, 235, 0.92);
+  color: var(--mk-ink);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 6px 18px rgba(18, 16, 14, 0.08);
+}
+
+.mk-pdp-back:active {
+  transform: scale(0.96);
+}
+
 .mk-pdp-hero .mk-card-stock {
   top: 0.85rem;
   bottom: auto;

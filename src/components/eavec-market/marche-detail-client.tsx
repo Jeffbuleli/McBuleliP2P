@@ -14,6 +14,30 @@ import {
 import type { EavecMarketListingRow } from "@/lib/eavec-market/service";
 import { avecCdf } from "@/lib/avec/display-currency";
 
+function goMarcheBack(
+  router: { back: () => void; push: (href: string) => void },
+  fallback = "/app/marche",
+) {
+  try {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      const ref = document.referrer;
+      if (ref) {
+        const url = new URL(ref);
+        if (
+          url.origin === window.location.origin &&
+          url.pathname.startsWith("/app")
+        ) {
+          router.back();
+          return;
+        }
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+  router.push(fallback);
+}
+
 export function EavecMarcheDetailClient({ id }: { id: string }) {
   const { locale } = useI18n();
   const fr = locale === "fr";
@@ -165,6 +189,22 @@ export function EavecMarcheDetailClient({ id }: { id: string }) {
       <MarcheChrome fr={fr} title={listing.title} showSell={false} />
 
       <div className="mk-rise mk-pdp-hero">
+        <button
+          type="button"
+          className="mk-pdp-back"
+          aria-label={fr ? "Retour" : "Back"}
+          onClick={() => goMarcheBack(router)}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <path
+              d="M15 6l-6 6 6 6"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
         {low ? (
           <span className="mk-card-stock" data-low="true">
             {fr ? `Reste ${listing.quantity}` : `${listing.quantity} left`}

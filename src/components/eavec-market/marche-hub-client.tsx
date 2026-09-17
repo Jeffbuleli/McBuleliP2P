@@ -62,6 +62,35 @@ export function EavecMarcheHubClient() {
 
   return (
     <div className="pb-10">
+      <div className="mk-rise flex items-center justify-between gap-2 px-0.5 pb-2 pt-2">
+        <Link
+          href="/app"
+          className="mk-icon-btn"
+          aria-label={fr ? "Retour à l’app" : "Back to app"}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <path
+              d="M15 6l-6 6 6 6"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </Link>
+        <Link href="/app/marche/orders" className="mk-icon-btn" aria-label={fr ? "Commandes" : "Orders"}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <path
+              d="M7 7h14l-1.4 10.2a2 2 0 0 1-2 1.8H8.4a2 2 0 0 1-2-1.8L5 4H2"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </Link>
+      </div>
+
       <section className="mk-hero mk-rise">
         <div className="mk-hero-inner">
           <h1 className="mk-brand">Marché</h1>
