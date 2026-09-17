@@ -104,6 +104,9 @@ export function EavecMarcheOrderDetailClient({ id }: { id: string }) {
   const [order, setOrder] = useState<EavecMarketOrderRow | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [disputeReason, setDisputeReason] = useState("");
+  const [stars, setStars] = useState(5);
+  const [rateComment, setRateComment] = useState("");
 
   async function load() {
     const res = await fetch(`/api/eavec/market/orders/${id}`, { cache: "no-store" });
@@ -128,13 +131,24 @@ export function EavecMarcheOrderDetailClient({ id }: { id: string }) {
     return () => window.clearInterval(t);
   }, [order?.status, id]);
 
-  async function act(action: "mark_ready" | "confirm" | "cancel" | "dispute") {
+  async function act(
+    action:
+      | "mark_ready"
+      | "confirm"
+      | "cancel"
+      | "dispute"
+      | "resolve_refund"
+      | "resolve_release",
+  ) {
     setBusy(true);
     setErr(null);
     const res = await fetch(`/api/eavec/market/orders/${id}/action`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action }),
+      body: JSON.stringify({
+        action,
+        reason: action === "dispute" ? disputeReason || undefined : undefined,
+      }),
     });
     const data = await res.json().catch(() => ({}));
     setBusy(false);
@@ -144,6 +158,23 @@ export function EavecMarcheOrderDetailClient({ id }: { id: string }) {
     }
     await load();
     if (action === "confirm") router.refresh();
+  }
+
+  async function submitRating() {
+    setBusy(true);
+    setErr(null);
+    const res = await fetch(`/api/eavec/market/orders/${id}/rate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ stars, comment: rateComment || undefined }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setBusy(false);
+    if (!res.ok) {
+      setErr(data.error ?? "error");
+      return;
+    }
+    await load();
   }
 
   if (err && !order) {
@@ -184,6 +215,14 @@ export function EavecMarcheOrderDetailClient({ id }: { id: string }) {
           {order.role === "buyer" ? (fr ? "Vous achetez" : "You buy") : fr ? "Vous vendez" : "You sell"}
           {order.paymentMethod === "momo" ? " · Mobile Money" : ""}
         </p>
+        {order.role === "buyer" ? (
+          <Link
+            href={`/app/marche/seller/${order.sellerUserId}`}
+            className="inline-block text-xs font-bold text-[#0F2D2F] underline"
+          >
+            {fr ? "Voir le vendeur" : "View seller"}
+          </Link>
+        ) : null}
         {order.status === "awaiting_payment" ? (
           <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">
             {fr
@@ -192,6 +231,16 @@ export function EavecMarcheOrderDetailClient({ id }: { id: string }) {
             {order.momoPhone ? (
               <p className="mt-1 font-semibold tabular-nums">{order.momoPhone}</p>
             ) : null}
+          </div>
+        ) : order.status === "disputed" ? (
+          <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-950">
+            <p className="font-bold">{fr ? "Litige ouvert" : "Dispute open"}</p>
+            {order.disputeReason ? <p className="mt-1">{order.disputeReason}</p> : null}
+            <p className="mt-2 text-[color:var(--fd-muted)]">
+              {fr
+                ? "Accord : rembourser l’acheteur ou libérer au vendeur."
+                : "Settle: refund buyer or release to seller."}
+            </p>
           </div>
         ) : (
           <ol className="mt-3 space-y-1 text-xs text-[color:var(--fd-muted)]">
@@ -217,6 +266,48 @@ export function EavecMarcheOrderDetailClient({ id }: { id: string }) {
       {err ? (
         <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
           {err}
+        </p>
+      ) : null}
+
+      {order.canRate ? (
+        <div className="space-y-2 rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] p-3">
+          <p className="text-sm font-bold text-[#0F2D2F]">
+            {fr ? "Noter le vendeur" : "Rate the seller"}
+          </p>
+          <div className="flex gap-1">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => setStars(n)}
+                className={`min-h-10 min-w-10 rounded-lg text-lg ${
+                  n <= stars ? "bg-[#0F2D2F] text-[#F6E8CD]" : "border border-[color:var(--fd-border)]"
+                }`}
+              >
+                ★
+              </button>
+            ))}
+          </div>
+          <input
+            value={rateComment}
+            onChange={(e) => setRateComment(e.target.value)}
+            placeholder={fr ? "Commentaire (optionnel)" : "Comment (optional)"}
+            className="min-h-11 w-full rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-bg)] px-3 text-sm"
+          />
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void submitRating()}
+            className="flex min-h-11 w-full items-center justify-center rounded-xl bg-[#0F2D2F] text-sm font-bold text-[#F6E8CD] disabled:opacity-60"
+          >
+            {fr ? "Envoyer la note" : "Submit rating"}
+          </button>
+        </div>
+      ) : null}
+
+      {order.myRatingStars != null ? (
+        <p className="text-center text-xs text-[color:var(--fd-muted)]">
+          {fr ? "Votre note" : "Your rating"}: ★ {order.myRatingStars}
         </p>
       ) : null}
 
@@ -256,14 +347,43 @@ export function EavecMarcheOrderDetailClient({ id }: { id: string }) {
         ) : null}
 
         {order.status === "escrowed" || order.status === "ready" ? (
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => void act("dispute")}
-            className="flex min-h-11 w-full items-center justify-center rounded-xl text-xs font-bold text-rose-700 disabled:opacity-60"
-          >
-            {fr ? "Ouvrir un litige" : "Open dispute"}
-          </button>
+          <div className="space-y-2 pt-2">
+            <input
+              value={disputeReason}
+              onChange={(e) => setDisputeReason(e.target.value)}
+              placeholder={fr ? "Motif du litige (optionnel)" : "Dispute reason (optional)"}
+              className="min-h-11 w-full rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-bg)] px-3 text-sm"
+            />
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void act("dispute")}
+              className="flex min-h-11 w-full items-center justify-center rounded-xl text-xs font-bold text-rose-700 disabled:opacity-60"
+            >
+              {fr ? "Ouvrir un litige" : "Open dispute"}
+            </button>
+          </div>
+        ) : null}
+
+        {order.status === "disputed" ? (
+          <>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void act("resolve_refund")}
+              className="flex min-h-12 w-full items-center justify-center rounded-xl border border-[color:var(--fd-border)] text-sm font-bold disabled:opacity-60"
+            >
+              {fr ? "Rembourser l’acheteur" : "Refund buyer"}
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void act("resolve_release")}
+              className="flex min-h-12 w-full items-center justify-center rounded-xl bg-[#0F2D2F] text-sm font-bold text-[#F6E8CD] disabled:opacity-60"
+            >
+              {fr ? "Libérer au vendeur" : "Release to seller"}
+            </button>
+          </>
         ) : null}
       </div>
     </div>

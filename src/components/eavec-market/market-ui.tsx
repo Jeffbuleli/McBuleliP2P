@@ -114,6 +114,11 @@ export function EavecMarketListingCard({
         <p className="text-sm font-extrabold tabular-nums text-[#0F2D2F]">
           {price}
         </p>
+        {listing.sellerRatingCount > 0 ? (
+          <p className="text-[10px] font-semibold text-[color:var(--fd-muted)]">
+            ★ {listing.sellerRatingAvg?.toFixed(1)} · {listing.sellerRatingCount}
+          </p>
+        ) : null}
         {listing.locationLabel ? (
           <p className="truncate text-[10px] font-medium text-[color:var(--fd-muted)]">
             {listing.locationLabel}

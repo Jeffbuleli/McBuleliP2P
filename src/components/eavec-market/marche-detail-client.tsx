@@ -204,7 +204,22 @@ export function EavecMarcheDetailClient({ id }: { id: string }) {
           ) : null}
           <p className="text-xs text-[color:var(--fd-muted)]">
             {fr ? "Vendeur" : "Seller"}:{" "}
-            {listing.sellerDisplayName?.trim() || (fr ? "Membre" : "Member")}
+            <Link
+              href={`/app/marche/seller/${listing.sellerUserId}`}
+              className="font-bold text-[#0F2D2F] underline"
+            >
+              {listing.sellerDisplayName?.trim() || (fr ? "Membre" : "Member")}
+            </Link>
+            {listing.sellerTrusted ? (
+              <span className="ml-2 text-[10px] font-bold uppercase text-emerald-700">
+                {fr ? "Confiance" : "Trusted"}
+              </span>
+            ) : null}
+            {listing.sellerRatingCount > 0 ? (
+              <span className="ml-2 tabular-nums">
+                ★ {listing.sellerRatingAvg?.toFixed(1)} ({listing.sellerRatingCount})
+              </span>
+            ) : null}
             {" · "}
             {fr ? "Qté" : "Qty"} {listing.quantity}
           </p>

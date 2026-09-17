@@ -13,6 +13,9 @@ export type EavecMarketListingRow = {
   id: string;
   sellerUserId: string;
   sellerDisplayName: string | null;
+  sellerRatingAvg: number | null;
+  sellerRatingCount: number;
+  sellerTrusted: boolean;
   groupId: string | null;
   title: string;
   description: string | null;
@@ -32,12 +35,18 @@ export type EavecMarketListingRow = {
 function mapRow(
   r: typeof eavecMarketListings.$inferSelect & {
     sellerDisplayName?: string | null;
+    sellerRatingAvg?: number | null;
+    sellerRatingCount?: number;
+    sellerTrusted?: boolean;
   },
 ): EavecMarketListingRow {
   return {
     id: r.id,
     sellerUserId: r.sellerUserId,
     sellerDisplayName: r.sellerDisplayName ?? null,
+    sellerRatingAvg: r.sellerRatingAvg ?? null,
+    sellerRatingCount: r.sellerRatingCount ?? 0,
+    sellerTrusted: Boolean(r.sellerTrusted),
     groupId: r.groupId,
     title: r.title,
     description: r.description,
@@ -117,11 +126,24 @@ export async function listEavecMarketListings(args: {
     .limit(limit)
     .offset(offset);
 
+  const sellerIds = rows.map((r) => r.listing.sellerUserId);
+  const { loadEavecSellerRatingMap } = await import("@/lib/eavec-market/merchant");
+  const ratingMap = await loadEavecSellerRatingMap(sellerIds);
+
   return {
     total: countRow?.n ?? 0,
-    listings: rows.map((r) =>
-      mapRow({ ...r.listing, sellerDisplayName: r.sellerDisplayName }),
-    ),
+    listings: rows.map((r) => {
+      const rep = ratingMap.get(r.listing.sellerUserId);
+      const ratingAvg = rep?.avg ?? 0;
+      const ratingCount = rep?.count ?? 0;
+      return mapRow({
+        ...r.listing,
+        sellerDisplayName: r.sellerDisplayName,
+        sellerRatingAvg: ratingCount > 0 ? ratingAvg : null,
+        sellerRatingCount: ratingCount,
+        sellerTrusted: false,
+      });
+    }),
   };
 }
 
@@ -139,7 +161,17 @@ export async function getEavecMarketListing(
     .where(eq(eavecMarketListings.id, id))
     .limit(1);
   if (!row) return null;
-  return mapRow({ ...row.listing, sellerDisplayName: row.sellerDisplayName });
+  const base = mapRow({ ...row.listing, sellerDisplayName: row.sellerDisplayName });
+  const profile = await (
+    await import("@/lib/eavec-market/merchant")
+  ).getEavecMerchantProfile(base.sellerUserId);
+  if (!profile) return base;
+  return {
+    ...base,
+    sellerRatingAvg: profile.ratingCount > 0 ? profile.ratingAvg : null,
+    sellerRatingCount: profile.ratingCount,
+    sellerTrusted: profile.trustedMerchant,
+  };
 }
 
 export async function createEavecMarketListing(args: {

@@ -2,18 +2,11 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUserId } from "@/lib/session";
 import { enforceApiRateLimit } from "@/lib/api-rate-limit";
-import { eavecMarketOrderAction } from "@/lib/eavec-market/orders";
+import { rateEavecMarketOrder } from "@/lib/eavec-market/merchant";
 
 const bodyZ = z.object({
-  action: z.enum([
-    "mark_ready",
-    "confirm",
-    "cancel",
-    "dispute",
-    "resolve_refund",
-    "resolve_release",
-  ]),
-  reason: z.string().max(500).optional(),
+  stars: z.number().int().min(1).max(5),
+  comment: z.string().max(500).optional(),
 });
 
 export async function POST(
@@ -34,11 +27,11 @@ export async function POST(
     return NextResponse.json({ error: "eavec_market_invalid" }, { status: 400 });
   }
 
-  const r = await eavecMarketOrderAction({
+  const r = await rateEavecMarketOrder({
     orderId: id,
-    userId,
-    action: parsed.data.action,
-    reason: parsed.data.reason,
+    fromUserId: userId,
+    stars: parsed.data.stars,
+    comment: parsed.data.comment,
   });
   if (!r.ok) {
     const status = r.error === "forbidden" ? 403 : 400;

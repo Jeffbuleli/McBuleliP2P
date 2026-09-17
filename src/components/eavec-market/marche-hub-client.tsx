@@ -78,6 +78,12 @@ export function EavecMarcheHubClient() {
 
       <div className="flex gap-2 overflow-x-auto pb-1">
         <Link
+          href="/app/marche/merchant"
+          className="shrink-0 rounded-full border border-[#0F2D2F] bg-[#0F2D2F] px-3 py-2 text-xs font-bold text-[#F6E8CD]"
+        >
+          {fr ? "Mode Marchand" : "Merchant"}
+        </Link>
+        <Link
           href="/app/marche/mine"
           className="shrink-0 rounded-full border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-3 py-2 text-xs font-bold"
         >

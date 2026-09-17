@@ -1695,6 +1695,9 @@ export const eavecMarketOrders = pgTable(
     expiresAt: timestamp("expires_at", { withTimezone: true }),
     cancelReason: varchar("cancel_reason", { length: 64 }),
     disputeReason: text("dispute_reason"),
+    /** refund | release — set when a disputed order is settled */
+    disputeResolution: varchar("dispute_resolution", { length: 16 }),
+    disputeResolvedAt: timestamp("dispute_resolved_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -1707,6 +1710,34 @@ export const eavecMarketOrders = pgTable(
     index("eavec_market_orders_seller_idx").on(t.sellerUserId, t.createdAt),
     index("eavec_market_orders_listing_idx").on(t.listingId),
     index("eavec_market_orders_status_idx").on(t.status),
+  ],
+);
+
+/**
+ * e-AVEC Marché ratings — buyer rates seller after a released order.
+ */
+export const eavecMarketRatings = pgTable(
+  "eavec_market_ratings",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    orderId: uuid("order_id")
+      .notNull()
+      .references(() => eavecMarketOrders.id, { onDelete: "cascade" }),
+    fromUserId: uuid("from_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    toUserId: uuid("to_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    stars: integer("stars").notNull(),
+    comment: text("comment"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("eavec_market_ratings_order_from_uidx").on(t.orderId, t.fromUserId),
+    index("eavec_market_ratings_to_user_idx").on(t.toUserId),
   ],
 );
 
