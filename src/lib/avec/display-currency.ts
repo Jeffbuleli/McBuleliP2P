@@ -5,6 +5,8 @@
 import { cdfPerOneUsd } from "@/lib/fx";
 
 export const AVEC_MONEY_LABEL = "Fc";
+/** @deprecated Use AVEC_MONEY_LABEL — kept for existing AVEC UI imports. */
+export const AVEC_MONEY = AVEC_MONEY_LABEL;
 
 /** Convert a USDT-ledger amount to a Fc display string. */
 export function avecMoney(
