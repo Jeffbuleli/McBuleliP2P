@@ -1,6 +1,7 @@
 import { and, desc, eq, ilike, or, sql } from "drizzle-orm";
 import { getDb, eavecMarketListings, users } from "@/db";
 import {
+  EAVEC_MARKET_DESCRIPTION_MAX,
   EAVEC_MARKET_IMAGE_MAX_CHARS,
   isEavecMarketCategory,
   type EavecMarketCategory,
@@ -222,7 +223,7 @@ export async function createEavecMarketListing(args: {
       sellerUserId: args.sellerUserId,
       groupId: args.groupId ?? null,
       title,
-      description: args.description?.trim().slice(0, 2000) || null,
+      description: args.description?.trim().slice(0, EAVEC_MARKET_DESCRIPTION_MAX) || null,
       category: args.category,
       currency,
       price: priceNum.toFixed(2),

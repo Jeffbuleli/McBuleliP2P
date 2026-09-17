@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { MarcheChrome } from "@/components/eavec-market/marche-chrome";
 import { EAVEC_MARKET_CATEGORY_EMOJI } from "@/lib/eavec-market/categories";
@@ -23,6 +23,7 @@ export function EavecMarcheDetailClient({ id }: { id: string }) {
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [cdfBalance, setCdfBalance] = useState<number | null>(null);
+  const [qty, setQty] = useState(1);
 
   useEffect(() => {
     void (async () => {
@@ -37,6 +38,12 @@ export function EavecMarcheDetailClient({ id }: { id: string }) {
       setListing(data.listing as EavecMarketListingRow);
     })();
   }, [id]);
+
+  useEffect(() => {
+    if (!listing) return;
+    const max = Math.min(Math.max(1, listing.quantity), 99);
+    setQty((q) => Math.min(Math.max(1, q), max));
+  }, [listing]);
 
   useEffect(() => {
     if (!listing) return;
@@ -64,14 +71,30 @@ export function EavecMarcheDetailClient({ id }: { id: string }) {
       .catch(() => setCdfBalance(null));
   }, []);
 
+  const unitPrice = listing ? Number(listing.price) : 0;
+  const total = useMemo(() => unitPrice * qty, [unitPrice, qty]);
+  const maxQty = listing
+    ? Math.min(Math.max(1, listing.quantity), 99)
+    : 1;
+  const inStock =
+    !!listing && listing.quantity >= 1 && listing.status === "available";
+  const low = inStock && listing!.quantity <= 3;
+  const canBuy =
+    !!listing &&
+    listing.status === "available" &&
+    listing.quantity >= qty &&
+    qty >= 1 &&
+    (cdfBalance == null || cdfBalance + 1e-9 >= total);
+  const insufficient =
+    cdfBalance != null && listing != null && cdfBalance + 1e-9 < total;
+
   async function buy() {
     if (!listing) return;
-    const price = Number(listing.price);
-    if (cdfBalance != null && cdfBalance + 1e-9 < price) {
+    if (cdfBalance != null && cdfBalance + 1e-9 < total) {
       setErr(
         fr
-          ? `Solde Fc insuffisant. Déposez d’abord via Mobile Money (Caisse).`
-          : `Insufficient Fc balance. Deposit via Mobile Money first (Wallet).`,
+          ? `Solde Fc insuffisant (${avecCdf(total)} requis). Déposez d’abord via Mobile Money (Caisse).`
+          : `Insufficient Fc balance (${avecCdf(total)} required). Deposit via Mobile Money first (Wallet).`,
       );
       return;
     }
@@ -82,7 +105,7 @@ export function EavecMarcheDetailClient({ id }: { id: string }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         listingId: listing.id,
-        quantity: 1,
+        quantity: qty,
         paymentMethod: "wallet",
       }),
     });
@@ -102,6 +125,12 @@ export function EavecMarcheDetailClient({ id }: { id: string }) {
         eavec_market_wallet_only: fr
           ? "Paiement interne uniquement (solde Fc)."
           : "Internal payment only (Fc balance).",
+        eavec_market_qty: fr
+          ? "Stock insuffisant pour cette quantité."
+          : "Not enough stock for this quantity.",
+        eavec_market_listing_unavailable: fr
+          ? "Cette annonce n’est plus disponible."
+          : "This listing is no longer available.",
       };
       setErr(map[data.error] ?? data.error ?? "error");
       return;
@@ -128,88 +157,98 @@ export function EavecMarcheDetailClient({ id }: { id: string }) {
     );
   }
 
-  const priceLabel = avecCdf(listing.price);
-  const canBuy =
-    listing.status === "available" &&
-    listing.quantity >= 1 &&
-    (cdfBalance == null || cdfBalance + 1e-9 >= Number(listing.price));
-  const inStock = listing.quantity >= 1 && listing.status === "available";
-  const low = listing.quantity > 0 && listing.quantity <= 3;
   const ref = marcheListingRef(listing.id, listing.category);
+  const desc = listing.description?.trim().slice(0, 300) || "";
 
   return (
     <div className="pb-28">
       <MarcheChrome fr={fr} title={listing.title} showSell={false} />
 
-      <div className="mk-rise mt-3 overflow-hidden rounded-[1.35rem] border border-[color:var(--mk-line)] bg-[#fff]">
-        <div className="relative aspect-square max-h-[70vh] bg-[linear-gradient(180deg,#fff,#f3eee4)]">
-          {inStock ? (
-            <span
-              className="mk-card-stock"
-              data-low={low ? "true" : "false"}
-              style={{ top: "0.75rem", bottom: "auto" }}
-            >
-              {low
-                ? fr
-                  ? `Reste ${listing.quantity}`
-                  : `${listing.quantity} left`
-                : fr
-                  ? "En stock"
-                  : "In stock"}
-            </span>
-          ) : null}
-          {listing.imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={listing.imageUrl}
-              alt=""
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center text-6xl">
-              {EAVEC_MARKET_CATEGORY_EMOJI[listing.category]}
-            </div>
-          )}
-        </div>
+      <div className="mk-rise mk-pdp-hero">
+        {low ? (
+          <span className="mk-card-stock" data-low="true">
+            {fr ? `Reste ${listing.quantity}` : `${listing.quantity} left`}
+          </span>
+        ) : inStock ? (
+          <span className="mk-card-stock">
+            {fr ? "En stock" : "In stock"}
+          </span>
+        ) : null}
+        {listing.imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={listing.imageUrl} alt="" />
+        ) : (
+          <div className="flex h-full items-center justify-center text-6xl">
+            {EAVEC_MARKET_CATEGORY_EMOJI[listing.category]}
+          </div>
+        )}
       </div>
 
-      <div className="mk-rise mk-rise-delay-1 mt-4 space-y-3 px-0.5">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="mk-section-label">
-            {eavecMarketCategoryLabel(listing.category, locale)}
-          </p>
-          <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-bold tracking-wider text-[color:var(--mk-muted)] border border-[color:var(--mk-line)]">
-            {ref}
-          </span>
-        </div>
-        <h1
-          className="text-[1.65rem] font-extrabold leading-tight tracking-tight text-[color:var(--mk-ink)]"
-          style={{ fontFamily: "var(--mk-display)" }}
-        >
-          {listing.title}
-        </h1>
-        <p className="text-2xl font-black tabular-nums tracking-tight text-[color:var(--mk-ink)]">
-          {priceLabel}
-          <span className="ml-2 text-sm font-semibold text-[color:var(--mk-muted)]">
-            · {fr ? "unité" : "unit"}
-          </span>
-        </p>
-
-        {listing.description?.trim() ? (
-          <div className="mk-panel">
-            <div className="mk-panel-pad">
-              <p className="mk-section-label mb-2">
-                {fr ? "Description" : "Description"}
-              </p>
-              <p className="whitespace-pre-wrap text-sm leading-relaxed text-[color:var(--mk-ink)]">
-                {listing.description.trim()}
-              </p>
-            </div>
+      <div className="mk-rise mk-rise-delay-1 mt-4 space-y-4 px-0.5">
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="mk-section-label">
+              {eavecMarketCategoryLabel(listing.category, locale)}
+            </p>
+            <span className="rounded-full border border-[color:var(--mk-line)] bg-white px-2 py-0.5 text-[10px] font-bold tracking-wider text-[color:var(--mk-muted)]">
+              {ref}
+            </span>
           </div>
+          <h1
+            className="mt-2 text-[1.7rem] font-extrabold leading-tight tracking-tight text-[color:var(--mk-ink)]"
+            style={{ fontFamily: "var(--mk-display)" }}
+          >
+            {listing.title}
+          </h1>
+          <p className="mt-2 text-2xl font-black tabular-nums tracking-tight text-[color:var(--mk-ink)]">
+            {avecCdf(listing.price)}
+            <span className="ml-2 text-sm font-semibold text-[color:var(--mk-muted)]">
+              · {fr ? "unité" : "unit"}
+            </span>
+          </p>
+        </div>
+
+        {desc ? (
+          <p className="whitespace-pre-wrap text-sm leading-relaxed text-[color:var(--mk-muted)]">
+            {desc}
+          </p>
         ) : null}
 
         <div className="mk-panel">
-          <div className="mk-panel-pad space-y-2 text-sm">
+          <div className="mk-panel-pad space-y-3 text-sm">
+            <div className="flex items-center justify-between gap-3">
+              <span className="font-semibold text-[color:var(--mk-ink)]">
+                {fr ? "Quantité" : "Quantity"}
+              </span>
+              <div className="mk-qty" role="group" aria-label={fr ? "Quantité" : "Quantity"}>
+                <button
+                  type="button"
+                  className="mk-qty-btn"
+                  disabled={qty <= 1 || !inStock}
+                  onClick={() => setQty((q) => Math.max(1, q - 1))}
+                  aria-label={fr ? "Diminuer" : "Decrease"}
+                >
+                  −
+                </button>
+                <span className="mk-qty-val tabular-nums">{qty}</span>
+                <button
+                  type="button"
+                  className="mk-qty-btn"
+                  disabled={qty >= maxQty || !inStock}
+                  onClick={() => setQty((q) => Math.min(maxQty, q + 1))}
+                  aria-label={fr ? "Augmenter" : "Increase"}
+                >
+                  +
+                </button>
+              </div>
+            </div>
+            <p className="text-xs text-[color:var(--mk-muted)]">
+              {fr ? "Disponible" : "Available"}: {listing.quantity}
+              {" · "}
+              {fr ? "Total" : "Total"}:{" "}
+              <strong className="text-[color:var(--mk-ink)]">{avecCdf(total)}</strong>
+            </p>
+
             {listing.locationLabel ? (
               <p className="text-[color:var(--mk-muted)]">{listing.locationLabel}</p>
             ) : null}
@@ -231,9 +270,6 @@ export function EavecMarcheDetailClient({ id }: { id: string }) {
                   ★ {listing.sellerRatingAvg?.toFixed(1)} ({listing.sellerRatingCount})
                 </span>
               ) : null}
-            </p>
-            <p className="text-xs text-[color:var(--mk-muted)]">
-              {fr ? "Disponible" : "Available"}: {listing.quantity}
             </p>
           </div>
         </div>
@@ -284,13 +320,17 @@ export function EavecMarcheDetailClient({ id }: { id: string }) {
         >
           {busy
             ? "…"
-            : !canBuy && cdfBalance != null && cdfBalance < Number(listing.price)
+            : insufficient
               ? fr
                 ? "Solde insuffisant — rechargez"
                 : "Insufficient balance — top up"
-              : fr
-                ? "Acheter · solde Fc"
-                : "Buy · Fc balance"}
+              : !inStock
+                ? fr
+                  ? "Indisponible"
+                  : "Unavailable"
+                : fr
+                  ? `Acheter · ${avecCdf(total)}`
+                  : `Buy · ${avecCdf(total)}`}
         </button>
       </div>
     </div>

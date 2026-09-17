@@ -193,7 +193,12 @@ export function EavecMarketListingCard({
     fr ? "fr-FR" : "en-US",
   )} Fc`;
   const inStock = listing.quantity >= 1 && listing.status === "available";
-  const low = listing.quantity > 0 && listing.quantity <= 3;
+  const low = inStock && listing.quantity <= 3;
+  const meta = listing.locationLabel
+    ? listing.locationLabel
+    : listing.sellerRatingCount > 0
+      ? `★ ${listing.sellerRatingAvg?.toFixed(1)} · ${listing.sellerRatingCount}`
+      : null;
 
   return (
     <Link href={`/app/marche/${listing.id}`} className="mk-card">
@@ -201,15 +206,9 @@ export function EavecMarketListingCard({
         <span className="mk-card-badge">
           {eavecMarketCategoryLabel(listing.category, locale)}
         </span>
-        {inStock ? (
-          <span className="mk-card-stock" data-low={low ? "true" : "false"}>
-            {low
-              ? fr
-                ? `Reste ${listing.quantity}`
-                : `${listing.quantity} left`
-              : fr
-                ? "En stock"
-                : "In stock"}
+        {low ? (
+          <span className="mk-card-stock" data-low="true">
+            {fr ? `Reste ${listing.quantity}` : `${listing.quantity} left`}
           </span>
         ) : null}
         {listing.imageUrl ? (
@@ -224,16 +223,9 @@ export function EavecMarketListingCard({
         )}
       </div>
       <div className="mk-card-body">
-        <p className="mk-card-ref">{marcheListingRef(listing.id, listing.category)}</p>
         <p className="mk-card-title">{listing.title}</p>
         <p className="mk-card-price">{price}</p>
-        {listing.locationLabel ? (
-          <p className="mk-card-meta">{listing.locationLabel}</p>
-        ) : listing.sellerRatingCount > 0 ? (
-          <p className="mk-card-meta">
-            ★ {listing.sellerRatingAvg?.toFixed(1)} · {listing.sellerRatingCount}
-          </p>
-        ) : null}
+        {meta ? <p className="mk-card-meta">{meta}</p> : null}
       </div>
     </Link>
   );

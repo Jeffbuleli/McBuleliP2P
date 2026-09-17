@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUserId } from "@/lib/session";
 import { checkKycGate } from "@/lib/kyc-guard";
-import { EAVEC_MARKET_CATEGORIES } from "@/lib/eavec-market/categories";
+import { EAVEC_MARKET_CATEGORIES, EAVEC_MARKET_DESCRIPTION_MAX } from "@/lib/eavec-market/categories";
 import {
   createEavecMarketListing,
   listEavecMarketListings,
@@ -11,7 +11,7 @@ import { enforceApiRateLimit } from "@/lib/api-rate-limit";
 
 const createZ = z.object({
   title: z.string().min(2).max(120),
-  description: z.string().max(2000).optional().nullable(),
+  description: z.string().max(EAVEC_MARKET_DESCRIPTION_MAX).optional().nullable(),
   category: z.enum(EAVEC_MARKET_CATEGORIES),
   currency: z.enum(["CDF"]).default("CDF"),
   price: z.string().min(1).max(32),

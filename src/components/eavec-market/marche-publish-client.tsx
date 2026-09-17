@@ -7,6 +7,7 @@ import { MarcheChrome } from "@/components/eavec-market/marche-chrome";
 import {
   EAVEC_MARKET_CATEGORIES,
   EAVEC_MARKET_CATEGORY_EMOJI,
+  EAVEC_MARKET_DESCRIPTION_MAX,
   EAVEC_MARKET_IMAGE_MAX_CHARS,
   type EavecMarketCategory,
 } from "@/lib/eavec-market/categories";
@@ -157,8 +158,8 @@ export function EavecMarchePublishClient() {
           </span>
           <textarea
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            maxLength={2000}
+            onChange={(e) => setDescription(e.target.value.slice(0, EAVEC_MARKET_DESCRIPTION_MAX))}
+            maxLength={EAVEC_MARKET_DESCRIPTION_MAX}
             rows={3}
             className={`${field} min-h-[5.5rem] py-3`}
             placeholder={
@@ -167,6 +168,9 @@ export function EavecMarchePublishClient() {
                 : "Quality, packing, delivery…"
             }
           />
+          <p className="text-right text-[11px] tabular-nums text-[color:var(--mk-muted)]">
+            {description.length}/{EAVEC_MARKET_DESCRIPTION_MAX}
+          </p>
         </label>
 
         <div className="grid grid-cols-2 gap-2.5">

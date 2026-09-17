@@ -47,3 +47,6 @@ export type EavecMarketKind = (typeof EAVEC_MARKET_KINDS)[number];
 
 /** Max data-URL image length (~400KB base64). */
 export const EAVEC_MARKET_IMAGE_MAX_CHARS = 550_000;
+
+/** Max listing description length (publish + API). */
+export const EAVEC_MARKET_DESCRIPTION_MAX = 300;
