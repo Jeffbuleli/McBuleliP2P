@@ -106,6 +106,18 @@ const SCOPES = {
       key: ({ userId }) => `api:trade-options:user:${userId}`,
     },
   ],
+  eavec_market_create: [
+    {
+      limit: 20,
+      windowMs: 60 * 60_000,
+      key: ({ userId }) => `api:eavec-market-create:user:${userId}`,
+    },
+    {
+      limit: 60,
+      windowMs: 60 * 60_000,
+      key: ({ req }) => rateLimitKeyIp("api:eavec-market-create", req),
+    },
+  ],
 } as const satisfies Record<string, Rule[]>;
 
 export type ApiRateLimitScope = keyof typeof SCOPES;

@@ -10,6 +10,7 @@ import { AvecVueGovernanceCard } from "@/components/groups/avec-vue-governance-c
 import { AvecAiInsightsCard } from "@/components/groups/avec-ai-insights-card";
 import { AvecFinancialPassportPanel } from "@/components/groups/avec-financial-passport-panel";
 import { AvecMemberQuickActions } from "@/components/groups/avec-member-quick-actions";
+import { EavecEconomicCycleStrip } from "@/components/eavec-market/market-ui";
 import { avecCls } from "@/components/groups/avec-ui";
 import type { GovernanceVoteMeta } from "@/lib/avec/governance/types";
 import type { AvecMemberRow } from "@/components/groups/avec-member-list";
@@ -64,7 +65,7 @@ export function AvecOverviewPanel({
   canAdmin?: boolean;
   onNavigate: (tab: "meeting" | "members" | "treasury" | "dialogue") => void;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [funds, setFunds] = useState<FundBuckets | null>(null);
   const [openVote, setOpenVote] = useState<GovernanceVoteMeta | null>(null);
   const [pendingPayouts, setPendingPayouts] = useState(0);
@@ -188,6 +189,8 @@ export function AvecOverviewPanel({
           </div>
         ) : null}
       </div>
+
+      <EavecEconomicCycleStrip locale={locale} />
 
       {/* 2. Live vote - one card only */}
       {openVote ? (

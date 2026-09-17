@@ -25,6 +25,7 @@ McBuleli provides the technology so village savings groups (AVEC), cooperatives,
 | Pillar | Status | Implementation |
 |--------|--------|----------------|
 | **eAVEC OS** | Live | Groups, shares, treasury buckets, loans, repayments, governance votes, roles — `src/lib/avec/`, `src/app/api/groups/**`, `src/app/app/wallet/groups/**` |
+| **eAVEC Marché** | Live (MVP listings) | Community marketplace — `src/lib/eavec-market/`, `src/app/api/eavec/market/**`, `src/app/app/marche/**` (escrow orders = next phase) |
 | **eAVEC AI** | Live (MVP) | Deterministic insights + optional LLM rephrase — `src/lib/avec/financial-ai-service.ts`, `GET /api/groups/:id/insights` |
 | **eAVEC Passport** | Live (MVP) | Member financial history + Reliability Score + consent — `src/lib/avec/financial-passport.ts`, `financial-reliability-score.ts` |
 | **eAVEC Agri** | Future | Architecture reserved in docs only — no product tables yet |
