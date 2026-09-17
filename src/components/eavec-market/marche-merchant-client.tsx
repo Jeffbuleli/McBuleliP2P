@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
+import { MarcheChrome } from "@/components/eavec-market/marche-chrome";
 import { EavecMarketListingCard } from "@/components/eavec-market/market-ui";
 import type { EavecMerchantProfile } from "@/lib/eavec-market/merchant";
 import type { EavecMarketListingRow } from "@/lib/eavec-market/service";
@@ -63,66 +64,62 @@ export function EavecMarcheMerchantClient() {
 
   return (
     <div className="space-y-5 pb-10">
-      <div>
-        <Link href="/app/marche" className="text-xs font-bold text-[color:var(--fd-muted)]">
-          ← {fr ? "Marché" : "Market"}
-        </Link>
-        <h1 className="text-xl font-extrabold text-[#0F2D2F]">
-          {fr ? "Mode Marchand" : "Merchant mode"}
-        </h1>
-        <p className="text-xs text-[color:var(--fd-muted)]">
-          {fr
-            ? "Vos ventes, notes et litiges en un coup d’œil"
-            : "Your sales, ratings and disputes at a glance"}
-        </p>
-      </div>
+      <MarcheChrome fr={fr} title={fr ? "Mode Marchand" : "Merchant mode"} />
 
-      <div className="rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-sm font-extrabold text-[#0F2D2F]">
-              {p.displayName?.trim() || (fr ? "Vous" : "You")}
-            </p>
-            {p.trustedMerchant ? (
-              <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
-                {fr ? "Marchand de confiance" : "Trusted merchant"}
+      <p className="px-0.5 text-sm text-[color:var(--mk-muted)]">
+        {fr
+          ? "Vos ventes, notes et litiges en un coup d’œil"
+          : "Your sales, ratings and disputes at a glance"}
+      </p>
+
+      <div className="mk-panel">
+        <div className="mk-panel-pad">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-extrabold text-[color:var(--mk-ink)]">
+                {p.displayName?.trim() || (fr ? "Vous" : "You")}
               </p>
-            ) : (
-              <p className="mt-1 text-[10px] text-[color:var(--fd-muted)]">
-                {fr
-                  ? "Badge confiance : 5 ventes · 3 notes · moyenne ≥ 4 · KYC"
-                  : "Trusted badge: 5 sales · 3 ratings · avg ≥ 4 · KYC"}
-              </p>
-            )}
+              {p.trustedMerchant ? (
+                <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
+                  {fr ? "Marchand de confiance" : "Trusted merchant"}
+                </p>
+              ) : (
+                <p className="mt-1 text-[10px] text-[color:var(--mk-muted)]">
+                  {fr
+                    ? "Badge confiance : 5 ventes · 3 notes · moyenne ≥ 4 · KYC"
+                    : "Trusted badge: 5 sales · 3 ratings · avg ≥ 4 · KYC"}
+                </p>
+              )}
+            </div>
+            <Link
+              href={`/app/marche/seller/${p.userId}`}
+              className="text-xs font-bold text-[color:var(--mk-ink)] underline"
+            >
+              {fr ? "Profil public" : "Public profile"}
+            </Link>
           </div>
-          <Link
-            href={`/app/marche/seller/${p.userId}`}
-            className="text-xs font-bold text-[#0F2D2F] underline"
-          >
-            {fr ? "Profil public" : "Public profile"}
-          </Link>
-        </div>
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Stat label={fr ? "Ventes" : "Sales"} value={String(p.salesCompleted)} />
-          <Stat
-            label={fr ? "Note" : "Rating"}
-            value={
-              p.ratingCount
-                ? `${p.ratingAvg.toFixed(1)} (${p.ratingCount})`
-                : "—"
-            }
-          />
-          <Stat label={fr ? "Litiges" : "Disputes"} value={String(p.openDisputes)} />
-          <Stat
-            label={fr ? "Annonces" : "Listings"}
-            value={String(p.activeListings)}
-          />
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <Stat label={fr ? "Ventes" : "Sales"} value={String(p.salesCompleted)} />
+            <Stat
+              label={fr ? "Note" : "Rating"}
+              value={
+                p.ratingCount
+                  ? `${p.ratingAvg.toFixed(1)} (${p.ratingCount})`
+                  : "—"
+              }
+            />
+            <Stat label={fr ? "Litiges" : "Disputes"} value={String(p.openDisputes)} />
+            <Stat
+              label={fr ? "Annonces" : "Listings"}
+              value={String(p.activeListings)}
+            />
+          </div>
         </div>
       </div>
 
       {dash.disputedOrders.length ? (
         <section className="space-y-2">
-          <h2 className="text-sm font-extrabold text-[#0F2D2F]">
+          <h2 className="text-sm font-extrabold text-[color:var(--mk-ink)]">
             {fr ? "Litiges ouverts" : "Open disputes"}
           </h2>
           <ul className="space-y-2">
@@ -132,7 +129,7 @@ export function EavecMarcheMerchantClient() {
                   href={`/app/marche/orders/${o.id}`}
                   className="block rounded-xl border border-amber-200 bg-amber-50 px-3 py-2"
                 >
-                  <p className="text-sm font-bold text-[#0F2D2F]">{o.listingTitle}</p>
+                  <p className="text-sm font-bold text-[color:var(--mk-ink)]">{o.listingTitle}</p>
                   <p className="text-[11px] text-amber-900">
                     {money(o.totalAmount, o.currency)}
                     {o.disputeReason ? ` · ${o.disputeReason}` : ""}
@@ -146,7 +143,7 @@ export function EavecMarcheMerchantClient() {
 
       <section className="space-y-2">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-extrabold text-[#0F2D2F]">
+          <h2 className="text-sm font-extrabold text-[color:var(--mk-ink)]">
             {fr ? "Ventes récentes" : "Recent sales"}
           </h2>
           <Link href="/app/marche/orders" className="text-xs font-bold underline">
@@ -154,7 +151,7 @@ export function EavecMarcheMerchantClient() {
           </Link>
         </div>
         {dash.recentSales.length === 0 ? (
-          <p className="text-sm text-[color:var(--fd-muted)]">
+          <p className="text-sm text-[color:var(--mk-muted)]">
             {fr ? "Pas encore de vente terminée." : "No completed sales yet."}
           </p>
         ) : (
@@ -163,7 +160,7 @@ export function EavecMarcheMerchantClient() {
               <li key={o.id}>
                 <Link
                   href={`/app/marche/orders/${o.id}`}
-                  className="flex items-center justify-between rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-3 py-2"
+                  className="flex items-center justify-between rounded-xl border border-[color:var(--mk-line)] bg-white px-3 py-2"
                 >
                   <span className="truncate text-sm font-bold">{o.listingTitle}</span>
                   <span className="shrink-0 text-sm font-extrabold tabular-nums">
@@ -178,7 +175,7 @@ export function EavecMarcheMerchantClient() {
 
       <section className="space-y-2">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-extrabold text-[#0F2D2F]">
+          <h2 className="text-sm font-extrabold text-[color:var(--mk-ink)]">
             {fr ? "Mes annonces" : "My listings"}
           </h2>
           <Link href="/app/marche/new" className="text-xs font-bold underline">
@@ -186,11 +183,11 @@ export function EavecMarcheMerchantClient() {
           </Link>
         </div>
         {dash.listings.length === 0 ? (
-          <p className="text-sm text-[color:var(--fd-muted)]">
+          <p className="text-sm text-[color:var(--mk-muted)]">
             {fr ? "Aucune annonce." : "No listings."}
           </p>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="mk-grid">
             {dash.listings.slice(0, 4).map((l) => (
               <EavecMarketListingCard key={l.id} listing={l} locale={locale} />
             ))}
@@ -203,11 +200,11 @@ export function EavecMarcheMerchantClient() {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl bg-[color:var(--fd-bg)] px-3 py-2">
-      <p className="text-[10px] font-bold uppercase text-[color:var(--fd-muted)]">
+    <div className="rounded-xl bg-[color:var(--mk-mist,#e8eef0)] px-3 py-2">
+      <p className="text-[10px] font-bold uppercase text-[color:var(--mk-muted)]">
         {label}
       </p>
-      <p className="text-base font-extrabold tabular-nums text-[#0F2D2F]">{value}</p>
+      <p className="text-base font-extrabold tabular-nums text-[color:var(--mk-ink)]">{value}</p>
     </div>
   );
 }

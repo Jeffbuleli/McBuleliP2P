@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
+import { MarcheChrome } from "@/components/eavec-market/marche-chrome";
 import { EavecMarketListingCard } from "@/components/eavec-market/market-ui";
 import type { EavecMarketListingRow } from "@/lib/eavec-market/service";
 
@@ -56,41 +57,32 @@ export function EavecMarcheMineClient() {
   };
 
   return (
-    <div className="space-y-4 pb-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <Link href="/app/marche" className="text-xs font-bold text-[color:var(--fd-muted)]">
-            ← {fr ? "Marché" : "Market"}
-          </Link>
-          <h1 className="text-xl font-extrabold text-[#0F2D2F]">
-            {fr ? "Mes annonces" : "My listings"}
-          </h1>
-          <p className="text-[11px] text-[color:var(--fd-muted)]">
-            {fr
-              ? "Les nouvelles annonces passent par validation agent."
-              : "New listings go through agent review."}
-          </p>
-        </div>
-        <Link
-          href="/app/marche/new"
-          className="rounded-full bg-[#0F2D2F] px-4 py-2 text-sm font-bold text-[#F6E8CD]"
-        >
-          +
-        </Link>
-      </div>
+    <div className="space-y-4 pb-10">
+      <MarcheChrome fr={fr} title={fr ? "Mes annonces" : "My listings"} />
+
+      <p className="px-0.5 text-sm text-[color:var(--mk-muted)]">
+        {fr
+          ? "Les nouvelles annonces passent par validation agent."
+          : "New listings go through agent review."}
+      </p>
 
       {listings === null ? (
-        <p className="text-center text-sm text-[color:var(--fd-muted)]">…</p>
+        <p className="text-center text-sm text-[color:var(--mk-muted)]">…</p>
       ) : listings.length === 0 ? (
-        <p className="text-center text-sm text-[color:var(--fd-muted)]">
-          {fr ? "Pas encore d’annonce." : "No listings yet."}
-        </p>
+        <div className="mk-empty">
+          <p style={{ fontFamily: "var(--mk-display)" }} className="text-lg font-extrabold">
+            {fr ? "Pas encore d’annonce." : "No listings yet."}
+          </p>
+          <Link href="/app/marche/new" className="mk-btn-primary max-w-[12rem]">
+            {fr ? "Publier" : "Publish"}
+          </Link>
+        </div>
       ) : (
-        <div className="space-y-3">
+        <div className="mk-grid">
           {listings.map((l) => (
             <div key={l.id} className="space-y-2">
               <EavecMarketListingCard listing={l} locale={locale} />
-              <p className="px-1 text-[10px] font-bold uppercase text-[color:var(--fd-muted)]">
+              <p className="px-1 text-[10px] font-bold uppercase tracking-wide text-[color:var(--mk-muted)]">
                 {statusLabel(l.status)}
               </p>
               <div className="flex gap-2">
@@ -98,7 +90,7 @@ export function EavecMarcheMineClient() {
                   <button
                     type="button"
                     onClick={() => void setStatus(l.id, "paused")}
-                    className="min-h-10 flex-1 rounded-xl border border-[color:var(--fd-border)] text-xs font-bold"
+                    className="mk-tool flex-1"
                   >
                     {fr ? "Pause" : "Pause"}
                   </button>
@@ -106,7 +98,7 @@ export function EavecMarcheMineClient() {
                   <button
                     type="button"
                     onClick={() => void setStatus(l.id, "available")}
-                    className="min-h-10 flex-1 rounded-xl border border-[color:var(--fd-border)] text-xs font-bold"
+                    className="mk-tool mk-tool-primary flex-1"
                   >
                     {fr ? "Republier" : "Republish"}
                   </button>
@@ -115,7 +107,7 @@ export function EavecMarcheMineClient() {
                   <button
                     type="button"
                     onClick={() => void setStatus(l.id, "closed")}
-                    className="min-h-10 flex-1 rounded-xl border border-rose-200 text-xs font-bold text-rose-700"
+                    className="mk-tool flex-1 text-rose-700"
                   >
                     {fr ? "Retirer" : "Close"}
                   </button>

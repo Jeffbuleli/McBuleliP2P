@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
+import { MarcheChrome } from "@/components/eavec-market/marche-chrome";
 import { EavecMarketListingCard } from "@/components/eavec-market/market-ui";
 import type { EavecMerchantProfile } from "@/lib/eavec-market/merchant";
 import type { EavecMarketListingRow } from "@/lib/eavec-market/service";
@@ -41,46 +41,53 @@ export function EavecMarcheSellerClient({ userId }: { userId: string }) {
 
   return (
     <div className="space-y-5 pb-10">
-      <Link href="/app/marche" className="text-xs font-bold text-[color:var(--fd-muted)]">
-        ← {fr ? "Marché" : "Market"}
-      </Link>
+      <MarcheChrome
+        fr={fr}
+        title={profile.displayName?.trim() || (fr ? "Vendeur" : "Seller")}
+        showSell={false}
+      />
 
-      <div className="rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] p-4">
-        <h1 className="text-xl font-extrabold text-[#0F2D2F]">
-          {profile.displayName?.trim() || (fr ? "Vendeur" : "Seller")}
-        </h1>
-        {profile.trustedMerchant ? (
-          <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
-            {fr ? "Marchand de confiance" : "Trusted merchant"}
-          </p>
-        ) : null}
-        <div className="mt-3 flex flex-wrap gap-4 text-sm">
-          <span className="font-bold tabular-nums text-[#0F2D2F]">
-            {profile.ratingCount
-              ? `★ ${profile.ratingAvg.toFixed(1)} · ${profile.ratingCount}`
-              : fr
-                ? "Pas encore de note"
-                : "No ratings yet"}
-          </span>
-          <span className="text-[color:var(--fd-muted)]">
-            {profile.salesCompleted} {fr ? "ventes" : "sales"}
-          </span>
-          {profile.kycApproved ? (
-            <span className="text-emerald-700">{fr ? "KYC OK" : "KYC OK"}</span>
+      <div className="mk-panel">
+        <div className="mk-panel-pad">
+          <h1
+            className="text-xl font-extrabold text-[color:var(--mk-ink)]"
+            style={{ fontFamily: "var(--mk-display)" }}
+          >
+            {profile.displayName?.trim() || (fr ? "Vendeur" : "Seller")}
+          </h1>
+          {profile.trustedMerchant ? (
+            <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
+              {fr ? "Marchand de confiance" : "Trusted merchant"}
+            </p>
           ) : null}
+          <div className="mt-3 flex flex-wrap gap-4 text-sm">
+            <span className="font-bold tabular-nums text-[color:var(--mk-ink)]">
+              {profile.ratingCount
+                ? `★ ${profile.ratingAvg.toFixed(1)} · ${profile.ratingCount}`
+                : fr
+                  ? "Pas encore de note"
+                  : "No ratings yet"}
+            </span>
+            <span className="text-[color:var(--mk-muted)]">
+              {profile.salesCompleted} {fr ? "ventes" : "sales"}
+            </span>
+            {profile.kycApproved ? (
+              <span className="text-emerald-700">{fr ? "KYC OK" : "KYC OK"}</span>
+            ) : null}
+          </div>
         </div>
       </div>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-extrabold text-[#0F2D2F]">
+        <h2 className="mk-section-label">
           {fr ? "Annonces actives" : "Active listings"}
         </h2>
         {listings.length === 0 ? (
-          <p className="text-sm text-[color:var(--fd-muted)]">
+          <p className="text-sm text-[color:var(--mk-muted)]">
             {fr ? "Aucune annonce disponible." : "No active listings."}
           </p>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="mk-grid">
             {listings.map((l) => (
               <EavecMarketListingCard key={l.id} listing={l} locale={locale} />
             ))}

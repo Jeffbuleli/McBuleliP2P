@@ -35,6 +35,7 @@ export function eavecMarketCategoryLabel(
   return locale.startsWith("fr") ? CAT_LABEL_FR[cat] : CAT_LABEL_EN[cat];
 }
 
+/** @deprecated Prefer EavecMarketCategoryPills in Marché world */
 export function EavecMarketCategoryGrid({
   active,
   onSelect,
@@ -45,26 +46,44 @@ export function EavecMarketCategoryGrid({
   locale?: string;
 }) {
   return (
-    <div className="grid grid-cols-4 gap-2 sm:grid-cols-7">
+    <EavecMarketCategoryPills active={active} onSelect={onSelect} locale={locale} />
+  );
+}
+
+export function EavecMarketCategoryPills({
+  active,
+  onSelect,
+  locale = "fr",
+}: {
+  active: string | null;
+  onSelect: (cat: EavecMarketCategory | null) => void;
+  locale?: string;
+}) {
+  return (
+    <div className="mk-cats" role="listbox" aria-label="Categories">
+      <button
+        type="button"
+        role="option"
+        aria-selected={active == null}
+        data-active={active == null ? "true" : "false"}
+        onClick={() => onSelect(null)}
+        className="mk-cat"
+      >
+        {locale.startsWith("fr") ? "Tout" : "All"}
+      </button>
       {EAVEC_MARKET_CATEGORIES.map((cat) => {
         const selected = active === cat;
         return (
           <button
             key={cat}
             type="button"
+            role="option"
+            aria-selected={selected}
+            data-active={selected ? "true" : "false"}
             onClick={() => onSelect(selected ? null : cat)}
-            className={`flex min-h-[64px] flex-col items-center justify-center gap-0.5 rounded-2xl border px-1 py-2 transition active:scale-95 ${
-              selected
-                ? "border-[#0F2D2F] bg-[#0F2D2F] text-[#F6E8CD]"
-                : "border-[color:var(--fd-border)] bg-[color:var(--fd-card)] text-[color:var(--fd-fg)]"
-            }`}
+            className="mk-cat"
           >
-            <span className="text-xl leading-none" aria-hidden>
-              {EAVEC_MARKET_CATEGORY_EMOJI[cat]}
-            </span>
-            <span className="max-w-full truncate text-[9px] font-bold">
-              {eavecMarketCategoryLabel(cat, locale)}
-            </span>
+            {eavecMarketCategoryLabel(cat, locale)}
           </button>
         );
       })}
@@ -84,42 +103,28 @@ export function EavecMarketListingCard({
   )} Fc`;
 
   return (
-    <Link
-      href={`/app/marche/${listing.id}`}
-      className="flex flex-col overflow-hidden rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] transition active:scale-[0.99]"
-    >
-      <div className="relative aspect-[4/3] bg-[color:var(--fd-bg)]">
+    <Link href={`/app/marche/${listing.id}`} className="mk-card">
+      <div className="mk-card-media">
         {listing.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={listing.imageUrl}
-            alt=""
-            className="h-full w-full object-cover"
-          />
+          <img src={listing.imageUrl} alt="" />
         ) : (
-          <div className="flex h-full w-full flex-col items-center justify-center gap-1 text-[color:var(--fd-muted)]">
-            <span className="text-3xl" aria-hidden>
+          <div className="flex h-full w-full flex-col items-center justify-center gap-1 text-[color:var(--mk-muted)]">
+            <span className="text-4xl" aria-hidden>
               {EAVEC_MARKET_CATEGORY_EMOJI[listing.category]}
             </span>
           </div>
         )}
       </div>
-      <div className="space-y-0.5 p-2.5">
-        <p className="line-clamp-2 text-sm font-bold leading-snug text-[color:var(--fd-fg)]">
-          {listing.title}
-        </p>
-        <p className="text-sm font-extrabold tabular-nums text-[#0F2D2F]">
-          {price}
-        </p>
+      <div className="mk-card-body">
+        <p className="mk-card-title">{listing.title}</p>
+        <p className="mk-card-price">{price}</p>
         {listing.sellerRatingCount > 0 ? (
-          <p className="text-[10px] font-semibold text-[color:var(--fd-muted)]">
+          <p className="mk-card-meta">
             ★ {listing.sellerRatingAvg?.toFixed(1)} · {listing.sellerRatingCount}
           </p>
-        ) : null}
-        {listing.locationLabel ? (
-          <p className="truncate text-[10px] font-medium text-[color:var(--fd-muted)]">
-            {listing.locationLabel}
-          </p>
+        ) : listing.locationLabel ? (
+          <p className="mk-card-meta">{listing.locationLabel}</p>
         ) : null}
       </div>
     </Link>

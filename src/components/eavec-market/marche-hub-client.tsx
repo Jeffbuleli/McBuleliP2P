@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import {
-  EavecMarketCategoryGrid,
+  EavecMarketCategoryPills,
   EavecMarketListingCard,
 } from "@/components/eavec-market/market-ui";
 import type { EavecMarketCategory } from "@/lib/eavec-market/categories";
@@ -41,92 +41,128 @@ export function EavecMarcheHubClient() {
   }, [load]);
 
   return (
-    <div className="space-y-4 pb-8">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-extrabold tracking-tight text-[#0F2D2F]">
-            {fr ? "Marché" : "Market"}
-          </h1>
-          <p className="text-xs text-[color:var(--fd-muted)]">
-            {fr ? "Acheter et vendre dans la communauté" : "Buy and sell in the community"}
+    <div className="pb-10">
+      <section className="mk-hero mk-rise">
+        <div className="mk-hero-inner">
+          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[rgba(244,247,246,0.55)]">
+            e-AVEC
           </p>
+          <h1 className="mk-brand">Marché</h1>
+          <p className="mk-tagline">
+            {fr
+              ? "Le commerce de la communauté — sélection soignée, paiement en Fc."
+              : "Community commerce — curated finds, pay in Fc."}
+          </p>
+          <Link href="/app/marche/new" className="mk-hero-cta">
+            {fr ? "Mettre en vente" : "List an item"}
+          </Link>
         </div>
-        <Link
-          href="/app/marche/new"
-          className="flex h-11 min-w-11 items-center justify-center rounded-full bg-[#0F2D2F] px-4 text-sm font-bold text-[#F6E8CD] shadow-md active:scale-95"
-        >
-          {fr ? "Vendre" : "Sell"}
-        </Link>
-      </div>
+      </section>
 
-      <label className="block">
-        <span className="sr-only">{fr ? "Que cherchez-vous ?" : "What are you looking for?"}</span>
+      <div className="mk-search-wrap mk-rise mk-rise-delay-1">
+        <span className="mk-search-icon" aria-hidden>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <circle cx="11" cy="11" r="6.5" stroke="currentColor" strokeWidth="1.8" />
+            <path d="M16 16l4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
+        </span>
+        <label className="sr-only">
+          {fr ? "Que cherchez-vous ?" : "What are you looking for?"}
+        </label>
         <input
           type="search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder={fr ? "Que cherchez-vous ?" : "What are you looking for?"}
-          className="min-h-12 w-full rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-4 text-sm font-medium outline-none ring-[#C9A227] focus:ring-2"
+          className="mk-search"
         />
-      </label>
-
-      <EavecMarketCategoryGrid
-        active={category}
-        onSelect={setCategory}
-        locale={locale}
-      />
-
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        <Link
-          href="/app/marche/merchant"
-          className="shrink-0 rounded-full border border-[#0F2D2F] bg-[#0F2D2F] px-3 py-2 text-xs font-bold text-[#F6E8CD]"
-        >
-          {fr ? "Mode Marchand" : "Merchant"}
-        </Link>
-        <Link
-          href="/app/marche/mine"
-          className="shrink-0 rounded-full border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-3 py-2 text-xs font-bold"
-        >
-          {fr ? "Mes annonces" : "My listings"}
-        </Link>
-        <Link
-          href="/app/marche/orders"
-          className="shrink-0 rounded-full border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-3 py-2 text-xs font-bold"
-        >
-          {fr ? "Mes commandes" : "My orders"}
-        </Link>
       </div>
 
-      {err ? (
-        <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
-          {err}
-        </p>
-      ) : null}
+      <div className="mt-5 space-y-5 px-0.5">
+        <div className="mk-rise mk-rise-delay-2">
+          <EavecMarketCategoryPills
+            active={category}
+            onSelect={setCategory}
+            locale={locale}
+          />
+        </div>
 
-      {listings === null ? (
-        <p className="text-center text-sm text-[color:var(--fd-muted)]">…</p>
-      ) : listings.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-[color:var(--fd-border)] px-4 py-10 text-center">
-          <span className="text-4xl" aria-hidden>
-            🛒
-          </span>
-          <p className="text-sm font-bold text-[#0F2D2F]">
-            {fr ? "Aucune annonce pour l’instant" : "No listings yet"}
-          </p>
-          <Link
-            href="/app/marche/new"
-            className="min-h-11 rounded-xl bg-[#0F2D2F] px-5 text-sm font-bold leading-[2.75rem] text-[#F6E8CD]"
-          >
-            {fr ? "Publier la première" : "Post the first"}
+        <div className="mk-tools mk-rise mk-rise-delay-2">
+          <Link href="/app/marche/merchant" className="mk-tool mk-tool-primary">
+            {fr ? "Marchand" : "Merchant"}
+          </Link>
+          <Link href="/app/marche/mine" className="mk-tool">
+            {fr ? "Mes annonces" : "My listings"}
+          </Link>
+          <Link href="/app/marche/orders" className="mk-tool">
+            {fr ? "Commandes" : "Orders"}
           </Link>
         </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-3">
-          {listings.map((l) => (
-            <EavecMarketListingCard key={l.id} listing={l} locale={locale} />
-          ))}
+
+        <div className="mk-rise mk-rise-delay-3">
+          <div className="mb-3 flex items-end justify-between gap-2">
+            <p className="mk-section-label">
+              {fr ? "Sélection" : "Featured"}
+            </p>
+            {listings && listings.length > 0 ? (
+              <p className="text-[11px] font-semibold text-[color:var(--mk-muted)]">
+                {listings.length} {fr ? "annonces" : "listings"}
+              </p>
+            ) : null}
+          </div>
+
+          {err ? (
+            <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
+              {err}
+            </p>
+          ) : null}
+
+          {listings === null ? (
+            <div className="mk-grid">
+              {[0, 1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="mk-card-media animate-pulse opacity-60"
+                  style={{
+                    background:
+                      "linear-gradient(90deg,#d8e4e1 25%,#e8eef0 50%,#d8e4e1 75%)",
+                    backgroundSize: "200% 100%",
+                  }}
+                />
+              ))}
+            </div>
+          ) : listings.length === 0 ? (
+            <div className="mk-empty">
+              <p
+                className="font-[family-name:var(--mk-display)] text-xl font-extrabold tracking-tight"
+                style={{ fontFamily: "var(--mk-display)" }}
+              >
+                {fr ? "Le rayon est encore vide" : "The aisle is still empty"}
+              </p>
+              <p className="max-w-xs text-sm text-[color:var(--mk-muted)]">
+                {fr
+                  ? "Publiez la première annonce — un agent valide avant la mise en ligne."
+                  : "Post the first listing — an agent reviews before it goes live."}
+              </p>
+              <Link href="/app/marche/new" className="mk-btn-primary mt-1 max-w-[14rem]">
+                {fr ? "Publier" : "Publish"}
+              </Link>
+            </div>
+          ) : (
+            <div className="mk-grid">
+              {listings.map((l, i) => (
+                <div
+                  key={l.id}
+                  className="mk-rise"
+                  style={{ animationDelay: `${Math.min(i, 8) * 0.04}s` }}
+                >
+                  <EavecMarketListingCard listing={l} locale={locale} />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

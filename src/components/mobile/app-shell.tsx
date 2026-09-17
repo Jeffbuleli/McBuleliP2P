@@ -38,6 +38,7 @@ export function AppShell({
     !pathname.endsWith("/new");
   const onCommunity = isCommunityRoute(pathname);
   const onMarket = pathname.startsWith("/app/market");
+  const onMarche = pathname.startsWith("/app/marche");
   const hideTopBarForFlow =
     pathname.startsWith("/app/wallet/deposit") ||
     pathname.startsWith("/app/wallet/withdraw") ||
@@ -46,7 +47,8 @@ export function AppShell({
     pathname.startsWith("/app/p2p/ad/") ||
     pathname.startsWith("/app/p2p/order/") ||
     pathname.startsWith("/app/support") ||
-    onAvecGroupFlow;
+    onAvecGroupFlow ||
+    onMarche;
   const showTopBar = !onProfile && !onCommunity && !hideTopBarForFlow;
   const navAutoHide = bottomNavAutoHide(pathname);
   const navHidden = useScrollChrome(navAutoHide);
@@ -58,7 +60,8 @@ export function AppShell({
     onSupport ||
     onAcademy ||
     onCommunity ||
-    onMarket;
+    onMarket ||
+    onMarche;
   const shellPb =
     navAutoHide && navHidden
       ? "pb-[calc(0.75rem+env(safe-area-inset-bottom))] lg:pb-4"
@@ -67,9 +70,13 @@ export function AppShell({
   return (
     <UnreadCountsProvider>
       <div
-        className={`relative mx-auto flex min-h-dvh w-full max-w-lg flex-col bg-[var(--fd-bg)] pt-[env(safe-area-inset-top)] transition-[padding-bottom] duration-300 ease-out md:max-w-3xl lg:max-w-6xl lg:flex-row lg:pt-0 ${shellPb}`}
+        className={`relative mx-auto flex min-h-dvh w-full flex-col pt-[env(safe-area-inset-top)] transition-[padding-bottom] duration-300 ease-out lg:flex-row lg:pt-0 ${shellPb} ${
+          onMarche
+            ? "max-w-none bg-[color:var(--mk-paper,#f4f7f6)] md:max-w-none lg:max-w-none"
+            : "max-w-lg bg-[var(--fd-bg)] md:max-w-3xl lg:max-w-6xl"
+        }`}
       >
-        <div className="hidden lg:block">
+        <div className={`hidden lg:block ${onMarche ? "lg:!hidden" : ""}`}>
           <AppSideNav />
         </div>
         <div className="flex min-w-0 flex-1 flex-col">
@@ -81,7 +88,11 @@ export function AppShell({
             </div>
           ) : null}
           <main
-            className={`flex-1 px-4 md:px-5 lg:px-6 ${onP2pHub ? "pt-0" : lightMainBg ? "pt-2" : "pt-3"} ${onSupport ? "!px-0 !pt-0 flex min-h-0 flex-col" : ""}`}
+            className={`flex-1 ${
+              onMarche
+                ? "px-4 pt-0 md:px-5 lg:mx-auto lg:max-w-6xl lg:px-6"
+                : `px-4 md:px-5 lg:px-6 ${onP2pHub ? "pt-0" : lightMainBg ? "pt-2" : "pt-3"}`
+            } ${onSupport ? "!px-0 !pt-0 flex min-h-0 flex-col" : ""}`}
           >
             {children}
           </main>

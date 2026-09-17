@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
+import { MarcheChrome } from "@/components/eavec-market/marche-chrome";
 import type { EavecMarketOrderRow } from "@/lib/eavec-market/orders";
 
 const STATUS_FR: Record<string, string> = {
@@ -41,36 +42,37 @@ export function EavecMarcheOrdersClient() {
   const label = fr ? STATUS_FR : STATUS_EN;
 
   return (
-    <div className="space-y-4 pb-8">
-      <div>
-        <Link href="/app/marche" className="text-xs font-bold text-[color:var(--fd-muted)]">
-          ← {fr ? "Marché" : "Market"}
-        </Link>
-        <h1 className="text-xl font-extrabold text-[#0F2D2F]">
-          {fr ? "Mes commandes" : "My orders"}
-        </h1>
-      </div>
+    <div className="space-y-4 pb-10">
+      <MarcheChrome fr={fr} title={fr ? "Mes commandes" : "My orders"} />
 
       {orders === null ? (
-        <p className="text-center text-sm text-[color:var(--fd-muted)]">…</p>
+        <p className="text-center text-sm text-[color:var(--mk-muted)]">…</p>
       ) : orders.length === 0 ? (
-        <p className="text-center text-sm text-[color:var(--fd-muted)]">
-          {fr ? "Aucune commande." : "No orders yet."}
-        </p>
+        <div className="mk-empty">
+          <p style={{ fontFamily: "var(--mk-display)" }} className="text-lg font-extrabold">
+            {fr ? "Aucune commande." : "No orders yet."}
+          </p>
+          <Link href="/app/marche" className="mk-btn-primary max-w-[12rem]">
+            {fr ? "Explorer" : "Browse"}
+          </Link>
+        </div>
       ) : (
-        <ul className="space-y-2">
+        <ul className="space-y-2.5">
           {orders.map((o) => (
             <li key={o.id}>
               <Link
                 href={`/app/marche/orders/${o.id}`}
-                className="block rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] p-3 active:scale-[0.99]"
+                className="mk-panel block active:scale-[0.99]"
               >
-                <div className="flex items-start justify-between gap-2">
+                <div className="mk-panel-pad flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-bold text-[#0F2D2F]">
+                    <p
+                      className="truncate text-sm font-bold text-[color:var(--mk-ink)]"
+                      style={{ fontFamily: "var(--mk-display)" }}
+                    >
                       {o.listingTitle}
                     </p>
-                    <p className="text-[10px] font-semibold uppercase text-[color:var(--fd-muted)]">
+                    <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-[color:var(--mk-muted)]">
                       {o.role === "buyer"
                         ? fr
                           ? "Achat"
@@ -177,13 +179,21 @@ export function EavecMarcheOrderDetailClient({ id }: { id: string }) {
 
   if (err && !order) {
     return (
-      <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
-        {err}
-      </p>
+      <div>
+        <MarcheChrome fr={fr} title={fr ? "Commande" : "Order"} showSell={false} />
+        <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
+          {err}
+        </p>
+      </div>
     );
   }
   if (!order) {
-    return <p className="text-center text-sm text-[color:var(--fd-muted)]">…</p>;
+    return (
+      <div>
+        <MarcheChrome fr={fr} title={fr ? "Commande" : "Order"} showSell={false} />
+        <p className="mt-8 text-center text-sm text-[color:var(--mk-muted)]">…</p>
+      </div>
+    );
   }
 
   const label = fr ? STATUS_FR : STATUS_EN;
@@ -191,19 +201,20 @@ export function EavecMarcheOrderDetailClient({ id }: { id: string }) {
     `${Math.round(Number(order.totalAmount)).toLocaleString(fr ? "fr-FR" : "en-US")} Fc`;
 
   return (
-    <div className="mx-auto max-w-lg space-y-4 pb-10">
-      <Link
-        href="/app/marche/orders"
-        className="text-xs font-bold text-[color:var(--fd-muted)]"
-      >
-        ← {fr ? "Commandes" : "Orders"}
-      </Link>
+    <div className="space-y-4 pb-10">
+      <MarcheChrome fr={fr} title={fr ? "Commande" : "Order"} showSell={false} />
 
-      <div className="rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] p-4 space-y-2">
-        <p className="text-[10px] font-bold uppercase text-[color:var(--fd-muted)]">
+      <div className="mk-panel">
+        <div className="mk-panel-pad space-y-2">
+        <p className="mk-section-label">
           {label[order.status] ?? order.status}
         </p>
-        <h1 className="text-xl font-extrabold text-[#0F2D2F]">{order.listingTitle}</h1>
+        <h1
+          className="text-xl font-extrabold text-[color:var(--mk-ink)]"
+          style={{ fontFamily: "var(--mk-display)" }}
+        >
+          {order.listingTitle}
+        </h1>
         <p className="text-2xl font-black tabular-nums">{price}</p>
         <p className="text-xs text-[color:var(--fd-muted)]">
           {fr ? "Qté" : "Qty"} {order.quantity}
@@ -239,24 +250,25 @@ export function EavecMarcheOrderDetailClient({ id }: { id: string }) {
             </p>
           </div>
         ) : (
-          <ol className="mt-3 space-y-1 text-xs text-[color:var(--fd-muted)]">
-            <li className={order.status !== "cancelled" ? "font-bold text-[#0F2D2F]" : ""}>
+          <ol className="mt-3 space-y-1 text-xs text-[color:var(--mk-muted)]">
+            <li className={order.status !== "cancelled" ? "font-bold text-[color:var(--mk-ink)]" : ""}>
               1. {fr ? "Payée (fonds sécurisés)" : "Paid (funds secured)"}
             </li>
             <li
               className={
                 order.status === "ready" || order.status === "released"
-                  ? "font-bold text-[#0F2D2F]"
+                  ? "font-bold text-[color:var(--mk-ink)]"
                   : ""
               }
             >
               2. {fr ? "Remise / livraison" : "Handover / delivery"}
             </li>
-            <li className={order.status === "released" ? "font-bold text-[#0F2D2F]" : ""}>
+            <li className={order.status === "released" ? "font-bold text-[color:var(--mk-ink)]" : ""}>
               3. {fr ? "Confirmée → vendeur payé" : "Confirmed → seller paid"}
             </li>
           </ol>
         )}
+        </div>
       </div>
 
       {err ? (
@@ -266,8 +278,9 @@ export function EavecMarcheOrderDetailClient({ id }: { id: string }) {
       ) : null}
 
       {order.canRate ? (
-        <div className="space-y-2 rounded-2xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] p-3">
-          <p className="text-sm font-bold text-[#0F2D2F]">
+        <div className="mk-panel">
+          <div className="mk-panel-pad space-y-2">
+          <p className="text-sm font-bold text-[color:var(--mk-ink)]">
             {fr ? "Noter le vendeur" : "Rate the seller"}
           </p>
           <div className="flex gap-1">
@@ -277,7 +290,9 @@ export function EavecMarcheOrderDetailClient({ id }: { id: string }) {
                 type="button"
                 onClick={() => setStars(n)}
                 className={`min-h-10 min-w-10 rounded-lg text-lg ${
-                  n <= stars ? "bg-[#0F2D2F] text-[#F6E8CD]" : "border border-[color:var(--fd-border)]"
+                  n <= stars
+                    ? "bg-[color:var(--mk-ink)] text-[#f4f7f6]"
+                    : "border border-[color:var(--mk-line)]"
                 }`}
               >
                 ★
@@ -288,16 +303,17 @@ export function EavecMarcheOrderDetailClient({ id }: { id: string }) {
             value={rateComment}
             onChange={(e) => setRateComment(e.target.value)}
             placeholder={fr ? "Commentaire (optionnel)" : "Comment (optional)"}
-            className="min-h-11 w-full rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-bg)] px-3 text-sm"
+            className="min-h-11 w-full rounded-xl border border-[color:var(--mk-line)] bg-white px-3 text-sm"
           />
           <button
             type="button"
             disabled={busy}
             onClick={() => void submitRating()}
-            className="flex min-h-11 w-full items-center justify-center rounded-xl bg-[#0F2D2F] text-sm font-bold text-[#F6E8CD] disabled:opacity-60"
+            className="mk-btn-primary"
           >
             {fr ? "Envoyer la note" : "Submit rating"}
           </button>
+          </div>
         </div>
       ) : null}
 
@@ -313,7 +329,7 @@ export function EavecMarcheOrderDetailClient({ id }: { id: string }) {
             type="button"
             disabled={busy}
             onClick={() => void act("mark_ready")}
-            className="flex min-h-12 w-full items-center justify-center rounded-xl bg-[#0F2D2F] text-sm font-bold text-[#F6E8CD] disabled:opacity-60"
+            className="mk-btn-primary"
           >
             {fr ? "Marquer prêt / remis" : "Mark ready / handed over"}
           </button>
@@ -325,7 +341,7 @@ export function EavecMarcheOrderDetailClient({ id }: { id: string }) {
             type="button"
             disabled={busy}
             onClick={() => void act("confirm")}
-            className="flex min-h-12 w-full items-center justify-center rounded-xl bg-[#0F2D2F] text-sm font-bold text-[#F6E8CD] disabled:opacity-60"
+            className="mk-btn-primary"
           >
             {fr ? "Confirmer réception" : "Confirm received"}
           </button>
@@ -336,7 +352,7 @@ export function EavecMarcheOrderDetailClient({ id }: { id: string }) {
             type="button"
             disabled={busy}
             onClick={() => void act("cancel")}
-            className="flex min-h-12 w-full items-center justify-center rounded-xl border border-[color:var(--fd-border)] text-sm font-bold disabled:opacity-60"
+            className="flex min-h-12 w-full items-center justify-center rounded-full border border-[color:var(--mk-line)] text-sm font-bold disabled:opacity-60"
           >
             {fr ? "Annuler" : "Cancel"}
           </button>
@@ -348,7 +364,7 @@ export function EavecMarcheOrderDetailClient({ id }: { id: string }) {
               value={disputeReason}
               onChange={(e) => setDisputeReason(e.target.value)}
               placeholder={fr ? "Motif du litige (optionnel)" : "Dispute reason (optional)"}
-              className="min-h-11 w-full rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-bg)] px-3 text-sm"
+              className="min-h-11 w-full rounded-xl border border-[color:var(--mk-line)] bg-white px-3 text-sm"
             />
             <button
               type="button"
@@ -367,7 +383,7 @@ export function EavecMarcheOrderDetailClient({ id }: { id: string }) {
               type="button"
               disabled={busy}
               onClick={() => void act("resolve_refund")}
-              className="flex min-h-12 w-full items-center justify-center rounded-xl border border-[color:var(--fd-border)] text-sm font-bold disabled:opacity-60"
+              className="flex min-h-12 w-full items-center justify-center rounded-full border border-[color:var(--mk-line)] text-sm font-bold disabled:opacity-60"
             >
               {fr ? "Rembourser l’acheteur" : "Refund buyer"}
             </button>
@@ -375,7 +391,7 @@ export function EavecMarcheOrderDetailClient({ id }: { id: string }) {
               type="button"
               disabled={busy}
               onClick={() => void act("resolve_release")}
-              className="flex min-h-12 w-full items-center justify-center rounded-xl bg-[#0F2D2F] text-sm font-bold text-[#F6E8CD] disabled:opacity-60"
+              className="mk-btn-primary"
             >
               {fr ? "Libérer au vendeur" : "Release to seller"}
             </button>
