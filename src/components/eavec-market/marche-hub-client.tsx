@@ -6,7 +6,6 @@ import { useI18n } from "@/components/i18n-provider";
 import {
   EavecMarketCategoryPills,
   EavecMarketListingCard,
-  EavecMarketRayons,
   eavecMarketCategoryLabel,
 } from "@/components/eavec-market/market-ui";
 import type { EavecMarketCategory } from "@/lib/eavec-market/categories";
@@ -61,36 +60,19 @@ export function EavecMarcheHubClient() {
     return copy;
   }, [listings, sort]);
 
-  const sectionTitle = category
-    ? eavecMarketCategoryLabel(category, locale)
-    : fr
-      ? "Catalogue"
-      : "Catalog";
-
   return (
     <div className="pb-10">
       <section className="mk-hero mk-rise">
         <div className="mk-hero-inner">
-          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[rgba(247,243,235,0.55)]">
-            e-AVEC · {fr ? "Communauté" : "Community"}
-          </p>
           <h1 className="mk-brand">Marché</h1>
           <p className="mk-tagline">
             {fr
-              ? "Chaque annonce a un visuel — parcourez les rayons, filtrez, payez en Fc."
-              : "Every listing has a photo — browse aisles, filter, pay in Fc."}
+              ? "Achetez et vendez dans la communauté — paiement en Fc."
+              : "Buy and sell in the community — pay in Fc."}
           </p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Link href="/app/marche/new" className="mk-hero-cta">
-              {fr ? "Mettre en vente" : "List an item"}
-            </Link>
-            <a
-              href="#mk-catalog"
-              className="inline-flex min-h-12 items-center rounded-full border border-[rgba(247,243,235,0.35)] px-4 text-sm font-bold text-[#f7f3eb]"
-            >
-              {fr ? "Voir le catalogue" : "Browse catalog"}
-            </a>
-          </div>
+          <Link href="/app/marche/new" className="mk-hero-cta">
+            {fr ? "Vendre" : "Sell"}
+          </Link>
         </div>
       </section>
 
@@ -102,45 +84,18 @@ export function EavecMarcheHubClient() {
           </svg>
         </span>
         <label className="sr-only">
-          {fr ? "Que cherchez-vous ?" : "What are you looking for?"}
+          {fr ? "Rechercher" : "Search"}
         </label>
         <input
           type="search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder={
-            fr
-              ? "Huile, tomates, couture, téléphone…"
-              : "Oil, tomatoes, sewing, phone…"
-          }
+          placeholder={fr ? "Rechercher…" : "Search…"}
           className="mk-search"
         />
       </div>
 
-      <div className="mt-5 space-y-5 px-0.5">
-        <div className="mk-trust-strip mk-rise mk-rise-delay-1">
-          <div className="mk-trust-item">
-            <strong>{fr ? "Photo" : "Photo"}</strong>
-            <span>{fr ? "Référence visuelle" : "Visual reference"}</span>
-          </div>
-          <div className="mk-trust-item">
-            <strong>Fc</strong>
-            <span>{fr ? "Paiement caisse" : "Wallet payment"}</span>
-          </div>
-          <div className="mk-trust-item">
-            <strong>{fr ? "Validé" : "Reviewed"}</strong>
-            <span>{fr ? "Avant mise en ligne" : "Before going live"}</span>
-          </div>
-        </div>
-
-        <div className="mk-rise mk-rise-delay-2">
-          <EavecMarketRayons
-            active={category}
-            onSelect={setCategory}
-            locale={locale}
-          />
-        </div>
-
+      <div className="mt-4 space-y-4 px-0.5">
         <div className="mk-rise mk-rise-delay-2">
           <EavecMarketCategoryPills
             active={category}
@@ -149,31 +104,19 @@ export function EavecMarcheHubClient() {
           />
         </div>
 
-        <div className="mk-tools mk-rise mk-rise-delay-2">
-          <Link href="/app/marche/merchant" className="mk-tool mk-tool-primary">
-            {fr ? "Marchand" : "Merchant"}
-          </Link>
-          <Link href="/app/marche/mine" className="mk-tool">
-            {fr ? "Mes annonces" : "My listings"}
-          </Link>
-          <Link href="/app/marche/orders" className="mk-tool">
-            {fr ? "Commandes" : "Orders"}
-          </Link>
-        </div>
-
-        <div id="mk-catalog" className="mk-rise mk-rise-delay-3 scroll-mt-4">
-          <div className="mb-2 flex items-end justify-between gap-2">
-            <div>
-              <p className="mk-section-label">{sectionTitle}</p>
-              {sorted && sorted.length > 0 ? (
-                <p className="mt-0.5 text-[11px] font-semibold text-[color:var(--mk-muted)]">
-                  {sorted.length} {fr ? "références" : "items"}
-                </p>
-              ) : null}
-            </div>
+        <div className="flex flex-wrap items-center justify-between gap-2 mk-rise mk-rise-delay-2">
+          <div className="mk-tools">
+            <Link href="/app/marche/mine" className="mk-tool">
+              {fr ? "Mes annonces" : "My listings"}
+            </Link>
+            <Link href="/app/marche/orders" className="mk-tool">
+              {fr ? "Commandes" : "Orders"}
+            </Link>
+            <Link href="/app/marche/merchant" className="mk-tool">
+              {fr ? "Marchand" : "Merchant"}
+            </Link>
           </div>
-
-          <div className="mb-3 mk-sort">
+          <div className="mk-sort">
             {(
               [
                 ["recent", fr ? "Récents" : "Newest"],
@@ -192,6 +135,19 @@ export function EavecMarcheHubClient() {
               </button>
             ))}
           </div>
+        </div>
+
+        <div id="mk-catalog" className="mk-rise mk-rise-delay-3">
+          {category ? (
+            <p className="mb-3 text-sm font-bold text-[color:var(--mk-ink)]">
+              {eavecMarketCategoryLabel(category, locale)}
+              {sorted && sorted.length > 0 ? (
+                <span className="ml-2 font-semibold text-[color:var(--mk-muted)]">
+                  · {sorted.length}
+                </span>
+              ) : null}
+            </p>
+          ) : null}
 
           {err ? (
             <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
@@ -216,30 +172,19 @@ export function EavecMarcheHubClient() {
           ) : sorted.length === 0 ? (
             <div className="mk-empty">
               <p
-                className="text-xl font-extrabold tracking-tight"
+                className="text-lg font-extrabold tracking-tight"
                 style={{ fontFamily: "var(--mk-display)" }}
               >
-                {fr ? "Le rayon est encore vide" : "The aisle is still empty"}
+                {fr ? "Aucune annonce" : "No listings"}
               </p>
-              <p className="max-w-xs text-sm text-[color:var(--mk-muted)]">
-                {fr
-                  ? "Publiez la première référence — un agent valide avant la mise en ligne."
-                  : "Post the first item — an agent reviews before it goes live."}
-              </p>
-              <Link href="/app/marche/new" className="mk-btn-primary mt-1 max-w-[14rem]">
+              <Link href="/app/marche/new" className="mk-btn-primary mt-1 max-w-[12rem]">
                 {fr ? "Publier" : "Publish"}
               </Link>
             </div>
           ) : (
             <div className="mk-grid">
-              {sorted.map((l, i) => (
-                <div
-                  key={l.id}
-                  className="mk-rise"
-                  style={{ animationDelay: `${Math.min(i, 8) * 0.04}s` }}
-                >
-                  <EavecMarketListingCard listing={l} locale={locale} />
-                </div>
+              {sorted.map((l) => (
+                <EavecMarketListingCard key={l.id} listing={l} locale={locale} />
               ))}
             </div>
           )}
