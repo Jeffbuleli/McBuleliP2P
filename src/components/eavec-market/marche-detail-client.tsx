@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { EAVEC_MARKET_CATEGORY_EMOJI } from "@/lib/eavec-market/categories";
@@ -10,8 +11,10 @@ import type { EavecMarketListingRow } from "@/lib/eavec-market/service";
 export function EavecMarcheDetailClient({ id }: { id: string }) {
   const { locale } = useI18n();
   const fr = locale === "fr";
+  const router = useRouter();
   const [listing, setListing] = useState<EavecMarketListingRow | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     void (async () => {
@@ -27,7 +30,36 @@ export function EavecMarcheDetailClient({ id }: { id: string }) {
     })();
   }, [id]);
 
-  if (err) {
+  async function buy() {
+    if (!listing) return;
+    setBusy(true);
+    setErr(null);
+    const res = await fetch("/api/eavec/market/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ listingId: listing.id, quantity: 1 }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setBusy(false);
+    if (!res.ok) {
+      const map: Record<string, string> = {
+        kyc_required: fr
+          ? "Vérifiez votre identité (KYC) pour acheter."
+          : "Verify identity (KYC) to buy.",
+        wallet_insufficient_balance: fr
+          ? "Solde insuffisant (USD/CDF)."
+          : "Insufficient balance (USD/CDF).",
+        eavec_market_own_listing: fr
+          ? "Vous ne pouvez pas acheter votre annonce."
+          : "You cannot buy your own listing.",
+      };
+      setErr(map[data.error] ?? data.error ?? "error");
+      return;
+    }
+    router.push(`/app/marche/orders/${data.id}`);
+  }
+
+  if (err && !listing) {
     return (
       <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
         {err}
@@ -93,18 +125,24 @@ export function EavecMarcheDetailClient({ id }: { id: string }) {
         </div>
       </div>
 
+      {err ? (
+        <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
+          {err}
+        </p>
+      ) : null}
+
       <button
         type="button"
-        disabled
-        className="flex min-h-12 w-full items-center justify-center rounded-xl bg-[#0F2D2F]/40 text-sm font-bold text-[#F6E8CD]"
-        title={fr ? "Paiement sécurisé — phase suivante" : "Secure payment — next phase"}
+        disabled={busy || listing.status !== "available" || listing.quantity < 1}
+        onClick={() => void buy()}
+        className="flex min-h-12 w-full items-center justify-center rounded-xl bg-[#0F2D2F] text-sm font-bold text-[#F6E8CD] disabled:opacity-50"
       >
-        {fr ? "Acheter · bientôt (escrow)" : "Buy · soon (escrow)"}
+        {busy ? "…" : fr ? "Acheter (paiement sécurisé)" : "Buy (secured payment)"}
       </button>
       <p className="text-center text-[11px] text-[color:var(--fd-muted)]">
         {fr
-          ? "Le paiement sécurisé arrive à la phase suivante."
-          : "Secure checkout comes in the next phase."}
+          ? "Fonds bloqués jusqu’à confirmation de réception."
+          : "Funds held until you confirm receipt."}
       </p>
     </div>
   );

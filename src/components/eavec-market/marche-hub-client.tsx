@@ -83,9 +83,12 @@ export function EavecMarcheHubClient() {
         >
           {fr ? "Mes annonces" : "My listings"}
         </Link>
-        <span className="shrink-0 rounded-full border border-dashed border-[color:var(--fd-border)] px-3 py-2 text-xs font-medium text-[color:var(--fd-muted)]">
-          {fr ? "Mes commandes · bientôt" : "My orders · soon"}
-        </span>
+        <Link
+          href="/app/marche/orders"
+          className="shrink-0 rounded-full border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-3 py-2 text-xs font-bold"
+        >
+          {fr ? "Mes commandes" : "My orders"}
+        </Link>
       </div>
 
       {err ? (

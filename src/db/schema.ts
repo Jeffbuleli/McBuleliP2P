@@ -1658,6 +1658,56 @@ export const eavecMarketListings = pgTable(
   ],
 );
 
+/**
+ * e-AVEC Marché orders — wallet escrow (USD/CDF/USDT), P2P-inspired state machine.
+ * Buy → escrow → seller ready → buyer confirm → release.
+ */
+export const eavecMarketOrders = pgTable(
+  "eavec_market_orders",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    listingId: uuid("listing_id")
+      .notNull()
+      .references(() => eavecMarketListings.id, { onDelete: "restrict" }),
+    buyerUserId: uuid("buyer_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    sellerUserId: uuid("seller_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    quantity: integer("quantity").notNull().default(1),
+    currency: varchar("currency", { length: 8 }).notNull(),
+    escrowAsset: varchar("escrow_asset", { length: 8 }).notNull(),
+    unitPrice: numeric("unit_price", { precision: 18, scale: 2 }).notNull(),
+    totalAmount: numeric("total_amount", { precision: 18, scale: 2 }).notNull(),
+    status: varchar("status", { length: 16 }).notNull().default("escrowed"),
+    listingTitle: varchar("listing_title", { length: 120 }).notNull(),
+    listingSnapshot: jsonb("listing_snapshot").$type<Record<string, unknown> | null>(),
+    escrowedAt: timestamp("escrowed_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    readyAt: timestamp("ready_at", { withTimezone: true }),
+    releasedAt: timestamp("released_at", { withTimezone: true }),
+    cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
+    disputedAt: timestamp("disputed_at", { withTimezone: true }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    cancelReason: varchar("cancel_reason", { length: 64 }),
+    disputeReason: text("dispute_reason"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("eavec_market_orders_buyer_idx").on(t.buyerUserId, t.createdAt),
+    index("eavec_market_orders_seller_idx").on(t.sellerUserId, t.createdAt),
+    index("eavec_market_orders_listing_idx").on(t.listingId),
+    index("eavec_market_orders_status_idx").on(t.status),
+  ],
+);
+
 /** Cross-cutting audit trail for platform staff actions (super-admin global view). */
 export const platformAdminAuditLog = pgTable(
   "platform_admin_audit_log",

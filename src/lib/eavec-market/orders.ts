@@ -1,0 +1,390 @@
+import { randomUUID } from "node:crypto";
+import { and, desc, eq, or, sql } from "drizzle-orm";
+import {
+  getDb,
+  eavecMarketListings,
+  eavecMarketOrders,
+  users,
+} from "@/db";
+import { debitUserAsset, creditUserAsset } from "@/lib/wallet-move-assets";
+import { insertWalletLedgerLines } from "@/lib/wallet-ledger";
+import { fmtWalletAmount, numFromNumeric } from "@/lib/wallet-types";
+import type { WalletAsset } from "@/lib/wallet-types";
+
+export type EavecMarketOrderStatus =
+  | "escrowed"
+  | "ready"
+  | "released"
+  | "cancelled"
+  | "disputed"
+  | "expired";
+
+export type EavecMarketOrderRow = {
+  id: string;
+  listingId: string;
+  buyerUserId: string;
+  sellerUserId: string;
+  quantity: number;
+  currency: string;
+  escrowAsset: string;
+  unitPrice: string;
+  totalAmount: string;
+  status: EavecMarketOrderStatus;
+  listingTitle: string;
+  escrowedAt: string;
+  readyAt: string | null;
+  releasedAt: string | null;
+  cancelledAt: string | null;
+  disputedAt: string | null;
+  expiresAt: string | null;
+  role: "buyer" | "seller";
+};
+
+const CONFIRM_WINDOW_HOURS = 72;
+
+function mapOrder(
+  o: typeof eavecMarketOrders.$inferSelect,
+  viewerId: string,
+): EavecMarketOrderRow {
+  return {
+    id: o.id,
+    listingId: o.listingId,
+    buyerUserId: o.buyerUserId,
+    sellerUserId: o.sellerUserId,
+    quantity: o.quantity,
+    currency: o.currency,
+    escrowAsset: o.escrowAsset,
+    unitPrice: String(o.unitPrice),
+    totalAmount: String(o.totalAmount),
+    status: o.status as EavecMarketOrderStatus,
+    listingTitle: o.listingTitle,
+    escrowedAt: o.escrowedAt.toISOString(),
+    readyAt: o.readyAt?.toISOString() ?? null,
+    releasedAt: o.releasedAt?.toISOString() ?? null,
+    cancelledAt: o.cancelledAt?.toISOString() ?? null,
+    disputedAt: o.disputedAt?.toISOString() ?? null,
+    expiresAt: o.expiresAt?.toISOString() ?? null,
+    role: o.buyerUserId === viewerId ? "buyer" : "seller",
+  };
+}
+
+async function pickEscrowAsset(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  tx: any,
+  userId: string,
+  currency: string,
+  total: number,
+): Promise<WalletAsset> {
+  const [u] = await tx
+    .select({
+      balance: users.balance,
+      usdBalance: users.usdBalance,
+      cdfBalance: users.cdfBalance,
+    })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  if (!u) throw new Error("wallet_not_found");
+
+  const usd = numFromNumeric(u.usdBalance);
+  const usdt = numFromNumeric(u.balance);
+  const cdf = numFromNumeric(u.cdfBalance);
+
+  if (currency === "CDF") {
+    if (cdf + 1e-9 < total) throw new Error("wallet_insufficient_balance");
+    return "CDF";
+  }
+  // USD listing: prefer USD fiat, else USDT (shown as USD in e-AVEC)
+  if (usd + 1e-9 >= total) return "USD";
+  if (usdt + 1e-9 >= total) return "USDT";
+  throw new Error("wallet_insufficient_balance");
+}
+
+export async function createEavecMarketOrder(args: {
+  buyerUserId: string;
+  listingId: string;
+  quantity?: number;
+}): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
+  const qty = Math.min(Math.max(Math.floor(args.quantity ?? 1), 1), 999);
+  const db = getDb();
+
+  try {
+    const id = await db.transaction(async (tx) => {
+      const [listing] = await tx
+        .select()
+        .from(eavecMarketListings)
+        .where(eq(eavecMarketListings.id, args.listingId))
+        .limit(1);
+      if (!listing || listing.status !== "available") {
+        throw new Error("eavec_market_listing_unavailable");
+      }
+      if (listing.sellerUserId === args.buyerUserId) {
+        throw new Error("eavec_market_own_listing");
+      }
+      if (listing.quantity < qty) {
+        throw new Error("eavec_market_qty");
+      }
+
+      const unit = Number(listing.price);
+      if (!Number.isFinite(unit) || unit <= 0) throw new Error("eavec_market_bad_price");
+      const total = Number((unit * qty).toFixed(2));
+      const totalStr = fmtWalletAmount(total);
+      const asset = await pickEscrowAsset(tx, args.buyerUserId, listing.currency, total);
+
+      await debitUserAsset(tx, args.buyerUserId, asset, totalStr);
+      const batchId = randomUUID();
+      await insertWalletLedgerLines(tx, [
+        {
+          batchId,
+          userId: args.buyerUserId,
+          entryType: "eavec_market_escrow_lock",
+          asset,
+          amount: `-${totalStr}`,
+          feeUsdEquivalent: "0",
+          counterpartyUserId: listing.sellerUserId,
+          meta: {
+            listingId: listing.id,
+            quantity: qty,
+            currency: listing.currency,
+          },
+        },
+      ]);
+
+      const now = new Date();
+      const expiresAt = new Date(now.getTime() + CONFIRM_WINDOW_HOURS * 3600_000);
+      const nextQty = listing.quantity - qty;
+      await tx
+        .update(eavecMarketListings)
+        .set({
+          quantity: nextQty,
+          status: nextQty <= 0 ? "sold" : "available",
+          updatedAt: now,
+        })
+        .where(eq(eavecMarketListings.id, listing.id));
+
+      const [order] = await tx
+        .insert(eavecMarketOrders)
+        .values({
+          listingId: listing.id,
+          buyerUserId: args.buyerUserId,
+          sellerUserId: listing.sellerUserId,
+          quantity: qty,
+          currency: listing.currency,
+          escrowAsset: asset,
+          unitPrice: unit.toFixed(2),
+          totalAmount: total.toFixed(2),
+          status: "escrowed",
+          listingTitle: listing.title,
+          listingSnapshot: {
+            category: listing.category,
+            kind: listing.kind,
+            locationLabel: listing.locationLabel,
+            imageUrl: listing.imageUrl,
+          },
+          escrowedAt: now,
+          expiresAt,
+        })
+        .returning({ id: eavecMarketOrders.id });
+
+      if (!order) throw new Error("eavec_market_order_failed");
+      return order.id;
+    });
+    return { ok: true, id };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "eavec_market_order_failed";
+    return { ok: false, error: msg };
+  }
+}
+
+export async function listEavecMarketOrdersForUser(
+  userId: string,
+): Promise<EavecMarketOrderRow[]> {
+  const db = getDb();
+  const rows = await db
+    .select()
+    .from(eavecMarketOrders)
+    .where(
+      or(
+        eq(eavecMarketOrders.buyerUserId, userId),
+        eq(eavecMarketOrders.sellerUserId, userId),
+      ),
+    )
+    .orderBy(desc(eavecMarketOrders.createdAt))
+    .limit(50);
+  return rows.map((r) => mapOrder(r, userId));
+}
+
+export async function getEavecMarketOrder(
+  id: string,
+  viewerId: string,
+): Promise<EavecMarketOrderRow | null> {
+  const db = getDb();
+  const [o] = await db
+    .select()
+    .from(eavecMarketOrders)
+    .where(eq(eavecMarketOrders.id, id))
+    .limit(1);
+  if (!o) return null;
+  if (o.buyerUserId !== viewerId && o.sellerUserId !== viewerId) return null;
+  return mapOrder(o, viewerId);
+}
+
+export async function eavecMarketOrderAction(args: {
+  orderId: string;
+  userId: string;
+  action: "mark_ready" | "confirm" | "cancel" | "dispute";
+  reason?: string;
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  const db = getDb();
+  try {
+    await db.transaction(async (tx) => {
+      const [o] = await tx
+        .select()
+        .from(eavecMarketOrders)
+        .where(eq(eavecMarketOrders.id, args.orderId))
+        .limit(1);
+      if (!o) throw new Error("eavec_market_order_not_found");
+
+      const now = new Date();
+      const asset = o.escrowAsset as WalletAsset;
+      const totalStr = fmtWalletAmount(Number(o.totalAmount));
+      const batchId = randomUUID();
+
+      if (args.action === "mark_ready") {
+        if (o.sellerUserId !== args.userId) throw new Error("forbidden");
+        if (o.status !== "escrowed") throw new Error("eavec_market_bad_status");
+        const [upd] = await tx
+          .update(eavecMarketOrders)
+          .set({ status: "ready", readyAt: now, updatedAt: now })
+          .where(
+            and(
+              eq(eavecMarketOrders.id, o.id),
+              eq(eavecMarketOrders.status, "escrowed"),
+            ),
+          )
+          .returning({ id: eavecMarketOrders.id });
+        if (!upd) throw new Error("eavec_market_bad_status");
+        return;
+      }
+
+      if (args.action === "confirm") {
+        if (o.buyerUserId !== args.userId) throw new Error("forbidden");
+        if (o.status !== "ready" && o.status !== "escrowed") {
+          throw new Error("eavec_market_bad_status");
+        }
+        const [upd] = await tx
+          .update(eavecMarketOrders)
+          .set({ status: "released", releasedAt: now, updatedAt: now })
+          .where(
+            and(
+              eq(eavecMarketOrders.id, o.id),
+              or(
+                eq(eavecMarketOrders.status, "ready"),
+                eq(eavecMarketOrders.status, "escrowed"),
+              ),
+            ),
+          )
+          .returning({ id: eavecMarketOrders.id });
+        if (!upd) throw new Error("eavec_market_bad_status");
+
+        await creditUserAsset(tx, o.sellerUserId, asset, totalStr);
+        await insertWalletLedgerLines(tx, [
+          {
+            batchId,
+            userId: o.sellerUserId,
+            entryType: "eavec_market_release",
+            asset,
+            amount: totalStr,
+            feeUsdEquivalent: "0",
+            counterpartyUserId: o.buyerUserId,
+            meta: { orderId: o.id, listingId: o.listingId },
+          },
+        ]);
+        return;
+      }
+
+      if (args.action === "cancel") {
+        const isBuyer = o.buyerUserId === args.userId;
+        const isSeller = o.sellerUserId === args.userId;
+        if (!isBuyer && !isSeller) throw new Error("forbidden");
+        if (o.status !== "escrowed") throw new Error("eavec_market_bad_status");
+        const [upd] = await tx
+          .update(eavecMarketOrders)
+          .set({
+            status: "cancelled",
+            cancelledAt: now,
+            cancelReason: args.reason?.slice(0, 64) ?? (isBuyer ? "buyer" : "seller"),
+            updatedAt: now,
+          })
+          .where(
+            and(
+              eq(eavecMarketOrders.id, o.id),
+              eq(eavecMarketOrders.status, "escrowed"),
+            ),
+          )
+          .returning({ id: eavecMarketOrders.id });
+        if (!upd) throw new Error("eavec_market_bad_status");
+
+        await creditUserAsset(tx, o.buyerUserId, asset, totalStr);
+        await insertWalletLedgerLines(tx, [
+          {
+            batchId,
+            userId: o.buyerUserId,
+            entryType: "eavec_market_escrow_refund",
+            asset,
+            amount: totalStr,
+            feeUsdEquivalent: "0",
+            counterpartyUserId: o.sellerUserId,
+            meta: { orderId: o.id },
+          },
+        ]);
+
+        // restore listing qty if still open-ish
+        await tx
+          .update(eavecMarketListings)
+          .set({
+            quantity: sql`${eavecMarketListings.quantity} + ${o.quantity}`,
+            status: "available",
+            updatedAt: now,
+          })
+          .where(eq(eavecMarketListings.id, o.listingId));
+        return;
+      }
+
+      if (args.action === "dispute") {
+        if (o.buyerUserId !== args.userId && o.sellerUserId !== args.userId) {
+          throw new Error("forbidden");
+        }
+        if (o.status !== "escrowed" && o.status !== "ready") {
+          throw new Error("eavec_market_bad_status");
+        }
+        const [upd] = await tx
+          .update(eavecMarketOrders)
+          .set({
+            status: "disputed",
+            disputedAt: now,
+            disputeReason: args.reason?.slice(0, 500) ?? null,
+            updatedAt: now,
+          })
+          .where(
+            and(
+              eq(eavecMarketOrders.id, o.id),
+              or(
+                eq(eavecMarketOrders.status, "escrowed"),
+                eq(eavecMarketOrders.status, "ready"),
+              ),
+            ),
+          )
+          .returning({ id: eavecMarketOrders.id });
+        if (!upd) throw new Error("eavec_market_bad_status");
+        return;
+      }
+
+      throw new Error("eavec_market_bad_action");
+    });
+    return { ok: true };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "eavec_market_action_failed";
+    return { ok: false, error: msg };
+  }
+}
