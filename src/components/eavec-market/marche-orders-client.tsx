@@ -83,9 +83,7 @@ export function EavecMarcheOrdersClient() {
                     </p>
                   </div>
                   <p className="shrink-0 text-sm font-extrabold tabular-nums">
-                    {o.currency === "CDF"
-                      ? `${Math.round(Number(o.totalAmount))} CDF`
-                      : `${Number(o.totalAmount).toFixed(2)} USD`}
+                    {`${Math.round(Number(o.totalAmount)).toLocaleString(fr ? "fr-FR" : "en-US")} Fc`}
                   </p>
                 </div>
               </Link>
@@ -190,9 +188,7 @@ export function EavecMarcheOrderDetailClient({ id }: { id: string }) {
 
   const label = fr ? STATUS_FR : STATUS_EN;
   const price =
-    order.currency === "CDF"
-      ? `${Math.round(Number(order.totalAmount))} CDF`
-      : `${Number(order.totalAmount).toFixed(2)} USD`;
+    `${Math.round(Number(order.totalAmount)).toLocaleString(fr ? "fr-FR" : "en-US")} Fc`;
 
   return (
     <div className="mx-auto max-w-lg space-y-4 pb-10">

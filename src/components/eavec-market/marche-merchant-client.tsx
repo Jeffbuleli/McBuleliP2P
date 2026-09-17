@@ -58,10 +58,8 @@ export function EavecMarcheMerchantClient() {
   }
 
   const p = dash.profile;
-  const money = (amount: string, currency: string) =>
-    currency === "CDF"
-      ? `${Math.round(Number(amount))} CDF`
-      : `${Number(amount).toFixed(2)} USD`;
+  const money = (amount: string, _currency: string) =>
+    `${Math.round(Number(amount)).toLocaleString(fr ? "fr-FR" : "en-US")} Fc`;
 
   return (
     <div className="space-y-5 pb-10">

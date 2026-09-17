@@ -162,6 +162,73 @@ export function buildProfileOpsHubItems(
   return items;
 }
 
+/** e-AVEC staff OPS — groups + marché review + MoMo only (no P2P/crypto/bots). */
+export function buildEavecOpsHubItems(
+  user: SessionUser,
+  stats: AdminDashboardStats,
+  marketPending = 0,
+): OpsHubItem[] {
+  const isSuper = user.role === UserRole.SUPER_ADMIN;
+  const showW = isSuper || agentHasScope(user, "withdrawals");
+  const items: OpsHubItem[] = [];
+
+  items.push({
+    id: "groups",
+    href: "/admin/groups",
+    labelKey: "profile_ops_dashboard",
+    descKey: "profile_ops_dashboard_desc",
+    tone: "forest",
+    icon: "dashboard",
+    badge: stats.groupsPendingReview > 0 ? stats.groupsPendingReview : null,
+  });
+
+  items.push({
+    id: "marche",
+    href: "/app/profile/ops/marche",
+    labelKey: "profile_ops_support",
+    descKey: "profile_ops_support_desc",
+    tone: "mint",
+    icon: "support",
+    badge: marketPending > 0 ? marketPending : null,
+  });
+
+  if (showW) {
+    items.push({
+      id: "withdrawals",
+      href: "/admin/withdrawals?status=PENDING_AGENT&assignFilter=all",
+      labelKey: "profile_ops_withdrawals",
+      descKey: "profile_ops_withdrawals_desc",
+      tone: "amber",
+      icon: "withdraw",
+      badge:
+        stats.withdrawalsPendingAgent > 0 ? stats.withdrawalsPendingAgent : null,
+    });
+  }
+
+  if (isSuper) {
+    items.push({
+      id: "kyc",
+      href: "/admin/kyc",
+      labelKey: "profile_ops_kyc",
+      descKey: "profile_ops_kyc_desc",
+      tone: "amber",
+      icon: "kyc",
+      badge: null,
+    });
+    items.push({
+      id: "users",
+      href: "/admin/users",
+      labelKey: "profile_ops_users",
+      descKey: "profile_ops_users_desc",
+      tone: "sky",
+      icon: "users",
+      badge: null,
+    });
+  }
+
+  return items;
+}
+
 export function opsHubTotalPending(items: OpsHubItem[]): number {
   return items.reduce((sum, i) => sum + (i.badge ?? 0), 0);
 }

@@ -27,16 +27,19 @@ export function isEavecMarketCategory(v: string): v is EavecMarketCategory {
 }
 
 export const EAVEC_MARKET_STATUSES = [
+  "pending_review",
   "available",
   "reserved",
   "sold",
   "paused",
   "closed",
+  "rejected",
 ] as const;
 
 export type EavecMarketListingStatus = (typeof EAVEC_MARKET_STATUSES)[number];
 
-export const EAVEC_MARKET_CURRENCIES = ["USD", "CDF"] as const;
+/** Marché e-AVEC is CDF / Fc only (DRC public). */
+export const EAVEC_MARKET_CURRENCIES = ["CDF"] as const;
 export type EavecMarketCurrency = (typeof EAVEC_MARKET_CURRENCIES)[number];
 
 export const EAVEC_MARKET_KINDS = ["product", "service"] as const;

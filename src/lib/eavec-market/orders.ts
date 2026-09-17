@@ -122,8 +122,6 @@ async function pickEscrowAsset(
 ): Promise<WalletAsset> {
   const [u] = await tx
     .select({
-      balance: users.balance,
-      usdBalance: users.usdBalance,
       cdfBalance: users.cdfBalance,
     })
     .from(users)
@@ -131,17 +129,13 @@ async function pickEscrowAsset(
     .limit(1);
   if (!u) throw new Error("wallet_not_found");
 
-  const usd = numFromNumeric(u.usdBalance);
-  const usdt = numFromNumeric(u.balance);
   const cdf = numFromNumeric(u.cdfBalance);
 
   if (currency === "CDF") {
     if (cdf + 1e-9 < total) throw new Error("wallet_insufficient_balance");
     return "CDF";
   }
-  if (usd + 1e-9 >= total) return "USD";
-  if (usdt + 1e-9 >= total) return "USDT";
-  throw new Error("wallet_insufficient_balance");
+  throw new Error("eavec_market_cdf_only");
 }
 
 function reserveListingQty(
@@ -176,18 +170,10 @@ export async function createEavecMarketOrder(args: {
 > {
   const method: EavecMarketPaymentMethod =
     args.paymentMethod === "momo" ? "momo" : "wallet";
-  const qty = Math.min(Math.max(Math.floor(args.quantity ?? 1), 1), 999);
-
   if (method === "momo") {
-    return createMomoMarketOrder({
-      buyerUserId: args.buyerUserId,
-      listingId: args.listingId,
-      quantity: qty,
-      phoneNumber: args.phoneNumber ?? "",
-      provider: args.provider ?? "",
-      providerLabel: args.providerLabel,
-    });
+    return { ok: false, error: "eavec_market_wallet_only" };
   }
+  const qty = Math.min(Math.max(Math.floor(args.quantity ?? 1), 1), 999);
 
   const db = getDb();
   try {
@@ -206,12 +192,15 @@ export async function createEavecMarketOrder(args: {
       if (listing.quantity < qty) {
         throw new Error("eavec_market_qty");
       }
+      if (listing.currency !== "CDF") {
+        throw new Error("eavec_market_cdf_only");
+      }
 
       const unit = Number(listing.price);
       if (!Number.isFinite(unit) || unit <= 0) throw new Error("eavec_market_bad_price");
       const total = Number((unit * qty).toFixed(2));
       const totalStr = fmtWalletAmount(total);
-      const asset = await pickEscrowAsset(tx, args.buyerUserId, listing.currency, total);
+      const asset = await pickEscrowAsset(tx, args.buyerUserId, "CDF", total);
 
       await debitUserAsset(tx, args.buyerUserId, asset, totalStr);
       const batchId = randomUUID();

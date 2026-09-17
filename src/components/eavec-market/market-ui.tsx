@@ -79,12 +79,9 @@ export function EavecMarketListingCard({
   listing: EavecMarketListingRow;
   locale?: string;
 }) {
-  const price =
-    listing.currency === "CDF"
-      ? `${Math.round(Number(listing.price)).toLocaleString(
-          locale.startsWith("fr") ? "fr-FR" : "en-US",
-        )} CDF`
-      : `${Number(listing.price).toFixed(2)} USD`;
+  const price = `${Math.round(Number(listing.price)).toLocaleString(
+    locale.startsWith("fr") ? "fr-FR" : "en-US",
+  )} Fc`;
 
   return (
     <Link

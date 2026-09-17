@@ -51,7 +51,7 @@ function mapRow(
     title: r.title,
     description: r.description,
     category: r.category as EavecMarketCategory,
-    currency: (r.currency === "CDF" ? "CDF" : "USD") as EavecMarketCurrency,
+    currency: "CDF" as EavecMarketCurrency,
     price: String(r.price),
     quantity: r.quantity,
     locationLabel: r.locationLabel,
@@ -194,8 +194,7 @@ export async function createEavecMarketListing(args: {
   const title = args.title.trim().slice(0, 120);
   if (title.length < 2) return { ok: false, error: "eavec_market_bad_title" };
 
-  const currency =
-    args.currency.toUpperCase() === "CDF" ? "CDF" : ("USD" as const);
+  const currency = "CDF" as const;
   const priceNum = Number(args.price);
   if (!Number.isFinite(priceNum) || priceNum <= 0) {
     return { ok: false, error: "eavec_market_bad_price" };
@@ -212,6 +211,9 @@ export async function createEavecMarketListing(args: {
       error: e instanceof Error ? e.message : "eavec_market_image_invalid",
     };
   }
+  if (!imageUrl) {
+    return { ok: false, error: "eavec_market_image_required" };
+  }
 
   const db = getDb();
   const [created] = await db
@@ -226,9 +228,9 @@ export async function createEavecMarketListing(args: {
       price: priceNum.toFixed(2),
       quantity,
       locationLabel: args.locationLabel?.trim().slice(0, 128) || null,
-      countryCode: args.countryCode?.trim().toUpperCase().slice(0, 8) || null,
+      countryCode: args.countryCode?.trim().toUpperCase().slice(0, 8) || "CD",
       imageUrl,
-      status: "available",
+      status: "pending_review",
       kind,
     })
     .returning({ id: eavecMarketListings.id });
@@ -237,18 +239,84 @@ export async function createEavecMarketListing(args: {
   return { ok: true, id: created.id };
 }
 
+export async function listEavecMarketPendingReview(args?: {
+  limit?: number;
+}): Promise<EavecMarketListingRow[]> {
+  const db = getDb();
+  const limit = Math.min(Math.max(args?.limit ?? 40, 1), 100);
+  const rows = await db
+    .select({
+      listing: eavecMarketListings,
+      sellerDisplayName: users.displayName,
+    })
+    .from(eavecMarketListings)
+    .leftJoin(users, eq(users.id, eavecMarketListings.sellerUserId))
+    .where(eq(eavecMarketListings.status, "pending_review"))
+    .orderBy(desc(eavecMarketListings.createdAt))
+    .limit(limit);
+  return rows.map((r) =>
+    mapRow({ ...r.listing, sellerDisplayName: r.sellerDisplayName }),
+  );
+}
+
+export async function countEavecMarketPendingReview(): Promise<number> {
+  const db = getDb();
+  const [row] = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(eavecMarketListings)
+    .where(eq(eavecMarketListings.status, "pending_review"));
+  return Number(row?.n ?? 0);
+}
+
+export async function reviewEavecMarketListing(args: {
+  id: string;
+  reviewerUserId: string;
+  action: "approve" | "reject";
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  const nextStatus: EavecMarketListingStatus =
+    args.action === "approve" ? "available" : "rejected";
+  const db = getDb();
+  const updated = await db
+    .update(eavecMarketListings)
+    .set({ status: nextStatus, updatedAt: new Date() })
+    .where(
+      and(
+        eq(eavecMarketListings.id, args.id),
+        eq(eavecMarketListings.status, "pending_review"),
+      ),
+    )
+    .returning({ id: eavecMarketListings.id });
+  if (!updated.length) return { ok: false, error: "eavec_market_not_found" };
+  return { ok: true };
+}
+
 export async function updateEavecMarketListingStatus(args: {
   id: string;
   sellerUserId: string;
   status: EavecMarketListingStatus;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   const allowed: EavecMarketListingStatus[] = [
-    "available",
     "paused",
     "sold",
     "closed",
   ];
-  if (!allowed.includes(args.status)) {
+  // Sellers may re-open a paused listing they already had approved.
+  if (args.status === "available") {
+    const db = getDb();
+    const [cur] = await db
+      .select({ status: eavecMarketListings.status })
+      .from(eavecMarketListings)
+      .where(
+        and(
+          eq(eavecMarketListings.id, args.id),
+          eq(eavecMarketListings.sellerUserId, args.sellerUserId),
+        ),
+      )
+      .limit(1);
+    if (!cur || cur.status !== "paused") {
+      return { ok: false, error: "eavec_market_needs_review" };
+    }
+  } else if (!allowed.includes(args.status)) {
     return { ok: false, error: "eavec_market_bad_status" };
   }
   const db = getDb();

@@ -1,15 +1,27 @@
 /**
- * User-facing money label for AVEC UI.
- * Ledger / wallet asset code stays USDT under the hood.
+ * User-facing money for e-AVEC (RDC public).
+ * Ledger asset for AVEC shares stays USDT under the hood; UI shows Francs congolais.
  */
-export const AVEC_MONEY: "USD" | "USDT" =
-  process.env.NEXT_PUBLIC_AVEC_MONEY_LABEL === "USDT" ? "USDT" : "USD";
+import { cdfPerOneUsd } from "@/lib/fx";
 
+export const AVEC_MONEY_LABEL = "Fc";
+
+/** Convert a USDT-ledger amount to a Fc display string. */
 export function avecMoney(
-  amount: string | number,
-  digits = 2,
+  amountUsdt: string | number,
+  digits = 0,
 ): string {
-  const n = typeof amount === "number" ? amount : Number(amount);
-  if (!Number.isFinite(n)) return `${amount} ${AVEC_MONEY}`;
-  return `${n.toFixed(digits)} ${AVEC_MONEY}`;
+  const n = typeof amountUsdt === "number" ? amountUsdt : Number(amountUsdt);
+  if (!Number.isFinite(n)) return `— ${AVEC_MONEY_LABEL}`;
+  const cdf = n * cdfPerOneUsd();
+  const rounded =
+    digits <= 0 ? Math.round(cdf) : Number(cdf.toFixed(digits));
+  return `${rounded.toLocaleString("fr-FR")} ${AVEC_MONEY_LABEL}`;
+}
+
+/** Format an amount already in CDF. */
+export function avecCdf(amountCdf: string | number): string {
+  const n = typeof amountCdf === "number" ? amountCdf : Number(amountCdf);
+  if (!Number.isFinite(n)) return `— ${AVEC_MONEY_LABEL}`;
+  return `${Math.round(n).toLocaleString("fr-FR")} ${AVEC_MONEY_LABEL}`;
 }

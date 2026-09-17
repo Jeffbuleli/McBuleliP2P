@@ -34,6 +34,27 @@ export function EavecMarcheMineClient() {
     void load();
   }
 
+  const statusLabel = (s: string) => {
+    const map = fr
+      ? {
+          pending_review: "En validation",
+          available: "Publiée",
+          paused: "En pause",
+          sold: "Vendue",
+          closed: "Fermée",
+          rejected: "Refusée",
+        }
+      : {
+          pending_review: "Pending review",
+          available: "Live",
+          paused: "Paused",
+          sold: "Sold",
+          closed: "Closed",
+          rejected: "Rejected",
+        };
+    return (map as Record<string, string>)[s] ?? s;
+  };
+
   return (
     <div className="space-y-4 pb-8">
       <div className="flex items-center justify-between">
@@ -44,6 +65,11 @@ export function EavecMarcheMineClient() {
           <h1 className="text-xl font-extrabold text-[#0F2D2F]">
             {fr ? "Mes annonces" : "My listings"}
           </h1>
+          <p className="text-[11px] text-[color:var(--fd-muted)]">
+            {fr
+              ? "Les nouvelles annonces passent par validation agent."
+              : "New listings go through agent review."}
+          </p>
         </div>
         <Link
           href="/app/marche/new"
@@ -64,6 +90,9 @@ export function EavecMarcheMineClient() {
           {listings.map((l) => (
             <div key={l.id} className="space-y-2">
               <EavecMarketListingCard listing={l} locale={locale} />
+              <p className="px-1 text-[10px] font-bold uppercase text-[color:var(--fd-muted)]">
+                {statusLabel(l.status)}
+              </p>
               <div className="flex gap-2">
                 {l.status === "available" ? (
                   <button
@@ -82,7 +111,7 @@ export function EavecMarcheMineClient() {
                     {fr ? "Republier" : "Republish"}
                   </button>
                 ) : null}
-                {l.status !== "closed" ? (
+                {l.status !== "closed" && l.status !== "pending_review" ? (
                   <button
                     type="button"
                     onClick={() => void setStatus(l.id, "closed")}
