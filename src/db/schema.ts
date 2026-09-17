@@ -1681,11 +1681,13 @@ export const eavecMarketOrders = pgTable(
     unitPrice: numeric("unit_price", { precision: 18, scale: 2 }).notNull(),
     totalAmount: numeric("total_amount", { precision: 18, scale: 2 }).notNull(),
     status: varchar("status", { length: 16 }).notNull().default("escrowed"),
+    /** wallet | momo */
+    paymentMethod: varchar("payment_method", { length: 16 }).notNull().default("wallet"),
+    fiatDepositRef: varchar("fiat_deposit_ref", { length: 64 }),
+    momoPhone: varchar("momo_phone", { length: 32 }),
     listingTitle: varchar("listing_title", { length: 120 }).notNull(),
     listingSnapshot: jsonb("listing_snapshot").$type<Record<string, unknown> | null>(),
-    escrowedAt: timestamp("escrowed_at", { withTimezone: true })
-      .defaultNow()
-      .notNull(),
+    escrowedAt: timestamp("escrowed_at", { withTimezone: true }),
     readyAt: timestamp("ready_at", { withTimezone: true }),
     releasedAt: timestamp("released_at", { withTimezone: true }),
     cancelledAt: timestamp("cancelled_at", { withTimezone: true }),

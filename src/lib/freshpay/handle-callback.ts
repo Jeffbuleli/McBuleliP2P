@@ -272,6 +272,30 @@ async function handleDepositCallback(args: {
     fiatDepositRef: args.reference,
   });
 
+  try {
+    const orderId =
+      tx.meta && typeof tx.meta === "object" && "eavecMarketOrderId" in tx.meta
+        ? String((tx.meta as Record<string, unknown>).eavecMarketOrderId ?? "")
+        : "";
+    if (
+      orderId &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        orderId,
+      )
+    ) {
+      const { finalizeEavecMarketOrderAfterMomoDeposit } = await import(
+        "@/lib/eavec-market/orders"
+      );
+      await finalizeEavecMarketOrderAfterMomoDeposit({
+        orderId,
+        buyerUserId: tx.userId,
+        fiatDepositRef: args.reference,
+      });
+    }
+  } catch (err) {
+    console.error("[freshpay] eavec market momo finalize failed", err);
+  }
+
   return { ok: true };
 }
 

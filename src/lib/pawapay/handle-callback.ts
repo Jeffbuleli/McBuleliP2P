@@ -73,7 +73,7 @@ async function handleDepositCallback(
   const dedupKey = `deposit:${args.reference}:${args.status}`;
   const tx = await lookupTx(args.reference);
 
-  // Wallet fiat requires USD/CDF. Hackathon MoMo callbacks sometimes omit currency —
+  // Wallet fiat requires USD/CDF. Hackathon MoMo callbacks sometimes omit currency -
   // fall back to the local payment row (always USD) so we never ACK-and-skip a paid seat.
   let currency = args.currency;
   if (!allowedFiat(currency)) {
@@ -327,6 +327,26 @@ async function handleDepositCallback(
     fiatDepositRef: payload.reference,
   });
 
+  // e-AVEC Marché: if this deposit was for a marketplace order, lock escrow next.
+  try {
+    const orderId =
+      tx.meta && typeof tx.meta === "object" && "eavecMarketOrderId" in tx.meta
+        ? String((tx.meta as Record<string, unknown>).eavecMarketOrderId ?? "")
+        : "";
+    if (orderId && UUID_RE.test(orderId)) {
+      const { finalizeEavecMarketOrderAfterMomoDeposit } = await import(
+        "@/lib/eavec-market/orders"
+      );
+      await finalizeEavecMarketOrderAfterMomoDeposit({
+        orderId,
+        buyerUserId: tx.userId,
+        fiatDepositRef: payload.reference,
+      });
+    }
+  } catch (err) {
+    console.error("[pawapay] eavec market momo finalize failed", err);
+  }
+
   return { ok: true };
 }
 
@@ -408,7 +428,7 @@ async function handlePayoutCallback(
       failureMessage: args.failureMessage,
     });
   } catch {
-    // best-effort — claim may not exist for this payout id
+    // best-effort - claim may not exist for this payout id
   }
 
   if (args.status === "FAILED" && tx?.batchId && userId && UUID_RE.test(userId)) {

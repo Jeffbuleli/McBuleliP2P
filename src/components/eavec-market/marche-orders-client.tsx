@@ -7,6 +7,7 @@ import { useI18n } from "@/components/i18n-provider";
 import type { EavecMarketOrderRow } from "@/lib/eavec-market/orders";
 
 const STATUS_FR: Record<string, string> = {
+  awaiting_payment: "En attente MoMo",
   escrowed: "Payée (sécurisée)",
   ready: "Prête / en remise",
   released: "Terminée",
@@ -16,6 +17,7 @@ const STATUS_FR: Record<string, string> = {
 };
 
 const STATUS_EN: Record<string, string> = {
+  awaiting_payment: "Awaiting MoMo",
   escrowed: "Paid (secured)",
   ready: "Ready / handover",
   released: "Completed",
@@ -117,6 +119,15 @@ export function EavecMarcheOrderDetailClient({ id }: { id: string }) {
     void load();
   }, [id]);
 
+  // Poll while waiting for MoMo confirmation callback.
+  useEffect(() => {
+    if (!order || order.status !== "awaiting_payment") return;
+    const t = window.setInterval(() => {
+      void load();
+    }, 4000);
+    return () => window.clearInterval(t);
+  }, [order?.status, id]);
+
   async function act(action: "mark_ready" | "confirm" | "cancel" | "dispute") {
     setBusy(true);
     setErr(null);
@@ -171,24 +182,36 @@ export function EavecMarcheOrderDetailClient({ id }: { id: string }) {
           {fr ? "Qté" : "Qty"} {order.quantity}
           {" · "}
           {order.role === "buyer" ? (fr ? "Vous achetez" : "You buy") : fr ? "Vous vendez" : "You sell"}
+          {order.paymentMethod === "momo" ? " · Mobile Money" : ""}
         </p>
-        <ol className="mt-3 space-y-1 text-xs text-[color:var(--fd-muted)]">
-          <li className={order.status !== "cancelled" ? "font-bold text-[#0F2D2F]" : ""}>
-            1. {fr ? "Payée (fonds sécurisés)" : "Paid (funds secured)"}
-          </li>
-          <li
-            className={
-              order.status === "ready" || order.status === "released"
-                ? "font-bold text-[#0F2D2F]"
-                : ""
-            }
-          >
-            2. {fr ? "Remise / livraison" : "Handover / delivery"}
-          </li>
-          <li className={order.status === "released" ? "font-bold text-[#0F2D2F]" : ""}>
-            3. {fr ? "Confirmée → vendeur payé" : "Confirmed → seller paid"}
-          </li>
-        </ol>
+        {order.status === "awaiting_payment" ? (
+          <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">
+            {fr
+              ? "Validez le paiement sur votre téléphone. Cette page se met à jour automatiquement."
+              : "Approve the payment on your phone. This page updates automatically."}
+            {order.momoPhone ? (
+              <p className="mt-1 font-semibold tabular-nums">{order.momoPhone}</p>
+            ) : null}
+          </div>
+        ) : (
+          <ol className="mt-3 space-y-1 text-xs text-[color:var(--fd-muted)]">
+            <li className={order.status !== "cancelled" ? "font-bold text-[#0F2D2F]" : ""}>
+              1. {fr ? "Payée (fonds sécurisés)" : "Paid (funds secured)"}
+            </li>
+            <li
+              className={
+                order.status === "ready" || order.status === "released"
+                  ? "font-bold text-[#0F2D2F]"
+                  : ""
+              }
+            >
+              2. {fr ? "Remise / livraison" : "Handover / delivery"}
+            </li>
+            <li className={order.status === "released" ? "font-bold text-[#0F2D2F]" : ""}>
+              3. {fr ? "Confirmée → vendeur payé" : "Confirmed → seller paid"}
+            </li>
+          </ol>
+        )}
       </div>
 
       {err ? (
@@ -221,7 +244,7 @@ export function EavecMarcheOrderDetailClient({ id }: { id: string }) {
           </button>
         ) : null}
 
-        {order.status === "escrowed" ? (
+        {order.status === "escrowed" || order.status === "awaiting_payment" ? (
           <button
             type="button"
             disabled={busy}

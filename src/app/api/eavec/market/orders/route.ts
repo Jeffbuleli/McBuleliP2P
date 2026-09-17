@@ -11,6 +11,10 @@ import {
 const createZ = z.object({
   listingId: z.string().uuid(),
   quantity: z.number().int().min(1).max(999).optional(),
+  paymentMethod: z.enum(["wallet", "momo"]).optional(),
+  phoneNumber: z.string().min(6).max(32).optional(),
+  provider: z.string().min(2).max(64).optional(),
+  providerLabel: z.string().min(1).max(64).optional(),
 });
 
 export async function GET() {
@@ -45,9 +49,18 @@ export async function POST(req: Request) {
     buyerUserId: userId,
     listingId: parsed.data.listingId,
     quantity: parsed.data.quantity,
+    paymentMethod: parsed.data.paymentMethod,
+    phoneNumber: parsed.data.phoneNumber,
+    provider: parsed.data.provider,
+    providerLabel: parsed.data.providerLabel,
   });
   if (!r.ok) {
     return NextResponse.json({ error: r.error }, { status: 400 });
   }
-  return NextResponse.json({ ok: true, id: r.id });
+  return NextResponse.json({
+    ok: true,
+    id: r.id,
+    status: r.status,
+    depositId: "depositId" in r ? r.depositId : undefined,
+  });
 }

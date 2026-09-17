@@ -4,20 +4,33 @@ import {
   getDb,
   eavecMarketListings,
   eavecMarketOrders,
+  fiatFreshpayTransactions,
   users,
 } from "@/db";
 import { debitUserAsset, creditUserAsset } from "@/lib/wallet-move-assets";
 import { insertWalletLedgerLines } from "@/lib/wallet-ledger";
 import { fmtWalletAmount, numFromNumeric } from "@/lib/wallet-types";
 import type { WalletAsset } from "@/lib/wallet-types";
+import { FIAT_FEE_RATE } from "@/lib/wallet-fees";
+import { hasPawapayKeys } from "@/lib/env";
+import { pawapayPayIn } from "@/lib/pawapay/provider";
+import { resolvePawapayProvider, toPawapayProviderId } from "@/lib/cod-mobile-providers";
+import {
+  isValidCodMsisdn,
+  normalizeCodPhoneNumber,
+} from "@/lib/freshpay/normalize-phone";
+import { isFiatDepositWithdrawPaused } from "@/lib/fiat-deposit-withdraw-paused";
 
 export type EavecMarketOrderStatus =
+  | "awaiting_payment"
   | "escrowed"
   | "ready"
   | "released"
   | "cancelled"
   | "disputed"
   | "expired";
+
+export type EavecMarketPaymentMethod = "wallet" | "momo";
 
 export type EavecMarketOrderRow = {
   id: string;
@@ -30,22 +43,33 @@ export type EavecMarketOrderRow = {
   unitPrice: string;
   totalAmount: string;
   status: EavecMarketOrderStatus;
+  paymentMethod: EavecMarketPaymentMethod;
+  fiatDepositRef: string | null;
+  momoPhone: string | null;
   listingTitle: string;
-  escrowedAt: string;
+  escrowedAt: string | null;
   readyAt: string | null;
   releasedAt: string | null;
   cancelledAt: string | null;
   disputedAt: string | null;
   expiresAt: string | null;
   role: "buyer" | "seller";
+  /** Gross MoMo charge when paying by mobile money (includes platform fee). */
+  momoGrossAmount?: string | null;
 };
 
 const CONFIRM_WINDOW_HOURS = 72;
+const MOMO_PAY_WINDOW_MINUTES = 30;
 
 function mapOrder(
   o: typeof eavecMarketOrders.$inferSelect,
   viewerId: string,
 ): EavecMarketOrderRow {
+  const total = Number(o.totalAmount);
+  const momoGross =
+    o.paymentMethod === "momo" && Number.isFinite(total)
+      ? fmtWalletAmount(total / (1 - FIAT_FEE_RATE))
+      : null;
   return {
     id: o.id,
     listingId: o.listingId,
@@ -57,14 +81,18 @@ function mapOrder(
     unitPrice: String(o.unitPrice),
     totalAmount: String(o.totalAmount),
     status: o.status as EavecMarketOrderStatus,
+    paymentMethod: (o.paymentMethod === "momo" ? "momo" : "wallet") as EavecMarketPaymentMethod,
+    fiatDepositRef: o.fiatDepositRef ?? null,
+    momoPhone: o.momoPhone ?? null,
     listingTitle: o.listingTitle,
-    escrowedAt: o.escrowedAt.toISOString(),
+    escrowedAt: o.escrowedAt?.toISOString() ?? null,
     readyAt: o.readyAt?.toISOString() ?? null,
     releasedAt: o.releasedAt?.toISOString() ?? null,
     cancelledAt: o.cancelledAt?.toISOString() ?? null,
     disputedAt: o.disputedAt?.toISOString() ?? null,
     expiresAt: o.expiresAt?.toISOString() ?? null,
     role: o.buyerUserId === viewerId ? "buyer" : "seller",
+    momoGrossAmount: momoGross,
   };
 }
 
@@ -94,20 +122,57 @@ async function pickEscrowAsset(
     if (cdf + 1e-9 < total) throw new Error("wallet_insufficient_balance");
     return "CDF";
   }
-  // USD listing: prefer USD fiat, else USDT (shown as USD in e-AVEC)
   if (usd + 1e-9 >= total) return "USD";
   if (usdt + 1e-9 >= total) return "USDT";
   throw new Error("wallet_insufficient_balance");
+}
+
+function reserveListingQty(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  tx: any,
+  listing: typeof eavecMarketListings.$inferSelect,
+  qty: number,
+  now: Date,
+) {
+  const nextQty = listing.quantity - qty;
+  return tx
+    .update(eavecMarketListings)
+    .set({
+      quantity: nextQty,
+      status: nextQty <= 0 ? "sold" : "available",
+      updatedAt: now,
+    })
+    .where(eq(eavecMarketListings.id, listing.id));
 }
 
 export async function createEavecMarketOrder(args: {
   buyerUserId: string;
   listingId: string;
   quantity?: number;
-}): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
+  paymentMethod?: EavecMarketPaymentMethod;
+  phoneNumber?: string;
+  provider?: string;
+  providerLabel?: string;
+}): Promise<
+  | { ok: true; id: string; depositId?: string; status: string }
+  | { ok: false; error: string }
+> {
+  const method: EavecMarketPaymentMethod =
+    args.paymentMethod === "momo" ? "momo" : "wallet";
   const qty = Math.min(Math.max(Math.floor(args.quantity ?? 1), 1), 999);
-  const db = getDb();
 
+  if (method === "momo") {
+    return createMomoMarketOrder({
+      buyerUserId: args.buyerUserId,
+      listingId: args.listingId,
+      quantity: qty,
+      phoneNumber: args.phoneNumber ?? "",
+      provider: args.provider ?? "",
+      providerLabel: args.providerLabel,
+    });
+  }
+
+  const db = getDb();
   try {
     const id = await db.transaction(async (tx) => {
       const [listing] = await tx
@@ -152,15 +217,7 @@ export async function createEavecMarketOrder(args: {
 
       const now = new Date();
       const expiresAt = new Date(now.getTime() + CONFIRM_WINDOW_HOURS * 3600_000);
-      const nextQty = listing.quantity - qty;
-      await tx
-        .update(eavecMarketListings)
-        .set({
-          quantity: nextQty,
-          status: nextQty <= 0 ? "sold" : "available",
-          updatedAt: now,
-        })
-        .where(eq(eavecMarketListings.id, listing.id));
+      await reserveListingQty(tx, listing, qty, now);
 
       const [order] = await tx
         .insert(eavecMarketOrders)
@@ -174,6 +231,7 @@ export async function createEavecMarketOrder(args: {
           unitPrice: unit.toFixed(2),
           totalAmount: total.toFixed(2),
           status: "escrowed",
+          paymentMethod: "wallet",
           listingTitle: listing.title,
           listingSnapshot: {
             category: listing.category,
@@ -189,11 +247,253 @@ export async function createEavecMarketOrder(args: {
       if (!order) throw new Error("eavec_market_order_failed");
       return order.id;
     });
-    return { ok: true, id };
+    return { ok: true, id, status: "escrowed" };
   } catch (e) {
     const msg = e instanceof Error ? e.message : "eavec_market_order_failed";
     return { ok: false, error: msg };
   }
+}
+
+async function createMomoMarketOrder(args: {
+  buyerUserId: string;
+  listingId: string;
+  quantity: number;
+  phoneNumber: string;
+  provider: string;
+  providerLabel?: string;
+}): Promise<
+  | { ok: true; id: string; depositId: string; status: string }
+  | { ok: false; error: string }
+> {
+  if (isFiatDepositWithdrawPaused()) {
+    return { ok: false, error: "wallet_fiat_paused" };
+  }
+  if (!hasPawapayKeys()) {
+    return { ok: false, error: "wallet_fiat_unconfigured" };
+  }
+
+  const phone = normalizeCodPhoneNumber(args.phoneNumber);
+  if (!isValidCodMsisdn(phone)) {
+    return { ok: false, error: "wallet_fiat_invalid_phone" };
+  }
+  if (!args.provider.trim()) {
+    return { ok: false, error: "wallet_fiat_invalid_provider" };
+  }
+
+  const db = getDb();
+  try {
+    const prepared = await db.transaction(async (tx) => {
+      const [listing] = await tx
+        .select()
+        .from(eavecMarketListings)
+        .where(eq(eavecMarketListings.id, args.listingId))
+        .limit(1);
+      if (!listing || listing.status !== "available") {
+        throw new Error("eavec_market_listing_unavailable");
+      }
+      if (listing.sellerUserId === args.buyerUserId) {
+        throw new Error("eavec_market_own_listing");
+      }
+      if (listing.quantity < args.quantity) {
+        throw new Error("eavec_market_qty");
+      }
+      const currency = listing.currency === "CDF" ? "CDF" : "USD";
+      if (currency !== "USD" && currency !== "CDF") {
+        throw new Error("eavec_market_momo_currency");
+      }
+
+      const unit = Number(listing.price);
+      if (!Number.isFinite(unit) || unit <= 0) throw new Error("eavec_market_bad_price");
+      const total = Number((unit * args.quantity).toFixed(2));
+      const gross = Number((total / (1 - FIAT_FEE_RATE)).toFixed(currency === "CDF" ? 0 : 2));
+      if (!Number.isFinite(gross) || gross <= 0) throw new Error("eavec_market_bad_price");
+
+      const now = new Date();
+      await reserveListingQty(tx, listing, args.quantity, now);
+      const expiresAt = new Date(now.getTime() + MOMO_PAY_WINDOW_MINUTES * 60_000);
+      const depositRef = randomUUID();
+
+      const [order] = await tx
+        .insert(eavecMarketOrders)
+        .values({
+          listingId: listing.id,
+          buyerUserId: args.buyerUserId,
+          sellerUserId: listing.sellerUserId,
+          quantity: args.quantity,
+          currency,
+          escrowAsset: currency,
+          unitPrice: unit.toFixed(2),
+          totalAmount: total.toFixed(2),
+          status: "awaiting_payment",
+          paymentMethod: "momo",
+          fiatDepositRef: depositRef,
+          momoPhone: phone,
+          listingTitle: listing.title,
+          listingSnapshot: {
+            category: listing.category,
+            kind: listing.kind,
+            locationLabel: listing.locationLabel,
+            imageUrl: listing.imageUrl,
+            momoGross: fmtWalletAmount(gross),
+          },
+          escrowedAt: null,
+          expiresAt,
+        })
+        .returning({ id: eavecMarketOrders.id });
+
+      if (!order) throw new Error("eavec_market_order_failed");
+      return {
+        orderId: order.id,
+        depositRef,
+        currency,
+        gross: fmtWalletAmount(gross),
+        total: fmtWalletAmount(total),
+      };
+    });
+
+    const network = resolvePawapayProvider(phone, args.provider);
+    const providerId = toPawapayProviderId(network.method);
+    const r = await pawapayPayIn({
+      depositId: prepared.depositRef,
+      amount: prepared.gross,
+      currency: prepared.currency,
+      phoneNumber: phone,
+      provider: providerId,
+    });
+
+    if (!r.accepted) {
+      await cancelAwaitingOrderInternal(prepared.orderId, "momo_rejected");
+      return { ok: false, error: "wallet_fiat_deposit_rejected" };
+    }
+
+    await db.insert(fiatFreshpayTransactions).values({
+      userId: args.buyerUserId,
+      kind: "deposit",
+      status: "PROCESSING",
+      reference: prepared.depositRef,
+      currency: prepared.currency,
+      amount: prepared.gross,
+      phoneNumber: phone,
+      provider: providerId,
+      meta: {
+        rail: "pawapay",
+        providerLabel: args.providerLabel ?? null,
+        selectedProvider: args.provider.trim(),
+        networkDetected: network.detected,
+        networkMatched: network.matched,
+        eavecMarketOrderId: prepared.orderId,
+        eavecMarketEscrowNet: prepared.total,
+      },
+    });
+
+    return {
+      ok: true,
+      id: prepared.orderId,
+      depositId: prepared.depositRef,
+      status: "awaiting_payment",
+    };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "eavec_market_order_failed";
+    return { ok: false, error: msg };
+  }
+}
+
+async function cancelAwaitingOrderInternal(orderId: string, reason: string) {
+  const db = getDb();
+  await db.transaction(async (tx) => {
+    const [o] = await tx
+      .select()
+      .from(eavecMarketOrders)
+      .where(eq(eavecMarketOrders.id, orderId))
+      .limit(1);
+    if (!o || o.status !== "awaiting_payment") return;
+    const now = new Date();
+    await tx
+      .update(eavecMarketOrders)
+      .set({
+        status: "cancelled",
+        cancelledAt: now,
+        cancelReason: reason.slice(0, 64),
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(eavecMarketOrders.id, orderId),
+          eq(eavecMarketOrders.status, "awaiting_payment"),
+        ),
+      );
+    await tx
+      .update(eavecMarketListings)
+      .set({
+        quantity: sql`${eavecMarketListings.quantity} + ${o.quantity}`,
+        status: "available",
+        updatedAt: now,
+      })
+      .where(eq(eavecMarketListings.id, o.listingId));
+  });
+}
+
+/**
+ * After MoMo deposit credited the buyer wallet, lock escrow for the linked order.
+ * Called from PawaPay/FreshPay deposit success handlers (same DB).
+ */
+export async function finalizeEavecMarketOrderAfterMomoDeposit(args: {
+  orderId: string;
+  buyerUserId: string;
+  fiatDepositRef: string;
+}): Promise<void> {
+  const db = getDb();
+  await db.transaction(async (tx) => {
+    const [o] = await tx
+      .select()
+      .from(eavecMarketOrders)
+      .where(eq(eavecMarketOrders.id, args.orderId))
+      .limit(1);
+    if (!o) return;
+    if (o.buyerUserId !== args.buyerUserId) return;
+    if (o.status !== "awaiting_payment") return;
+
+    const asset = (o.currency === "CDF" ? "CDF" : "USD") as WalletAsset;
+    const totalStr = fmtWalletAmount(Number(o.totalAmount));
+    const now = new Date();
+
+    await debitUserAsset(tx, o.buyerUserId, asset, totalStr);
+    await insertWalletLedgerLines(tx, [
+      {
+        batchId: randomUUID(),
+        userId: o.buyerUserId,
+        entryType: "eavec_market_escrow_lock",
+        asset,
+        amount: `-${totalStr}`,
+        feeUsdEquivalent: "0",
+        counterpartyUserId: o.sellerUserId,
+        meta: {
+          orderId: o.id,
+          listingId: o.listingId,
+          fiatDepositRef: args.fiatDepositRef,
+          paymentMethod: "momo",
+        },
+      },
+    ]);
+
+    const expiresAt = new Date(now.getTime() + CONFIRM_WINDOW_HOURS * 3600_000);
+    await tx
+      .update(eavecMarketOrders)
+      .set({
+        status: "escrowed",
+        escrowAsset: asset,
+        escrowedAt: now,
+        expiresAt,
+        fiatDepositRef: args.fiatDepositRef,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(eavecMarketOrders.id, o.id),
+          eq(eavecMarketOrders.status, "awaiting_payment"),
+        ),
+      );
+  });
 }
 
 export async function listEavecMarketOrdersForUser(
@@ -307,6 +607,36 @@ export async function eavecMarketOrderAction(args: {
         const isBuyer = o.buyerUserId === args.userId;
         const isSeller = o.sellerUserId === args.userId;
         if (!isBuyer && !isSeller) throw new Error("forbidden");
+
+        if (o.status === "awaiting_payment") {
+          if (!isBuyer && !isSeller) throw new Error("forbidden");
+          const [upd] = await tx
+            .update(eavecMarketOrders)
+            .set({
+              status: "cancelled",
+              cancelledAt: now,
+              cancelReason: args.reason?.slice(0, 64) ?? (isBuyer ? "buyer" : "seller"),
+              updatedAt: now,
+            })
+            .where(
+              and(
+                eq(eavecMarketOrders.id, o.id),
+                eq(eavecMarketOrders.status, "awaiting_payment"),
+              ),
+            )
+            .returning({ id: eavecMarketOrders.id });
+          if (!upd) throw new Error("eavec_market_bad_status");
+          await tx
+            .update(eavecMarketListings)
+            .set({
+              quantity: sql`${eavecMarketListings.quantity} + ${o.quantity}`,
+              status: "available",
+              updatedAt: now,
+            })
+            .where(eq(eavecMarketListings.id, o.listingId));
+          return;
+        }
+
         if (o.status !== "escrowed") throw new Error("eavec_market_bad_status");
         const [upd] = await tx
           .update(eavecMarketOrders)
@@ -339,7 +669,6 @@ export async function eavecMarketOrderAction(args: {
           },
         ]);
 
-        // restore listing qty if still open-ish
         await tx
           .update(eavecMarketListings)
           .set({
