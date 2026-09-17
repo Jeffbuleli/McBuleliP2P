@@ -128,7 +128,7 @@ const SAMPLES: Sample[] = [
     quantity: 6,
     kind: "service",
     imageUrl:
-      "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=85",
+      "https://images.pexels.com/photos/159304/network-cable-ethernet-computer-159304.jpeg?auto=compress&cs=tinysrgb&w=1200",
   },
   {
     title: "Panier tressé décoratif",
