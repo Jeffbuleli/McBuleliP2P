@@ -5,11 +5,12 @@
  *   npx tsx scripts/seed-eavec-mcbuleli-samples.ts
  *
  * Requires DATABASE_URL. Sets listings to status=available (skip ops review).
+ * Images: verified Unsplash HTTPS (allowed in CSP img-src).
  */
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { loadEnvFile } from "node:process";
-import { and, eq, like } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { getDb, eavecMarketListings, users } from "../src/db";
 import type { EavecMarketCategory } from "../src/lib/eavec-market/categories";
 
@@ -27,7 +28,7 @@ loadLocalEnv();
 
 const SELLER_EMAIL = "ceo@mcbuleli.org";
 const TITLE_PREFIX = "McBuleli · ";
-const LOCATION = "Kinshasa · Gombe — McBuleli HQ";
+const LOCATION = "Kinshasa · Gombe - McBuleli HQ";
 
 type Sample = {
   title: string;
@@ -36,10 +37,10 @@ type Sample = {
   price: number;
   quantity: number;
   kind: "product" | "service";
-  /** HD Unsplash / Wikimedia stable URLs */
   imageUrl: string;
 };
 
+/** HD Unsplash URLs verified HTTP 200 (w=1200). */
 const SAMPLES: Sample[] = [
   {
     title: "Tomates fraîches du plateau",
@@ -50,12 +51,12 @@ const SAMPLES: Sample[] = [
     quantity: 12,
     kind: "product",
     imageUrl:
-      "https://images.unsplash.com/photo-1546470427-e26264be0d16?auto=format&fit=crop&w=1200&q=85",
+      "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=1200&q=85",
   },
   {
     title: "Manioc frais en lots",
     description:
-      "Manioc blanc premium — filière McBuleli. Lots de 5 kg, livraison Kinshasa possible. Produit communautaire vérifié.",
+      "Manioc blanc premium - filière McBuleli. Lots de 5 kg, livraison Kinshasa possible. Produit communautaire vérifié.",
     category: "agriculture",
     price: 12000,
     quantity: 8,
@@ -66,7 +67,7 @@ const SAMPLES: Sample[] = [
   {
     title: "Café arabica torréfié RDC",
     description:
-      "Café McBuleli — grains arabica Kivu, torréfaction moyenne. Paquet 250 g. Arôme riche pour bureaux & foyers.",
+      "Café McBuleli - grains arabica Kivu, torréfaction moyenne. Paquet 250 g. Arôme riche pour bureaux & foyers.",
     category: "food",
     price: 18500,
     quantity: 15,
@@ -88,18 +89,18 @@ const SAMPLES: Sample[] = [
   {
     title: "Pagne wax premium 6 yards",
     description:
-      "Wax hollandais motifs exclusifs — collection McBuleli Mode. Tissu 6 yards, couleurs vives, prêt couture.",
+      "Wax hollandais motifs exclusifs - collection McBuleli Mode. Tissu 6 yards, couleurs vives, prêt couture.",
     category: "fashion",
     price: 45000,
     quantity: 7,
     kind: "product",
     imageUrl:
-      "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=1200&q=85",
+      "https://images.unsplash.com/photo-1558171813-4c088753af8f?auto=format&fit=crop&w=1200&q=85",
   },
   {
     title: "Sneakers urbaines unisexes",
     description:
-      "Baskets confort McBuleli Store. Pointures 38–44, semelle souple. Style ville Kinshasa, neuf emballé.",
+      "Baskets confort McBuleli Store. Pointures 38-44, semelle souple. Style ville Kinshasa, neuf emballé.",
     category: "fashion",
     price: 65000,
     quantity: 9,
@@ -119,7 +120,7 @@ const SAMPLES: Sample[] = [
       "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=1200&q=85",
   },
   {
-    title: "Installation Wi‑Fi PME",
+    title: "Installation Wi-Fi PME",
     description:
       "McBuleli Tech : câblage & config routeur pour petits commerces. Inclut test débit et briefing équipe (Kinshasa).",
     category: "services",
@@ -127,7 +128,7 @@ const SAMPLES: Sample[] = [
     quantity: 6,
     kind: "service",
     imageUrl:
-      "https://images.unsplash.com/photo-1544197150-b99a580bb7a2?auto=format&fit=crop&w=1200&q=85",
+      "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=85",
   },
   {
     title: "Panier tressé décoratif",
@@ -143,13 +144,13 @@ const SAMPLES: Sample[] = [
   {
     title: "Kit cuisine inox 5 pièces",
     description:
-      "Ustensiles inox durables — gamme McBuleli Foyer. 5 pièces essentielles, hygiéniques, faciles à nettoyer.",
+      "Ustensiles inox durables - gamme McBuleli Foyer. 5 pièces essentielles, hygiéniques, faciles à nettoyer.",
     category: "home",
     price: 38000,
     quantity: 8,
     kind: "product",
     imageUrl:
-      "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=1200&q=85",
+      "https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=1200&q=85",
   },
   {
     title: "Lampe solaire portable",
@@ -187,7 +188,7 @@ const SAMPLES: Sample[] = [
   {
     title: "Sac tote canvas logo",
     description:
-      "Tote bag canvas McBuleli — robuste, quotidien bureau/marché. Impression logo, stock limité HQ Gombe.",
+      "Tote bag canvas McBuleli - robuste, quotidien bureau/marché. Impression logo, stock limité HQ Gombe.",
     category: "other",
     price: 12000,
     quantity: 15,
@@ -288,20 +289,9 @@ async function main() {
     console.log(`+ ${title}`);
   }
 
-  const [countRow] = await db
-    .select({ id: eavecMarketListings.id })
-    .from(eavecMarketListings)
-    .where(
-      and(
-        eq(eavecMarketListings.sellerUserId, seller.id),
-        like(eavecMarketListings.title, `${TITLE_PREFIX}%`),
-      ),
-    );
-
   console.log(
     `\nDone. created=${created} updated=${updated} (sample titles with prefix "${TITLE_PREFIX}")`,
   );
-  void countRow;
 }
 
 main().catch((e) => {

@@ -141,8 +141,8 @@ export function EavecMarcheDetailClient({ id }: { id: string }) {
           ? "Vérifiez votre identité (KYC) pour acheter."
           : "Verify identity (KYC) to buy.",
         wallet_insufficient_balance: fr
-          ? "Solde Fc insuffisant — rechargez votre caisse."
-          : "Insufficient Fc balance — top up your wallet.",
+          ? "Solde Fc insuffisant - rechargez votre caisse."
+          : "Insufficient Fc balance - top up your wallet.",
         eavec_market_own_listing: fr
           ? "Vous ne pouvez pas acheter votre annonce."
           : "You cannot buy your own listing.",
@@ -188,6 +188,7 @@ export function EavecMarcheDetailClient({ id }: { id: string }) {
     <div className="pb-28">
       <MarcheChrome fr={fr} title={listing.title} showSell={false} />
 
+      <div className="mk-pdp-layout">
       <div className="mk-rise mk-pdp-hero">
         <button
           type="button"
@@ -224,7 +225,7 @@ export function EavecMarcheDetailClient({ id }: { id: string }) {
         )}
       </div>
 
-      <div className="mk-rise mk-rise-delay-1 mt-4 space-y-4 px-0.5">
+      <div className="mk-rise mk-rise-delay-1 mt-4 space-y-4 px-0.5 md:mt-0">
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <p className="mk-section-label">
@@ -336,20 +337,21 @@ export function EavecMarcheDetailClient({ id }: { id: string }) {
             {err}
           </p>
         ) : null}
-
-        {related.length > 0 ? (
-          <div className="pt-2">
-            <p className="mk-section-label mb-3">
-              {fr ? "Dans le même rayon" : "Same aisle"}
-            </p>
-            <div className="mk-grid">
-              {related.map((l) => (
-                <EavecMarketListingCard key={l.id} listing={l} locale={locale} />
-              ))}
-            </div>
-          </div>
-        ) : null}
       </div>
+      </div>
+
+      {related.length > 0 ? (
+        <div className="mk-rise mt-6 pt-2 px-0.5">
+          <p className="mk-section-label mb-3">
+            {fr ? "Dans le même rayon" : "Same aisle"}
+          </p>
+          <div className="mk-grid">
+            {related.map((l) => (
+              <EavecMarketListingCard key={l.id} listing={l} locale={locale} />
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       <div className="mk-buy-bar">
         <button
@@ -362,8 +364,8 @@ export function EavecMarcheDetailClient({ id }: { id: string }) {
             ? "…"
             : insufficient
               ? fr
-                ? "Solde insuffisant — rechargez"
-                : "Insufficient balance — top up"
+                ? "Solde insuffisant - rechargez"
+                : "Insufficient balance - top up"
               : !inStock
                 ? fr
                   ? "Indisponible"

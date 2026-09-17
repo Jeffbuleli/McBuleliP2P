@@ -88,7 +88,7 @@ export function EavecMarketReviewClient() {
                 <p className="font-bold text-[#0F2D2F]">{l.title}</p>
                 <p className="text-sm font-extrabold tabular-nums">{avecCdf(l.price)}</p>
                 <p className="text-[11px] text-[color:var(--fd-muted)]">
-                  {l.sellerDisplayName || "—"}
+                  {l.sellerDisplayName || "-"}
                   {l.locationLabel ? ` · ${l.locationLabel}` : ""}
                 </p>
                 <div className="flex gap-2">

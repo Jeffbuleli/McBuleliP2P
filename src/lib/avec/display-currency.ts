@@ -14,7 +14,7 @@ export function avecMoney(
   digits = 0,
 ): string {
   const n = typeof amountUsdt === "number" ? amountUsdt : Number(amountUsdt);
-  if (!Number.isFinite(n)) return `— ${AVEC_MONEY_LABEL}`;
+  if (!Number.isFinite(n)) return `- ${AVEC_MONEY_LABEL}`;
   const cdf = n * cdfPerOneUsd();
   const rounded =
     digits <= 0 ? Math.round(cdf) : Number(cdf.toFixed(digits));
@@ -24,6 +24,6 @@ export function avecMoney(
 /** Format an amount already in CDF. */
 export function avecCdf(amountCdf: string | number): string {
   const n = typeof amountCdf === "number" ? amountCdf : Number(amountCdf);
-  if (!Number.isFinite(n)) return `— ${AVEC_MONEY_LABEL}`;
+  if (!Number.isFinite(n)) return `- ${AVEC_MONEY_LABEL}`;
   return `${Math.round(n).toLocaleString("fr-FR")} ${AVEC_MONEY_LABEL}`;
 }

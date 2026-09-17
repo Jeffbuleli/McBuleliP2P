@@ -96,8 +96,8 @@ export function EavecMarcheHubClient() {
           <h1 className="mk-brand">Marché</h1>
           <p className="mk-tagline">
             {fr
-              ? "Achetez et vendez dans la communauté — paiement en Fc."
-              : "Buy and sell in the community — pay in Fc."}
+              ? "Achetez et vendez dans la communauté - paiement en Fc."
+              : "Buy and sell in the community - pay in Fc."}
           </p>
           <Link href="/app/marche/new" className="mk-hero-cta">
             {fr ? "Vendre" : "Sell"}

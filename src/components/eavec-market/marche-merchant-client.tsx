@@ -105,7 +105,7 @@ export function EavecMarcheMerchantClient() {
               value={
                 p.ratingCount
                   ? `${p.ratingAvg.toFixed(1)} (${p.ratingCount})`
-                  : "—"
+                  : "-"
               }
             />
             <Stat label={fr ? "Litiges" : "Disputes"} value={String(p.openDisputes)} />
