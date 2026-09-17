@@ -2,7 +2,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { getDb, groupSavingsMemberships } from "@/db";
 import { listGroupManagers } from "@/lib/group-savings-payouts";
 
-/** Approved members with role committee (3–7 typical). */
+/** Approved members with role committee (3-7 typical). */
 export async function listCommitteeMembers(groupId: string): Promise<string[]> {
   const db = getDb();
   const rows = await db

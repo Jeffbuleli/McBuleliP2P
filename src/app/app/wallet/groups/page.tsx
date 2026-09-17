@@ -78,7 +78,7 @@ export default function AvecHubPage() {
   const mineSlice = useMemo(() => minePag.slice, [minePag.slice]);
 
   return (
-    <div className="space-y-4 pb-8">
+    <div className="mx-auto w-full max-w-lg space-y-4 pb-8 md:max-w-3xl lg:max-w-5xl">
       <WalletSubpageHeader
         title={t("group_hub_title")}
         subtitle={t("group_hub_sub")}
@@ -125,7 +125,7 @@ export default function AvecHubPage() {
                 <li key={r.groupId}>
                   <Link
                     href={`/app/wallet/groups/${r.groupId}`}
-                    className="fd-card block p-3.5 active:scale-[0.99]"
+                    className="fd-card block border border-[color:var(--fd-border)] p-3.5 transition hover:border-[color:var(--fd-primary)]/35 active:scale-[0.99]"
                   >
                     <div className="flex items-center gap-3">
                       {r.logoUrl ? (
@@ -153,6 +153,13 @@ export default function AvecHubPage() {
                           {r.nextBillingAt
                             ? ` · ${new Date(r.nextBillingAt).toLocaleDateString(loc)}`
                             : ""}
+                        </p>
+                        <p className="mt-1 text-[10px] font-bold text-[color:var(--fd-primary)]">
+                          {r.membershipStatus === "pending"
+                            ? t("group_hub_action_pending")
+                            : r.status === "active"
+                              ? t("group_hub_action_open")
+                              : t("group_hub_action_review")}
                         </p>
                       </div>
                       <div className="flex shrink-0 flex-col items-end gap-1.5">

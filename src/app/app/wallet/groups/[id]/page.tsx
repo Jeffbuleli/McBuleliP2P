@@ -21,12 +21,7 @@ import { McBuleliPoweredFooter } from "@/components/brand/mcbuleli-powered-foote
 import { p2pDisplayName } from "@/lib/p2p-display";
 import { AvecMeetingPanel } from "@/components/groups/avec-meeting-panel";
 import { AvecOverviewPanel } from "@/components/groups/avec-overview-panel";
-import { AvecPayoutPanel } from "@/components/groups/avec-payout-panel";
-import { AvecLoansPanel } from "@/components/groups/avec-loans-panel";
-import { AvecClosurePanel } from "@/components/groups/avec-closure-panel";
-import { AvecTreasuryFunds } from "@/components/groups/avec-treasury-funds";
-import { AvecBucketTransferGovernance } from "@/components/groups/avec-bucket-transfer-governance";
-import { AvecSocialAidPanel } from "@/components/groups/avec-social-aid-panel";
+import { AvecTreasurySections } from "@/components/groups/avec-treasury-sections";
 import { AvecReportsPanel } from "@/components/groups/avec-reports-panel";
 import { AvecGroupHero } from "@/components/groups/avec-group-hero";
 import { AvecRoleStrip } from "@/components/groups/avec-role-strip";
@@ -92,18 +87,30 @@ export default function AvecDashboardPage() {
   const searchParams = useSearchParams();
   const showCreateProgress = searchParams.get("created") === "1";
   const id = typeof routeParams.id === "string" ? routeParams.id : "";
+  const tabFromUrl = searchParams.get("tab");
   const [data, setData] = useState<Dashboard | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [payOk, setPayOk] = useState(false);
   const [fundsRefresh, setFundsRefresh] = useState(0);
-  const [tab, setTab] = useState<Tab>("vue");
+  const [tab, setTab] = useState<Tab>(() => {
+    const allowed: Tab[] = [
+      "vue",
+      "meeting",
+      "members",
+      "treasury",
+      "dialogue",
+      "reports",
+    ];
+    return allowed.includes(tabFromUrl as Tab) ? (tabFromUrl as Tab) : "vue";
+  });
   const [myUserId, setMyUserId] = useState<string | undefined>();
   const [dialogueUnread, setDialogueUnread] = useState(false);
   const [treasuryFunds, setTreasuryFunds] = useState<{
     penaltiesUsdt: number;
     interestUsdt: number;
   } | null>(null);
+  const [walletUsdt, setWalletUsdt] = useState<number | null>(null);
 
   const me = data?.group.me;
   const canModerateMembership = me ? canModerateGroupMembership(me) : false;
@@ -141,6 +148,18 @@ export default function AvecDashboardPage() {
   useEffect(() => {
     void load();
   }, [id]);
+
+  useEffect(() => {
+    void fetch("/api/wallet/summary", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => {
+        const line = (
+          d.lines as Array<{ asset: string; balance: string }> | undefined
+        )?.find((b) => b.asset === "USDT");
+        setWalletUsdt(line ? Number(line.balance) : 0);
+      })
+      .catch(() => setWalletUsdt(null));
+  }, []);
 
   useEffect(() => {
     if (!id || tab !== "treasury") return;
@@ -294,7 +313,7 @@ export default function AvecDashboardPage() {
   const showSuspended = g.status === "suspended";
 
   return (
-    <div className="pb-10">
+    <div className="mx-auto w-full max-w-lg pb-10 md:max-w-3xl lg:max-w-5xl">
       <AvecTopBar
         groupName={g.name}
         groupLogoUrl={g.logoUrl}
@@ -305,7 +324,7 @@ export default function AvecDashboardPage() {
         memberKycApproved={data.viewer.kycApproved}
       />
 
-      <div className="space-y-3 px-1">
+      <div className="space-y-3 px-1 md:px-2">
         {g.status === "pending" || showCreateProgress ? (
           <TransactionStepper steps={groupCreationProgressSteps(g.status)} />
         ) : null}
@@ -429,6 +448,8 @@ export default function AvecDashboardPage() {
               paySuccess={payOk}
               onPay={payShares}
               onSocialFixed={() => void load()}
+              members={data.members}
+              walletBalanceUsdt={walletUsdt}
             />
           ) : !groupActive ? (
             <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
@@ -465,57 +486,18 @@ export default function AvecDashboardPage() {
         {tab === "reports" && <AvecReportsPanel groupId={id} />}
 
         {tab === "treasury" && (
-          <div className="space-y-3">
-            <AvecTreasuryFunds groupId={id} onRefreshKey={fundsRefresh} />
-            {canAdmin && treasuryFunds ? (
-              <AvecBucketTransferGovernance
-                groupId={id}
-                penaltiesUsdt={treasuryFunds.penaltiesUsdt}
-                interestUsdt={treasuryFunds.interestUsdt}
-                canPropose={!!canAdmin}
-                onDone={() => setFundsRefresh((n) => n + 1)}
-              />
-            ) : null}
-            <AvecSocialAidPanel
-              groupId={id}
-              myUserId={myUserId}
-              canRequest={!!canContribute}
-              onDone={() => {
-                setFundsRefresh((n) => n + 1);
-                void load();
-              }}
-            />
-            <AvecLoansPanel
-              groupId={id}
-              members={data.members}
-              myUserId={myUserId}
-              onDone={() => {
-                setFundsRefresh((n) => n + 1);
-                void load();
-              }}
-            />
-            {canModerateMembership ? (
-              <>
-                <AvecClosurePanel
-                  groupId={id}
-                  isAdmin={!!canAdmin}
-                  onDone={() => {
-                    setFundsRefresh((n) => n + 1);
-                    void load();
-                  }}
-                />
-                <AvecPayoutPanel
-                  groupId={id}
-                  members={data.members}
-                  myUserId={myUserId}
-                  onDone={() => {
-                    setFundsRefresh((n) => n + 1);
-                    void load();
-                  }}
-                />
-              </>
-            ) : null}
-          </div>
+          <AvecTreasurySections
+            groupId={id}
+            myUserId={myUserId}
+            members={data.members}
+            canContribute={!!canContribute}
+            canAdmin={!!canAdmin}
+            canModerateMembership={!!canModerateMembership}
+            treasuryFunds={treasuryFunds}
+            fundsRefresh={fundsRefresh}
+            onFundsRefresh={() => setFundsRefresh((n) => n + 1)}
+            onReload={() => void load()}
+          />
         )}
       </div>
       <McBuleliPoweredFooter />

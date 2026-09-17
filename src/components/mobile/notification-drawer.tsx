@@ -30,7 +30,7 @@ function notifMeta(
 } {
   const p = row.payload ?? {};
   const str = (k: string) => (typeof p[k] === "string" ? (p[k] as string) : "");
-  const asset = str("asset") || "—";
+  const asset = str("asset") || "-";
   const amount = str("amount") || str("net") || "";
   const orderId = str("orderId");
   const p2pHref = orderId ? `/app/p2p/order/${orderId}` : "/app/p2p";
@@ -45,7 +45,7 @@ function notifMeta(
   const p2pPreviewBody = () => {
     const preview = str("preview");
     const base = p2pBody();
-    return preview ? `${base} — ${preview}` : base;
+    return preview ? `${base} - ${preview}` : base;
   };
 
   switch (row.kind) {
@@ -75,7 +75,7 @@ function notifMeta(
         title: t("notif_withdrawal_rejected_title", { asset }),
         body: t("notif_withdrawal_rejected_body", {
           asset,
-          reason: str("reason") || "—",
+          reason: str("reason") || "-",
         }),
         href: "/app/wallet/history",
         pill: { variant: "failed", label: t("status_ui_failed") },
@@ -85,7 +85,7 @@ function notifMeta(
         title: t("notif_deposit_confirmed_title", { asset }),
         body: t("notif_deposit_confirmed_body", {
           asset,
-          amount: amount || "—",
+          amount: amount || "-",
         }),
         href: "/app/wallet/history",
         pill: { variant: "success", label: t("status_ui_success") },
@@ -216,7 +216,7 @@ function notifMeta(
         title: t("notif_support_message_title"),
         body: t("notif_support_message_body", {
           fromLabel: str("fromLabel") || t("support_typing_agents"),
-          preview: str("preview") || "—",
+          preview: str("preview") || "-",
         }),
         href: supportInboxHref({
           isStaff: !!opts?.isSupportStaff,
@@ -245,7 +245,7 @@ function notifMeta(
         title: t("notif_admin_withdrawal_order_title"),
         body: t("notif_admin_withdrawal_order_body", {
           asset,
-          amount: amount || "—",
+          amount: amount || "-",
         }),
         href: str("withdrawalId")
           ? `/admin/withdrawals/${encodeURIComponent(str("withdrawalId"))}`
@@ -264,7 +264,7 @@ function notifMeta(
           );
       return {
         title: t("notif_group_message_title"),
-        body: t("notif_group_message_body", { preview: preview || "—" }),
+        body: t("notif_group_message_body", { preview: preview || "-" }),
         href: gid ? `/app/wallet/groups/${gid}` : "/app/wallet/groups",
         pill: { variant: "processing", label: t("status_ui_processing") },
       };
@@ -315,6 +315,55 @@ function notifMeta(
           : t("notif_group_ops_approved_body_short"),
         href: gid ? `/app/wallet/groups/${gid}` : "/app/wallet/groups",
         pill: { variant: "success", label: t("status_ui_success") },
+      };
+    }
+    case "group_loan_requested": {
+      const gid = str("groupId");
+      const name = str("borrowerName");
+      return {
+        title: t("notif_group_loan_requested_title"),
+        body: t("notif_group_loan_requested_body", {
+          amount,
+          name: name || "-",
+        }),
+        href: gid ? `/app/wallet/groups/${gid}?tab=treasury` : "/app/wallet/groups",
+        pill: { variant: "pending", label: t("status_ui_pending") },
+      };
+    }
+    case "group_loan_approved": {
+      const gid = str("groupId");
+      return {
+        title: t("notif_group_loan_approved_title"),
+        body: t("notif_group_loan_approved_body", { amount }),
+        href: gid ? `/app/wallet/groups/${gid}?tab=treasury` : "/app/wallet/groups",
+        pill: { variant: "success", label: t("status_ui_success") },
+      };
+    }
+    case "group_loan_due": {
+      const gid = str("groupId");
+      return {
+        title: t("notif_group_loan_due_title"),
+        body: t("notif_group_loan_due_body", { amount }),
+        href: gid ? `/app/wallet/groups/${gid}?tab=treasury` : "/app/wallet/groups",
+        pill: { variant: "pending", label: t("status_ui_pending") },
+      };
+    }
+    case "group_vote_open": {
+      const gid = str("groupId");
+      return {
+        title: t("notif_group_vote_open_title"),
+        body: t("notif_group_vote_open_body"),
+        href: gid ? `/app/wallet/groups/${gid}?tab=dialogue` : "/app/wallet/groups",
+        pill: { variant: "processing", label: t("status_ui_processing") },
+      };
+    }
+    case "group_social_aid": {
+      const gid = str("groupId");
+      return {
+        title: t("notif_group_social_aid_title"),
+        body: t("notif_group_social_aid_body", { amount }),
+        href: gid ? `/app/wallet/groups/${gid}?tab=treasury` : "/app/wallet/groups",
+        pill: { variant: "pending", label: t("status_ui_pending") },
       };
     }
     case "kyc_pending":
@@ -370,7 +419,7 @@ function notifMeta(
     case "academy_cohort_invite": {
       const edition =
         str("editionTitleFr") || str("editionTitleEn") || t("academy_title");
-      const inviter = str("inviterLabel") || "—";
+      const inviter = str("inviterLabel") || "-";
       return {
         title: t("notif_academy_cohort_invite_title"),
         body: t("notif_academy_cohort_invite_body", { inviter, edition }),
@@ -379,7 +428,7 @@ function notifMeta(
       };
     }
     case "community_comment": {
-      const preview = str("preview") || "—";
+      const preview = str("preview") || "-";
       return {
         title: t("notif_community_comment_title"),
         body: preview,

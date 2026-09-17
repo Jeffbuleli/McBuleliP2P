@@ -25,7 +25,7 @@ export type GroupFundSummary = {
   interestUsdt: number;
   reserveUsdt: number;
   lentUsdt: number;
-  /** Outstanding internal loans (encours) — same as lentUsdt, informational credit bucket. */
+  /** Outstanding internal loans (encours) - same as lentUsdt, informational credit bucket. */
   creditUsdt: number;
   availableUsdt: number;
   totalShares: number;

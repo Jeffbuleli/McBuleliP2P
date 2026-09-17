@@ -212,6 +212,22 @@ async function tryDisburseLoan(args: {
       },
     });
 
+    try {
+      const { createUserNotification } = await import("@/lib/notifications-service");
+      await createUserNotification({
+        userId: loan.borrowerUserId,
+        kind: "group_loan_approved",
+        payload: {
+          groupId: args.groupId,
+          loanId: loan.id,
+          amount: amountUsdt.toFixed(2),
+          asset: "USDT",
+        },
+      });
+    } catch {
+      // optional
+    }
+
     await insertGroupLoanDecisionMessage({
       groupId: args.groupId,
       actorUserId: args.lastApproverUserId,
@@ -485,17 +501,18 @@ export async function requestMemberLoan(args: {
 
   try {
     const { notifyGroupMembers } = await import("@/lib/group-savings-notifications");
-    const preview = `LOAN_REQUESTED|${args.amountUsdt.toFixed(2)}|${borrowerDisplay}`;
     await notifyGroupMembers({
       groupId: args.groupId,
-      kind: "group_message",
+      kind: "group_loan_requested",
       payload: {
         groupId: args.groupId,
-        messageId: row.id,
-        preview,
-        senderEmail: "",
-        messageType: "system",
+        loanId: row.id,
+        amount: args.amountUsdt.toFixed(2),
+        asset: "USDT",
+        preview: `LOAN_REQUESTED|${args.amountUsdt.toFixed(2)}|${borrowerDisplay}`,
+        borrowerName: borrowerDisplay,
       },
+      onlyRoles: ["admin", "co_admin"],
     });
   } catch {
     // optional

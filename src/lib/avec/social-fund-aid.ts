@@ -308,11 +308,13 @@ export async function requestSocialAid(args: {
     });
     await notifyGroupMembers({
       groupId: args.groupId,
-      kind: "group_message",
+      kind: "group_social_aid",
       excludeUserId: args.requesterUserId,
       payload: {
         groupId: args.groupId,
-        preview: `Social aid vote: ${args.amountUsdt.toFixed(2)} USDT`,
+        amount: args.amountUsdt.toFixed(2),
+        asset: "USDT",
+        requestId: row.id,
       },
     });
   } catch {

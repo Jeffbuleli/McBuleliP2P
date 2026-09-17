@@ -353,6 +353,22 @@ export async function insertAndStartProposal(args: {
     after: { proposalId: row.id, type: args.type, payload: args.payload },
   });
 
+  try {
+    const { notifyGroupMembers } = await import("@/lib/group-savings-notifications");
+    await notifyGroupMembers({
+      groupId: args.groupId,
+      kind: "group_vote_open",
+      excludeUserId: args.authorUserId,
+      payload: {
+        groupId: args.groupId,
+        proposalId: row.id,
+        proposalType: args.type,
+      },
+    });
+  } catch {
+    // optional
+  }
+
   await openProposalVoteFromRow({
     proposalId: row.id,
     groupId: args.groupId,
