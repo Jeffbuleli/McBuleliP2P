@@ -35,7 +35,16 @@ export const avecCls = {
   layoutVue:
     "grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4 md:items-start",
   hubCard:
-    "fd-card block p-3.5 transition active:scale-[0.99] hover:border-[color:var(--fd-primary)]/30",
+    "fd-card block overflow-hidden rounded-2xl border border-[color:var(--fd-primary)]/12 p-0 shadow-sm transition active:scale-[0.99] hover:border-[color:var(--fd-primary)]/35 hover:shadow-md",
+  hubCardBody: "flex items-center gap-3.5 p-3.5",
+  hubCardMeta:
+    "mt-1.5 flex flex-wrap items-center gap-1.5 text-[10px] font-semibold text-[color:var(--fd-muted)]",
+  hubChip:
+    "inline-flex items-center rounded-full bg-[color:var(--fd-mint)]/70 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[color:var(--fd-primary)]",
+  hubCardFoot:
+    "flex items-center justify-between gap-2 border-t border-[color:var(--fd-border)]/80 bg-gradient-to-r from-[color:var(--fd-mint)]/35 to-transparent px-3.5 py-2",
+  hubAvatar:
+    "flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[color:var(--fd-primary)]/20 bg-gradient-to-br from-[color:var(--fd-mint)] to-white text-sm font-black text-[color:var(--fd-primary)] shadow-sm",
 };
 
 export function AvecKpi({

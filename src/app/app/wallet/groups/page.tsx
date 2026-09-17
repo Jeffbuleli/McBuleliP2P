@@ -11,6 +11,7 @@ import {
   type DiscoverGroup,
 } from "@/components/groups/avec-discover-sheet";
 import { AvecProgressRing } from "@/components/groups/avec-charts";
+import { avecCls } from "@/components/groups/avec-ui";
 import { WalletSubpageHeader } from "@/components/wallet/wallet-subpage-header";
 import { ListPagination, useListPagination } from "@/components/ui/list-pagination";
 import { clientErrorText } from "@/lib/client-error-text";
@@ -35,6 +36,40 @@ type Row = {
   memberCount?: number;
   isCreator?: boolean;
 };
+
+function HubAvatar({
+  name,
+  logoUrl,
+}: {
+  name: string;
+  logoUrl?: string | null;
+}) {
+  if (logoUrl) {
+    return (
+      <span className={avecCls.hubAvatar}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={logoUrl} alt="" className="h-full w-full object-cover" />
+      </span>
+    );
+  }
+  return (
+    <span className={avecCls.hubAvatar}>{name.slice(0, 2).toUpperCase()}</span>
+  );
+}
+
+function ChevronRight() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M9 6l6 6-6 6"
+        stroke="currentColor"
+        strokeWidth="2.25"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 
 export default function AvecHubPage() {
   const { t, locale } = useI18n();
@@ -78,10 +113,11 @@ export default function AvecHubPage() {
   const mineSlice = useMemo(() => minePag.slice, [minePag.slice]);
 
   return (
-    <div className="mx-auto w-full max-w-lg space-y-4 pb-8 md:max-w-3xl lg:max-w-5xl">
+    <div className="mx-auto w-full max-w-lg space-y-5 pb-8 md:max-w-3xl lg:max-w-5xl">
       <WalletSubpageHeader
         title={t("group_hub_title")}
         subtitle={t("group_hub_sub")}
+        backHref="/app"
         badge={<AvecHelpTrigger onClick={() => setHelpOpen(true)} />}
         action={
           <Link
@@ -100,88 +136,112 @@ export default function AvecHubPage() {
         </p>
       ) : null}
 
-      <section className="space-y-2">
-        <h2 className="px-0.5 text-[10px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
-          {t("group_hub_mine_title")}
-        </h2>
+      <section className="space-y-2.5">
+        <div className="flex items-end justify-between gap-2 px-0.5">
+          <h2 className="text-[10px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
+            {t("group_hub_mine_title")}
+          </h2>
+          {rows && rows.length > 0 ? (
+            <span className="text-[10px] font-bold tabular-nums text-[color:var(--fd-primary)]">
+              {rows.length}
+            </span>
+          ) : null}
+        </div>
 
         {rows === null ? (
           <p className="text-[color:var(--fd-muted)]">…</p>
         ) : rows.length === 0 ? (
-          <div className="fd-card flex flex-col items-center gap-3 p-8 text-center">
-            <AvecListMark className="h-14 w-14" />
+          <div className="fd-card flex flex-col items-center gap-3 rounded-2xl border border-dashed border-[color:var(--fd-primary)]/25 bg-gradient-to-b from-[color:var(--fd-mint)]/40 to-[color:var(--fd-card)] p-8 text-center">
+            <AvecListMark className="h-14 w-14 text-[color:var(--fd-primary)]" />
             <p className="text-sm font-bold text-[color:var(--fd-text)]">{t("group_hub_empty")}</p>
             <p className="max-w-xs text-[11px] leading-relaxed text-[color:var(--fd-muted)]">
               {t("group_hub_empty_hint")}
             </p>
-            <Link href="/app/wallet/groups/new" className="mt-1 text-sm font-bold text-[color:var(--fd-primary)]">
-              {t("group_hub_create")} →
+            <Link
+              href="/app/wallet/groups/new"
+              className="mt-1 rounded-full bg-[color:var(--fd-primary)] px-4 py-2 text-sm font-bold text-white shadow-sm"
+            >
+              {t("group_hub_create")}
             </Link>
           </div>
         ) : (
           <>
-            <ul className="space-y-2">
-              {mineSlice.map((r) => (
-                <li key={r.groupId}>
-                  <Link
-                    href={`/app/wallet/groups/${r.groupId}`}
-                    className="fd-card block border border-[color:var(--fd-border)] p-3.5 transition hover:border-[color:var(--fd-primary)]/35 active:scale-[0.99]"
-                  >
-                    <div className="flex items-center gap-3">
-                      {r.logoUrl ? (
-                        <span className="flex h-11 w-11 shrink-0 overflow-hidden rounded-full border border-[color:var(--fd-border)]">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={r.logoUrl} alt="" className="h-full w-full object-cover" />
-                        </span>
-                      ) : (
-                        <AvecListMark />
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-bold text-[color:var(--fd-text)]">
-                          {r.name}
-                          {r.isCreator ? (
-                            <span className="ml-1.5 text-[9px] font-bold uppercase text-[color:var(--fd-primary)]">
-                              · {t("group_hub_creator_badge")}
-                            </span>
-                          ) : null}
-                        </p>
-                        <p className="mt-0.5 text-[10px] text-[color:var(--fd-muted)]">
-                          {groupRoleLabel(t, r.role)}
-                          {r.countryCode
-                            ? ` · ${countryShortLabel(locale, r.countryCode)}`
-                            : ""}
-                          {r.nextBillingAt
-                            ? ` · ${new Date(r.nextBillingAt).toLocaleDateString(loc)}`
-                            : ""}
-                        </p>
-                        <p className="mt-1 text-[10px] font-bold text-[color:var(--fd-primary)]">
-                          {r.membershipStatus === "pending"
-                            ? t("group_hub_action_pending")
-                            : r.status === "active"
-                              ? t("group_hub_action_open")
-                              : t("group_hub_action_review")}
-                        </p>
-                      </div>
-                      <div className="flex shrink-0 flex-col items-end gap-1.5">
-                        {r.maxMembers != null && r.memberCount != null ? (
-                          <div className="flex flex-col items-center">
-                            <AvecProgressRing
-                              value={r.memberCount}
-                              max={r.maxMembers}
-                              size={36}
-                              strokeWidth={4}
-                            />
-                            <span className="text-[8px] font-bold tabular-nums text-[color:var(--fd-muted)]">
-                              {r.memberCount}/{r.maxMembers}
-                            </span>
+            <ul className="space-y-3">
+              {mineSlice.map((r) => {
+                const region = r.countryCode
+                  ? countryShortLabel(locale, r.countryCode)
+                  : "";
+                const actionLabel =
+                  r.membershipStatus === "pending"
+                    ? t("group_hub_action_pending")
+                    : r.status === "active"
+                      ? t("group_hub_action_open")
+                      : t("group_hub_action_review");
+                const membersLabel =
+                  r.maxMembers != null && r.memberCount != null
+                    ? `${r.memberCount}/${r.maxMembers}`
+                    : null;
+
+                return (
+                  <li key={r.groupId}>
+                    <Link
+                      href={`/app/wallet/groups/${r.groupId}`}
+                      className={avecCls.hubCard}
+                    >
+                      <div className={avecCls.hubCardBody}>
+                        <HubAvatar name={r.name} logoUrl={r.logoUrl} />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <p className="truncate text-[15px] font-extrabold tracking-tight text-[color:var(--fd-text)]">
+                              {r.name}
+                            </p>
+                            {r.isCreator ? (
+                              <span className={avecCls.hubChip}>
+                                {t("group_hub_creator_badge")}
+                              </span>
+                            ) : null}
                           </div>
-                        ) : null}
-                        <GroupStatusBadge status={r.status} />
+                          <div className={avecCls.hubCardMeta}>
+                            <span className={avecCls.hubChip}>
+                              {groupRoleLabel(t, r.role)}
+                            </span>
+                            {region ? <span>· {region}</span> : null}
+                            {r.nextBillingAt ? (
+                              <span>
+                                · {new Date(r.nextBillingAt).toLocaleDateString(loc)}
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+                        <div className="flex shrink-0 flex-col items-end gap-1.5">
+                          {membersLabel ? (
+                            <div className="flex flex-col items-center">
+                              <AvecProgressRing
+                                value={r.memberCount ?? 0}
+                                max={r.maxMembers ?? 1}
+                                size={40}
+                                strokeWidth={4}
+                              />
+                              <span className="mt-0.5 text-[8px] font-bold tabular-nums text-[color:var(--fd-muted)]">
+                                {membersLabel}
+                              </span>
+                            </div>
+                          ) : null}
+                          <GroupStatusBadge status={r.status} />
+                        </div>
                       </div>
-                    </div>
-                  </Link>
-                </li>
-              ))}
+                      <div className={avecCls.hubCardFoot}>
+                        <span className="text-[11px] font-bold text-[color:var(--fd-primary)]">
+                          {actionLabel}
+                        </span>
+                        <span className="text-[color:var(--fd-primary)]">
+                          <ChevronRight />
+                        </span>
+                      </div>
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
             <ListPagination
               page={minePag.page}
@@ -195,7 +255,7 @@ export default function AvecHubPage() {
         )}
       </section>
 
-      <section className="space-y-2 border-t border-[color:var(--fd-border)] pt-4">
+      <section className="space-y-2.5 border-t border-[color:var(--fd-border)] pt-5">
         <h2 className="px-0.5 text-[10px] font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
           {t("group_discover_title")}
         </h2>
@@ -206,46 +266,42 @@ export default function AvecHubPage() {
         {discover === null ? (
           <p className="text-[color:var(--fd-muted)]">…</p>
         ) : discover.length === 0 ? (
-          <p className="fd-card px-3 py-4 text-center text-xs text-[color:var(--fd-muted)]">
+          <p className="fd-card rounded-2xl px-3 py-5 text-center text-xs text-[color:var(--fd-muted)]">
             {t("group_discover_empty")}
           </p>
         ) : (
           <>
-            <ul className="space-y-2">
+            <ul className="space-y-3">
               {discoverPag.slice.map((g) => {
                 const region = g.countryCode
                   ? countryShortLabel(locale, g.countryCode)
-                  : "";
+                  : t("group_discover_location_fallback");
+                const membersLabel =
+                  g.memberCount != null
+                    ? `${g.memberCount}/${g.maxMembers}`
+                    : null;
+
                 return (
                   <li key={g.groupId}>
                     <button
                       type="button"
                       onClick={() => setSheetGroup(g)}
-                      className="fd-card w-full p-3.5 text-left active:scale-[0.99]"
+                      className={`${avecCls.hubCard} w-full text-left`}
                     >
-                      <div className="flex items-center gap-3">
-                        {g.logoUrl ? (
-                          <span className="flex h-11 w-11 shrink-0 overflow-hidden rounded-full border border-[color:var(--fd-border)]">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={g.logoUrl} alt="" className="h-full w-full object-cover" />
-                          </span>
-                        ) : (
-                          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[color:var(--fd-mint)] text-xs font-black text-[color:var(--fd-primary)]">
-                            {g.name.slice(0, 2).toUpperCase()}
-                          </span>
-                        )}
+                      <div className={avecCls.hubCardBody}>
+                        <HubAvatar name={g.name} logoUrl={g.logoUrl} />
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-bold text-[color:var(--fd-text)]">
+                          <p className="truncate text-[15px] font-extrabold tracking-tight text-[color:var(--fd-text)]">
                             {g.name}
                           </p>
-                          <p className="mt-0.5 truncate text-[10px] text-[color:var(--fd-muted)]">
-                            {region || t("group_discover_location_fallback")}
-                            {g.memberCount != null
-                              ? ` · ${g.memberCount}/${g.maxMembers}`
-                              : ""}
-                          </p>
+                          <div className={avecCls.hubCardMeta}>
+                            <span>{region}</span>
+                            {membersLabel ? (
+                              <span className={avecCls.hubChip}>{membersLabel}</span>
+                            ) : null}
+                          </div>
                         </div>
-                        <span className="shrink-0 rounded-full bg-[color:var(--fd-primary)] px-3 py-1.5 text-[10px] font-bold text-white">
+                        <span className="shrink-0 rounded-full bg-[color:var(--fd-primary)] px-3.5 py-2 text-[10px] font-bold text-white shadow-sm">
                           {t("group_discover_cta")}
                         </span>
                       </div>
