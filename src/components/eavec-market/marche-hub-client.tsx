@@ -1,20 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import {
   EavecMarketCategoryPills,
   EavecMarketListingCard,
+  EavecMarketRayons,
+  eavecMarketCategoryLabel,
 } from "@/components/eavec-market/market-ui";
 import type { EavecMarketCategory } from "@/lib/eavec-market/categories";
 import type { EavecMarketListingRow } from "@/lib/eavec-market/service";
+
+type SortKey = "recent" | "price_asc" | "price_desc";
 
 export function EavecMarcheHubClient() {
   const { locale } = useI18n();
   const fr = locale === "fr";
   const [q, setQ] = useState("");
   const [category, setCategory] = useState<EavecMarketCategory | null>(null);
+  const [sort, setSort] = useState<SortKey>("recent");
   const [listings, setListings] = useState<EavecMarketListingRow[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
@@ -40,22 +45,52 @@ export function EavecMarcheHubClient() {
     return () => clearTimeout(t);
   }, [load]);
 
+  const sorted = useMemo(() => {
+    if (!listings) return null;
+    const copy = [...listings];
+    if (sort === "price_asc") {
+      copy.sort((a, b) => Number(a.price) - Number(b.price));
+    } else if (sort === "price_desc") {
+      copy.sort((a, b) => Number(b.price) - Number(a.price));
+    } else {
+      copy.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+    }
+    return copy;
+  }, [listings, sort]);
+
+  const sectionTitle = category
+    ? eavecMarketCategoryLabel(category, locale)
+    : fr
+      ? "Catalogue"
+      : "Catalog";
+
   return (
     <div className="pb-10">
       <section className="mk-hero mk-rise">
         <div className="mk-hero-inner">
-          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[rgba(244,247,246,0.55)]">
-            e-AVEC
+          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[rgba(247,243,235,0.55)]">
+            e-AVEC · {fr ? "Communauté" : "Community"}
           </p>
           <h1 className="mk-brand">Marché</h1>
           <p className="mk-tagline">
             {fr
-              ? "Le commerce de la communauté — sélection soignée, paiement en Fc."
-              : "Community commerce — curated finds, pay in Fc."}
+              ? "Chaque annonce a un visuel — parcourez les rayons, filtrez, payez en Fc."
+              : "Every listing has a photo — browse aisles, filter, pay in Fc."}
           </p>
-          <Link href="/app/marche/new" className="mk-hero-cta">
-            {fr ? "Mettre en vente" : "List an item"}
-          </Link>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Link href="/app/marche/new" className="mk-hero-cta">
+              {fr ? "Mettre en vente" : "List an item"}
+            </Link>
+            <a
+              href="#mk-catalog"
+              className="inline-flex min-h-12 items-center rounded-full border border-[rgba(247,243,235,0.35)] px-4 text-sm font-bold text-[#f7f3eb]"
+            >
+              {fr ? "Voir le catalogue" : "Browse catalog"}
+            </a>
+          </div>
         </div>
       </section>
 
@@ -73,12 +108,39 @@ export function EavecMarcheHubClient() {
           type="search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder={fr ? "Que cherchez-vous ?" : "What are you looking for?"}
+          placeholder={
+            fr
+              ? "Huile, tomates, couture, téléphone…"
+              : "Oil, tomatoes, sewing, phone…"
+          }
           className="mk-search"
         />
       </div>
 
       <div className="mt-5 space-y-5 px-0.5">
+        <div className="mk-trust-strip mk-rise mk-rise-delay-1">
+          <div className="mk-trust-item">
+            <strong>{fr ? "Photo" : "Photo"}</strong>
+            <span>{fr ? "Référence visuelle" : "Visual reference"}</span>
+          </div>
+          <div className="mk-trust-item">
+            <strong>Fc</strong>
+            <span>{fr ? "Paiement caisse" : "Wallet payment"}</span>
+          </div>
+          <div className="mk-trust-item">
+            <strong>{fr ? "Validé" : "Reviewed"}</strong>
+            <span>{fr ? "Avant mise en ligne" : "Before going live"}</span>
+          </div>
+        </div>
+
+        <div className="mk-rise mk-rise-delay-2">
+          <EavecMarketRayons
+            active={category}
+            onSelect={setCategory}
+            locale={locale}
+          />
+        </div>
+
         <div className="mk-rise mk-rise-delay-2">
           <EavecMarketCategoryPills
             active={category}
@@ -99,16 +161,36 @@ export function EavecMarcheHubClient() {
           </Link>
         </div>
 
-        <div className="mk-rise mk-rise-delay-3">
-          <div className="mb-3 flex items-end justify-between gap-2">
-            <p className="mk-section-label">
-              {fr ? "Sélection" : "Featured"}
-            </p>
-            {listings && listings.length > 0 ? (
-              <p className="text-[11px] font-semibold text-[color:var(--mk-muted)]">
-                {listings.length} {fr ? "annonces" : "listings"}
-              </p>
-            ) : null}
+        <div id="mk-catalog" className="mk-rise mk-rise-delay-3 scroll-mt-4">
+          <div className="mb-2 flex items-end justify-between gap-2">
+            <div>
+              <p className="mk-section-label">{sectionTitle}</p>
+              {sorted && sorted.length > 0 ? (
+                <p className="mt-0.5 text-[11px] font-semibold text-[color:var(--mk-muted)]">
+                  {sorted.length} {fr ? "références" : "items"}
+                </p>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="mb-3 mk-sort">
+            {(
+              [
+                ["recent", fr ? "Récents" : "Newest"],
+                ["price_asc", fr ? "Prix ↑" : "Price ↑"],
+                ["price_desc", fr ? "Prix ↓" : "Price ↓"],
+              ] as const
+            ).map(([key, label]) => (
+              <button
+                key={key}
+                type="button"
+                className="mk-sort-btn"
+                data-active={sort === key ? "true" : "false"}
+                onClick={() => setSort(key)}
+              >
+                {label}
+              </button>
+            ))}
           </div>
 
           {err ? (
@@ -117,7 +199,7 @@ export function EavecMarcheHubClient() {
             </p>
           ) : null}
 
-          {listings === null ? (
+          {sorted === null ? (
             <div className="mk-grid">
               {[0, 1, 2, 3].map((i) => (
                 <div
@@ -125,24 +207,24 @@ export function EavecMarcheHubClient() {
                   className="mk-card-media animate-pulse opacity-60"
                   style={{
                     background:
-                      "linear-gradient(90deg,#d8e4e1 25%,#e8eef0 50%,#d8e4e1 75%)",
+                      "linear-gradient(90deg,#ebe6dc 25%,#f7f3eb 50%,#ebe6dc 75%)",
                     backgroundSize: "200% 100%",
                   }}
                 />
               ))}
             </div>
-          ) : listings.length === 0 ? (
+          ) : sorted.length === 0 ? (
             <div className="mk-empty">
               <p
-                className="font-[family-name:var(--mk-display)] text-xl font-extrabold tracking-tight"
+                className="text-xl font-extrabold tracking-tight"
                 style={{ fontFamily: "var(--mk-display)" }}
               >
                 {fr ? "Le rayon est encore vide" : "The aisle is still empty"}
               </p>
               <p className="max-w-xs text-sm text-[color:var(--mk-muted)]">
                 {fr
-                  ? "Publiez la première annonce — un agent valide avant la mise en ligne."
-                  : "Post the first listing — an agent reviews before it goes live."}
+                  ? "Publiez la première référence — un agent valide avant la mise en ligne."
+                  : "Post the first item — an agent reviews before it goes live."}
               </p>
               <Link href="/app/marche/new" className="mk-btn-primary mt-1 max-w-[14rem]">
                 {fr ? "Publier" : "Publish"}
@@ -150,7 +232,7 @@ export function EavecMarcheHubClient() {
             </div>
           ) : (
             <div className="mk-grid">
-              {listings.map((l, i) => (
+              {sorted.map((l, i) => (
                 <div
                   key={l.id}
                   className="mk-rise"

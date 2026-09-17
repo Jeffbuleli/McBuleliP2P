@@ -31,6 +31,7 @@ export function EavecMarchePublishClient() {
   const [location, setLocation] = useState("");
   const [category, setCategory] = useState<EavecMarketCategory>("other");
   const [kind, setKind] = useState<"product" | "service">("product");
+  const [description, setDescription] = useState("");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -63,6 +64,7 @@ export function EavecMarchePublishClient() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         title,
+        description: description.trim() || null,
         price,
         quantity: Number(quantity) || 1,
         locationLabel: location || null,
@@ -146,6 +148,24 @@ export function EavecMarchePublishClient() {
             onChange={(e) => setTitle(e.target.value)}
             className={field}
             placeholder={fr ? "Ex. Tomates fraîches" : "e.g. Fresh tomatoes"}
+          />
+        </label>
+
+        <label className="block space-y-1.5">
+          <span className="mk-section-label">
+            {fr ? "Description (optionnel)" : "Description (optional)"}
+          </span>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            maxLength={2000}
+            rows={3}
+            className={`${field} min-h-[5.5rem] py-3`}
+            placeholder={
+              fr
+                ? "Qualité, conditionnement, livraison…"
+                : "Quality, packing, delivery…"
+            }
           />
         </label>
 

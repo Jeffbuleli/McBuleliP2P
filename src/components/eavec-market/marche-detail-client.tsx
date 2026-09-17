@@ -6,7 +6,11 @@ import { useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { MarcheChrome } from "@/components/eavec-market/marche-chrome";
 import { EAVEC_MARKET_CATEGORY_EMOJI } from "@/lib/eavec-market/categories";
-import { eavecMarketCategoryLabel } from "@/components/eavec-market/market-ui";
+import {
+  eavecMarketCategoryLabel,
+  marcheListingRef,
+  EavecMarketListingCard,
+} from "@/components/eavec-market/market-ui";
 import type { EavecMarketListingRow } from "@/lib/eavec-market/service";
 import { avecCdf } from "@/lib/avec/display-currency";
 
@@ -15,6 +19,7 @@ export function EavecMarcheDetailClient({ id }: { id: string }) {
   const fr = locale === "fr";
   const router = useRouter();
   const [listing, setListing] = useState<EavecMarketListingRow | null>(null);
+  const [related, setRelated] = useState<EavecMarketListingRow[]>([]);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [cdfBalance, setCdfBalance] = useState<number | null>(null);
@@ -32,6 +37,20 @@ export function EavecMarcheDetailClient({ id }: { id: string }) {
       setListing(data.listing as EavecMarketListingRow);
     })();
   }, [id]);
+
+  useEffect(() => {
+    if (!listing) return;
+    void fetch(
+      `/api/eavec/market/listings?category=${encodeURIComponent(listing.category)}`,
+      { cache: "no-store" },
+    )
+      .then((r) => r.json())
+      .then((d) => {
+        const rows = (d.listings ?? []) as EavecMarketListingRow[];
+        setRelated(rows.filter((x) => x.id !== listing.id).slice(0, 4));
+      })
+      .catch(() => setRelated([]));
+  }, [listing]);
 
   useEffect(() => {
     void fetch("/api/wallet/summary", { cache: "no-store" })
@@ -114,13 +133,31 @@ export function EavecMarcheDetailClient({ id }: { id: string }) {
     listing.status === "available" &&
     listing.quantity >= 1 &&
     (cdfBalance == null || cdfBalance + 1e-9 >= Number(listing.price));
+  const inStock = listing.quantity >= 1 && listing.status === "available";
+  const low = listing.quantity > 0 && listing.quantity <= 3;
+  const ref = marcheListingRef(listing.id, listing.category);
 
   return (
     <div className="pb-28">
       <MarcheChrome fr={fr} title={listing.title} showSell={false} />
 
-      <div className="mk-rise mt-3 overflow-hidden rounded-[1.35rem] bg-[#fff]">
-        <div className="aspect-[3/4] max-h-[70vh] bg-[linear-gradient(145deg,#d8e4e1,#b7c9c4)]">
+      <div className="mk-rise mt-3 overflow-hidden rounded-[1.35rem] border border-[color:var(--mk-line)] bg-[#fff]">
+        <div className="relative aspect-square max-h-[70vh] bg-[linear-gradient(180deg,#fff,#f3eee4)]">
+          {inStock ? (
+            <span
+              className="mk-card-stock"
+              data-low={low ? "true" : "false"}
+              style={{ top: "0.75rem", bottom: "auto" }}
+            >
+              {low
+                ? fr
+                  ? `Reste ${listing.quantity}`
+                  : `${listing.quantity} left`
+                : fr
+                  ? "En stock"
+                  : "In stock"}
+            </span>
+          ) : null}
           {listing.imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -137,9 +174,14 @@ export function EavecMarcheDetailClient({ id }: { id: string }) {
       </div>
 
       <div className="mk-rise mk-rise-delay-1 mt-4 space-y-3 px-0.5">
-        <p className="mk-section-label">
-          {eavecMarketCategoryLabel(listing.category, locale)}
-        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="mk-section-label">
+            {eavecMarketCategoryLabel(listing.category, locale)}
+          </p>
+          <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-bold tracking-wider text-[color:var(--mk-muted)] border border-[color:var(--mk-line)]">
+            {ref}
+          </span>
+        </div>
         <h1
           className="text-[1.65rem] font-extrabold leading-tight tracking-tight text-[color:var(--mk-ink)]"
           style={{ fontFamily: "var(--mk-display)" }}
@@ -148,7 +190,23 @@ export function EavecMarcheDetailClient({ id }: { id: string }) {
         </h1>
         <p className="text-2xl font-black tabular-nums tracking-tight text-[color:var(--mk-ink)]">
           {priceLabel}
+          <span className="ml-2 text-sm font-semibold text-[color:var(--mk-muted)]">
+            · {fr ? "unité" : "unit"}
+          </span>
         </p>
+
+        {listing.description?.trim() ? (
+          <div className="mk-panel">
+            <div className="mk-panel-pad">
+              <p className="mk-section-label mb-2">
+                {fr ? "Description" : "Description"}
+              </p>
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-[color:var(--mk-ink)]">
+                {listing.description.trim()}
+              </p>
+            </div>
+          </div>
+        ) : null}
 
         <div className="mk-panel">
           <div className="mk-panel-pad space-y-2 text-sm">
@@ -175,7 +233,7 @@ export function EavecMarcheDetailClient({ id }: { id: string }) {
               ) : null}
             </p>
             <p className="text-xs text-[color:var(--mk-muted)]">
-              {fr ? "Quantité" : "Qty"} {listing.quantity}
+              {fr ? "Disponible" : "Available"}: {listing.quantity}
             </p>
           </div>
         </div>
@@ -201,6 +259,19 @@ export function EavecMarcheDetailClient({ id }: { id: string }) {
           <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
             {err}
           </p>
+        ) : null}
+
+        {related.length > 0 ? (
+          <div className="pt-2">
+            <p className="mk-section-label mb-3">
+              {fr ? "Dans le même rayon" : "Same aisle"}
+            </p>
+            <div className="mk-grid">
+              {related.map((l) => (
+                <EavecMarketListingCard key={l.id} listing={l} locale={locale} />
+              ))}
+            </div>
+          </div>
         ) : null}
       </div>
 

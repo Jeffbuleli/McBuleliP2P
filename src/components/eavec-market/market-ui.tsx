@@ -28,11 +28,45 @@ const CAT_LABEL_EN: Record<EavecMarketCategory, string> = {
   other: "Other",
 };
 
+const CAT_HINT_FR: Record<EavecMarketCategory, string> = {
+  agriculture: "Vivres & champs",
+  food: "Épicerie & frais",
+  fashion: "Habits & accessoires",
+  services: "Savoir-faire local",
+  home: "Foyer & équipement",
+  tech: "Téléphones & outils",
+  other: "Divers",
+};
+
+const CAT_HINT_EN: Record<EavecMarketCategory, string> = {
+  agriculture: "Crops & produce",
+  food: "Grocery & fresh",
+  fashion: "Clothes & accessories",
+  services: "Local skills",
+  home: "Home & gear",
+  tech: "Phones & tools",
+  other: "Misc",
+};
+
+const CAT_CODE: Record<EavecMarketCategory, string> = {
+  agriculture: "AGR",
+  food: "ALI",
+  fashion: "MOD",
+  services: "SRV",
+  home: "MAI",
+  tech: "TEC",
+  other: "DIV",
+};
+
 export function eavecMarketCategoryLabel(
   cat: EavecMarketCategory,
   locale: string,
 ): string {
   return locale.startsWith("fr") ? CAT_LABEL_FR[cat] : CAT_LABEL_EN[cat];
+}
+
+export function marcheListingRef(id: string, category: EavecMarketCategory): string {
+  return `${CAT_CODE[category]}-${id.replace(/-/g, "").slice(0, 6).toUpperCase()}`;
 }
 
 /** @deprecated Prefer EavecMarketCategoryPills in Marché world */
@@ -47,6 +81,62 @@ export function EavecMarketCategoryGrid({
 }) {
   return (
     <EavecMarketCategoryPills active={active} onSelect={onSelect} locale={locale} />
+  );
+}
+
+export function EavecMarketRayons({
+  active,
+  onSelect,
+  locale = "fr",
+}: {
+  active: string | null;
+  onSelect: (cat: EavecMarketCategory | null) => void;
+  locale?: string;
+}) {
+  const fr = locale.startsWith("fr");
+  const featured: EavecMarketCategory[] = [
+    "food",
+    "agriculture",
+    "fashion",
+    "services",
+  ];
+  return (
+    <div>
+      <div className="mb-2 flex items-end justify-between gap-2">
+        <p className="mk-section-label">{fr ? "Rayons" : "Aisles"}</p>
+        {active ? (
+          <button
+            type="button"
+            className="text-[11px] font-bold text-[color:var(--mk-muted)] underline"
+            onClick={() => onSelect(null)}
+          >
+            {fr ? "Tout voir" : "See all"}
+          </button>
+        ) : null}
+      </div>
+      <div className="mk-rayons">
+        {featured.map((cat) => {
+          const selected = active === cat;
+          return (
+            <button
+              key={cat}
+              type="button"
+              data-active={selected ? "true" : "false"}
+              className="mk-rayon"
+              onClick={() => onSelect(selected ? null : cat)}
+            >
+              <span className="mk-rayon-emoji" aria-hidden>
+                {EAVEC_MARKET_CATEGORY_EMOJI[cat]}
+              </span>
+              <p className="mk-rayon-label">{eavecMarketCategoryLabel(cat, locale)}</p>
+              <p className="mk-rayon-hint">
+                {fr ? CAT_HINT_FR[cat] : CAT_HINT_EN[cat]}
+              </p>
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -98,13 +188,30 @@ export function EavecMarketListingCard({
   listing: EavecMarketListingRow;
   locale?: string;
 }) {
+  const fr = locale.startsWith("fr");
   const price = `${Math.round(Number(listing.price)).toLocaleString(
-    locale.startsWith("fr") ? "fr-FR" : "en-US",
+    fr ? "fr-FR" : "en-US",
   )} Fc`;
+  const inStock = listing.quantity >= 1 && listing.status === "available";
+  const low = listing.quantity > 0 && listing.quantity <= 3;
 
   return (
     <Link href={`/app/marche/${listing.id}`} className="mk-card">
       <div className="mk-card-media">
+        <span className="mk-card-badge">
+          {eavecMarketCategoryLabel(listing.category, locale)}
+        </span>
+        {inStock ? (
+          <span className="mk-card-stock" data-low={low ? "true" : "false"}>
+            {low
+              ? fr
+                ? `Reste ${listing.quantity}`
+                : `${listing.quantity} left`
+              : fr
+                ? "En stock"
+                : "In stock"}
+          </span>
+        ) : null}
         {listing.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={listing.imageUrl} alt="" />
@@ -117,14 +224,15 @@ export function EavecMarketListingCard({
         )}
       </div>
       <div className="mk-card-body">
+        <p className="mk-card-ref">{marcheListingRef(listing.id, listing.category)}</p>
         <p className="mk-card-title">{listing.title}</p>
         <p className="mk-card-price">{price}</p>
-        {listing.sellerRatingCount > 0 ? (
+        {listing.locationLabel ? (
+          <p className="mk-card-meta">{listing.locationLabel}</p>
+        ) : listing.sellerRatingCount > 0 ? (
           <p className="mk-card-meta">
             ★ {listing.sellerRatingAvg?.toFixed(1)} · {listing.sellerRatingCount}
           </p>
-        ) : listing.locationLabel ? (
-          <p className="mk-card-meta">{listing.locationLabel}</p>
         ) : null}
       </div>
     </Link>
