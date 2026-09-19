@@ -120,7 +120,7 @@ export function AmbassadorApplyClient() {
 
   if (!data && !loadErr) {
     return (
-      <div className="mx-auto max-w-lg px-4 py-16 text-center text-sm text-[color:var(--fd-muted)]">
+      <div className="mx-auto max-w-lg sm:max-w-xl md:max-w-2xl py-16 text-center text-sm text-[color:var(--fd-muted)]">
         …
       </div>
     );
@@ -128,7 +128,7 @@ export function AmbassadorApplyClient() {
 
   if (loadErr || !data) {
     return (
-      <div className="mx-auto max-w-lg px-4 py-8">
+      <div className="mx-auto max-w-lg sm:max-w-xl md:max-w-2xl py-8">
         <WalletSubpageHeader title={t("amb_title")} backHref="/app/community/builders" />
         <p className="mt-6 text-sm text-rose-700">{t("amb_load_error")}</p>
       </div>
@@ -138,7 +138,7 @@ export function AmbassadorApplyClient() {
   const { eligibility } = data;
 
   return (
-    <div className="mx-auto max-w-lg px-4 pb-24 pt-2">
+    <div className="mx-auto max-w-lg sm:max-w-xl md:max-w-2xl pb-24 pt-2">
       <WalletSubpageHeader title={t("amb_title")} backHref="/app/community/builders" />
 
       <p className="mt-3 text-base font-bold tracking-tight text-[color:var(--fd-text)]">

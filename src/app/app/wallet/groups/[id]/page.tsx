@@ -313,7 +313,7 @@ export default function AvecDashboardPage() {
   const showSuspended = g.status === "suspended";
 
   return (
-    <div className="mx-auto w-full max-w-lg pb-10 md:max-w-3xl lg:max-w-5xl">
+    <div className="mx-auto w-full max-w-lg pb-10 sm:max-w-xl md:max-w-2xl lg:max-w-3xl">
       <AvecTopBar
         groupName={g.name}
         groupLogoUrl={g.logoUrl}

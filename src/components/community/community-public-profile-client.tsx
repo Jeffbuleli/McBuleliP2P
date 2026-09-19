@@ -203,7 +203,7 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
 
   if (notFound) {
     return (
-      <div className="community-theme mx-auto max-w-lg px-4 py-16 text-center">
+      <div className="community-theme mx-auto max-w-lg sm:max-w-xl md:max-w-2xl py-16 text-center">
         <p className="text-sm text-[#57534e]">
           {fr ? "Profil introuvable" : "Profile not found"}
         </p>
@@ -216,7 +216,7 @@ export function CommunityPublicProfileClient({ handle }: { handle: string }) {
 
   if (!profile) {
     return (
-      <div className="community-theme mx-auto max-w-lg px-4 py-16 text-center text-sm text-[#78716c]">
+      <div className="community-theme mx-auto max-w-lg sm:max-w-xl md:max-w-2xl py-16 text-center text-sm text-[#78716c]">
         …
       </div>
     );

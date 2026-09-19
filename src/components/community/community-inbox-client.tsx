@@ -69,7 +69,7 @@ export function CommunityInboxClient() {
   }, []);
 
   return (
-    <div className="community-theme mx-auto w-full max-w-lg px-4 pb-4 pt-3">
+    <div className="community-theme mx-auto w-full max-w-lg sm:max-w-xl md:max-w-2xl pb-4 pt-3">
       <div className="mb-4 flex items-center justify-between">
         <div>
           <Link href="/app/community" className="text-sm font-semibold text-[#305f33]">

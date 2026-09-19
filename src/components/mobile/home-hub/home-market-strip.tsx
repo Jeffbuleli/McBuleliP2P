@@ -42,7 +42,7 @@ export function HomeMarketStrip({
 
   return (
     <section className="fd-card overflow-hidden p-3">
-      <div className="mb-2 flex items-center justify-between gap-2 px-0.5">
+      <div className="mb-2 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <h2 className="fd-section-title text-sm">{d.market_preview}</h2>
           <span className="fd-live-pill">{d.market_live}</span>

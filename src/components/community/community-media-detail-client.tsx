@@ -132,7 +132,7 @@ export function CommunityMediaDetailClient({
 
   if (notFound) {
     return (
-      <div className="community-theme mx-auto max-w-lg px-4 py-16 text-center text-sm text-[#57534e]">
+      <div className="community-theme mx-auto max-w-lg sm:max-w-xl md:max-w-2xl py-16 text-center text-sm text-[#57534e]">
         {fr ? "Image introuvable" : "Image not found"}
       </div>
     );
@@ -140,7 +140,7 @@ export function CommunityMediaDetailClient({
 
   if (!data) {
     return (
-      <div className="community-theme mx-auto max-w-lg px-4 py-16 text-center text-sm text-[#78716c]">
+      <div className="community-theme mx-auto max-w-lg sm:max-w-xl md:max-w-2xl py-16 text-center text-sm text-[#78716c]">
         …
       </div>
     );
@@ -149,7 +149,7 @@ export function CommunityMediaDetailClient({
   const imgSrc = mediaDisplayUrl(data.media);
 
   return (
-    <div className="community-theme mx-auto w-full max-w-lg px-4 pb-4 pt-3">
+    <div className="community-theme mx-auto w-full max-w-lg sm:max-w-xl md:max-w-2xl pb-4 pt-3">
       <div className="flex items-center justify-between gap-2">
         <Link
           href={`/app/community/post/${postId}`}

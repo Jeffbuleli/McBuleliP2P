@@ -78,7 +78,7 @@ export function CommunityQuestionDetailClient({
 
   if (!question) {
     return (
-      <div className="community-theme mx-auto max-w-lg px-4 py-8 text-center text-sm text-[#78716c]">
+      <div className="community-theme mx-auto max-w-lg sm:max-w-xl md:max-w-2xl py-8 text-center text-sm text-[#78716c]">
         …
       </div>
     );
@@ -87,7 +87,7 @@ export function CommunityQuestionDetailClient({
   const isAuthor = viewerId === question.author.userId;
 
   return (
-    <div className="community-theme mx-auto w-full max-w-lg px-4 pb-4 pt-4">
+    <div className="community-theme mx-auto w-full max-w-lg sm:max-w-xl md:max-w-2xl pb-4 pt-4">
       <Link
         href="/app/community/questions"
         className="text-sm font-semibold text-[#305f33]"

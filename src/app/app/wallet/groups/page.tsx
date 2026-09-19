@@ -113,7 +113,7 @@ export default function AvecHubPage() {
   const mineSlice = useMemo(() => minePag.slice, [minePag.slice]);
 
   return (
-    <div className="mx-auto w-full max-w-lg space-y-5 pb-8 md:max-w-3xl lg:max-w-5xl">
+    <div className="mx-auto w-full max-w-lg space-y-5 pb-8 sm:max-w-xl md:max-w-2xl lg:max-w-3xl">
       <WalletSubpageHeader
         title={t("group_hub_title")}
         subtitle={t("group_hub_sub")}

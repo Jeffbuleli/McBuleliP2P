@@ -9,7 +9,7 @@ export function CommunityBlogDetailClient({ post }: { post: BlogPostDetail }) {
   const fr = locale === "fr";
 
   return (
-    <div className="community-theme mx-auto w-full max-w-lg px-4 pb-4 pt-4">
+    <div className="community-theme mx-auto w-full max-w-lg sm:max-w-xl md:max-w-2xl pb-4 pt-4">
       <Link href="/app/community/blogs" className="text-sm font-semibold text-[#305f33]">
         ← Blogs
       </Link>

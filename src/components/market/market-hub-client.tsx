@@ -107,14 +107,14 @@ function MarketHubInner({
 
   const themeClass =
     panel === "bots"
-      ? "trade-bots-theme -mx-4 rounded-t-3xl px-4 pb-4 pt-3"
+      ? "trade-bots-theme rounded-t-3xl pb-4 pt-3"
       : panel === "futures"
-        ? "trade-futures-theme -mx-4 rounded-t-3xl px-4 pb-4 pt-3"
+        ? "trade-futures-theme rounded-t-3xl pb-4 pt-3"
         : "";
 
   return (
-    <div className="flex flex-col gap-3 pb-2">
-      <header className="px-0.5">
+    <div className="mx-auto flex w-full max-w-lg flex-col gap-3 pb-2 sm:max-w-xl md:max-w-2xl lg:max-w-3xl">
+      <header>
         <h1 className="text-2xl font-black tracking-tight text-[color:var(--fd-text)]">
           {t("market_hub_title")}
         </h1>

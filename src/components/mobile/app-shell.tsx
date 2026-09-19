@@ -81,8 +81,8 @@ export function AppShell({
         </div>
         <div className="flex min-w-0 flex-1 flex-col">
           {showTopBar ? (
-            <div className="sticky top-0 z-40 px-3 pt-2 md:px-4 lg:px-5 lg:pt-4">
-              <div className="fd-app-topbar px-2 py-1.5">
+            <div className="sticky top-0 z-40 px-4 pt-2 sm:px-5 lg:px-6 lg:pt-4">
+              <div className="fd-app-topbar px-1 py-1.5 sm:px-2">
                 <AppTopBar email={email} avatarUrl={avatarUrl} isSupportStaff={isSupportStaff} />
               </div>
             </div>
@@ -90,8 +90,8 @@ export function AppShell({
           <main
             className={`flex-1 ${
               onMarche
-                ? "px-3 pt-0 sm:px-4 md:px-5 lg:mx-auto lg:w-full lg:max-w-6xl lg:px-6 xl:max-w-7xl"
-                : `px-3 sm:px-4 md:px-5 lg:px-6 ${onP2pHub ? "pt-0" : lightMainBg ? "pt-2" : "pt-3"}`
+                ? "px-4 pt-0 sm:px-5 lg:mx-auto lg:w-full lg:max-w-6xl lg:px-6 xl:max-w-7xl"
+                : `px-4 sm:px-5 lg:px-6 ${onP2pHub ? "pt-0" : lightMainBg ? "pt-2" : "pt-3"}`
             } ${onSupport ? "!px-0 !pt-0 flex min-h-0 flex-col" : ""}`}
           >
             {children}

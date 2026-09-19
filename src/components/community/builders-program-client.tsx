@@ -256,7 +256,7 @@ export function BuildersProgramClient() {
 
   if (!data && !loadErr) {
     return (
-      <div className="mx-auto max-w-lg px-4 py-16 text-center text-sm text-[color:var(--fd-muted)]">
+      <div className="mx-auto max-w-lg sm:max-w-xl md:max-w-2xl py-16 text-center text-sm text-[color:var(--fd-muted)]">
         …
       </div>
     );
@@ -264,7 +264,7 @@ export function BuildersProgramClient() {
 
   if (loadErr || !data) {
     return (
-      <div className="mx-auto max-w-lg px-4 py-8">
+      <div className="mx-auto max-w-lg sm:max-w-xl md:max-w-2xl py-8">
         <WalletSubpageHeader title={t("builders_title")} backHref="/app/community" />
         <p className="mt-6 text-sm text-rose-700">{t("builders_load_error")}</p>
       </div>
@@ -273,7 +273,7 @@ export function BuildersProgramClient() {
 
   if (!data.catalog.preview) {
     return (
-      <div className="mx-auto max-w-lg px-4 py-8">
+      <div className="mx-auto max-w-lg sm:max-w-xl md:max-w-2xl py-8">
         <WalletSubpageHeader title={t("builders_title")} backHref="/app/community" />
         <p className="mt-6 text-sm text-[color:var(--fd-muted)]">{t("builders_hidden")}</p>
       </div>
@@ -281,7 +281,7 @@ export function BuildersProgramClient() {
   }
 
   return (
-    <div className="mx-auto max-w-lg px-4 pb-24 pt-2">
+    <div className="mx-auto max-w-lg sm:max-w-xl md:max-w-2xl pb-24 pt-2">
       <WalletSubpageHeader title={t("builders_title")} backHref="/app/community" />
 
       <div className="mt-3">

@@ -25,7 +25,7 @@ export function ProfileScreenHeader({ title }: { title: string }) {
 
   return (
     <>
-      <header className="sticky top-0 z-30 -mx-4 mb-2 border-b border-[rgba(74,103,79,0.12)] bg-[var(--fd-bg)] px-4 pb-3 pt-0 backdrop-blur-md">
+      <header className="sticky top-0 z-30 mb-2 border-b border-[rgba(74,103,79,0.12)] bg-[var(--fd-bg)] pb-3 pt-0 backdrop-blur-md">
         <div className="flex min-h-[44px] items-center justify-between gap-3">
           <h1 className="text-lg font-bold tracking-tight text-[var(--fd-text)]">
             {title}

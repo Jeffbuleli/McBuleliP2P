@@ -326,7 +326,7 @@ export default function WalletPointsPage() {
   }, [claimBp, claimData]);
 
   return (
-    <div className="home-theme wallet-theme home-scroll -mx-4 min-h-[60vh] px-4 pb-10">
+    <div className="home-theme wallet-theme home-scroll mx-auto w-full max-w-lg min-h-[60vh] pb-10 sm:max-w-xl md:max-w-2xl">
       <WalletSubpageHeader title={t("points_title")} backHref="/app/wallet" />
 
       {loadErr ? (

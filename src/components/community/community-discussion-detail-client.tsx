@@ -56,14 +56,14 @@ export function CommunityDiscussionDetailClient({
 
   if (!discussion) {
     return (
-      <div className="community-theme mx-auto max-w-lg px-4 py-16 text-center text-sm text-[#78716c]">
+      <div className="community-theme mx-auto max-w-lg sm:max-w-xl md:max-w-2xl py-16 text-center text-sm text-[#78716c]">
         …
       </div>
     );
   }
 
   return (
-    <div className="community-theme mx-auto w-full max-w-lg px-4 pb-4 pt-3">
+    <div className="community-theme mx-auto w-full max-w-lg sm:max-w-xl md:max-w-2xl pb-4 pt-3">
       <CommunityModuleHeader
         title={fr ? "Discussion" : "Discussion"}
         backHref="/app/community/discussions"

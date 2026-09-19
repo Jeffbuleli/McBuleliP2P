@@ -21,9 +21,9 @@ export function HomeHubView({
   const fr = locale === "fr";
 
   return (
-    <div className="home-theme wallet-theme home-scroll -mx-4 space-y-3 px-4 pb-2">
+    <div className="home-theme wallet-theme home-scroll mx-auto w-full max-w-lg space-y-3 pb-2 sm:max-w-xl md:max-w-2xl lg:max-w-3xl">
       <header className="flex items-start justify-between gap-3 pt-1">
-        <h1 className="text-2xl font-extrabold tracking-tight text-[color:var(--fd-text)]">
+        <h1 className="min-w-0 text-2xl font-extrabold tracking-tight text-[color:var(--fd-text)] sm:text-[1.65rem]">
           {data.greeting}
         </h1>
         {data.showKycCta ? (

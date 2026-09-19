@@ -185,7 +185,7 @@ export function CommunityChatClient({ threadId }: { threadId: string }) {
 
   if (!meta) {
     return (
-      <div className="community-theme mx-auto max-w-lg px-4 py-16 text-center text-sm text-[#78716c]">
+      <div className="community-theme mx-auto max-w-lg sm:max-w-xl md:max-w-2xl py-16 text-center text-sm text-[#78716c]">
         …
       </div>
     );

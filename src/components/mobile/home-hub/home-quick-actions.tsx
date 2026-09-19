@@ -34,15 +34,15 @@ export function HomeQuickActions({
 
   return (
     <>
-      <section className="fd-card p-3" aria-label={fr ? "Actions rapides" : "Quick actions"}>
-        <h2 className="mb-2 px-1 text-xs font-bold uppercase tracking-wide text-[color:var(--fd-muted)]">
+      <section className="fd-card p-3 sm:p-3.5" aria-label={fr ? "Actions rapides" : "Quick actions"}>
+        <h2 className="mb-2.5 text-xs font-bold uppercase tracking-wide text-[color:var(--fd-muted)] sm:mb-3">
           {fr ? "Actions rapides" : "Quick actions"}
         </h2>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-2 sm:gap-2.5 md:gap-3">
           {ACTIONS.map((action) => {
             const isLiveTile = action.id === "lives" && liveActive;
             const label = fr ? action.labelFr : action.labelEn;
-            const tileClass = `relative flex min-h-[64px] flex-col items-center justify-center gap-1 rounded-2xl border px-2 py-2.5 text-center transition active:scale-[0.98] ${
+            const tileClass = `relative flex aspect-square min-w-0 flex-col items-center justify-center gap-1 rounded-[1.15rem] border px-1.5 py-2 text-center transition active:scale-[0.98] sm:gap-1.5 sm:rounded-2xl sm:px-2 sm:py-2.5 ${
               action.accent
                 ? "border-[color:var(--fd-primary)] bg-[color:var(--fd-mint)]"
                 : isLiveTile
@@ -60,7 +60,7 @@ export function HomeQuickActions({
                 >
                   <ActionIcon actionId={action.id} accent={action.accent} live={isLiveTile} />
                   <span
-                    className={`text-[11px] font-extrabold leading-tight ${
+                    className={`max-w-full truncate px-0.5 text-[10px] font-extrabold leading-tight sm:text-[11px] ${
                       action.accent ? "text-[color:var(--fd-primary)]" : "text-[color:var(--fd-text)]"
                     }`}
                   >
@@ -74,13 +74,13 @@ export function HomeQuickActions({
               <Link key={action.id} href={action.href!} className={tileClass}>
                 {isLiveTile ? (
                   <span
-                    className="absolute right-2 top-2 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white"
+                    className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white sm:right-2 sm:top-2"
                     aria-hidden
                   />
                 ) : null}
                 <ActionIcon actionId={action.id} accent={action.accent} live={isLiveTile} />
                 <span
-                  className={`text-[11px] font-extrabold leading-tight ${
+                  className={`max-w-full truncate px-0.5 text-[10px] font-extrabold leading-tight sm:text-[11px] ${
                     action.accent
                       ? "text-[color:var(--fd-primary)]"
                       : isLiveTile
