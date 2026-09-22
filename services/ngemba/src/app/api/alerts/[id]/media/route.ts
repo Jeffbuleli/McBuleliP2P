@@ -43,6 +43,12 @@ export async function POST(req: Request, ctx: Ctx) {
   if (!access.allowed) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
+  if (
+    access.session.status === "closed" ||
+    access.session.status === "cancelled"
+  ) {
+    return NextResponse.json({ error: "session_closed" }, { status: 409 });
+  }
   if (access.session.media.length >= MEDIA_MAX_PER_SESSION) {
     return NextResponse.json({ error: "media_limit" }, { status: 400 });
   }

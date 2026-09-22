@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { decideIncidentAccess, hashIp, logAccess } from "@/lib/access";
-import { actorHasScope } from "@/lib/access/bridge";
 import { readCitizenToken } from "@/lib/citizen/token";
 import { getNgembaObject } from "@/lib/media/r2";
 import { mediaPublicUrl, readMediaFile } from "@/lib/media/store";
@@ -32,23 +31,24 @@ export async function GET(req: Request, ctx: Ctx) {
   }
 
   if (isOps) {
-    const decision = decideIncidentAccess(auth.actor, session, "evidence");
-    const allowed =
-      decision.allowed && actorHasScope(auth.actor, "evidence");
+    // Chat + dossier : tout ops qui peut voir l'incident doit voir les médias.
+    // (evidence était trop strict : security/partner/school → images cassées dans le chat)
+    const decision = decideIncidentAccess(auth.actor, session, "operational");
+    const allowed = decision.allowed;
     logAccess({
       actor: auth.actor,
       resourceType: "alert_media",
       resourceId: mediaId,
       action: "download",
-      scope: "evidence",
+      scope: "operational",
       allowed,
-      reason: allowed ? "ok" : decision.reason || "scope_evidence_required",
+      reason: allowed ? "ok" : decision.reason || "scope_operational_required",
       ipHash: hashIp(clientIp(req)),
       meta: { sessionId: id },
     });
     if (!allowed) {
       return NextResponse.json(
-        { error: "forbidden", reason: "scope_evidence_required" },
+        { error: "forbidden", reason: decision.reason || "forbidden" },
         { status: 403 },
       );
     }

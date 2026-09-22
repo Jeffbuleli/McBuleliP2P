@@ -25,7 +25,14 @@ export const ALLOWED_MEDIA: Record<
   { mimes: string[]; exts: string[] }
 > = {
   photo: {
-    mimes: ["image/jpeg", "image/png", "image/webp"],
+    mimes: [
+      "image/jpeg",
+      "image/jpg",
+      "image/pjpeg",
+      "image/png",
+      "image/x-png",
+      "image/webp",
+    ],
     exts: [".jpg", ".jpeg", ".png", ".webp"],
   },
   audio: {

@@ -351,6 +351,9 @@ export function SessionView({
               viewerRole="citizen"
               discrete={discrete}
               locale={locale}
+              closed={
+                session.status === "closed" || session.status === "cancelled"
+              }
               onMediaChange={() => {
                 void fetch(`/api/alerts/${id}`, { credentials: "include" })
                   .then((r) => r.json())

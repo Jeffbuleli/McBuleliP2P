@@ -22,6 +22,10 @@ export function normalizeMime(raw: string): string {
   if (base === "audio/mp3") return "audio/mpeg";
   if (base === "audio/x-wav" || base === "audio/wave") return "audio/wav";
   if (base === "audio/m4a" || base === "audio/x-m4a") return "audio/mp4";
+  // Some browsers / OS send image/jpg instead of image/jpeg
+  if (base === "image/jpg") return "image/jpeg";
+  if (base === "image/pjpeg") return "image/jpeg";
+  if (base === "image/x-png") return "image/png";
   return base;
 }
 

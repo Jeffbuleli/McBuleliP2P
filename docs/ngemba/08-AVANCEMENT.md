@@ -61,6 +61,10 @@ Cutover : [24-DOMAINE-NGEMBA-RDC.md](./24-DOMAINE-NGEMBA-RDC.md) (DNS / TLS / Re
 4. Bloc B : signatures JGL + relecture avocat
 5. Phase 6 Dispatch Engine
 
+## Plus tard (pas maintenant)
+
+- **Safety Check** (crise collective → « Êtes-vous en sécurité ? » → pont SOS) — vision documentée, **non codée** tant que le pilote SOS/ops n’est pas plus solide : [33-SAFETY-CHECK-FUTURE.md](./33-SAFETY-CHECK-FUTURE.md)
+
 ## Phase 5.2 - livre
 
 - Carte Leaflet/OSM (centroides communes/villes, pas de pins individuels)

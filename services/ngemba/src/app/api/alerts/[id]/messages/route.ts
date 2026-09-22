@@ -48,6 +48,10 @@ export async function POST(req: Request, ctx: Ctx) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
+  if (session.status === "closed" || session.status === "cancelled") {
+    return NextResponse.json({ error: "session_closed" }, { status: 409 });
+  }
+
   let json: unknown;
   try {
     json = await req.json();

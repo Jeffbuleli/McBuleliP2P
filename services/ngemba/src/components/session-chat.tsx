@@ -73,6 +73,7 @@ export function SessionChat({
   discrete = false,
   locale,
   onMediaChange,
+  closed = false,
 }: {
   sessionId: string;
   labels: {
@@ -87,6 +88,8 @@ export function SessionChat({
   locale?: string;
   /** Called after a file is uploaded via chat (refresh media list). */
   onMediaChange?: () => void;
+  /** When true, composer is disabled (dossier clôturé / annulé). */
+  closed?: boolean;
 }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [body, setBody] = useState("");
@@ -135,7 +138,7 @@ export function SessionChat({
 
   async function send() {
     const text = body.trim();
-    if ((!text && !pendingFile) || busy) return;
+    if (closed || (!text && !pendingFile) || busy) return;
     setBusy(true);
     setUploadErr(null);
     try {
@@ -150,14 +153,31 @@ export function SessionChat({
         });
         const upData = await up.json().catch(() => ({}));
         if (!up.ok || !upData.attachment?.id) {
+          const err = String(upData.error || "");
           setUploadErr(
-            upData.error === "media_limit"
+            err === "session_closed"
               ? isFr
-                ? "Limite de fichiers atteinte"
-                : "File limit reached"
-              : isFr
-                ? "Envoi du fichier impossible"
-                : "Could not upload file",
+                ? "Dossier clôturé - plus d'envoi possible"
+                : "Case closed - messaging disabled"
+              : err === "media_limit"
+                ? isFr
+                  ? "Limite de fichiers atteinte"
+                  : "File limit reached"
+                : err === "photo_limit"
+                  ? isFr
+                    ? "Limite de photos atteinte (max 4)"
+                    : "Photo limit reached (max 4)"
+                  : err === "unsupported_media_type"
+                    ? isFr
+                      ? "Format non supporté (JPEG, PNG, WebP)"
+                      : "Unsupported format (JPEG, PNG, WebP)"
+                    : err === "file_too_large"
+                      ? isFr
+                        ? "Fichier trop volumineux (max 10 Mo)"
+                        : "File too large (max 10 MB)"
+                      : isFr
+                        ? "Envoi du fichier impossible"
+                        : "Could not upload file",
           );
           return;
         }
@@ -174,11 +194,17 @@ export function SessionChat({
           mediaId,
         }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (res.ok) {
         setMessages(data.messages ?? []);
         setBody("");
         clearPending();
+      } else if (data.error === "session_closed") {
+        setUploadErr(
+          isFr
+            ? "Dossier clôturé - plus d'envoi possible"
+            : "Case closed - messaging disabled",
+        );
       } else {
         setUploadErr(isFr ? "Message non envoyé" : "Message not sent");
       }
@@ -215,16 +241,26 @@ export function SessionChat({
           <p className={`text-sm font-bold ${titleCls}`}>{labels.chatTitle}</p>
           <span
             className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-              discrete
-                ? "bg-white/10 text-[#c9a0bc]"
-                : "bg-ng-primary-muted text-ng-primary"
+              closed
+                ? "bg-ng-bg text-ng-muted"
+                : discrete
+                  ? "bg-white/10 text-[#c9a0bc]"
+                  : "bg-ng-primary-muted text-ng-primary"
             }`}
           >
-            <span className="size-1.5 animate-pulse rounded-full bg-current" />
-            Live
+            {closed ? null : (
+              <span className="size-1.5 animate-pulse rounded-full bg-current" />
+            )}
+            {closed ? (isFr ? "Clôturé" : "Closed") : "Live"}
           </span>
         </div>
-        <p className={`text-[11px] ${headerMuted}`}>{hint}</p>
+        <p className={`text-[11px] ${headerMuted}`}>
+          {closed
+            ? isFr
+              ? "Dossier clôturé - le chat est en lecture seule. Rouvrir le dossier pour écrire."
+              : "Case closed - chat is read-only. Reopen the case to write."
+            : hint}
+        </p>
       </header>
 
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-3 py-3">
@@ -374,7 +410,7 @@ export function SessionChat({
           />
           <button
             type="button"
-            disabled={busy}
+            disabled={busy || closed}
             onClick={() => fileRef.current?.click()}
             className={
               discrete
@@ -390,18 +426,25 @@ export function SessionChat({
             value={body}
             onChange={(e) => setBody(e.target.value.slice(0, 2000))}
             onKeyDown={onKeyDown}
-            placeholder={labels.chatPlaceholder}
+            placeholder={
+              closed
+                ? isFr
+                  ? "Dossier clôturé"
+                  : "Case closed"
+                : labels.chatPlaceholder
+            }
             rows={2}
             maxLength={2000}
+            disabled={closed}
             className={
               discrete
-                ? "min-h-[2.75rem] flex-1 resize-none rounded-2xl border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-[#f5f0f4] outline-none ring-[#882364] placeholder:text-[#c9a0bc] focus:ring-2"
-                : "min-h-[2.75rem] flex-1 resize-none rounded-2xl border border-[var(--ng-border)] bg-ng-bg px-3 py-2.5 text-sm text-ng-text outline-none ring-ng-primary focus:ring-2"
+                ? "min-h-[2.75rem] flex-1 resize-none rounded-2xl border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-[#f5f0f4] outline-none ring-[#882364] placeholder:text-[#c9a0bc] focus:ring-2 disabled:opacity-50"
+                : "min-h-[2.75rem] flex-1 resize-none rounded-2xl border border-[var(--ng-border)] bg-ng-bg px-3 py-2.5 text-sm text-ng-text outline-none ring-ng-primary focus:ring-2 disabled:opacity-50"
             }
           />
           <button
             type="submit"
-            disabled={busy || (!body.trim() && !pendingFile)}
+            disabled={closed || busy || (!body.trim() && !pendingFile)}
             className={
               discrete
                 ? "inline-flex min-h-11 shrink-0 items-center justify-center rounded-2xl bg-[#882364] px-4 text-sm font-semibold text-white disabled:opacity-50"
