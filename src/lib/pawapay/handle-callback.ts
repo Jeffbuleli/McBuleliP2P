@@ -4,6 +4,11 @@ import { fiatFreshpayTransactions, freshpayWebhookEvents, getDb } from "@/db";
 import { walletLedgerEntries } from "@/db/schema";
 import { cdfPerOneUsd } from "@/lib/fx";
 import type { PawapayNormalizedCallback } from "@/lib/pawapay/types";
+import {
+  normalizePawapayStatusPayload,
+  pawapayCheckDeposit,
+  pawapayCheckPayout,
+} from "@/lib/pawapay/provider";
 import { insertWalletLedgerLines } from "@/lib/wallet-ledger";
 import { creditUserAsset } from "@/lib/wallet-move-assets";
 import { FIAT_FEE_RATE } from "@/lib/wallet-fees";
@@ -16,6 +21,28 @@ const UUID_RE =
 function allowedFiat(currency: string): boolean {
   const c = currency.toUpperCase();
   return c === "CDF" || c === "USD";
+}
+
+/**
+ * Never credit (or refund) on a client-supplied COMPLETED/FAILED alone.
+ * Re-fetch status from PawaPay; fail closed if the provider is unreachable.
+ */
+async function verifyWithPawapay(
+  claimed: PawapayNormalizedCallback,
+): Promise<{ ok: true; payload: PawapayNormalizedCallback } | { ok: false; message: string }> {
+  const remote =
+    claimed.kind === "deposit"
+      ? await pawapayCheckDeposit(claimed.reference)
+      : await pawapayCheckPayout(claimed.reference);
+  if (!remote) {
+    return { ok: false, message: "provider_verify_unavailable" };
+  }
+  const payload = normalizePawapayStatusPayload(claimed.kind, remote, {
+    reference: claimed.reference,
+    currency: claimed.currency || "USD",
+    amount: claimed.amount || "0",
+  });
+  return { ok: true, payload };
 }
 
 async function insertWebhookEvent(args: {
@@ -70,24 +97,32 @@ export async function handlePawapayCallback(
 async function handleDepositCallback(
   args: PawapayNormalizedCallback,
 ): Promise<{ ok: true } | { ok: false; message: string }> {
-  const dedupKey = `deposit:${args.reference}:${args.status}`;
-  const tx = await lookupTx(args.reference);
+  // Claimed COMPLETED must be confirmed by PawaPay API (blocks forged webhooks).
+  let claimed = args;
+  if (args.status === "COMPLETED") {
+    const verified = await verifyWithPawapay(args);
+    if (!verified.ok) return verified;
+    claimed = verified.payload;
+  }
+
+  const dedupKey = `deposit:${claimed.reference}:${claimed.status}`;
+  const tx = await lookupTx(claimed.reference);
 
   // Wallet fiat requires USD/CDF. Hackathon MoMo callbacks sometimes omit currency -
   // fall back to the local payment row (always USD) so we never ACK-and-skip a paid seat.
-  let currency = args.currency;
+  let currency = claimed.currency;
   if (!allowedFiat(currency)) {
     if (tx) {
       await insertWebhookEvent({
         dedupKey,
         kind: "deposit",
-        providerReference: args.reference,
-        status: args.status,
-        currency: args.currency,
-        amount: args.amount,
+        providerReference: claimed.reference,
+        status: claimed.status,
+        currency: claimed.currency,
+        amount: claimed.amount,
         userId: tx.userId ?? null,
         effect: "skipped_currency",
-        rawBody: args.rawBody,
+        rawBody: claimed.rawBody,
       });
       return { ok: true };
     }
@@ -98,7 +133,7 @@ async function handleDepositCallback(
       const [pay] = await db
         .select({ currency: hackathonPayments.currency })
         .from(hackathonPayments)
-        .where(eq(hackathonPayments.reference, args.reference))
+        .where(eq(hackathonPayments.reference, claimed.reference))
         .limit(1);
       if (pay?.currency && allowedFiat(pay.currency)) {
         currency = pay.currency.toUpperCase();
@@ -112,19 +147,19 @@ async function handleDepositCallback(
       await insertWebhookEvent({
         dedupKey,
         kind: "deposit",
-        providerReference: args.reference,
-        status: args.status,
-        currency: args.currency,
-        amount: args.amount,
+        providerReference: claimed.reference,
+        status: claimed.status,
+        currency: claimed.currency,
+        amount: claimed.amount,
         userId: null,
         effect: "skipped_currency",
-        rawBody: args.rawBody,
+        rawBody: claimed.rawBody,
       });
       return { ok: true };
     }
   }
 
-  const payload: PawapayNormalizedCallback = { ...args, currency };
+  const payload: PawapayNormalizedCallback = { ...claimed, currency };
 
   try {
     const db = getDb();
@@ -353,42 +388,50 @@ async function handleDepositCallback(
 async function handlePayoutCallback(
   args: PawapayNormalizedCallback,
 ): Promise<{ ok: true } | { ok: false; message: string }> {
-  const dedupKey = `payout:${args.reference}:${args.status}`;
-  const tx = await lookupTx(args.reference);
+  // Terminal payout statuses (esp. FAILED → refund) must match PawaPay API.
+  let claimed = args;
+  if (args.status === "COMPLETED" || args.status === "FAILED") {
+    const verified = await verifyWithPawapay(args);
+    if (!verified.ok) return verified;
+    claimed = verified.payload;
+  }
+
+  const dedupKey = `payout:${claimed.reference}:${claimed.status}`;
+  const tx = await lookupTx(claimed.reference);
   const userId = tx?.userId ?? null;
 
-  if (!allowedFiat(args.currency)) {
+  if (!allowedFiat(claimed.currency)) {
     await insertWebhookEvent({
       dedupKey,
       kind: "payout",
-      providerReference: args.reference,
-      status: args.status,
-      currency: args.currency,
-      amount: args.amount,
+      providerReference: claimed.reference,
+      status: claimed.status,
+      currency: claimed.currency,
+      amount: claimed.amount,
       userId,
       effect: "skipped_currency",
-      rawBody: args.rawBody,
+      rawBody: claimed.rawBody,
     });
     return { ok: true };
   }
 
   const effect =
-    args.status === "COMPLETED"
+    claimed.status === "COMPLETED"
       ? "payout_completed_logged"
-      : args.status === "FAILED"
+      : claimed.status === "FAILED"
         ? "payout_failed_logged"
         : "payout_non_final";
 
   await insertWebhookEvent({
     dedupKey,
     kind: "payout",
-    providerReference: args.reference,
-    status: args.status,
-    currency: args.currency,
-    amount: args.amount,
+    providerReference: claimed.reference,
+    status: claimed.status,
+    currency: claimed.currency,
+    amount: claimed.amount,
     userId,
     effect,
-    rawBody: args.rawBody,
+    rawBody: claimed.rawBody,
   });
 
   try {
@@ -397,18 +440,21 @@ async function handlePayoutCallback(
       .update(fiatFreshpayTransactions)
       .set({
         status:
-          args.status === "COMPLETED"
+          claimed.status === "COMPLETED"
             ? "COMPLETED"
-            : args.status === "FAILED"
+            : claimed.status === "FAILED"
               ? "FAILED"
               : "PROCESSING",
-        providerTxId: args.providerTxId || undefined,
-        failureCode: args.status === "FAILED" ? args.failureCode : null,
-        failureMessage: args.status === "FAILED" ? args.failureMessage : null,
+        providerTxId: claimed.providerTxId || undefined,
+        failureCode: claimed.status === "FAILED" ? claimed.failureCode : null,
+        failureMessage: claimed.status === "FAILED" ? claimed.failureMessage : null,
         updatedAt: new Date(),
-        completedAt: args.status === "COMPLETED" || args.status === "FAILED" ? new Date() : null,
+        completedAt:
+          claimed.status === "COMPLETED" || claimed.status === "FAILED"
+            ? new Date()
+            : null,
       })
-      .where(eq(fiatFreshpayTransactions.reference, args.reference));
+      .where(eq(fiatFreshpayTransactions.reference, claimed.reference));
   } catch {
     // best-effort
   }
@@ -418,21 +464,21 @@ async function handlePayoutCallback(
       "@/lib/hackathon/promo-claims"
     );
     await applyPromoCashbackPayoutCallback({
-      payoutReference: args.reference,
+      payoutReference: claimed.reference,
       status:
-        args.status === "COMPLETED"
+        claimed.status === "COMPLETED"
           ? "COMPLETED"
-          : args.status === "FAILED"
+          : claimed.status === "FAILED"
             ? "FAILED"
             : "PROCESSING",
-      failureMessage: args.failureMessage,
+      failureMessage: claimed.failureMessage,
     });
   } catch {
     // best-effort - claim may not exist for this payout id
   }
 
-  if (args.status === "FAILED" && tx?.batchId && userId && UUID_RE.test(userId)) {
-    const pocket = args.currency === "USD" ? "USD" : "CDF";
+  if (claimed.status === "FAILED" && tx?.batchId && userId && UUID_RE.test(userId)) {
+    const pocket = claimed.currency === "USD" ? "USD" : "CDF";
     const batchId = tx.batchId;
     const db = getDb();
     try {
@@ -440,15 +486,15 @@ async function handlePayoutCallback(
         const [inserted] = await t
           .insert(freshpayWebhookEvents)
           .values({
-            dedupKey: `payout_refund:${args.reference}:${args.status}`,
+            dedupKey: `payout_refund:${claimed.reference}:${claimed.status}`,
             kind: "payout_refund",
-            providerReference: args.reference,
-            status: args.status,
-            currency: args.currency,
-            amount: args.amount,
+            providerReference: claimed.reference,
+            status: claimed.status,
+            currency: claimed.currency,
+            amount: claimed.amount,
             userId,
             effect: "refunded_gross",
-            rawBody: args.rawBody,
+            rawBody: claimed.rawBody,
           })
           .onConflictDoNothing()
           .returning({ id: freshpayWebhookEvents.id });
@@ -458,7 +504,7 @@ async function handlePayoutCallback(
           .select({ id: walletLedgerEntries.id })
           .from(walletLedgerEntries)
           .where(
-            sql`${walletLedgerEntries.batchId} = ${batchId}::uuid and ${walletLedgerEntries.entryType} = 'fiat_withdraw_refund' and ((${walletLedgerEntries.meta} ->> 'fiatPayoutRef') = ${args.reference} or (${walletLedgerEntries.meta} ->> 'pawapayPayoutId') = ${args.reference})`,
+            sql`${walletLedgerEntries.batchId} = ${batchId}::uuid and ${walletLedgerEntries.entryType} = 'fiat_withdraw_refund' and ((${walletLedgerEntries.meta} ->> 'fiatPayoutRef') = ${claimed.reference} or (${walletLedgerEntries.meta} ->> 'pawapayPayoutId') = ${claimed.reference})`,
           )
           .limit(1);
         if (existing.length > 0) return;
@@ -472,7 +518,7 @@ async function handlePayoutCallback(
           .limit(1);
 
         const grossFromLedger = withdrawRow ? Math.abs(Number(withdrawRow.amount)) : null;
-        const net = Number(args.amount);
+        const net = Number(claimed.amount);
         const refundAmount = grossFromLedger ?? (Number.isFinite(net) && net > 0 ? net : 0);
         if (refundAmount <= 0) return;
 
@@ -487,8 +533,8 @@ async function handlePayoutCallback(
             amount: refundStr,
             feeUsdEquivalent: "0",
             meta: {
-              fiatPayoutRef: args.reference,
-              pawapayPayoutId: args.reference,
+              fiatPayoutRef: claimed.reference,
+              pawapayPayoutId: claimed.reference,
               reason: "payout_failed",
               refunded: grossFromLedger ? "gross" : "net_fallback",
               rail: "pawapay",

@@ -4,7 +4,9 @@ import { fiatFreshpayTransactions, freshpayWebhookEvents, getDb } from "@/db";
 import { walletLedgerEntries } from "@/db/schema";
 import { cdfPerOneUsd } from "@/lib/fx";
 import {
+  freshpayVerifyBestEffort,
   mapFreshpayTransStatus,
+  mapFreshpayVerifyStatus,
 } from "@/lib/freshpay/provider";
 import type { FreshpayCallbackPayload } from "@/lib/freshpay/types";
 import { insertWalletLedgerLines } from "@/lib/wallet-ledger";
@@ -115,17 +117,51 @@ async function handleDepositCallback(args: {
   providerTxId: string;
   failureMessage: string | null;
 }): Promise<{ ok: true } | { ok: false; message: string }> {
-  const dedupKey = `deposit:${args.reference}:${args.txStatus}`;
+  // Never credit on a client-supplied Successful alone — re-check FreshPay.
+  let txStatus = args.txStatus;
+  let amount = args.amount;
+  let currency = args.currency;
+  let providerTxId = args.providerTxId;
+  let failureMessage = args.failureMessage;
+  if (txStatus === "COMPLETED") {
+    const remote = await freshpayVerifyBestEffort({
+      reference: args.reference,
+      providerTxId: args.providerTxId || null,
+    });
+    if (!remote) {
+      return { ok: false, message: "provider_verify_unavailable" };
+    }
+    const verified = mapFreshpayVerifyStatus(remote);
+    if (verified !== "COMPLETED") {
+      txStatus = verified ?? "PROCESSING";
+      failureMessage =
+        remote.Trans_Status_Description ??
+        remote.Status_Description ??
+        failureMessage;
+    } else {
+      if (remote.Amount != null && String(remote.Amount).trim()) {
+        amount = String(remote.Amount);
+      }
+      if (remote.Currency != null && String(remote.Currency).trim()) {
+        currency = String(remote.Currency).toUpperCase();
+      }
+      const remoteTx =
+        remote.Transaction_id ?? remote.PayDRC_Reference ?? null;
+      if (remoteTx) providerTxId = String(remoteTx);
+    }
+  }
+
+  const dedupKey = `deposit:${args.reference}:${txStatus}`;
   const tx = await lookupTx(args.reference);
 
-  if (!allowedFiat(args.currency)) {
+  if (!allowedFiat(currency)) {
     await insertWebhookEvent({
       dedupKey,
       kind: "deposit",
       providerReference: args.reference,
-      status: args.txStatus,
-      currency: args.currency,
-      amount: args.amount,
+      status: txStatus,
+      currency: currency,
+      amount: amount,
       userId: tx?.userId ?? null,
       effect: "skipped_currency",
       rawBody: args.rawBody,
@@ -139,29 +175,29 @@ async function handleDepositCallback(args: {
       .update(fiatFreshpayTransactions)
       .set({
         status:
-          args.txStatus === "COMPLETED"
+          txStatus === "COMPLETED"
             ? "COMPLETED"
-            : args.txStatus === "FAILED"
+            : txStatus === "FAILED"
               ? "FAILED"
               : "PROCESSING",
-        providerTxId: args.providerTxId || undefined,
-        failureMessage: args.txStatus === "FAILED" ? args.failureMessage : null,
+        providerTxId: providerTxId || undefined,
+        failureMessage: txStatus === "FAILED" ? failureMessage : null,
         updatedAt: new Date(),
-        completedAt: args.txStatus === "COMPLETED" || args.txStatus === "FAILED" ? new Date() : null,
+        completedAt: txStatus === "COMPLETED" || txStatus === "FAILED" ? new Date() : null,
       })
       .where(eq(fiatFreshpayTransactions.reference, args.reference));
   } catch {
     // best-effort
   }
 
-  if (args.txStatus !== "COMPLETED") {
+  if (txStatus !== "COMPLETED") {
     await insertWebhookEvent({
       dedupKey,
       kind: "deposit",
       providerReference: args.reference,
-      status: args.txStatus,
-      currency: args.currency,
-      amount: args.amount,
+      status: txStatus,
+      currency: currency,
+      amount: amount,
       userId: tx?.userId ?? null,
       effect: "non_final",
       rawBody: args.rawBody,
@@ -174,9 +210,9 @@ async function handleDepositCallback(args: {
       dedupKey,
       kind: "deposit",
       providerReference: args.reference,
-      status: args.txStatus,
-      currency: args.currency,
-      amount: args.amount,
+      status: txStatus,
+      currency: currency,
+      amount: amount,
       userId: tx?.userId ?? null,
       effect: tx?.kind !== "deposit" ? "wrong_kind" : "no_user",
       rawBody: args.rawBody,
@@ -185,7 +221,7 @@ async function handleDepositCallback(args: {
   }
 
   const initiatedGross = Number(tx.amount);
-  const callbackGross = Number(args.amount || tx.amount);
+  const callbackGross = Number(amount || tx.amount);
   const gross = Math.min(
     Number.isFinite(initiatedGross) && initiatedGross > 0 ? initiatedGross : callbackGross,
     Number.isFinite(callbackGross) && callbackGross > 0 ? callbackGross : initiatedGross,
@@ -195,9 +231,9 @@ async function handleDepositCallback(args: {
       dedupKey,
       kind: "deposit",
       providerReference: args.reference,
-      status: args.txStatus,
-      currency: args.currency,
-      amount: args.amount,
+      status: txStatus,
+      currency: currency,
+      amount: amount,
       userId: tx.userId,
       effect: "invalid_amount",
       rawBody: args.rawBody,
@@ -207,7 +243,7 @@ async function handleDepositCallback(args: {
 
   const net = gross * (1 - FIAT_FEE_RATE);
   const fee = gross - net;
-  const pocket = args.currency === "USD" ? "USD" : "CDF";
+  const pocket = currency === "USD" ? "USD" : "CDF";
   const netStr = fmtWalletAmount(net);
   const feeUsdEq =
     pocket === "USD" ? fmtWalletAmount(fee) : fmtWalletAmount(fee / cdfPerOneUsd());
@@ -221,9 +257,9 @@ async function handleDepositCallback(args: {
           dedupKey,
           kind: "deposit",
           providerReference: args.reference,
-          status: args.txStatus,
-          currency: args.currency,
-          amount: args.amount,
+          status: txStatus,
+          currency: currency,
+          amount: amount,
           userId: tx.userId,
           effect: "credited_fiat",
           rawBody: args.rawBody,
@@ -267,7 +303,7 @@ async function handleDepositCallback(args: {
   await tryAwardReferralFromFiatDeposit({
     userId: tx.userId,
     grossAmount: gross,
-    currency: args.currency,
+    currency: currency,
     feeUsdEquivalentStr: feeUsdEq,
     fiatDepositRef: args.reference,
   });

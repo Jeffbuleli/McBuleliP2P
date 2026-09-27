@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { users } from "@/db/schema";
 import type { WalletAsset } from "@/lib/wallet-types";
 
@@ -6,6 +6,12 @@ import type { WalletAsset } from "@/lib/wallet-types";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type DbLike = any;
 
+/**
+ * Debit a wallet pocket atomically.
+ * Uses `UPDATE … WHERE balance >= amt` so concurrent requests cannot
+ * push the balance negative (TOCTOU / double-spend).
+ * Throws `wallet_insufficient_balance` if the row is not updated.
+ */
 export async function debitUserAsset(
   tx: DbLike,
   userId: string,
@@ -13,32 +19,61 @@ export async function debitUserAsset(
   amtStr: string,
 ) {
   switch (asset) {
-    case "USDT":
-      await tx
+    case "USDT": {
+      const [row] = await tx
         .update(users)
         .set({ balance: sql`${users.balance} - ${amtStr}::numeric` })
-        .where(eq(users.id, userId));
+        .where(
+          and(eq(users.id, userId), sql`${users.balance} >= ${amtStr}::numeric`),
+        )
+        .returning({ id: users.id });
+      if (!row) throw new Error("wallet_insufficient_balance");
       break;
-    case "PI":
-      await tx
+    }
+    case "PI": {
+      const [row] = await tx
         .update(users)
         .set({ piBalance: sql`${users.piBalance} - ${amtStr}::numeric` })
-        .where(eq(users.id, userId));
+        .where(
+          and(
+            eq(users.id, userId),
+            sql`${users.piBalance} >= ${amtStr}::numeric`,
+          ),
+        )
+        .returning({ id: users.id });
+      if (!row) throw new Error("wallet_insufficient_balance");
       break;
+    }
     case "PI_TEST":
       throw new Error("pi_test_asset_not_debitable");
-    case "USD":
-      await tx
+    case "USD": {
+      const [row] = await tx
         .update(users)
         .set({ usdBalance: sql`${users.usdBalance} - ${amtStr}::numeric` })
-        .where(eq(users.id, userId));
+        .where(
+          and(
+            eq(users.id, userId),
+            sql`${users.usdBalance} >= ${amtStr}::numeric`,
+          ),
+        )
+        .returning({ id: users.id });
+      if (!row) throw new Error("wallet_insufficient_balance");
       break;
-    case "CDF":
-      await tx
+    }
+    case "CDF": {
+      const [row] = await tx
         .update(users)
         .set({ cdfBalance: sql`${users.cdfBalance} - ${amtStr}::numeric` })
-        .where(eq(users.id, userId));
+        .where(
+          and(
+            eq(users.id, userId),
+            sql`${users.cdfBalance} >= ${amtStr}::numeric`,
+          ),
+        )
+        .returning({ id: users.id });
+      if (!row) throw new Error("wallet_insufficient_balance");
       break;
+    }
     default:
       throw new Error("asset");
   }

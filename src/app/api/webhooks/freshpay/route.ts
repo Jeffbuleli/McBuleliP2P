@@ -21,7 +21,11 @@ export async function POST(req: Request) {
     const payload = FreshPayProvider.parseCallback(req, body);
     const result = await handleFreshpayCallbackPayload(payload);
     if (!result.ok) {
-      return NextResponse.json({ error: result.message }, { status: 400 });
+      const retryable = result.message === "provider_verify_unavailable";
+      return NextResponse.json(
+        { error: result.message },
+        { status: retryable ? 503 : 400 },
+      );
     }
     return NextResponse.json({ status: "Callback received successfully", data: payload });
   } catch (e) {

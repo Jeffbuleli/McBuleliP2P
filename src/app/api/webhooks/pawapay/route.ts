@@ -26,7 +26,11 @@ export async function POST(req: Request) {
     const payload = PawaPayProvider.parseCallback(req, body);
     const result = await handlePawapayCallback(payload);
     if (!result.ok) {
-      return NextResponse.json({ error: result.message }, { status: 400 });
+      const retryable = result.message === "provider_verify_unavailable";
+      return NextResponse.json(
+        { error: result.message },
+        { status: retryable ? 503 : 400 },
+      );
     }
     return NextResponse.json({ status: "Callback received successfully" });
   } catch (e) {

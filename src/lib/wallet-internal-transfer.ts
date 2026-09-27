@@ -194,7 +194,11 @@ export async function executeInternalTransfer(args: {
       };
     });
     return out;
-  } catch {
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "";
+    if (msg === "wallet_insufficient_balance") {
+      return { ok: false, message: "wallet_insufficient_balance" };
+    }
     return { ok: false, message: "wallet_transfer_failed" };
   }
 }
