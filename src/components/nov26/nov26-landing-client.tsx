@@ -15,6 +15,9 @@ import {
   NOV26_FAQ,
   NOV26_NAV,
   NOV26_PROGRAM,
+  NOV26_PROGRAM_INTRO_EN,
+  NOV26_PROGRAM_INTRO_FR,
+  NOV26_LEARNER_BENEFITS,
   NOV26_TAGLINE_EN,
   NOV26_TAGLINE_FR,
   NOV26_TIME_LABEL_EN,
@@ -39,6 +42,7 @@ function Nov26Section({
   subtitle,
   children,
   band = false,
+  wide = false,
 }: {
   id: string;
   eyebrow?: string;
@@ -46,13 +50,16 @@ function Nov26Section({
   subtitle?: string;
   children: ReactNode;
   band?: boolean;
+  wide?: boolean;
 }) {
   return (
     <section
       id={id}
       className={`scroll-mt-24 py-10 sm:py-12 ${band ? "bg-[color:var(--hk-surface,var(--fd-card))]" : ""}`}
     >
-      <div className="mx-auto max-w-3xl px-4">
+      <div
+        className={`mx-auto px-4 ${wide ? "max-w-4xl" : "max-w-3xl"}`}
+      >
         {eyebrow ? (
           <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[color:var(--hk-accent,var(--fd-primary))]">
             {eyebrow}
@@ -62,7 +69,7 @@ function Nov26Section({
           {title}
         </h2>
         {subtitle ? (
-          <p className="mt-2 max-w-xl text-sm leading-relaxed text-[color:var(--hk-muted,var(--fd-muted))]">
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[color:var(--hk-muted,var(--fd-muted))]">
             {subtitle}
           </p>
         ) : null}
@@ -71,6 +78,16 @@ function Nov26Section({
     </section>
   );
 }
+
+const NOV26_DAY_DATES_FR = ["27 nov.", "28 nov.", "29 nov."] as const;
+const NOV26_DAY_DATES_EN = ["Nov 27", "Nov 28", "Nov 29"] as const;
+
+const NOV26_BENEFIT_MARK: Record<string, string> = {
+  "x-verified": "X",
+  xai: "Grok",
+  cursor: "IDE",
+  business: "Biz",
+};
 
 export function Nov26LandingClient({
   basePath = "/nov26",
@@ -123,6 +140,19 @@ export function Nov26LandingClient({
           </h1>
           <p className="mt-3 max-w-lg text-sm leading-relaxed text-white/90">
             {isFr ? NOV26_TAGLINE_FR : NOV26_TAGLINE_EN}
+          </p>
+          <p className="mt-3 flex flex-wrap gap-2 text-[11px] font-semibold text-white/85">
+            {(isFr
+              ? ["Développeurs", "Entrepreneurs", "Équipes & ONG"]
+              : ["Developers", "Entrepreneurs", "Teams & NGOs"]
+            ).map((chip) => (
+              <span
+                key={chip}
+                className="rounded-md bg-black/20 px-2 py-0.5 ring-1 ring-white/15"
+              >
+                {chip}
+              </span>
+            ))}
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             {NOV26_TOOL_TAGS.map((t) => (
@@ -244,35 +274,97 @@ export function Nov26LandingClient({
       {/* Programme — light cards, not a wall of bullets */}
       <Nov26Section
         id="programme"
+        wide
         eyebrow={isFr ? "Contenu" : "Curriculum"}
         title={isFr ? "Trois soirées" : "Three evenings"}
         subtitle={
-          isFr ? NOV26_DATES_LABEL_FR : NOV26_DATES_LABEL_EN
+          isFr ? NOV26_PROGRAM_INTRO_FR : NOV26_PROGRAM_INTRO_EN
         }
       >
-        <p className="-mt-4 mb-4 text-xs font-medium text-[color:var(--hk-muted,var(--fd-muted))]">
-          {isFr ? NOV26_TIME_LABEL_FR : NOV26_TIME_LABEL_EN}
-          <span className="mx-2">·</span>
-          {isFr ? "Ir Jeff Buleli" : "Ir Jeff Buleli"}
-        </p>
+        <div className="mb-6 flex flex-wrap gap-2">
+          {[
+            isFr ? NOV26_DATES_LABEL_FR : NOV26_DATES_LABEL_EN,
+            isFr ? NOV26_TIME_LABEL_FR : NOV26_TIME_LABEL_EN,
+            isFr ? "Animateur · Ir Jeff Buleli" : "Host · Ir Jeff Buleli",
+          ].map((pill) => (
+            <span
+              key={pill}
+              className="inline-flex rounded-full border border-[color:var(--hk-border,var(--fd-border))] bg-[color:var(--hk-surface,var(--fd-card))] px-3 py-1 text-[11px] font-semibold text-[color:var(--hk-muted,var(--fd-muted))]"
+            >
+              {pill}
+            </span>
+          ))}
+        </div>
         <ul className="grid gap-3 sm:grid-cols-3">
-          {NOV26_PROGRAM.map((day) => (
+          {NOV26_PROGRAM.map((day, idx) => (
             <li
               key={day.day}
-              className="flex flex-col rounded-2xl border border-[color:var(--hk-border,var(--fd-border))] bg-[color:var(--hk-surface,var(--fd-card))] p-4"
+              className="flex flex-col rounded-2xl border border-[color:var(--hk-border,var(--fd-border))] bg-[color:var(--hk-surface,var(--fd-card))] p-4 shadow-[0_10px_28px_-18px_var(--hk-shadow,rgba(0,0,0,0.12))]"
             >
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-[color:var(--hk-accent,var(--fd-primary))]">
-                {isFr ? `Jour ${day.day}` : `Day ${day.day}`}
-              </span>
+              <div className="flex items-start justify-between gap-2">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-[color:var(--hk-accent,var(--fd-primary))]">
+                  {isFr ? `Soirée ${day.day}` : `Evening ${day.day}`}
+                </span>
+                <span className="shrink-0 rounded-lg bg-[color:var(--hk-soft,var(--fd-mint))] px-2 py-0.5 text-[10px] font-bold tabular-nums text-[color:var(--hk-accent,var(--fd-primary))]">
+                  {isFr ? NOV26_DAY_DATES_FR[idx] : NOV26_DAY_DATES_EN[idx]}
+                </span>
+              </div>
               <p className="mt-2 text-sm font-bold leading-snug text-[color:var(--hk-text,var(--fd-text))]">
-                {isFr ? day.labelFr.replace(/^Jour \d · /, "") : day.labelEn.replace(/^Day \d · /, "")}
+                {isFr
+                  ? day.labelFr.replace(/^Jour \d · /, "")
+                  : day.labelEn.replace(/^Day \d · /, "")}
               </p>
-              <p className="mt-2 flex-1 text-xs leading-relaxed text-[color:var(--hk-muted,var(--fd-muted))]">
-                {(isFr ? day.topicsFr : day.topicsEn)[0]}
-              </p>
+              <ul className="mt-3 flex-1 space-y-2 border-t border-[color:var(--hk-border,var(--fd-border))] pt-3 text-xs leading-relaxed text-[color:var(--hk-muted,var(--fd-muted))]">
+                {(isFr ? day.topicsFr : day.topicsEn).map((t) => (
+                  <li key={t} className="flex gap-2">
+                    <span
+                      className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[color:var(--hk-accent,var(--fd-primary))]/15 text-[10px] font-bold text-[color:var(--hk-accent,var(--fd-primary))]"
+                      aria-hidden
+                    >
+                      ✓
+                    </span>
+                    <span>{t}</span>
+                  </li>
+                ))}
+              </ul>
             </li>
           ))}
         </ul>
+        <div className="mt-8 overflow-hidden rounded-2xl border border-[color:var(--hk-accent,var(--fd-primary))]/25 bg-gradient-to-br from-[color:var(--hk-soft,var(--fd-mint))] to-[color:var(--hk-surface,var(--fd-card))] p-4 shadow-[0_10px_28px_-18px_var(--hk-shadow,rgba(0,0,0,0.1))] sm:p-5">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <p className="text-[10px] font-extrabold uppercase tracking-wider text-[color:var(--hk-accent,var(--fd-primary))]">
+              {isFr ? "Avantages apprenants McBuleli" : "McBuleli learner perks"}
+            </p>
+            <p className="text-[11px] font-medium text-[color:var(--hk-muted,var(--fd-muted))]">
+              {isFr
+                ? "Orientation & accès premium (selon éligibilité)"
+                : "Guidance & premium access (eligibility applies)"}
+            </p>
+          </div>
+          <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+            {NOV26_LEARNER_BENEFITS.map((b) => (
+              <li
+                key={b.id}
+                className="flex gap-3 rounded-xl border border-[color:var(--hk-border,var(--fd-border))] bg-[color:var(--hk-page,var(--fd-bg))]/80 p-3.5 backdrop-blur-sm"
+              >
+                <span
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[color:var(--hk-accent,var(--fd-primary))] text-[10px] font-black uppercase tracking-tight text-white"
+                  aria-hidden
+                >
+                  {NOV26_BENEFIT_MARK[b.id] ?? "•"}
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-[color:var(--hk-text,var(--fd-text))]">
+                    {isFr ? b.titleFr : b.titleEn}
+                  </p>
+                  <p className="mt-1 text-xs leading-relaxed text-[color:var(--hk-muted,var(--fd-muted))]">
+                    {isFr ? b.detailFr : b.detailEn}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
       </Nov26Section>
 
       {/* FAQ */}

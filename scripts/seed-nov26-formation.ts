@@ -18,14 +18,14 @@ async function main() {
       titleFr: "27 nov. · Fondations & Vibe Coding",
       titleEn: "Nov 27 · Foundations & Vibe Coding",
       itemsFr: [
-        "Esprit Vibe Coding · Cursor, Claude, Codex",
-        "Cadrage projet app IA",
-        "Premier squelette",
+        "Esprit Vibe Coding : app IA ou outil métier",
+        "Cursor, Claude, Codex — premier flux concret",
+        "Cartographie : IA au quotidien",
       ],
       itemsEn: [
-        "Vibe Coding · Cursor, Claude, Codex",
-        "Scoping your AI app",
-        "First skeleton",
+        "Vibe Coding: AI app or business tool",
+        "Cursor, Claude, Codex — first workflow",
+        "Map AI in everyday work",
       ],
     },
     {
@@ -33,14 +33,14 @@ async function main() {
       titleFr: "28 nov. · Construction",
       titleEn: "Nov 28 · Build",
       itemsFr: [
-        "Itération IA · debug & UX",
-        "Intégrations (auth, API)",
-        "Préparation démo",
+        "Itération : contenu, processus, support client",
+        "Intégrations (données, API, automatisations)",
+        "Entreprise : tâches répétitives",
       ],
       itemsEn: [
-        "AI iteration · debug & UX",
-        "Integrations (auth, APIs)",
-        "Demo prep",
+        "Iteration: content, processes, support",
+        "Integrations (data, APIs, automation)",
+        "Business: repetitive tasks",
       ],
     },
     {
@@ -48,14 +48,14 @@ async function main() {
       titleFr: "29 nov. · Finalisation & démo",
       titleEn: "Nov 29 · Polish & demo",
       itemsFr: [
-        "Finition & documentation",
-        "Démo & Q&A",
-        "Suite (Academy, portfolio)",
+        "Finition, démo, passation équipe",
+        "Démo individuelle / Q&A",
+        "Avantages apprenants (X, xAI, Cursor)",
       ],
       itemsEn: [
-        "Polish & docs",
-        "Demo & Q&A",
-        "Next steps (Academy, portfolio)",
+        "Polish, demo, team handoff",
+        "Individual demo / Q&A",
+        "Learner perks (X, xAI, Cursor)",
       ],
     },
   ];
@@ -64,8 +64,10 @@ async function main() {
     slug,
     nameFr: "Formation IA · Nov 2026",
     nameEn: "AI Training · Nov 2026",
-    taglineFr: "Créez une app avec Cursor, Claude et Codex — en ligne.",
-    taglineEn: "Build an app with Cursor, Claude, and Codex — online.",
+    taglineFr:
+      "Formation pratique — développeurs, entrepreneurs et équipes (Cursor, Claude, Codex).",
+    taglineEn:
+      "Hands-on training — developers, entrepreneurs, and teams (Cursor, Claude, Codex).",
     startDate: new Date("2026-11-27T18:30:00.000Z"),
     endDate: new Date("2026-11-29T21:30:00.000Z"),
     venue: "Google Meet",

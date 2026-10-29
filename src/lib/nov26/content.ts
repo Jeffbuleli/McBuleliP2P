@@ -16,9 +16,63 @@ export const NOV26_TITLE_EN =
   "Build an app · Artificial intelligence";
 
 export const NOV26_TAGLINE_FR =
-  "Formation pratique en ligne avec Cursor, Claude et Codex. Devenez créateur de solutions numériques.";
+  "Formation pratique en ligne avec Cursor, Claude et Codex — développeurs, entrepreneurs et équipes qui veulent améliorer leur quotidien avec l'IA.";
 export const NOV26_TAGLINE_EN =
-  "Hands-on online training with Cursor, Claude, and Codex. Become a builder of digital solutions.";
+  "Hands-on online training with Cursor, Claude, and Codex — for developers, entrepreneurs, and teams leveling up everyday work with AI.";
+
+/** Sous-titre section Programme (Contenu · Trois soirées). */
+export const NOV26_PROGRAM_INTRO_FR =
+  "Pas seulement du code : automatiser, produire, communiquer et servir vos clients mieux — avec des outils que vous gardez après la formation.";
+export const NOV26_PROGRAM_INTRO_EN =
+  "Not just coding: automate, create, communicate, and serve clients better — with tools you keep after the training.";
+
+export type Nov26LearnerBenefit = {
+  id: string;
+  titleFr: string;
+  titleEn: string;
+  detailFr: string;
+  detailEn: string;
+};
+
+/** Avantages McBuleli / partenaires (orientation + accès premium RS / outils). */
+export const NOV26_LEARNER_BENEFITS: Nov26LearnerBenefit[] = [
+  {
+    id: "x-verified",
+    titleFr: "Compte X (vérifié)",
+    titleEn: "X (verified account)",
+    detailFr:
+      "Accompagnement pour renforcer votre présence pro : badge vérifié, bonnes pratiques de publication et visibilité auprès de votre audience.",
+    detailEn:
+      "Guidance to strengthen your professional presence: verified badge, publishing best practices, and visibility with your audience.",
+  },
+  {
+    id: "xai",
+    titleFr: "xAI & assistants",
+    titleEn: "xAI & assistants",
+    detailFr:
+      "Découvrir Grok / xAI et les assistants modernes pour veille, réponses clients et contenu — au-delà du simple chat.",
+    detailEn:
+      "Explore Grok / xAI and modern assistants for monitoring, customer replies, and content — beyond basic chat.",
+  },
+  {
+    id: "cursor",
+    titleFr: "Cursor & Codex",
+    titleEn: "Cursor & Codex",
+    detailFr:
+      "Workflow premium Cursor + Claude + Codex : accélérer sites, apps, docs et prototypes sans équipe technique complète.",
+    detailEn:
+      "Premium Cursor + Claude + Codex workflow: ship sites, apps, docs, and prototypes without a full dev team.",
+  },
+  {
+    id: "business",
+    titleFr: "Entreprises & services",
+    titleEn: "Business & services",
+    detailFr:
+      "Cas concrets : devis, FAQ, suivi client, mini-outils métier — pour PME, ONG, commerces et indépendants, pas uniquement les devs.",
+    detailEn:
+      "Real cases: quotes, FAQ, client follow-up, small business tools — for SMEs, NGOs, shops, and freelancers, not devs only.",
+  },
+];
 
 export type Nov26ProgramDay = {
   day: number;
@@ -34,14 +88,14 @@ export const NOV26_PROGRAM: Nov26ProgramDay[] = [
     labelFr: "Jour 1 · Fondations & Vibe Coding",
     labelEn: "Day 1 · Foundations & Vibe Coding",
     topicsFr: [
-      "Esprit Vibe Coding et cadrage du projet app IA",
-      "Cursor, Claude, Codex : workflow concret",
-      "Premier squelette fonctionnel",
+      "Esprit Vibe Coding : app IA ou outil métier (pas que les développeurs)",
+      "Cursor, Claude, Codex — premier flux de travail concret",
+      "Cartographie : où l'IA améliore votre service au quotidien",
     ],
     topicsEn: [
-      "Vibe Coding mindset and scoping your AI app",
-      "Cursor, Claude, Codex: a practical workflow",
-      "First working skeleton",
+      "Vibe Coding mindset: AI app or business tool (not devs only)",
+      "Cursor, Claude, Codex — first concrete workflow",
+      "Map where AI improves your everyday service",
     ],
   },
   {
@@ -49,14 +103,14 @@ export const NOV26_PROGRAM: Nov26ProgramDay[] = [
     labelFr: "Jour 2 · Construction",
     labelEn: "Day 2 · Build",
     topicsFr: [
-      "Itération avec l'IA (debug, tests, UX)",
-      "Intégrations utiles (auth, données, API)",
-      "Bonnes pratiques déploiement",
+      "Itération IA : contenu, processus, support client",
+      "Intégrations utiles (données, API, automatisations légères)",
+      "Entreprise : gagner du temps sur tâches répétitives",
     ],
     topicsEn: [
-      "Iterating with AI (debug, tests, UX)",
-      "Useful integrations (auth, data, APIs)",
-      "Deployment best practices",
+      "AI iteration: content, processes, customer support",
+      "Useful integrations (data, APIs, light automation)",
+      "Business: save time on repetitive tasks",
     ],
   },
   {
@@ -64,14 +118,14 @@ export const NOV26_PROGRAM: Nov26ProgramDay[] = [
     labelFr: "Jour 3 · Finalisation & démo",
     labelEn: "Day 3 · Polish & demo",
     topicsFr: [
-      "Finition produit et documentation",
-      "Démo individuelle / Q&A",
-      "Prochaines étapes (portfolio, McBuleli Academy)",
+      "Finition : doc, démo, passation à votre équipe",
+      "Démo individuelle / Q&A (app ou cas métier)",
+      "Suite : avantages apprenants (X, xAI, Cursor) & McBuleli Academy",
     ],
     topicsEn: [
-      "Product polish and documentation",
-      "Individual demo / Q&A",
-      "Next steps (portfolio, McBuleli Academy)",
+      "Polish: docs, demo, handoff to your team",
+      "Individual demo / Q&A (app or business case)",
+      "Next: learner perks (X, xAI, Cursor) & McBuleli Academy",
     ],
   },
 ];
@@ -96,8 +150,14 @@ export const NOV26_FAQ: Nov26FaqItem[] = [
   {
     qFr: "Faut-il déjà savoir coder ?",
     qEn: "Do I need to code already?",
-    aFr: "Non. Niveau débutant bienvenu : on construit pas à pas avec l'IA (Vibe Coding). Un ordinateur stable et une connexion internet suffisent.",
-    aEn: "No. Beginners welcome: we build step by step with AI (Vibe Coding). A stable computer and internet are enough.",
+    aFr: "Non. Débutants, entrepreneurs et équipes métier bienvenus : on avance pas à pas avec l'IA (Vibe Coding). Un ordinateur stable et internet suffisent.",
+    aEn: "No. Beginners, entrepreneurs, and business teams welcome: we move step by step with AI (Vibe Coding). A stable computer and internet are enough.",
+  },
+  {
+    qFr: "C'est réservé aux développeurs ?",
+    qEn: "Is this developers only?",
+    aFr: "Non. L'objectif est d'améliorer votre activité (service client, contenu, processus) avec Cursor, Claude et Codex — avec ou sans bagage technique.",
+    aEn: "No. The goal is to improve your work (support, content, processes) with Cursor, Claude, and Codex — with or without a technical background.",
   },
   {
     qFr: "Comment se déroule la formation ?",
