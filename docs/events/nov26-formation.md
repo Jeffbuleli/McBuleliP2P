@@ -14,10 +14,11 @@ Inscription + Mobile Money : même tunnel que le hackathon (`hackathon_editions`
    ```bash
    npx tsx scripts/seed-nov26-formation.ts
    ```
-3. Ajouter dans `ops/vps/.env` :
+3. Ajouter dans `ops/vps/.env` (server-only, ne pas committer) :
    ```bash
-   NOV26_GOOGLE_MEET_URL=https://meet.google.com/…
+   NOV26_GOOGLE_MEET_URL=https://meet.google.com/xxx-xxxx-xxx
    ```
+   Puis redémarrer le conteneur web (`docker compose restart web` dans `ops/vps`).
 4. Seed édition :
    ```bash
    bash ops/vps/seed-nov26-formation.sh
@@ -27,6 +28,30 @@ Inscription + Mobile Money : même tunnel que le hackathon (`hackathon_editions`
 ## Emails
 
 Pour l’édition `nov26`, les e-mails réservation / rappel / confirmation utilisent le copy **formation** (Google Meet, `/nov26/espace`) — pas Silikin Village.
+
+**Après paiement** (`sendHackathonTicketEmail`) :
+
+- Objet : *Inscription confirmée - Formation IA · Nov 2026*
+- Bloc pro **Google Meet** (27–29 nov, 19h30 GMT+1) + bouton + QR pass
+- Envoyé **uniquement** à l’e-mail d’inscription (`reg.email`)
+
+Renvoyer aux déjà payés (après avoir défini `NOV26_GOOGLE_MEET_URL`) :
+
+```bash
+npx tsx scripts/resend-nov26-paid-confirmation-emails.ts --dry-run
+npx tsx scripts/resend-nov26-paid-confirmation-emails.ts
+```
+
+## Sécurité d’accès
+
+| Couche | Comportement |
+|--------|----------------|
+| **Espace** `/nov26/espace` | Connexion McBuleli obligatoire ; inscription liée au `userId` |
+| **Google Meet** | Affiché seulement si `paymentStatus = paid` **et** e-mail du compte = e-mail d’inscription |
+| **E-mail confirmation** | Meet + QR ; texte « accès nominatif », ne pas transférer |
+| **Pass QR** | Ouverture réservée au titulaire du compte / e-mail (comme hackathon) |
+
+Google Meet lui-même ne vérifie pas McBuleli : configurer la salle (ex. accès Google connecté / salle restreinte) côté Google si besoin renforcé.
 
 ## Parcours participant
 

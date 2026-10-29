@@ -26,6 +26,8 @@ type Props = {
   ticketCode: string | null;
   payUrl: string | null;
   meetUrl: string | null;
+  registrationEmail?: string | null;
+  accountEmailMatchesRegistration?: boolean;
 };
 
 function ProgramBlock({ isFr }: { isFr: boolean }) {
@@ -63,6 +65,8 @@ export function Nov26EspaceClient({
   ticketCode,
   payUrl,
   meetUrl,
+  registrationEmail,
+  accountEmailMatchesRegistration = true,
 }: Props) {
   const { locale } = useI18n();
   const isFr = locale === "fr";
@@ -162,14 +166,27 @@ export function Nov26EspaceClient({
                   : "Join each evening at 7:30 PM GMT+1 via Google Meet."}
               </p>
               {meetUrl ? (
-                <a
-                  href={meetUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-4 inline-flex w-full justify-center rounded-xl bg-[color:var(--fd-primary)] px-5 py-3 text-sm font-extrabold text-white shadow-sm hover:bg-[color:var(--fd-primary-dark)] sm:w-auto"
-                >
-                  {isFr ? "Rejoindre Google Meet" : "Join Google Meet"}
-                </a>
+                <>
+                  <a
+                    href={meetUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 inline-flex w-full justify-center rounded-xl bg-[color:var(--fd-primary)] px-5 py-3 text-sm font-extrabold text-white shadow-sm hover:bg-[color:var(--fd-primary-dark)] sm:w-auto"
+                  >
+                    {isFr ? "Rejoindre Google Meet" : "Join Google Meet"}
+                  </a>
+                  <p className="mt-3 text-[11px] leading-relaxed text-[color:var(--fd-muted)]">
+                    {isFr
+                      ? `Lien personnel · 27–29 nov · 19h30 GMT+1 · réservé au compte ${registrationEmail ?? displayName}. Ne partagez pas ce lien publiquement.`
+                      : `Personal link · Nov 27–29 · 7:30 PM GMT+1 · for account ${registrationEmail ?? displayName} only. Do not share publicly.`}
+                  </p>
+                </>
+              ) : !accountEmailMatchesRegistration ? (
+                <p className="mt-3 text-xs leading-relaxed text-amber-800 dark:text-amber-200">
+                  {isFr
+                    ? `Pour afficher Google Meet, connectez-vous avec l'e-mail d'inscription (${registrationEmail ?? "—"}). Compte actuel : ${displayName}.`
+                    : `To show Google Meet, sign in with your registration email (${registrationEmail ?? "—"}). Current account: ${displayName}.`}
+                </p>
               ) : (
                 <p className="mt-3 text-xs leading-relaxed text-[color:var(--fd-muted)]">
                   {isFr

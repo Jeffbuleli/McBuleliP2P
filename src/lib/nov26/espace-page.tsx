@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Nov26EspaceClient } from "@/components/nov26/nov26-espace-client";
 import { LandingTopBar } from "@/components/landing/landing-top-bar";
+import { canonicalEmailForDedup } from "@/lib/auth/email-normalize";
 import { getNov26GoogleMeetUrl, NOV26_TAGLINE_FR } from "@/lib/nov26/content";
 import { loadNov26HubForUser } from "@/lib/nov26/hub";
 import { getSessionUser } from "@/lib/session-user";
@@ -35,7 +36,13 @@ export async function Nov26EspacePage({ basePath, authReturnPath }: EspaceProps)
   }
 
   const hub = await loadNov26HubForUser(user.id);
-  const meetUrl = hub?.paymentStatus === "paid" ? getNov26GoogleMeetUrl() : null;
+  const emailAligned =
+    hub &&
+    canonicalEmailForDedup(user.email) === canonicalEmailForDedup(hub.email);
+  const meetUrl =
+    hub?.paymentStatus === "paid" && emailAligned
+      ? getNov26GoogleMeetUrl()
+      : null;
 
   return (
     <div className="min-h-dvh">
@@ -50,6 +57,8 @@ export async function Nov26EspacePage({ basePath, authReturnPath }: EspaceProps)
         ticketCode={hub?.ticketCode ?? null}
         payUrl={hub?.payUrl ?? null}
         meetUrl={meetUrl}
+        registrationEmail={hub?.email ?? null}
+        accountEmailMatchesRegistration={emailAligned !== false}
       />
     </div>
   );

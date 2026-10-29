@@ -22,6 +22,11 @@ import {
   nov26ScheduleLabel,
   nov26VenueLabel,
 } from "@/lib/nov26/email-copy";
+import { getNov26GoogleMeetUrl } from "@/lib/nov26/content";
+import {
+  nov26FormationSecurityBlurb,
+  renderNov26MeetAccessEmailHtml,
+} from "@/lib/nov26/meet-email-card";
 
 /** Always https absolute - never path-only (breaks mail clients as http:///…). */
 function absolutePayUrl(token: string): string {
@@ -275,6 +280,7 @@ export async function sendHackathonTicketEmail(args: {
     ? (edition?.nameFr ?? "McBuleli Hackathon")
     : (edition?.nameEn ?? "McBuleli Hackathon");
   const formation = isNov26Edition(edition);
+  const meetUrl = formation ? getNov26GoogleMeetUrl() : null;
 
   const subject = isFr
     ? formation
@@ -284,19 +290,32 @@ export async function sendHackathonTicketEmail(args: {
       ? `Registration confirmed - ${editionName}`
       : `Your official ticket - ${editionName}`;
 
-  const extraHtml = renderHackathonTicketQrCardHtml({
-    ticketUrl,
-    ticketCode: reg.ticketCode,
-    isFr,
-    hint: formation
-      ? isFr
-        ? "Preuve d'inscription · sessions sur Google Meet via votre espace formation."
-        : "Proof of registration · sessions on Google Meet via your training hub."
-      : undefined,
-  });
+  const extraHtml = [
+    renderHackathonTicketQrCardHtml({
+      ticketUrl,
+      ticketCode: reg.ticketCode,
+      isFr,
+      hint: formation
+        ? isFr
+          ? "Preuve d'inscription · sessions sur Google Meet (lien ci-dessous et dans votre espace)."
+          : "Proof of registration · Google Meet sessions (link below and in your hub)."
+        : undefined,
+    }),
+    formation && meetUrl
+      ? renderNov26MeetAccessEmailHtml({
+          meetUrl,
+          recipientEmail: reg.email,
+          isFr,
+        })
+      : "",
+  ].join("");
 
-  const securityFr = `Sécurité : ce ticket est réservé au titulaire. Seul un compte McBuleli connecté avec l'email ${reg.email} peut l'ouvrir. Un lien partagé ne suffit pas.`;
-  const securityEn = `Security: this ticket is owner-only. Only a McBuleli account signed in as ${reg.email} can open it. A shared link is not enough.`;
+  const securityFr = formation
+    ? nov26FormationSecurityBlurb(true, reg.email)
+    : `Sécurité : ce ticket est réservé au titulaire. Seul un compte McBuleli connecté avec l'email ${reg.email} peut l'ouvrir. Un lien partagé ne suffit pas.`;
+  const securityEn = formation
+    ? nov26FormationSecurityBlurb(false, reg.email)
+    : `Security: this ticket is owner-only. Only a McBuleli account signed in as ${reg.email} can open it. A shared link is not enough.`;
 
   const { html, text } = renderMcBuleliEmail({
     locale: isFr ? "fr" : "en",
@@ -307,16 +326,24 @@ export async function sendHackathonTicketEmail(args: {
       subject,
       preheader: formation
         ? isFr
-          ? `Paiement confirmé · Espace formation · ${nov26ScheduleLabel(true)}`
-          : `Payment confirmed · Training hub · ${nov26ScheduleLabel(false)}`
+          ? meetUrl
+            ? `Paiement confirmé · Google Meet · ${nov26ScheduleLabel(true)}`
+            : `Paiement confirmé · Espace formation · ${nov26ScheduleLabel(true)}`
+          : meetUrl
+            ? `Payment confirmed · Google Meet · ${nov26ScheduleLabel(false)}`
+            : `Payment confirmed · Training hub · ${nov26ScheduleLabel(false)}`
         : isFr
           ? `Paiement confirmé · Ticket ${reg.ticketCode}. Accès exclusif à votre email McBuleli.`
           : `Payment confirmed · Ticket ${reg.ticketCode}. Exclusive access via your McBuleli email.`,
       title: isFr ? `Bienvenue ${reg.firstName}` : `Welcome ${reg.firstName}`,
       body: formation
         ? isFr
-          ? `Votre place à ${editionName} est confirmée (${nov26DateLabel(true)}, ${nov26ScheduleLabel(true)}). Ouvrez votre espace pour le lien Google Meet et le support. ${securityFr}`
-          : `Your seat for ${editionName} is confirmed (${nov26DateLabel(false)}, ${nov26ScheduleLabel(false)}). Open your hub for the Google Meet link and support. ${securityEn}`
+          ? meetUrl
+            ? `Votre place à ${editionName} est confirmée (${nov26DateLabel(true)}, ${nov26ScheduleLabel(true)}). Utilisez le bouton Google Meet ci-dessous ou votre espace mcbuleli.com/nov26/espace (connexion avec ${reg.email}). ${securityFr}`
+            : `Votre place à ${editionName} est confirmée (${nov26DateLabel(true)}, ${nov26ScheduleLabel(true)}). Ouvrez votre espace pour le lien Google Meet et le support. ${securityFr}`
+          : meetUrl
+            ? `Your seat for ${editionName} is confirmed (${nov26DateLabel(false)}, ${nov26ScheduleLabel(false)}). Use the Google Meet button below or your hub at mcbuleli.com/nov26/espace (sign in as ${reg.email}). ${securityEn}`
+            : `Your seat for ${editionName} is confirmed (${nov26DateLabel(false)}, ${nov26ScheduleLabel(false)}). Open your hub for the Google Meet link and support. ${securityEn}`
         : isFr
           ? `Votre inscription à ${editionName} est confirmée. Conservez ce message et votre ticket QR (code ${reg.ticketCode}) - ils vous seront demandés à l'entrée du Silikin Village. ${securityFr}`
           : `Your registration for ${editionName} is confirmed. Keep this email and your QR ticket (code ${reg.ticketCode}) - you will need them at the Silikin Village entrance. ${securityEn}`,
@@ -348,6 +375,9 @@ export async function sendHackathonTicketEmail(args: {
         value: formation ? nov26PackLabel(isFr) : hackathonPackLabel(isFr, 100),
       },
       { label: isFr ? "Code ticket" : "Ticket code", value: reg.ticketCode },
+      ...(formation && meetUrl
+        ? [{ label: "Google Meet", value: meetUrl }]
+        : []),
       {
         label: isFr ? "Accès ticket" : "Ticket access",
         value: isFr
