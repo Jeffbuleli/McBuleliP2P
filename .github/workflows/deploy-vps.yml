@@ -35,6 +35,10 @@ jobs:
             REPO="${{ secrets.VPS_REPO_DIR }}"
             REPO="${REPO:-/opt/mcbuleli}"
             if [[ ! -d "$REPO/.git" ]]; then
+              if [[ -e "$REPO" ]] && [[ -n "$(ls -A "$REPO" 2>/dev/null || true)" ]]; then
+                echo "ERROR: $REPO exists but is not a git checkout (fix on VPS or set VPS_REPO_DIR)." >&2
+                exit 1
+              fi
               mkdir -p "$(dirname "$REPO")"
               git clone --depth 1 -b main https://github.com/Jeffbuleli/McBuleliP2P.git "$REPO"
             fi
