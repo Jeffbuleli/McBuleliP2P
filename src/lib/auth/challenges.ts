@@ -1,6 +1,7 @@
 import { and, eq, gt, isNull } from "drizzle-orm";
 import { authChallenges, getDb } from "@/db";
 import { hashToken, randomToken } from "@/lib/auth/crypto";
+import { HACKATHON_EMAIL_VERIFY_DAYS } from "@/lib/hackathon/constants";
 
 export type AuthChallengePurpose =
   | "email_verify"
@@ -12,6 +13,20 @@ export type AuthChallengePurpose =
   | "passkey_register"
   | "passkey_login"
   | "passkey_step_up";
+
+function challengeTtlMinutes(args: {
+  purpose: AuthChallengePurpose;
+  meta?: Record<string, unknown> | null;
+}): number {
+  if (
+    args.purpose === "email_verify" &&
+    args.meta &&
+    typeof args.meta.hackathonRegistrationId === "string"
+  ) {
+    return HACKATHON_EMAIL_VERIFY_DAYS * 24 * 60;
+  }
+  return TTL_MINUTES[args.purpose];
+}
 
 const TTL_MINUTES: Record<AuthChallengePurpose, number> = {
   email_verify: 24 * 60,
@@ -52,7 +67,8 @@ export async function createAuthChallenge(args: {
 }): Promise<{ id: string; rawCode: string; expiresAt: Date }> {
   const rawCode = args.rawCode ?? randomToken(24);
   const expiresAt = new Date(
-    Date.now() + TTL_MINUTES[args.purpose] * 60 * 1000,
+    Date.now() +
+      challengeTtlMinutes({ purpose: args.purpose, meta: args.meta }) * 60 * 1000,
   );
   const db = getDb();
   const [row] = await db

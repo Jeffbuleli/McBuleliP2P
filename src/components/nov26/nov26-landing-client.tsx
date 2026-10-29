@@ -225,15 +225,15 @@ export function Nov26LandingClient({
         title={isFr ? "Inscrivez-vous" : "Register"}
         subtitle={
           isFr
-            ? `${priceUsd} USD · pré-inscription gratuite (rappels e-mail) ou paiement Mobile Money immédiat.`
-            : `${priceUsd} USD · free pre-registration (email reminders) or immediate Mobile Money payment.`
+            ? `${priceUsd} USD · pré-inscription gratuite (place gardée, rappels toutes les 24 h) ou paiement MoMo / USDT immédiat.`
+            : `${priceUsd} USD · free pre-registration (seat held, reminders every 24 h) or immediate MoMo / USDT payment.`
         }
       >
         <div className="rounded-2xl bg-[color:var(--hk-page,var(--fd-bg))] p-4 ring-1 ring-[color:var(--hk-border,var(--fd-border))] sm:p-6">
           <HackathonMomoRailLogos
             className="mb-5"
             label={
-              isFr ? "Paiement sécurisé · RDC" : "Secure payment · DRC"
+              isFr ? "Paiement MoMo · USDT" : "MoMo · USDT payment"
             }
           />
           {!editionId ? (

@@ -146,11 +146,11 @@ export async function sendHackathonReserveEmail(args: {
       title: isFr ? `Bonjour ${reg.firstName}` : `Hi ${reg.firstName}`,
       body: formation
         ? isFr
-          ? `Votre pré-inscription à ${editionName} est enregistrée (${nov26ScheduleLabel(true)}). Payez ${reg.priceUsd} USD pour confirmer et ouvrir votre espace sur mcbuleli.com/nov26/espace.`
-          : `Your pre-registration for ${editionName} is saved (${nov26ScheduleLabel(false)}). Pay ${reg.priceUsd} USD to confirm and open your hub at mcbuleli.com/nov26/espace.`
+          ? `Votre pré-inscription à ${editionName} est enregistrée (${nov26ScheduleLabel(true)}). Votre place reste réservée sans date limite. Nous vous rappelons toutes les ${HACKATHON_REMINDER_HOURS} h jusqu'au paiement. Payez ${reg.priceUsd} USD pour ouvrir mcbuleli.com/nov26/espace et recevoir le lien Google Meet.`
+          : `Your pre-registration for ${editionName} is saved (${nov26ScheduleLabel(false)}). Your seat stays reserved with no automatic expiry. We email you every ${HACKATHON_REMINDER_HOURS} h until you pay. Pay ${reg.priceUsd} USD to open mcbuleli.com/nov26/espace and get the Google Meet link.`
         : isFr
-          ? `Votre pré-inscription à ${editionName} est enregistrée. Votre place est réservée sans expiration automatique. Nous vous rappelons toutes les ${HACKATHON_REMINDER_HOURS} h pour confirmer. Cliquez pour payer (${reg.priceUsd} USD) et recevoir votre ticket QR. Compte McBuleli : utilisez « Mot de passe oublié » sur mcbuleli.org/login si besoin.`
-          : `Your pre-registration for ${editionName} is saved. Your seat is held with no automatic expiry. We remind you every ${HACKATHON_REMINDER_HOURS} h to confirm. Tap below to pay (${reg.priceUsd} USD) and receive your QR ticket. McBuleli account: use “Forgot password” on mcbuleli.org/login if needed.`,
+          ? `Votre pré-inscription à ${editionName} est enregistrée. Votre place est réservée sans expiration automatique. Nous vous rappelons toutes les ${HACKATHON_REMINDER_HOURS} h jusqu'au paiement. Cliquez pour payer (${reg.priceUsd} USD) et recevoir votre ticket QR. Compte McBuleli : utilisez « Mot de passe oublié » sur mcbuleli.org/login si besoin.`
+          : `Your pre-registration for ${editionName} is saved. Your seat is held with no automatic expiry. We remind you every ${HACKATHON_REMINDER_HOURS} h until payment is complete. Tap below to pay (${reg.priceUsd} USD) and receive your QR ticket. McBuleli account: use “Forgot password” on mcbuleli.org/login if needed.`,
       cta: isFr ? "Payer mon inscription" : "Pay my registration",
       footerHelp: isFr ? "Besoin d'aide ?" : "Need help?",
       footerContact: isFr ? "Contactez-nous" : "Contact us",
@@ -226,8 +226,8 @@ export async function sendHackathonHoldReminderEmail(args: {
       title: isFr ? `Bonjour ${reg.firstName}` : `Hi ${reg.firstName}`,
       body: formation
         ? isFr
-          ? `Rappel ${editionName} : votre place est toujours réservée. Payez ${reg.priceUsd} USD pour accéder à l'espace formation et au lien Google Meet.`
-          : `Reminder for ${editionName}: your seat is still reserved. Pay ${reg.priceUsd} USD to access the training hub and Google Meet link.`
+          ? `Rappel ${editionName} : votre place est toujours réservée (sans expiration). Payez ${reg.priceUsd} USD pour accéder à l'espace formation et au lien Google Meet. Rappels toutes les ${HACKATHON_REMINDER_HOURS} h tant que le paiement n'est pas fait.`
+          : `Reminder for ${editionName}: your seat is still reserved (no expiry). Pay ${reg.priceUsd} USD to access the training hub and Google Meet link. Reminders every ${HACKATHON_REMINDER_HOURS} h until payment is complete.`
         : isFr
           ? `Rappel pour ${editionName} : votre place est toujours réservée (${reg.firstName} ${reg.lastName}). Payez pour confirmer et recevoir votre ticket QR. Nous vous rappelons toutes les ${HACKATHON_REMINDER_HOURS} h tant que le paiement n'est pas fait.`
           : `Reminder for ${editionName}: your seat is still reserved (${reg.firstName} ${reg.lastName}). Pay to confirm and receive your QR ticket. We remind you every ${HACKATHON_REMINDER_HOURS} h until payment is complete.`,

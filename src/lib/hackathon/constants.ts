@@ -40,6 +40,8 @@ export type HackathonPaymentMethod =
 export const HACKATHON_HOLD_EXPIRES = false;
 /** Hours between payment reminder emails for reserved seats (cron). */
 export const HACKATHON_REMINDER_HOURS = 24;
+/** Email verification link validity when signing up via hackathon / formation pre-register. */
+export const HACKATHON_EMAIL_VERIFY_DAYS = 30;
 /** @deprecated kept for older callers - holds no longer expire */
 export const HACKATHON_HOLD_HOURS = HACKATHON_REMINDER_HOURS;
 

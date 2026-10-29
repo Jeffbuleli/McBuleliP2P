@@ -268,8 +268,8 @@ function HackathonParticipantFormInner({
       if (json.mode === "pending_verify") {
         setMsg(
           isFr
-            ? "Confirmez votre e-mail : un message de vérification vient de vous être envoyé. Dès confirmation, vous recevrez le lien de réservation / paiement. Compte McBuleli déjà lié à cet e-mail ? Utilisez « Mot de passe oublié » sur /login pour y accéder."
-            : "Confirm your email: we just sent a verification message. Once confirmed, you will get the reservation / payment link. Already have a McBuleli account on this email? Use “Forgot password” on /login to access it.",
+            ? "Confirmez votre e-mail : un message vient de vous être envoyé (lien valable 30 jours). Dès confirmation, votre place est réservée sans limite — rappels toutes les 24 h jusqu'au paiement."
+            : "Confirm your email: we just sent a verification message (link valid 30 days). Once confirmed, your seat is held with no expiry — reminders every 24 h until payment.",
         );
         return;
       }
@@ -282,15 +282,15 @@ function HackathonParticipantFormInner({
                 ? "Place réservée. Ouvrez votre espace formation pour payer quand vous voulez (rappels par e-mail)."
                 : "Place pré-réservée. Lien de paiement envoyé (compte McBuleli déjà lié à cet e-mail - Mot de passe oublié sur /login si besoin)."
               : isFormation
-                ? "Place réservée. Espace formation ouvert — payez maintenant ou plus tard (rappels toutes les 24 h)."
-                : "Place pré-réservée. Un e-mail avec le lien de paiement vous a été envoyé. Nous vous rappelons toutes les 24 h pour confirmer."
+                ? "Place réservée. Espace formation ouvert — payez quand vous voulez (rappels e-mail toutes les 24 h, sans expiration)."
+                : "Place pré-réservée. Un e-mail avec le lien de paiement vous a été envoyé. Rappels toutes les 24 h jusqu'au paiement (place sans expiration)."
             : json.existingAccount
               ? isFormation
-                ? "Seat reserved. Open your training hub to pay anytime (email reminders)."
+                ? "Seat reserved. Open your training hub to pay anytime (email every 24 h, no expiry)."
                 : "Seat reserved. Payment link emailed (McBuleli account already linked - use Forgot password on /login if needed)."
               : isFormation
-                ? "Seat reserved. Training hub is ready — pay now or later (reminders every 24 h)."
-                : "Seat reserved. We emailed you a payment link. We remind you every 24 h to confirm.",
+                ? "Seat reserved. Training hub is ready — pay now or later (reminders every 24 h, no expiry)."
+                : "Seat reserved. We emailed you a payment link. Reminders every 24 h until payment (seat does not expire).",
         );
         if (afterReservePath) {
           window.setTimeout(() => {
@@ -588,8 +588,8 @@ function HackathonParticipantFormInner({
 
       <p className="rounded-xl bg-[color:var(--fd-mint)]/50 px-4 py-3 text-sm text-[color:var(--fd-muted)]">
         {isFr
-          ? "Pré-inscription gratuite : place réservée, rappels 24 h pour confirmer. Ou payez tout de suite."
-          : "Free pre-registration: seat held, 24h reminders to confirm. Or pay now."}
+          ? "Pré-inscription gratuite : place gardée sans date limite, rappel e-mail toutes les 24 h jusqu'au paiement. Ou payez tout de suite."
+          : "Free pre-registration: seat held with no expiry, email reminder every 24 h until payment. Or pay now."}
       </p>
 
       <div>

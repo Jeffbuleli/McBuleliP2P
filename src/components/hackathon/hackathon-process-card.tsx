@@ -69,16 +69,16 @@ export function HackathonMomoRailLogos({
           </span>
         ))}
         <span
-          className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-white px-2 ring-1 ring-[color:var(--fd-border)]"
-          title="pawaPay"
+          className="inline-flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-white ring-1 ring-[color:var(--fd-border)]"
+          title="USDT"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/partners/pawapay-logo.png"
-            alt="pawaPay"
-            width={72}
-            height={28}
-            className="h-5 w-auto object-contain"
+            src="/assets/crypto/usdt.png"
+            alt="USDT"
+            width={36}
+            height={36}
+            className="h-full w-full object-contain p-1"
           />
         </span>
       </div>

@@ -168,8 +168,8 @@ export const NOV26_FAQ: Nov26FaqItem[] = [
   {
     qFr: "Pré-inscription ou paiement immédiat ?",
     qEn: "Pre-register or pay now?",
-    aFr: "Les deux : place réservée gratuite avec rappels, ou paiement Mobile Money (Orange, M-Pesa, Airtel) pour confirmer tout de suite.",
-    aEn: "Both: free seat hold with reminders, or Mobile Money (Orange, M-Pesa, Airtel) to confirm immediately.",
+    aFr: "Les deux : place réservée sans date limite, rappels e-mail toutes les 24 h jusqu'au paiement (MoMo ou USDT bientôt), ou paiement immédiat pour confirmer tout de suite.",
+    aEn: "Both: seat held with no expiry, email reminders every 24 h until you pay (MoMo or USDT soon), or pay now to confirm immediately.",
   },
   {
     qFr: "C'est le hackathon Kinshasa ?",

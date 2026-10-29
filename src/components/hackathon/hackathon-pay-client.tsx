@@ -206,7 +206,18 @@ export function HackathonPayClient({
                 {expiresLabel}
               </dd>
             </div>
-          ) : null}
+          ) : (
+            <div className="grid grid-cols-[7.5rem_1fr] items-baseline gap-3 px-4 py-3">
+              <dt className="text-[color:var(--fd-muted)]">
+                {isFr ? "Réservation" : "Hold"}
+              </dt>
+              <dd className="text-right text-xs font-semibold leading-snug text-[color:var(--fd-primary)]">
+                {isFr
+                  ? "Sans expiration · rappels 24 h"
+                  : "No expiry · 24 h reminders"}
+              </dd>
+            </div>
+          )}
         </dl>
 
         <HackathonMomoRailLogos
