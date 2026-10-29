@@ -5,7 +5,7 @@ Inscription + Mobile Money : même tunnel que le hackathon (`hackathon_editions`
 
 ## Activation prod
 
-1. Déployer le code (`main` → VPS).
+1. Déployer le code (`main` → VPS prod **153.75.235.176**, voir [docs/vps-production-host.md](../vps-production-host.md)).
 2. Sur le VPS (ou avec `DATABASE_URL` prod en local) :
    ```bash
    npx tsx scripts/seed-nov26-formation.ts

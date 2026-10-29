@@ -1,0 +1,17 @@
+# McBuleli on shared VPS 153.75.235.176 (~1.6 GiB RAM + swap).
+# Used with: docker compose -f docker-compose.yml -f docker-compose.shared-host.yml
+# See docs/vps-production-host.md
+
+services:
+  db:
+    mem_limit: 192m
+    memswap_limit: 384m
+
+  web:
+    mem_limit: 512m
+    memswap_limit: 896m
+    build:
+      args:
+        NODE_BUILD_MAX_OLD_SPACE_SIZE: "1024"
+    environment:
+      NODE_OPTIONS: --max-old-space-size=384

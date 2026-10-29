@@ -10,14 +10,22 @@ COMPOSE_DIR="${MCBULELI_COMPOSE_DIR:-$REPO/ops/vps}"
 
 cd "$COMPOSE_DIR"
 
-WEB="$(docker compose ps -q web)"
+compose() {
+  if [[ -f docker-compose.shared-host.yml ]]; then
+    docker compose -f docker-compose.yml -f docker-compose.shared-host.yml "$@"
+  else
+    docker compose "$@"
+  fi
+}
+
+WEB="$(compose ps -q web)"
 if [[ -z "$WEB" ]]; then
   echo "ERROR: web container not running" >&2
   exit 1
 fi
 
 NET="$(docker inspect "$WEB" --format '{{range $k, $v := .NetworkSettings.Networks}}{{$k}}{{end}}')"
-DBURL="$(docker compose exec -T web printenv DATABASE_URL | tr -d '\r')"
+DBURL="$(compose exec -T web printenv DATABASE_URL | tr -d '\r')"
 
 echo "==> $(date -u +%Y-%m-%dT%H:%M:%SZ) seed nov26 formation edition"
 echo "    NET=$NET"

@@ -1,27 +1,30 @@
-# Serveur principal McBuleli
+# Serveurs McBuleli — prod vs migration
 
-| Rôle | Valeur |
-|------|--------|
-| **VPS principal** | `162.35.181.98` |
-| **Ancien live only** | `162.35.160.30` (à décommissionner après cutover) |
-| Domaines | **`mcbuleli.com`** (canonique) + `www` · legacy redirect `mcbuleli.org` · `live.mcbuleli.org` · **`e-avec.org`** |
+**Prod `mcbuleli.com` aujourd’hui :** lire d’abord **[docs/vps-production-host.md](../../docs/vps-production-host.md)** (origin **153.75.235.176**).
 
-Tout (Next.js, Postgres, crons haute fréquence, ai-relay, **Jitsi Live**) tourne sur **162.35.181.98**.
+Ce fichier décrit surtout la **cible** migration « VPS principal » et le live Jitsi.
+
+| Rôle | IP | Notes |
+|------|-----|--------|
+| **Prod web + Postgres (Cloudflare origin)** | **`153.75.235.176`** | SSH OK · Docker `mcbuleli-web` · Nginx `mcbuleli.com` |
+| **Cible migration tout-en-un** | `162.35.181.98` | InterServer · doc historique · **pas** l’origin McBuleli.com actuel |
+| **Ancien live only** | `162.35.160.30` | À décommissionner après cutover live |
+| Domaines | **`mcbuleli.com`** + `www` · legacy `mcbuleli.org` · `live.mcbuleli.org` · **`e-avec.org`** |
 
 ## DNS (Cloudflare)
 
-| Record | Type | Cible après cutover | Notes |
-|--------|------|---------------------|--------|
-| `mcbuleli.org` | A / CNAME | via Cloudflare → origin `162.35.181.98` | Aujourd’hui proxy CF (IPs `104.21` / `172.67`) - mettre l’**origin** A/AAAA (DNS only ou proxied) vers le nouveau VPS |
-| `www` | CNAME/A | idem | |
-| `e-avec.org` / `www` | A / CNAME | même origin `162.35.181.98` | App AVEC autonome (port `3001`). Nginx : `ops/vps/nginx-e-avec.conf` dans le repo [avec](https://github.com/Jeffbuleli/avec). Même Postgres. |
-| `live.mcbuleli.org` | **A** | `162.35.181.98` | Aujourd’hui = `162.35.160.30` - **à basculer en dernier** pour le live |
+| Record | Type | Origin prod (mesuré) | Cible migration |
+|--------|------|----------------------|-----------------|
+| `mcbuleli.com` / `www` | proxied CF | **`153.75.235.176`** | `162.35.181.98` (prévu) |
+| `mcbuleli.org` / `www` | proxied CF | idem | idem |
+| `e-avec.org` / `www` | — | (selon déploiement AVEC) | même origin cible 162.35 |
+| `live.mcbuleli.org` | **A** | souvent `162.35.160.30` | `162.35.181.98` |
 
-Vérif :
+Vérif origin (sans deviner le DNS public) :
 
 ```bash
-dig +short live.mcbuleli.org A   # → 162.35.181.98
-dig +short mcbuleli.org A        # CF ou → 162.35.181.98
+curl -sk -o /dev/null -w "153.75 → %{http_code}\n" -H "Host: mcbuleli.com" https://153.75.235.176/login
+curl -sk -o /dev/null -w "162.35 → %{http_code}\n" -H "Host: mcbuleli.com" https://162.35.181.98/login
 ```
 
 ## GitHub Actions Deploy VPS
@@ -30,19 +33,20 @@ Secrets (**Settings → Actions → Secrets**) :
 
 | Secret | Valeur |
 |--------|--------|
-| `VPS_HOST` | **`162.35.181.98`** (McBuleli principal — pas 153.75 CyberAlert) |
+| `VPS_HOST` | **`153.75.235.176`** (prod McBuleli tant que CF origin = cette IP) |
 | `VPS_USER` | `root` |
-| `VPS_SSH_KEY` | clé privée dont la **publique** est dans `/root/.ssh/authorized_keys` sur ce VPS |
+| `VPS_SSH_KEY` | clé privée autorisée sur **153.75** (`authorized_keys`) |
 
-Si le workflow échoue avec `unable to authenticate`, régénérer une paire dédiée deploy, ajouter la `.pub` sur le VPS, mettre à jour `VPS_SSH_KEY`.
+Si le workflow échoue avec `unable to authenticate`, régénérer une paire deploy, ajouter la `.pub` sur le VPS, mettre à jour `VPS_SSH_KEY`.
 
+## Ordre de bascule (vers 162.35.181.98)
 
 1. SSH root@162.35.181.98 (clé déployée) → `bash ops/vps/install.sh`
 2. Dump Render → restore Postgres (app encore sur Render OK pendant ce temps)
 3. Migrer **Jitsi** depuis 162.35.160.30 (voir `ops/vps/migrate-live-from-old.sh`)
 4. Staging app : `http://162.35.181.98:3000` / hostname test
 5. DNS `live` → nouveau IP (fenêtre courte ; garder ancien allumé 24-48 h)
-6. Origin `mcbuleli.org` → nouveau IP ; suspendre Render web+DB après validation
+6. Origin Cloudflare `mcbuleli.com` → **162.35.181.98** ; mettre à jour `VPS_HOST` GHA
 7. Désactiver crons Render ; activer crontab + GHA
 
 Détail app/cron : [docs/vps-migration.md](../../docs/vps-migration.md)
@@ -69,4 +73,4 @@ Deploy McB / contrats Solidity en interne :
 | URL | `https://remix.mcbuleli.org` (Basic Auth + TLS) |
 | Doc | [docs/mcb-remix-vps.md](../../docs/mcb-remix-vps.md) |
 
-MetaMask se connecte **dans le navigateur** (Injected Provider), pas au serveur. Alternative sûre : tunnel SSH `ssh -L 8080:127.0.0.1:8080 root@162.35.181.98`.
+MetaMask se connecte **dans le navigateur** (Injected Provider), pas au serveur. Tunnel SSH exemple : `ssh -L 8080:127.0.0.1:8080 root@153.75.235.176` (prod) ou `162.35.181.98` (post-migration).

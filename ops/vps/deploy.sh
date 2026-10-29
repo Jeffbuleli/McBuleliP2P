@@ -11,6 +11,8 @@ set -euo pipefail
 
 REPO_DIR="${MCBULELI_REPO:-/opt/mcbuleli}"
 COMPOSE_DIR="$REPO_DIR/ops/vps"
+COMPOSE_BASE="$COMPOSE_DIR/docker-compose.yml"
+COMPOSE_SHARED="$COMPOSE_DIR/docker-compose.shared-host.yml"
 BRANCH="${MCBULELI_DEPLOY_BRANCH:-main}"
 LOCK_FILE="/var/run/mcbuleli-deploy.lock"
 REF=""
@@ -38,6 +40,14 @@ if ! flock -n 9; then
   echo "ERROR: another deploy is running (lock $LOCK_FILE)" >&2
   exit 1
 fi
+
+compose() {
+  if [[ -f "$COMPOSE_SHARED" ]]; then
+    docker compose -f "$COMPOSE_BASE" -f "$COMPOSE_SHARED" "$@"
+  else
+    docker compose -f "$COMPOSE_BASE" "$@"
+  fi
+}
 
 kill_stale_builds() {
   if pgrep -f "docker compose build" >/dev/null 2>&1; then
@@ -91,18 +101,18 @@ fi
 
 if [[ "$SKIP_BUILD" -eq 0 ]]; then
   echo "==> Building web image"
-  docker compose build web
+  compose build web
 else
   echo "==> Skipping build (--skip-build)"
 fi
 
 echo "==> Restarting web"
-docker compose stop web 2>/dev/null || true
+compose stop web 2>/dev/null || true
 sleep 2
-docker compose rm -f web 2>/dev/null || true
+compose rm -f web 2>/dev/null || true
 docker rm -f mcbuleli-web-1 2>/dev/null || true
 sleep 1
-docker compose up -d web
+compose up -d web
 sleep 3
 curl -fsS -o /dev/null -w "health_http=%{http_code}\n" "http://127.0.0.1:3000/login" || {
   echo "WARN: web not responding on :3000 yet — check: docker compose logs -f web" >&2

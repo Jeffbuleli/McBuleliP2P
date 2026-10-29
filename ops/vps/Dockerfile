@@ -13,8 +13,9 @@ ARG NEXT_PUBLIC_ACADEMY_LIVE_BASE_URL=https://live.mcbuleli.org
 ENV NEXT_PUBLIC_ACADEMY_LIVE_BASE_URL=$NEXT_PUBLIC_ACADEMY_LIVE_BASE_URL
 ARG NEXT_PUBLIC_ACADEMY_LIVE_EMBED=false
 ENV NEXT_PUBLIC_ACADEMY_LIVE_EMBED=$NEXT_PUBLIC_ACADEMY_LIVE_EMBED
-# Cap Node heap during next build on 8 GiB VPS (avoid OOM during parallel deploys).
-ENV NODE_OPTIONS=--max-old-space-size=2048
+# Cap Node heap during next build (override on 1.6 GiB host via compose build arg).
+ARG NODE_BUILD_MAX_OLD_SPACE_SIZE=2048
+ENV NODE_OPTIONS=--max-old-space-size=${NODE_BUILD_MAX_OLD_SPACE_SIZE}
 RUN npm run build
 
 FROM node:22-bookworm-slim AS runner
