@@ -24,7 +24,18 @@ dig +short live.mcbuleli.org A   # → 162.35.181.98
 dig +short mcbuleli.org A        # CF ou → 162.35.181.98
 ```
 
-## Ordre de bascule
+## GitHub Actions Deploy VPS
+
+Secrets (**Settings → Actions → Secrets**) :
+
+| Secret | Valeur |
+|--------|--------|
+| `VPS_HOST` | **`162.35.181.98`** (McBuleli principal — pas 153.75 CyberAlert) |
+| `VPS_USER` | `root` |
+| `VPS_SSH_KEY` | clé privée dont la **publique** est dans `/root/.ssh/authorized_keys` sur ce VPS |
+
+Si le workflow échoue avec `unable to authenticate`, régénérer une paire dédiée deploy, ajouter la `.pub` sur le VPS, mettre à jour `VPS_SSH_KEY`.
+
 
 1. SSH root@162.35.181.98 (clé déployée) → `bash ops/vps/install.sh`
 2. Dump Render → restore Postgres (app encore sur Render OK pendant ce temps)
