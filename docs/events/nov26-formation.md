@@ -1,6 +1,10 @@
 # Formation en ligne Nov 2026 (`/nov26`)
 
-Landing publique : **https://mcbuleli.com/nov26** (URL canonique en minuscules ; éviter `/Nov26` en dev macOS — boucle de redirect avec `next.config`).  
+## URLs
+
+- **Canonique (affiche, SEO)** : `https://mcbuleli.com/nov26` et `/nov26/espace`
+- **Alias hackathon** : `/hackathon/nov26` et `/hackathon/nov26/espace` (même contenu, même seed slug `nov26`)
+
 Inscription + Mobile Money : même tunnel que le hackathon (`hackathon_editions` slug `nov26`, 50 USD).
 
 ## Activation prod

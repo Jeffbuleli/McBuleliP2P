@@ -26,6 +26,7 @@ import {
 import { SUPPORT_EMAIL, SUPPORT_WA_PATH } from "@/lib/support-contact";
 
 type Props = {
+  basePath?: string;
   editionId: string | null;
   registrationOpen: boolean;
   priceUsd: string;
@@ -72,12 +73,16 @@ function Nov26Section({
 }
 
 export function Nov26LandingClient({
+  basePath = "/nov26",
   editionId,
   registrationOpen,
   priceUsd,
 }: Props) {
   const { locale } = useI18n();
   const isFr = locale === "fr";
+  const hubPath = `${basePath}/espace`;
+  const registerPath = `${basePath}#register`;
+  const loginNext = encodeURIComponent(hubPath);
 
   const stats = [
     {
@@ -96,7 +101,7 @@ export function Nov26LandingClient({
 
   return (
     <div className="min-h-dvh bg-[color:var(--hk-page,var(--fd-bg))] text-[color:var(--hk-text,var(--fd-fg))]">
-      <LandingTopBar authReturnPath="/nov26" />
+      <LandingTopBar authReturnPath={basePath} />
 
       {/* Hero compact */}
       <header className="relative overflow-hidden bg-gradient-to-br from-[#5c1830] via-[#7a2840] to-[#1F6B43] text-white">
@@ -213,21 +218,21 @@ export function Nov26LandingClient({
               priceUsd={priceUsd}
               registrationOpen={registrationOpen}
               product="formation"
-              registerPath="/nov26#register"
-              hubPath="/nov26/espace"
+              registerPath={registerPath}
+              hubPath={hubPath}
             />
           )}
           <p className="mt-5 text-center text-xs text-[color:var(--hk-muted,var(--fd-muted))]">
             {isFr ? "Déjà un compte McBuleli ?" : "Already have a McBuleli account?"}{" "}
             <Link
-              href="/login?next=%2Fnov26%2Fespace"
+              href={`/login?next=${loginNext}`}
               className="font-semibold text-[color:var(--hk-accent,var(--fd-primary))] underline"
             >
               {isFr ? "Se connecter → espace" : "Sign in → hub"}
             </Link>
             <span className="mx-2">·</span>
             <Link
-              href="/nov26/espace"
+              href={hubPath}
               className="font-semibold text-[color:var(--hk-accent,var(--fd-primary))] underline"
             >
               {isFr ? "Mon espace" : "My hub"}

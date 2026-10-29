@@ -17,6 +17,7 @@ import {
 import { SUPPORT_EMAIL, SUPPORT_WA_PATH } from "@/lib/support-contact";
 
 type Props = {
+  basePath?: string;
   displayName: string;
   firstName?: string;
   lastName?: string;
@@ -53,6 +54,7 @@ function ProgramBlock({ isFr }: { isFr: boolean }) {
 }
 
 export function Nov26EspaceClient({
+  basePath = "/nov26",
   displayName,
   firstName,
   lastName,
@@ -71,6 +73,7 @@ export function Nov26EspaceClient({
     firstName?.trim() ||
     displayName.split("@")[0] ||
     displayName;
+  const registerHref = `${basePath}#register`;
 
   return (
     <div className="min-h-[60vh]">
@@ -107,7 +110,7 @@ export function Nov26EspaceClient({
                 : "Sign in with the same email you used to register, or sign up (free pre-registration or pay now)."}
             </p>
             <Link
-              href="/nov26#register"
+              href={registerHref}
               className="mt-4 inline-flex rounded-xl bg-[color:var(--fd-primary)] px-4 py-2.5 text-sm font-extrabold text-white"
             >
               {isFr ? "S'inscrire sur la page formation" : "Register on the training page"}
@@ -136,7 +139,7 @@ export function Nov26EspaceClient({
                   </a>
                 ) : null}
                 <Link
-                  href="/nov26#register"
+                  href={registerHref}
                   className="inline-flex justify-center rounded-xl border border-[color:var(--fd-border)] bg-[color:var(--fd-card)] px-5 py-3 text-sm font-bold text-[color:var(--fd-text)]"
                 >
                   {isFr ? "Mobile Money sur la page inscription" : "Mobile Money on registration page"}
@@ -190,7 +193,7 @@ export function Nov26EspaceClient({
 
         <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-[color:var(--hk-border,var(--fd-border))] pt-6 text-xs">
           <Link
-            href="/nov26"
+            href={basePath}
             className="font-semibold text-[color:var(--hk-accent,var(--fd-primary))]"
           >
             ← {isFr ? "Page formation" : "Training page"}
