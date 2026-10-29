@@ -37,6 +37,12 @@ bash /opt/mcbuleli/ops/vps/seed-nov26-formation.sh   # si édition nov26
 
 Première install sans git : `bash ops/vps/bootstrap-git-on-shared-host.sh`.
 
+## Hôte partagé — ne pas couper Africa Insight
+
+**153.75** sert **McBuleli** et **Africa Insight** (`africa-insight-web-1`, port **3002**) en parallèle.  
+**Interdit** : `docker stop africa-insight-web-1` pour « libérer la RAM » pendant un build McBuleli — le site Africa Insight a du trafic continu.  
+Si le build McBuleli OOM : augmenter swap, build sur GHA/registry, ou `NEXT_BUILD_SKIP_TYPECHECK=1` (déjà sur shared-host) — pas arrêter l’autre produit.
+
 ## Piège fréquent (agents)
 
 - Lire `ops/vps/SERVER.md` **sans** ce fichier → risque de deploy sur **162.35** (mauvais serveur).
