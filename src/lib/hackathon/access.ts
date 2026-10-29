@@ -8,8 +8,10 @@ import {
   hackathonPartners,
   hackathonRegistrations,
 } from "@/db";
-import { CANONICAL_PRODUCTION_ORIGIN } from "@/lib/app-url";
 import { getSessionUser } from "@/lib/session-user";
+import { passPublicUrl } from "@/lib/hackathon/pass-url";
+
+export { passPublicUrl } from "@/lib/hackathon/pass-url";
 
 /** Only this McBuleli staff mailbox may open any badge (plus the pass owner). */
 export const HACKATHON_BADGE_STAFF_EMAIL = "ceo@mcbuleli.org";
@@ -48,14 +50,6 @@ export type ResolvedPass = {
 
 export function generatePartnerTicketCode(): string {
   return `MBP-${randomBytes(5).toString("hex").toUpperCase()}`;
-}
-
-/** Canonical public badge URL (participants + partners). */
-export function passPublicUrl(code: string): string {
-  const origin =
-    process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, "") ||
-    CANONICAL_PRODUCTION_ORIGIN;
-  return `${origin}/hackathon/pass/${encodeURIComponent(code)}`;
 }
 
 /** Extract MBH-/MBP- code from raw QR text or bare code. */

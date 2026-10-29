@@ -61,8 +61,11 @@ export function generatePromoDashboardToken(): string {
   return randomBytes(24).toString("base64url");
 }
 
-export function discountedPriceUsd(discountPercent: number): string {
-  const base = Number(HACKATHON_PRICE_USD);
+export function discountedPriceUsd(
+  discountPercent: number,
+  baseUsd: string = HACKATHON_PRICE_USD,
+): string {
+  const base = Number(baseUsd);
   const pct = Math.min(100, Math.max(0, discountPercent));
   const price = Math.round((base * (100 - pct)) / 100);
   return String(price);
@@ -117,6 +120,15 @@ export async function resolveActivePromo(args: {
 
   if (!row) return null;
 
+  const [editionRow] = await db
+    .select({ priceFullUsd: hackathonEditions.priceFullUsd })
+    .from(hackathonEditions)
+    .where(eq(hackathonEditions.id, editionId))
+    .limit(1);
+  const baseUsd = editionRow?.priceFullUsd
+    ? String(editionRow.priceFullUsd)
+    : HACKATHON_PRICE_USD;
+
   const discountPercent = Number(row.discountPercent);
   const cashbackUsd = Number(row.cashbackUsd);
   return {
@@ -128,7 +140,7 @@ export async function resolveActivePromo(args: {
     partnerName: row.partnerName,
     discountPercent,
     cashbackUsd,
-    priceUsd: discountedPriceUsd(discountPercent),
+    priceUsd: discountedPriceUsd(discountPercent, baseUsd),
     dashboardToken: row.dashboardToken,
   };
 }

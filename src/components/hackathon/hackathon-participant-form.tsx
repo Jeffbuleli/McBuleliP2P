@@ -23,6 +23,12 @@ type Props = {
   /** Unique 1-day program price (USD) */
   priceUsd: string;
   registrationOpen: boolean;
+  /** Hackathon Kinshasa vs formation en ligne (nov26). */
+  product?: "hackathon" | "formation";
+  /** Path for login ?next= and copy (default hackathon). */
+  registerPath?: string;
+  /** After free pre-registration, redirect here (formation hub). */
+  hubPath?: string;
 };
 
 type LockedPromo = {
@@ -63,7 +69,12 @@ function HackathonParticipantFormInner({
   editionId,
   priceUsd,
   registrationOpen,
+  product = "hackathon",
+  registerPath = "/hackathon#register",
+  hubPath,
 }: Props) {
+  const isFormation = product === "formation";
+  const afterReservePath = hubPath ?? (isFormation ? "/nov26/espace" : null);
   const { locale } = useI18n();
   const isFr = locale === "fr";
   const searchParams = useSearchParams();
@@ -267,12 +278,25 @@ function HackathonParticipantFormInner({
         setMsg(
           isFr
             ? json.existingAccount
-              ? "Place pré-réservée. Lien de paiement envoyé (compte McBuleli déjà lié à cet e-mail - Mot de passe oublié sur /login si besoin)."
-              : "Place pré-réservée. Un e-mail avec le lien de paiement vous a été envoyé. Nous vous rappelons toutes les 24 h pour confirmer."
+              ? isFormation
+                ? "Place réservée. Ouvrez votre espace formation pour payer quand vous voulez (rappels par e-mail)."
+                : "Place pré-réservée. Lien de paiement envoyé (compte McBuleli déjà lié à cet e-mail - Mot de passe oublié sur /login si besoin)."
+              : isFormation
+                ? "Place réservée. Espace formation ouvert — payez maintenant ou plus tard (rappels toutes les 24 h)."
+                : "Place pré-réservée. Un e-mail avec le lien de paiement vous a été envoyé. Nous vous rappelons toutes les 24 h pour confirmer."
             : json.existingAccount
-              ? "Seat reserved. Payment link emailed (McBuleli account already linked - use Forgot password on /login if needed)."
-              : "Seat reserved. We emailed you a payment link. We remind you every 24 h to confirm.",
+              ? isFormation
+                ? "Seat reserved. Open your training hub to pay anytime (email reminders)."
+                : "Seat reserved. Payment link emailed (McBuleli account already linked - use Forgot password on /login if needed)."
+              : isFormation
+                ? "Seat reserved. Training hub is ready — pay now or later (reminders every 24 h)."
+                : "Seat reserved. We emailed you a payment link. We remind you every 24 h to confirm.",
         );
+        if (afterReservePath) {
+          window.setTimeout(() => {
+            window.location.href = afterReservePath;
+          }, 1800);
+        }
         return;
       }
       if (json.checkoutUrl) {
@@ -338,19 +362,27 @@ function HackathonParticipantFormInner({
           <p className="mt-1 text-[color:var(--fd-muted)]">
             {sessionVerified
               ? isFr
-                ? `Compte vérifié · ${sessionEmail}. Ce compte seul ne réserve pas de place : finalisez le formulaire ci-dessous et payez pour être sur la liste des inscrits.`
-                : `Verified account · ${sessionEmail}. An account alone does not reserve a seat: finish the form below and pay to appear on the participants list.`
+                ? isFormation
+                  ? `Compte vérifié · ${sessionEmail}. Finalisez le formulaire : pré-inscription gratuite ou paiement immédiat, puis espace /nov26/espace.`
+                  : `Compte vérifié · ${sessionEmail}. Ce compte seul ne réserve pas de place : finalisez le formulaire ci-dessous et payez pour être sur la liste des inscrits.`
+                : isFormation
+                  ? `Verified account · ${sessionEmail}. Finish the form: free pre-registration or pay now, then /nov26/espace.`
+                  : `Verified account · ${sessionEmail}. An account alone does not reserve a seat: finish the form below and pay to appear on the participants list.`
               : isFr
-                ? `Session active · ${sessionEmail}. Confirmez votre e-mail McBuleli, puis finalisez le formulaire + paiement.`
-                : `Active session · ${sessionEmail}. Verify your McBuleli email, then finish the form + payment.`}
+                ? `Session active · ${sessionEmail}. Confirmez votre e-mail McBuleli, puis finalisez le formulaire (pré-inscrire ou payer).`
+                : `Active session · ${sessionEmail}. Verify your McBuleli email, then finish the form (pre-register or pay).`}
           </p>
         </div>
       ) : (
         <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs leading-relaxed text-[color:var(--hk-warn-text,#92400e)]">
           <p className="font-bold">
             {isFr
-              ? "Important : créer un compte McBuleli ≠ inscription hackathon"
-              : "Important: creating a McBuleli account ≠ hackathon registration"}
+              ? isFormation
+                ? "Important : compte McBuleli ≠ place en formation"
+                : "Important : créer un compte McBuleli ≠ inscription hackathon"
+              : isFormation
+                ? "Important: McBuleli account ≠ training seat"
+                : "Important: creating a McBuleli account ≠ hackathon registration"}
           </p>
           <p className="mt-1">
             {isFr ? (
@@ -358,7 +390,7 @@ function HackathonParticipantFormInner({
                 Remplissez ce formulaire puis payez (Mobile Money) pour être inscrit.
                 Déjà un compte ?{" "}
                 <Link
-                  href={`/login?next=${encodeURIComponent("/hackathon#register")}`}
+                  href={`/login?next=${encodeURIComponent(registerPath)}`}
                   className="font-semibold underline"
                 >
                   Connectez-vous
@@ -370,7 +402,7 @@ function HackathonParticipantFormInner({
                 Fill this form then pay (Mobile Money) to be registered.
                 Already have an account?{" "}
                 <Link
-                  href={`/login?next=${encodeURIComponent("/hackathon#register")}`}
+                  href={`/login?next=${encodeURIComponent(registerPath)}`}
                   className="font-semibold underline"
                 >
                   Sign in
@@ -391,10 +423,20 @@ function HackathonParticipantFormInner({
             {existingReg.ticketCode}
           </p>
           <Link
-            href={`/hackathon/ticket/${encodeURIComponent(existingReg.ticketCode)}`}
+            href={
+              isFormation
+                ? "/nov26/espace"
+                : `/hackathon/ticket/${encodeURIComponent(existingReg.ticketCode)}`
+            }
             className="mt-3 inline-flex rounded-2xl bg-[color:var(--fd-primary)] px-4 py-2.5 text-sm font-extrabold text-white"
           >
-            {isFr ? "Voir mon ticket QR" : "View my QR ticket"}
+            {isFr
+              ? isFormation
+                ? "Ouvrir mon espace formation"
+                : "Voir mon ticket QR"
+              : isFormation
+                ? "Open my training hub"
+                : "View my QR ticket"}
           </Link>
         </div>
       ) : null}
@@ -406,15 +448,29 @@ function HackathonParticipantFormInner({
           </p>
           <p className="mt-1 text-xs text-[color:var(--hk-warn-muted,#b45309)]">
             {isFr
-              ? "Finalisez le paiement pour recevoir votre ticket QR."
-              : "Complete payment to receive your QR ticket."}
+              ? isFormation
+                ? "Payez quand vous voulez — ou ouvrez votre espace formation."
+                : "Finalisez le paiement pour recevoir votre ticket QR."
+              : isFormation
+                ? "Pay anytime — or open your training hub."
+                : "Complete payment to receive your QR ticket."}
           </p>
-          <a
-            href={existingReg.payUrl}
-            className="mt-3 inline-flex rounded-2xl bg-[color:var(--fd-primary)] px-4 py-2.5 text-sm font-extrabold text-white"
-          >
-            {isFr ? "Payer maintenant" : "Pay now"}
-          </a>
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:justify-center">
+            {isFormation ? (
+              <Link
+                href="/nov26/espace"
+                className="inline-flex rounded-2xl bg-[color:var(--fd-primary)] px-4 py-2.5 text-sm font-extrabold text-white"
+              >
+                {isFr ? "Mon espace" : "My hub"}
+              </Link>
+            ) : null}
+            <a
+              href={existingReg.payUrl}
+              className="inline-flex rounded-2xl bg-amber-600 px-4 py-2.5 text-sm font-extrabold text-white"
+            >
+              {isFr ? "Payer maintenant" : "Pay now"}
+            </a>
+          </div>
         </div>
       ) : null}
 
@@ -506,8 +562,12 @@ function HackathonParticipantFormInner({
         </p>
         <p className="mt-1 text-lg font-semibold text-[color:var(--fd-text)]">
           {isFr
-            ? `${hackathonPackLabel(true)} - ${effectivePriceUsd} USD`
-            : `${hackathonPackLabel(false)} - ${effectivePriceUsd} USD`}
+            ? isFormation
+              ? `Formation en ligne · 3 soirées · ${effectivePriceUsd} USD`
+              : `${hackathonPackLabel(true)} - ${effectivePriceUsd} USD`
+            : isFormation
+              ? `Online training · 3 evenings · ${effectivePriceUsd} USD`
+              : `${hackathonPackLabel(false)} - ${effectivePriceUsd} USD`}
           {lockedPromo && lockedPromo.priceUsd !== priceUsd ? (
             <span className="ml-2 text-sm font-medium text-[color:var(--fd-muted)] line-through">
               {priceUsd} USD
@@ -516,8 +576,12 @@ function HackathonParticipantFormInner({
         </p>
         <p className="mt-2 text-xs text-[color:var(--fd-muted)]">
           {isFr
-            ? "Défi, équipe ou solo : vous choisirez dans votre espace après inscription."
-            : "Challenge, team or solo: you choose later in your participant hub."}
+            ? isFormation
+              ? "Après paiement : espace /nov26/espace, lien Google Meet et support par e-mail."
+              : "Défi, équipe ou solo : vous choisirez dans votre espace après inscription."
+            : isFormation
+              ? "After payment: /nov26/espace hub, Google Meet link, and email support."
+              : "Challenge, team or solo: you choose later in your participant hub."}
         </p>
         <input type="hidden" name="ticketPack" value="full" />
       </div>

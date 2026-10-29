@@ -18,6 +18,8 @@ type Status = {
   firstName: string | null;
   locale?: string | null;
   checkoutUrl: string | null;
+  editionSlug?: string | null;
+  nov26Hub?: boolean;
 };
 
 function StatusIcon({ kind }: { kind: "wait" | "ok" | "fail" | "miss" }) {
@@ -97,18 +99,27 @@ export default function HackathonPaymentStatusPage() {
     };
   }, [reference]);
 
-  const paid = data?.paymentStatus === "paid" && data.ticketCode;
+  const paid = data?.paymentStatus === "paid";
   const failed =
     data?.status === "FAILED" || data?.paymentStatus === "failed";
+  const isNov26 =
+    data?.nov26Hub === true || data?.editionSlug === "nov26";
+  const registerBack = isNov26 ? "/nov26#register" : "/hackathon#register";
 
   useEffect(() => {
-    if (!paid || !data?.ticketCode || redirected.current) return;
+    if (!paid || redirected.current) return;
     redirected.current = true;
+    const hub =
+      data?.nov26Hub || data?.editionSlug === "nov26"
+        ? "/nov26/espace"
+        : data?.ticketCode
+          ? `/hackathon/ticket/${encodeURIComponent(data.ticketCode)}`
+          : "/hackathon/espace";
     const timer = window.setTimeout(() => {
-      window.location.href = `/hackathon/ticket/${encodeURIComponent(data.ticketCode!)}`;
+      window.location.href = hub;
     }, 2200);
     return () => window.clearTimeout(timer);
-  }, [paid, data?.ticketCode]);
+  }, [paid, data?.ticketCode, data?.nov26Hub, data?.editionSlug]);
 
   function shell(card: ReactNode) {
     return (
@@ -130,7 +141,7 @@ export default function HackathonPaymentStatusPage() {
             ? "Cette référence n'existe pas ou n'est plus disponible. Vérifiez le lien ou recommencez depuis la page Hackathon."
             : "This reference does not exist or is no longer available. Check the link or start again from the Hackathon page."
         }
-        backHref="/hackathon#register"
+        backHref={registerBack}
         backLabel={isFr ? "← Retour inscription" : "← Back to registration"}
       >
         <p className="font-mono text-[11px] text-[color:var(--fd-muted)]">
@@ -140,29 +151,54 @@ export default function HackathonPaymentStatusPage() {
     );
   }
 
-  if (paid && data?.ticketCode) {
+  if (paid) {
+    const hubHref = isNov26
+      ? "/nov26/espace"
+      : data?.ticketCode
+        ? `/hackathon/ticket/${encodeURIComponent(data.ticketCode)}`
+        : "/hackathon/espace";
     return shell(
       <HackathonProcessCard
         tone="success"
         icon={<StatusIcon kind="ok" />}
         title={isFr ? "Paiement confirmé" : "Payment confirmed"}
         subtitle={
-          isFr
-            ? `${data.firstName ? `Merci ${data.firstName}. ` : ""}Votre ticket QR est prêt. Redirection automatique…`
-            : `${data.firstName ? `Thank you ${data.firstName}. ` : ""}Your QR ticket is ready. Redirecting…`
+          isNov26
+            ? isFr
+              ? `${data.firstName ? `Merci ${data.firstName}. ` : ""}Votre place est confirmée. Redirection vers l'espace formation…`
+              : `${data.firstName ? `Thank you ${data.firstName}. ` : ""}Your seat is confirmed. Redirecting to the training hub…`
+            : isFr
+              ? `${data.firstName ? `Merci ${data.firstName}. ` : ""}Votre ticket QR est prêt. Redirection automatique…`
+              : `${data.firstName ? `Thank you ${data.firstName}. ` : ""}Your QR ticket is ready. Redirecting…`
         }
-        backHref={`/hackathon/ticket/${encodeURIComponent(data.ticketCode)}`}
-        backLabel={isFr ? "Voir mon ticket QR →" : "View my QR ticket →"}
+        backHref={hubHref}
+        backLabel={
+          isNov26
+            ? isFr
+              ? "Ouvrir mon espace →"
+              : "Open my hub →"
+            : isFr
+              ? "Voir mon ticket QR →"
+              : "View my QR ticket →"
+        }
       >
         <Link
-          href={`/hackathon/ticket/${encodeURIComponent(data.ticketCode)}`}
+          href={hubHref}
           className="inline-flex rounded-2xl bg-[color:var(--fd-primary)] px-5 py-3 text-sm font-extrabold text-white shadow-sm transition hover:bg-[color:var(--fd-primary-dark)]"
         >
-          {isFr ? "Ouvrir mon ticket" : "Open my ticket"}
+          {isNov26
+            ? isFr
+              ? "Espace formation"
+              : "Training hub"
+            : isFr
+              ? "Ouvrir mon ticket"
+              : "Open my ticket"}
         </Link>
-        <p className="mt-3 font-mono text-xs font-bold tracking-wide text-[color:var(--fd-primary)]">
-          {data.ticketCode}
-        </p>
+        {data.ticketCode ? (
+          <p className="mt-3 font-mono text-xs font-bold tracking-wide text-[color:var(--fd-primary)]">
+            {data.ticketCode}
+          </p>
+        ) : null}
       </HackathonProcessCard>,
     );
   }
@@ -178,14 +214,14 @@ export default function HackathonPaymentStatusPage() {
             ? "La transaction n'a pas abouti (annulation, fonds insuffisants ou délai dépassé). Vous pouvez réessayer avec le même numéro ou un autre opérateur."
             : "The transaction did not complete (cancelled, insufficient funds, or timeout). You can retry with the same number or another operator."
         }
-        backHref="/hackathon#register"
+        backHref={registerBack}
         backLabel={isFr ? "← Réessayer l'inscription" : "← Try registration again"}
       >
         <p className="rounded-xl bg-red-50 px-3 py-2 font-mono text-[11px] text-red-700">
           {data?.status ?? "FAILED"}
         </p>
         <Link
-          href="/hackathon#register"
+          href={registerBack}
           className="mt-4 inline-flex rounded-2xl bg-[color:var(--fd-primary)] px-5 py-3 text-sm font-extrabold text-white"
         >
           {isFr ? "Reprendre" : "Try again"}

@@ -51,7 +51,7 @@ export const registerBodyZ = z
     projectName: z.string().trim().max(200).optional(),
     projectDescription: z.string().trim().max(4000).optional(),
     projectCategory: z.string().trim().max(64).optional(),
-    /** Deferred to hub team/challenge step — default solo at signup. */
+    /** Deferred to hub team/challenge step - default solo at signup. */
     workMode: z.enum(["solo", "team"]).default("solo"),
     ticketPack: z.enum(["day1", "full"]).default("full"),
     /** Free seat hold (default) or immediate checkout */
@@ -248,7 +248,8 @@ export async function registerParticipant(raw: unknown) {
     return { ok: false as const, error: "invalid_promo", status: 400 };
   }
 
-  const priceUsd = promo?.priceUsd ?? HACKATHON_PRICE_USD;
+  const priceUsd =
+    promo?.priceUsd ?? String(fullEdition.priceFullUsd ?? HACKATHON_PRICE_USD);
 
   const email = data.email.toLowerCase();
   // Always resolve the McBuleli user by registration email (never borrow a

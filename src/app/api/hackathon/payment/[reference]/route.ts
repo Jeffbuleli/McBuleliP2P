@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
-import { getDb, hackathonPayments, hackathonRegistrations } from "@/db";
+import {
+  getDb,
+  hackathonEditions,
+  hackathonPayments,
+  hackathonRegistrations,
+} from "@/db";
+import { NOV26_EDITION_SLUG } from "@/lib/hackathon/editions";
 import { reconcileHackathonPaymentByReference } from "@/lib/hackathon/reconcile-payment";
 
 export const dynamic = "force-dynamic";
@@ -44,10 +50,21 @@ export async function GET(
         ticketCode: hackathonRegistrations.ticketCode,
         firstName: hackathonRegistrations.firstName,
         locale: hackathonRegistrations.locale,
+        editionId: hackathonRegistrations.editionId,
       })
       .from(hackathonRegistrations)
       .where(eq(hackathonRegistrations.id, row.registrationId))
       .limit(1);
+
+    let editionSlug: string | null = null;
+    if (reg?.editionId) {
+      const [ed] = await db
+        .select({ slug: hackathonEditions.slug })
+        .from(hackathonEditions)
+        .where(eq(hackathonEditions.id, reg.editionId))
+        .limit(1);
+      editionSlug = ed?.slug ?? null;
+    }
 
     return NextResponse.json({
       reference: row.reference,
@@ -59,6 +76,8 @@ export async function GET(
       checkoutUrl: row.checkoutUrl,
       provider: row.provider,
       rail: row.rail,
+      editionSlug,
+      nov26Hub: editionSlug === NOV26_EDITION_SLUG,
     });
   } catch (e) {
     console.error("[hackathon/payment]", e);
