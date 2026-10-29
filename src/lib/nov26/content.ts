@@ -26,6 +26,37 @@ export const NOV26_PROGRAM_INTRO_FR =
 export const NOV26_PROGRAM_INTRO_EN =
   "Not just coding: automate, create, communicate, and serve clients better — with tools you keep after the training.";
 
+/** Bloc court « à l'issue » (même préoccupation que prospects B2B). */
+export const NOV26_OUTCOMES_TITLE_FR = "À l'issue de la formation";
+export const NOV26_OUTCOMES_TITLE_EN = "After the training";
+export const NOV26_OUTCOMES_INTRO_FR =
+  "Vous repartez avec des gestes concrets — service client, contenu, processus — et les outils pour continuer seul.";
+export const NOV26_OUTCOMES_INTRO_EN =
+  "You leave with concrete skills — support, content, processes — and tools to keep going on your own.";
+
+export const NOV26_OUTCOMES: { fr: string; en: string }[] = [
+  {
+    fr: "Messages pro (WhatsApp, e-mail) avec l'IA, validés avant envoi",
+    en: "Pro messages (WhatsApp, email) with AI, reviewed before sending",
+  },
+  {
+    fr: "Publications et légendes pour vos réseaux sociaux",
+    en: "Posts and captions for your social channels",
+  },
+  {
+    fr: "Prospection, relances et tri des demandes clients",
+    en: "Lead follow-up and prioritizing client requests",
+  },
+  {
+    fr: "Premiers pas vers un assistant métier (FAQ, rappel) via API",
+    en: "First steps toward a business assistant (FAQ, callbacks) via API",
+  },
+  {
+    fr: "Autonomie avec Cursor, Claude et Codex au quotidien",
+    en: "Day-to-day autonomy with Cursor, Claude, and Codex",
+  },
+];
+
 export type Nov26LearnerBenefit = {
   id: string;
   titleFr: string;
@@ -147,6 +178,12 @@ export type Nov26FaqItem = {
 };
 
 export const NOV26_FAQ: Nov26FaqItem[] = [
+  {
+    qFr: "Quelles compétences à l'issue de la formation ?",
+    qEn: "What will I be able to do after the training?",
+    aFr: "Réponses clients (WhatsApp, e-mail), contenu réseaux sociaux, prospection et relances, premiers pas API / assistant métier, et autonomie avec Cursor, Claude et Codex — applicable en entreprise comme en solo.",
+    aEn: "Client replies (WhatsApp, email), social content, lead follow-up, first API / business-assistant steps, and autonomy with Cursor, Claude, and Codex — for teams or solo work.",
+  },
   {
     qFr: "Faut-il déjà savoir coder ?",
     qEn: "Do I need to code already?",

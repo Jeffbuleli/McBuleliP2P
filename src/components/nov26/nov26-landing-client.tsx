@@ -17,6 +17,11 @@ import {
   NOV26_PROGRAM,
   NOV26_PROGRAM_INTRO_EN,
   NOV26_PROGRAM_INTRO_FR,
+  NOV26_OUTCOMES,
+  NOV26_OUTCOMES_INTRO_EN,
+  NOV26_OUTCOMES_INTRO_FR,
+  NOV26_OUTCOMES_TITLE_EN,
+  NOV26_OUTCOMES_TITLE_FR,
   NOV26_LEARNER_BENEFITS,
   NOV26_TAGLINE_EN,
   NOV26_TAGLINE_FR,
@@ -294,6 +299,30 @@ export function Nov26LandingClient({
               {pill}
             </span>
           ))}
+        </div>
+        <div className="mb-6 rounded-2xl border border-[color:var(--hk-border,var(--fd-border))] bg-[color:var(--hk-surface,var(--fd-card))] p-4 sm:p-5">
+          <p className="text-[10px] font-extrabold uppercase tracking-wider text-[color:var(--hk-accent,var(--fd-primary))]">
+            {isFr ? NOV26_OUTCOMES_TITLE_FR : NOV26_OUTCOMES_TITLE_EN}
+          </p>
+          <p className="mt-2 text-sm leading-relaxed text-[color:var(--hk-muted,var(--fd-muted))]">
+            {isFr ? NOV26_OUTCOMES_INTRO_FR : NOV26_OUTCOMES_INTRO_EN}
+          </p>
+          <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+            {NOV26_OUTCOMES.map((item) => (
+              <li
+                key={item.fr}
+                className="flex gap-2 text-xs leading-snug text-[color:var(--hk-text,var(--fd-text))]"
+              >
+                <span
+                  className="mt-0.5 shrink-0 text-[color:var(--hk-accent,var(--fd-primary))]"
+                  aria-hidden
+                >
+                  ✓
+                </span>
+                <span>{isFr ? item.fr : item.en}</span>
+              </li>
+            ))}
+          </ul>
         </div>
         <ul className="grid gap-3 sm:grid-cols-3">
           {NOV26_PROGRAM.map((day, idx) => (
