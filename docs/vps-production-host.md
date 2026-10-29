@@ -32,7 +32,7 @@ bash /opt/mcbuleli/ops/vps/seed-nov26-formation.sh   # si édition nov26
 
 - Dépôt git complet : **`/opt/mcbuleli`** (pas seulement `ops/vps/`).
 - Secrets : **`/opt/mcbuleli/ops/vps/.env`** (jamais dans git).
-- Compose : `docker-compose.yml` + **`docker-compose.shared-host.yml`** (RAM 1.6 GiB).
+- Compose : `docker-compose.yml` + **`docker-compose.shared-host.yml`** (RAM 1.6 GiB ; build Docker skip `tsc` via `NEXT_BUILD_SKIP_TYPECHECK=1` — OOM sinon).
 - GitHub Actions **`VPS_HOST`** = **`153.75.235.176`** tant que Cloudflare pointe là.
 
 Première install sans git : `bash ops/vps/bootstrap-git-on-shared-host.sh`.

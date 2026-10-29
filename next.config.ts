@@ -5,6 +5,10 @@ import { securityResponseHeaders } from "./src/lib/security-headers";
 const nextConfig: NextConfig = {
   // Required by ops/vps/Dockerfile (standalone Node server)
   output: "standalone",
+  // Shared VPS 1.6 GiB: Docker build sets NEXT_BUILD_SKIP_TYPECHECK=1 (OOM on tsc). CI/local keep full check.
+  typescript: {
+    ignoreBuildErrors: process.env.NEXT_BUILD_SKIP_TYPECHECK === "1",
+  },
   poweredByHeader: false,
   serverExternalPackages: ["ccxt", "technicalindicators", "postgres"],
   images: {

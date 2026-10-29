@@ -13,5 +13,6 @@ services:
     build:
       args:
         NODE_BUILD_MAX_OLD_SPACE_SIZE: "1024"
+        NEXT_BUILD_SKIP_TYPECHECK: "1"
     environment:
       NODE_OPTIONS: --max-old-space-size=384
