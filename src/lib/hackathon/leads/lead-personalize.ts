@@ -433,7 +433,7 @@ export function buildCampaignCtaUrl(args: {
   return `${base}/hackathon?${params.toString()}`;
 }
 
-function renderPartnershipHtml(args: {
+export function renderPartnershipHtml(args: {
   greeting: string;
   headline: string;
   preheader: string;
@@ -535,7 +535,7 @@ function renderPartnershipHtml(args: {
 </html>`;
 }
 
-function renderPartnershipText(args: {
+export function renderPartnershipText(args: {
   greeting: string;
   headline: string;
   paragraphs: string[];

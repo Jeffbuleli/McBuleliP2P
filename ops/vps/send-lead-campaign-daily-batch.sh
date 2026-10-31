@@ -1,17 +1,16 @@
 #!/usr/bin/env bash
-# Regenerate lead queue and/or send next daily batch (max 60).
+# Regenerate lead queue and/or send next daily batch (max 80).
 # Usage:
 #   bash ops/vps/send-lead-campaign-daily-batch.sh --regenerate
-#   bash ops/vps/send-lead-campaign-daily-batch.sh --send
-#   bash ops/vps/send-lead-campaign-daily-batch.sh --send --minCategory=UNQUALIFIED --domainMode=gmail_icloud_first
-# Default: 60/day · Gmail/iCloud first · then corporate not contacted.
+#   bash ops/vps/send-lead-campaign-daily-batch.sh --send --limit=80 --domainMode=gmail_icloud_first
+# Default when no args: --send --minCategory=UNQUALIFIED --limit=80
 set -euo pipefail
 
 REPO="${MCBULELI_REPO:-/opt/mcbuleli}"
 COMPOSE_DIR="${MCBULELI_COMPOSE_DIR:-$REPO/ops/vps}"
 ARGS=("$@")
 if [[ ${#ARGS[@]} -eq 0 ]]; then
-  ARGS=(--send --minCategory=UNQUALIFIED)
+  ARGS=(--send --minCategory=UNQUALIFIED --limit=80 --domainMode=gmail_icloud_first)
 fi
 
 cd "$COMPOSE_DIR"

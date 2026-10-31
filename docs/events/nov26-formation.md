@@ -7,6 +7,8 @@
 
 Inscription + Mobile Money : même tunnel que le hackathon (`hackathon_editions` slug `nov26`, 50 USD).
 
+**Campagne leads (e-mail)** : voir **[nov26-lead-campaign.md](./nov26-lead-campaign.md)** (80/j, Gmail puis pro, test `send-nov26-formation-lead-test-email.ts`).
+
 ## Activation prod
 
 1. Déployer le code (`main` → VPS prod **153.75.235.176**, voir [docs/vps-production-host.md](../vps-production-host.md)).

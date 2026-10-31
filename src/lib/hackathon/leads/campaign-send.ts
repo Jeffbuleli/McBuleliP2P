@@ -4,6 +4,8 @@
  * Phase A: Gmail + iCloud → Phase B: corporate not yet contacted.
  */
 
+import { existsSync, readFileSync } from "node:fs";
+import path from "node:path";
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import {
   getDb,
@@ -17,8 +19,30 @@ import { companyOutreachKey } from "./lead-outreach-exclude";
 import { canonicalEmailForDedup } from "@/lib/auth/email-normalize";
 import { sendEmail, canSendViaResendApi, resendSendBlockedReason } from "@/lib/email/send";
 import { SUPPORT_EMAIL } from "@/lib/support-contact";
+import { NOV26_FORMATION_TEMPLATE_KEY } from "./nov26-formation-personalize";
 
-export const LEAD_CAMPAIGN_DAILY_BATCH = 60;
+function nov26PosterAttachments():
+  | {
+      filename: string;
+      content: string;
+      content_type: string;
+    }[]
+  | undefined {
+  const posterPath = path.join(
+    process.cwd(),
+    "public/events/nov26/affiche.png",
+  );
+  if (!existsSync(posterPath)) return undefined;
+  return [
+    {
+      filename: "McBuleli-Formation-Nov2026-affiche.png",
+      content: readFileSync(posterPath).toString("base64"),
+      content_type: "image/png",
+    },
+  ];
+}
+
+export const LEAD_CAMPAIGN_DAILY_BATCH = 80;
 
 /** Broad freemail set (corporate = everything else). */
 const FREE_DOMAINS = new Set([
@@ -108,7 +132,7 @@ export async function approveEditionCampaigns(args: {
       type: "APPROVED",
       meta: {
         dryRun: args.dryRun ?? false,
-        note: "Approved for progressive daily send (60/day Kinshasa 08h30 · Gmail/iCloud then corporate)",
+        note: "Approved for progressive daily send (80/day Kinshasa 08h30 · Gmail/iCloud then corporate)",
       },
     });
   }
@@ -188,6 +212,7 @@ export async function sendDailyLeadCampaignBatch(args: {
       id: hackathonEmailCampaigns.id,
       dryRun: hackathonEmailCampaigns.dryRun,
       status: hackathonEmailCampaigns.status,
+      bodyTemplate: hackathonEmailCampaigns.bodyTemplate,
     })
     .from(hackathonEmailCampaigns)
     .where(
@@ -287,29 +312,40 @@ export async function sendDailyLeadCampaignBatch(args: {
     }
   }
 
+  const templateByCampaign = new Map(
+    campaigns.map((c) => [c.id, c.bodyTemplate]),
+  );
+  const nov26OnlyBatch =
+    liveCampaignIds.length > 0 &&
+    liveCampaignIds.every(
+      (id) => templateByCampaign.get(id) === NOV26_FORMATION_TEMPLATE_KEY,
+    );
+
   // Addresses / companies already SENT or leads already contacted on this edition
   const alreadySentKeys = new Set<string>();
   const alreadySentEmails = new Set<string>();
 
-  const contactedLeads = await db
-    .select({
-      emailCanonical: hackathonLeads.emailCanonical,
-      company: hackathonLeads.company,
-      email: hackathonLeads.email,
-    })
-    .from(hackathonLeads)
-    .where(
-      and(
-        eq(hackathonLeads.editionId, args.editionId),
-        sql`(${hackathonLeads.contactCount} > 0 OR ${hackathonLeads.lastContactedAt} IS NOT NULL)`,
-      ),
-    );
-  for (const row of contactedLeads) {
-    if (row.emailCanonical) {
-      alreadySentEmails.add(row.emailCanonical.toLowerCase());
+  if (!nov26OnlyBatch) {
+    const contactedLeads = await db
+      .select({
+        emailCanonical: hackathonLeads.emailCanonical,
+        company: hackathonLeads.company,
+        email: hackathonLeads.email,
+      })
+      .from(hackathonLeads)
+      .where(
+        and(
+          eq(hackathonLeads.editionId, args.editionId),
+          sql`(${hackathonLeads.contactCount} > 0 OR ${hackathonLeads.lastContactedAt} IS NOT NULL)`,
+        ),
+      );
+    for (const row of contactedLeads) {
+      if (row.emailCanonical) {
+        alreadySentEmails.add(row.emailCanonical.toLowerCase());
+      }
+      const key = companyOutreachKey(row.company, row.email);
+      if (key) alreadySentKeys.add(key);
     }
-    const key = companyOutreachKey(row.company, row.email);
-    if (key) alreadySentKeys.add(key);
   }
 
   const sentRows = await db
@@ -336,6 +372,8 @@ export async function sendDailyLeadCampaignBatch(args: {
     if (emailKey) alreadySentEmails.add(emailKey);
   }
 
+  const nov26Attachments = nov26PosterAttachments();
+
   let sent = 0;
   let failed = 0;
   let skipped = 0;
@@ -352,11 +390,15 @@ export async function sendDailyLeadCampaignBatch(args: {
       row.email
     ).toLowerCase();
     const companyKey = companyOutreachKey(row.company, row.email);
+    const rowIsNov26 =
+      templateByCampaign.get(row.campaignId) ===
+      NOV26_FORMATION_TEMPLATE_KEY;
 
     if (
-      (row.contactCount ?? 0) > 0 ||
-      row.lastContactedAt != null ||
-      batchEmails.has(emailKey)
+      !rowIsNov26 &&
+      ((row.contactCount ?? 0) > 0 ||
+        row.lastContactedAt != null ||
+        batchEmails.has(emailKey))
     ) {
       await db
         .update(hackathonCampaignRecipients)
@@ -370,7 +412,20 @@ export async function sendDailyLeadCampaignBatch(args: {
       continue;
     }
 
-    if (companyKey && batchClaimed.has(companyKey)) {
+    if (rowIsNov26 && batchEmails.has(emailKey)) {
+      await db
+        .update(hackathonCampaignRecipients)
+        .set({
+          status: "SKIPPED",
+          skipReason: "already_sent_nov26_batch",
+          updatedAt: new Date(),
+        })
+        .where(eq(hackathonCampaignRecipients.id, row.recipientId));
+      skipped += 1;
+      continue;
+    }
+
+    if (companyKey && batchClaimed.has(companyKey) && !rowIsNov26) {
       await db
         .update(hackathonCampaignRecipients)
         .set({
@@ -402,6 +457,12 @@ export async function sendDailyLeadCampaignBatch(args: {
       html: row.html,
       text: row.text ?? undefined,
       replyTo: SUPPORT_EMAIL,
+      from: `Mme Patty B. - McBuleli <${SUPPORT_EMAIL}>`,
+      fileAttachments:
+        templateByCampaign.get(row.campaignId) ===
+        NOV26_FORMATION_TEMPLATE_KEY
+          ? nov26Attachments
+          : undefined,
     });
 
     if (ok) {
@@ -451,7 +512,7 @@ export async function sendDailyLeadCampaignBatch(args: {
         recipientId: row.recipientId,
         leadId: row.leadId,
         type: "SENT",
-        meta: { to: row.email, batch: "daily_60", domainPhase },
+        meta: { to: row.email, batch: "daily_80", domainPhase },
       });
 
       sent += 1;

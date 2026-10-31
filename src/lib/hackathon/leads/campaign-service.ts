@@ -24,6 +24,11 @@ import {
   personalizeNgembaLaunchEmail,
 } from "./ngemba-launch-personalize";
 import {
+  NOV26_FORMATION_TEMPLATE_KEY,
+  buildNov26FormationCtaUrl,
+  personalizeNov26FormationEmail,
+} from "./nov26-formation-personalize";
+import {
   loadOutreachExclusionSet,
   outreachSkipReason,
   companyOutreachKey,
@@ -274,9 +279,11 @@ export async function generateCampaignRecipients(args: {
     throw new Error("campaign_locked");
   }
 
-  const isNgemba =
-    campaign.bodyTemplate === NGEMBA_LAUNCH_TEMPLATE_KEY ||
-    args.recontactMode === true;
+  const isNgemba = campaign.bodyTemplate === NGEMBA_LAUNCH_TEMPLATE_KEY;
+  const isNov26Formation =
+    campaign.bodyTemplate === NOV26_FORMATION_TEMPLATE_KEY;
+  const allowRecontact =
+    isNgemba || isNov26Formation || args.recontactMode === true;
 
   if (args.regenerate) {
     await clearCampaignPendingRecipients(args.campaignId);
@@ -287,7 +294,7 @@ export async function generateCampaignRecipients(args: {
     .from(hackathonLeads)
     .where(eq(hackathonLeads.editionId, campaign.editionId))
     .orderBy(desc(hackathonLeads.score))
-    .limit(isNgemba ? 8000 : 3000);
+    .limit(isNgemba || isNov26Formation ? 8000 : 3000);
 
   const suppressed = await db
     .select({ emailCanonical: hackathonSuppressionList.emailCanonical })
@@ -297,7 +304,7 @@ export async function generateCampaignRecipients(args: {
 
   const claimed =
     args.claimedCompanyKeys ??
-    (isNgemba
+    (allowRecontact
       ? new Set<string>()
       : await loadEditionClaimedCompanyKeys(
           campaign.editionId,
@@ -305,7 +312,7 @@ export async function generateCampaignRecipients(args: {
         ));
   const claimedEmails =
     args.claimedEmails ??
-    (isNgemba
+    (allowRecontact
       ? new Set<string>()
       : await loadEditionClaimedEmails(campaign.editionId, args.campaignId));
 
@@ -356,7 +363,7 @@ export async function generateCampaignRecipients(args: {
       status = "SKIPPED";
       skipReason = "already_registered";
     } else if (
-      !isNgemba &&
+      !allowRecontact &&
       ((lead.contactCount ?? 0) > 0 ||
         lead.lastContactedAt != null ||
         claimedEmails.has(emailKey))
@@ -366,7 +373,7 @@ export async function generateCampaignRecipients(args: {
         (lead.contactCount ?? 0) > 0 || lead.lastContactedAt != null
           ? "already_contacted"
           : "duplicate_email";
-    } else if (isNgemba && claimedEmails.has(emailKey)) {
+    } else if (allowRecontact && claimedEmails.has(emailKey)) {
       status = "SKIPPED";
       skipReason = "duplicate_email";
     } else if (companyKey && claimed.has(companyKey)) {
@@ -375,11 +382,16 @@ export async function generateCampaignRecipients(args: {
     }
 
     const unsubUrl = `${base}/api/hackathon/email/u/${unsubscribeToken}`;
-    const ctaUrl = buildCampaignCtaUrl({
-      campaignSlug: HACKATHON_CAMPAIGN_SLUG,
-      segment: lead.segment,
-      clickToken,
-    });
+    const ctaUrl = isNov26Formation
+      ? buildNov26FormationCtaUrl({
+          segment: lead.segment,
+          clickToken,
+        })
+      : buildCampaignCtaUrl({
+          campaignSlug: HACKATHON_CAMPAIGN_SLUG,
+          segment: lead.segment,
+          clickToken,
+        });
 
     const personalized =
       campaign.bodyTemplate === NGEMBA_LAUNCH_TEMPLATE_KEY
@@ -388,7 +400,24 @@ export async function generateCampaignRecipients(args: {
             unsubscribeUrl: unsubUrl,
             company: lead.company,
           })
-        : personalizeLeadEmail({
+        : isNov26Formation
+          ? personalizeNov26FormationEmail({
+              lead: {
+                firstName: lead.firstName,
+                lastName: lead.lastName,
+                email: lead.email,
+                jobTitle: lead.jobTitle,
+                company: lead.company,
+                location: lead.location,
+                skills: lead.skills ?? [],
+                segment: lead.segment as HackathonLeadSegment,
+                recommendedProfile: lead.recommendedProfile,
+                notes: lead.notes,
+              },
+              unsubscribeUrl: unsubUrl,
+              ctaUrl,
+            })
+          : personalizeLeadEmail({
             lead: {
               firstName: lead.firstName,
               lastName: lead.lastName,
@@ -673,6 +702,83 @@ export async function prepareNgembaLaunchCampaignPack(args: {
       meta: {
         dryRun: false,
         note: "NGEMBA launch · progressive 60/day · 08h30 Africa/Kinshasa",
+      },
+    });
+    approved = true;
+  }
+
+  return {
+    paused,
+    campaignId: id,
+    name,
+    generate,
+    approved,
+  };
+}
+
+/** Formation mcbuleli.com/nov26 · leads hackathon · 80/j · Gmail puis pro · PJ affiche. */
+export async function prepareNov26FormationCampaignPack(args: {
+  editionId: string;
+  createdByUserId?: string | null;
+  minCategory?: HackathonLeadCategory;
+  approveLive?: boolean;
+}): Promise<{
+  paused: number;
+  campaignId: string;
+  name: string;
+  generate: GenerateCampaignResult;
+  approved: boolean;
+}> {
+  const { paused } = await pauseActiveEditionCampaigns(args.editionId);
+  const name =
+    "Formation nov26 · leads (80/j · Gmail puis pro · affiche PJ)";
+  const { id } = await createCampaign({
+    editionId: args.editionId,
+    name,
+    segment: "mixed",
+    minCategory: args.minCategory ?? "UNQUALIFIED",
+    createdByUserId: args.createdByUserId,
+    scheduledAt: new Date(),
+    dryRun: !(args.approveLive ?? false),
+    subjectTemplate:
+      "{{firstName}}, formation IA en ligne · 27-29 nov. · McBuleli",
+    bodyTemplate: NOV26_FORMATION_TEMPLATE_KEY,
+  });
+
+  const generate = await generateCampaignRecipients({
+    campaignId: id,
+    regenerate: true,
+    recontactMode: true,
+    claimedCompanyKeys: new Set(),
+    claimedEmails: new Set(),
+  });
+
+  await scheduleCampaign({
+    campaignId: id,
+    scheduledAt: new Date(),
+    dryRun: !(args.approveLive ?? false),
+    markReady: true,
+  });
+
+  let approved = false;
+  if (args.approveLive) {
+    const db = getDb();
+    const now = new Date();
+    await db
+      .update(hackathonEmailCampaigns)
+      .set({
+        status: "APPROVED",
+        dryRun: false,
+        approvedAt: now,
+        updatedAt: now,
+      })
+      .where(eq(hackathonEmailCampaigns.id, id));
+    await db.insert(hackathonCampaignEvents).values({
+      campaignId: id,
+      type: "APPROVED",
+      meta: {
+        dryRun: false,
+        note: "Formation nov26 · 80/day · Resend quota · Gmail/iCloud then corporate",
       },
     });
     approved = true;

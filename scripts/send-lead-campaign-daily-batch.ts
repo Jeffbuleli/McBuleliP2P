@@ -1,5 +1,5 @@
 /**
- * Progressive lead campaign: regenerate queue then send up to 60/day.
+ * Progressive lead campaign: regenerate queue then send up to 80/day.
  *
  * Dry regenerate only:
  *   npx tsx scripts/send-lead-campaign-daily-batch.ts --regenerate
