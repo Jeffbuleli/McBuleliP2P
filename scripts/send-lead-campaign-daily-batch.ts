@@ -255,7 +255,7 @@ async function main() {
         domainMode: args.domainMode,
         corporateOnly: args.corporateOnly,
         reopenCompleted: shouldReopen,
-        regenerate: Boolean(args.regenerate || args.send),
+        regenerate: Boolean(args.regenerate),
         send: Boolean(args.send),
       },
       null,
@@ -273,10 +273,14 @@ async function main() {
     `minCategory -> ${args.minCategory} on ${lowered.length} campaign(s)`,
   );
 
-  // Always refresh queue before send so we pick never-contacted C_LOW+
-  const regenerated = await regenerateEdition(args.editionId);
-  console.log("regenerate:", JSON.stringify(regenerated, null, 2));
-  console.log("pending_by_segment:", JSON.stringify(await pendingStats(args.editionId), null, 2));
+  if (args.regenerate) {
+    const regenerated = await regenerateEdition(args.editionId);
+    console.log("regenerate:", JSON.stringify(regenerated, null, 2));
+  }
+  console.log(
+    "pending_by_segment:",
+    JSON.stringify(await pendingStats(args.editionId), null, 2),
+  );
 
   if (!args.send) {
     console.log("Dry regenerate only (no Resend). Pass --send to approve + send.");
