@@ -23,7 +23,7 @@ function authorize(req: Request): boolean {
 }
 
 /**
- * Progressive lead campaign send - 60/day @ ~09h Africa/Kinshasa (cron UTC 08:00).
+ * Progressive lead campaign send - 80/day @ 09h30 GMT+1 (cron UTC 08:30).
  * POST { editionId?, limit?, domainMode?, corporateOnly?, approve? }
  */
 export async function POST(req: Request) {
@@ -62,6 +62,6 @@ export async function POST(req: Request) {
   return NextResponse.json({
     editionId,
     ...result,
-    note: "Lot quotidien max 60 — Gmail/iCloud d'abord, puis emails pro non contactés.",
+    note: "Lot quotidien max 80 - 09h30 GMT+1 - Gmail/iCloud d'abord, puis emails pro.",
   });
 }

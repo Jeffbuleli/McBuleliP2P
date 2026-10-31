@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * GitHub Actions cron - POST /api/internal/hackathon/campaign-daily-send
- * 08h30 Africa/Kinshasa = 07:30 UTC → send up to 60 lead emails (NGEMBA / partnership).
+ * 09h30 Africa/Kinshasa (GMT+1) = 08h30 UTC → send up to 80 lead emails (formation nov26).
  * Phase: Gmail/iCloud first, then corporate not yet contacted.
  * Infrequent email job → GHA (.github/workflows/cron-scheduled.yml), not VPS crontab.
  */
@@ -29,7 +29,7 @@ const res = await fetch(url, {
   body: JSON.stringify({
     // Approval is manual (admin). Cron only sends already APPROVED + dryRun=false.
     domainMode: "gmail_icloud_first",
-    limit: 60,
+    limit: 80,
   }),
 });
 const body = await res.text();

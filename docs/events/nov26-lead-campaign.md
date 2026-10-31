@@ -4,7 +4,7 @@ Cible : base **hackathon_leads** (édition Kinshasa / lead-gen), message **forma
 
 ## Quota Resend
 
-- Compte ~**100 e-mails / jour** → lots de **80/j** (marge tests / ops).
+- Compte ~**100 e-mails / jour** → lots de **80/j** à **09h30 GMT+1** (cron GitHub `30 8 * * *` UTC).
 - Fenêtre **31 oct. → 26 nov. 2026** ≈ 26 × 80 → **~2 080** envois max si file suffisante.
 
 ## Priorité des domaines

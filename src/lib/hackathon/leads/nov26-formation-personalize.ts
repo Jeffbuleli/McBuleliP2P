@@ -5,20 +5,225 @@
 
 import {
   NOV26_DATES_LABEL_FR,
+  NOV26_OUTCOMES,
+  NOV26_OUTCOMES_INTRO_FR,
+  NOV26_OUTCOMES_TITLE_FR,
   NOV26_PRICE_USD,
   NOV26_TIME_LABEL_FR,
   NOV26_TITLE_FR,
 } from "@/lib/nov26/content";
-import { SUPPORT_WA_PATH } from "@/lib/support-contact";
+import { EMAIL_BRAND, logoUrl } from "@/lib/email/config";
+import {
+  SUPPORT_EMAIL,
+  SUPPORT_PHONES_DISPLAY,
+  SUPPORT_WA_PATH,
+} from "@/lib/support-contact";
 import { isCompanyStyleLead } from "./lead-outreach-exclude";
 import {
   MCBULELI_RCCM,
-  renderPartnershipHtml,
   renderPartnershipText,
   type LeadPersonalizeInput,
   type PersonalizedEmail,
 } from "./lead-personalize";
 import type { HackathonLeadSegment } from "./types";
+
+const POSTER_URL = "https://mcbuleli.com/events/nov26/affiche.png";
+
+function esc(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function renderNov26FormationHtml(args: {
+  greeting: string;
+  headline: string;
+  preheader: string;
+  paragraphs: string[];
+  outcomesTitle: string;
+  outcomesIntro: string;
+  outcomes: string[];
+  formatBullets: string[];
+  ctaLabel: string;
+  ctaHref: string;
+  waHref: string;
+  close: string;
+  unsubscribeHref: string;
+}): string {
+  const year = new Date().getFullYear();
+  const logoSrc = logoUrl();
+  const paras = args.paragraphs
+    .map(
+      (p) =>
+        `<p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:${EMAIL_BRAND.muted};">${esc(p)}</p>`,
+    )
+    .join("");
+
+  const bulletRows = args.formatBullets
+    .map(
+      (b) => `<tr>
+        <td style="width:28px;vertical-align:top;padding:0 0 10px 0;">
+          <span style="display:inline-block;width:22px;height:22px;line-height:22px;text-align:center;border-radius:50%;background:${EMAIL_BRAND.mint};color:${EMAIL_BRAND.primary};font-size:12px;font-weight:800;">✓</span>
+        </td>
+        <td style="vertical-align:top;padding:0 0 10px 0;font-size:14px;line-height:1.5;color:${EMAIL_BRAND.text};">${esc(b)}</td>
+      </tr>`,
+    )
+    .join("");
+
+  const outcomeRows = args.outcomes
+    .map(
+      (b) => `<tr>
+        <td style="width:28px;vertical-align:top;padding:0 0 8px 0;">
+          <span style="display:inline-block;width:22px;height:22px;line-height:22px;text-align:center;border-radius:50%;background:${EMAIL_BRAND.primary};color:#fff;font-size:11px;font-weight:800;">✓</span>
+        </td>
+        <td style="vertical-align:top;padding:0 0 8px 0;font-size:13px;line-height:1.45;color:${EMAIL_BRAND.text};">${esc(b)}</td>
+      </tr>`,
+    )
+    .join("");
+
+  const greetingLine = args.greeting
+    ? `Bonjour ${esc(args.greeting)},`
+    : "Bonjour,";
+
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light" />
+  <title>${esc(args.headline)}</title>
+</head>
+<body style="margin:0;padding:0;background:${EMAIL_BRAND.mint};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${esc(args.preheader)}</div>
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:${EMAIL_BRAND.mint};padding:24px 12px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:${EMAIL_BRAND.white};border-radius:18px;border:1px solid ${EMAIL_BRAND.border};overflow:hidden;box-shadow:0 12px 40px -20px rgba(48,95,51,0.25);">
+          <tr>
+            <td style="padding:0;background:linear-gradient(135deg,#5c1830 0%,#7a2840 42%,#1F6B43 100%);">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td style="padding:20px 24px 8px;">
+                    <table role="presentation" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td style="vertical-align:middle;padding-right:10px;">
+                          <img src="${logoSrc}" width="44" height="44" alt="" style="display:block;border:0;border-radius:50%;background:#fff;padding:2px;" />
+                        </td>
+                        <td style="vertical-align:middle;">
+                          <p style="margin:0;font-size:17px;font-weight:800;color:#ffffff;letter-spacing:-0.02em;">McBuleli</p>
+                          <p style="margin:2px 0 0;font-size:11px;color:rgba(255,255,255,0.85);">Formation IA · En ligne · nov. 2026</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:4px 24px 20px;">
+                    <p style="margin:0 0 6px;font-size:10px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,255,255,0.75);">Trois soirées · Google Meet</p>
+                    <h1 style="margin:0;font-size:22px;line-height:1.25;font-weight:800;color:#ffffff;">${esc(args.headline)}</h1>
+                    <p style="margin:10px 0 0;font-size:13px;line-height:1.45;color:rgba(255,255,255,0.9);">${esc(NOV26_TITLE_FR)}</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 20px;background:${EMAIL_BRAND.white};">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-top:-14px;">
+                <tr>
+                  <td style="width:33%;padding:4px;">
+                    <div style="text-align:center;background:${EMAIL_BRAND.mint};border:1px solid ${EMAIL_BRAND.border};border-radius:12px;padding:10px 6px;">
+                      <p style="margin:0;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:${EMAIL_BRAND.muted};">Dates</p>
+                      <p style="margin:4px 0 0;font-size:12px;font-weight:800;color:${EMAIL_BRAND.primary};">27-29 nov.</p>
+                    </div>
+                  </td>
+                  <td style="width:33%;padding:4px;">
+                    <div style="text-align:center;background:${EMAIL_BRAND.mint};border:1px solid ${EMAIL_BRAND.border};border-radius:12px;padding:10px 6px;">
+                      <p style="margin:0;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:${EMAIL_BRAND.muted};">Horaire</p>
+                      <p style="margin:4px 0 0;font-size:12px;font-weight:800;color:${EMAIL_BRAND.primary};">19h30</p>
+                    </div>
+                  </td>
+                  <td style="width:33%;padding:4px;">
+                    <div style="text-align:center;background:${EMAIL_BRAND.mint};border:1px solid ${EMAIL_BRAND.border};border-radius:12px;padding:10px 6px;">
+                      <p style="margin:0;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:${EMAIL_BRAND.muted};">Tarif</p>
+                      <p style="margin:4px 0 0;font-size:12px;font-weight:800;color:${EMAIL_BRAND.primary};">${esc(NOV26_PRICE_USD)} USD</p>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:16px 24px 0;text-align:center;">
+              <span style="display:inline-block;margin:2px 4px;padding:5px 10px;border-radius:999px;background:${EMAIL_BRAND.mint};border:1px solid ${EMAIL_BRAND.border};font-size:11px;font-weight:700;color:${EMAIL_BRAND.primary};">Cursor</span>
+              <span style="display:inline-block;margin:2px 4px;padding:5px 10px;border-radius:999px;background:${EMAIL_BRAND.mint};border:1px solid ${EMAIL_BRAND.border};font-size:11px;font-weight:700;color:${EMAIL_BRAND.primary};">Claude</span>
+              <span style="display:inline-block;margin:2px 4px;padding:5px 10px;border-radius:999px;background:${EMAIL_BRAND.mint};border:1px solid ${EMAIL_BRAND.border};font-size:11px;font-weight:700;color:${EMAIL_BRAND.primary};">Codex</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:20px 24px 8px;">
+              <p style="margin:0 0 14px;font-size:15px;line-height:1.55;color:${EMAIL_BRAND.text};">${greetingLine}</p>
+              ${paras}
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 18px;border:1px solid ${EMAIL_BRAND.border};border-left:4px solid ${EMAIL_BRAND.primary};border-radius:14px;background:linear-gradient(135deg,${EMAIL_BRAND.mint} 0%,#f6fbf8 100%);">
+                <tr>
+                  <td style="padding:16px 16px 12px;">
+                    <p style="margin:0 0 6px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:${EMAIL_BRAND.primary};">${esc(args.outcomesTitle)}</p>
+                    <p style="margin:0 0 12px;font-size:14px;line-height:1.5;color:${EMAIL_BRAND.muted};">${esc(args.outcomesIntro)}</p>
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0">${outcomeRows}</table>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:0 0 10px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:${EMAIL_BRAND.primary};">Format &amp; inscription</p>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 16px;">${bulletRows}</table>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 18px;background:linear-gradient(135deg,${EMAIL_BRAND.mint} 0%,#f6fbf8 100%);border:1px solid ${EMAIL_BRAND.border};border-radius:14px;">
+                <tr>
+                  <td style="padding:14px 16px;">
+                    <p style="margin:0 0 8px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:${EMAIL_BRAND.primary};">Avantages apprenants</p>
+                    <p style="margin:0;font-size:13px;line-height:1.5;color:${EMAIL_BRAND.muted};">Orientation compte <strong style="color:${EMAIL_BRAND.text};">X</strong> (vérifié) · assistants <strong style="color:${EMAIL_BRAND.text};">xAI / Grok</strong> · workflow <strong style="color:${EMAIL_BRAND.text};">Cursor</strong> premium - selon éligibilité.</p>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:0 0 18px;font-size:14px;line-height:1.55;color:${EMAIL_BRAND.muted};">${esc(args.close)}</p>
+              <p style="margin:0 0 14px;text-align:center;">
+                <a href="${esc(args.ctaHref)}" style="display:inline-block;background:${EMAIL_BRAND.primary};color:#ffffff;text-decoration:none;font-size:15px;font-weight:800;padding:15px 28px;border-radius:14px;box-shadow:0 10px 24px -12px rgba(48,95,51,0.55);">${esc(args.ctaLabel)}</a>
+              </p>
+              <p style="margin:0 0 20px;text-align:center;">
+                <a href="${esc(args.waHref)}" style="display:inline-block;color:${EMAIL_BRAND.primary};text-decoration:none;font-size:14px;font-weight:700;border:1px solid ${EMAIL_BRAND.border};background:${EMAIL_BRAND.white};padding:11px 20px;border-radius:12px;">WhatsApp · questions rapides</a>
+              </p>
+              <p style="margin:0 0 16px;text-align:center;">
+                <a href="${esc(POSTER_URL)}" style="font-size:12px;color:${EMAIL_BRAND.muted};text-decoration:underline;">Voir l'affiche (PJ jointe)</a>
+              </p>
+              <p style="margin:0 0 6px;font-size:15px;line-height:1.55;color:${EMAIL_BRAND.text};">Cordialement,</p>
+              <p style="margin:0 0 20px;font-size:15px;line-height:1.55;color:${EMAIL_BRAND.text};">
+                <strong>McBuleli Team</strong><br />
+                Mme Patty B.<br />
+                <a href="mailto:${SUPPORT_EMAIL}" style="color:${EMAIL_BRAND.primary};text-decoration:none;">${SUPPORT_EMAIL}</a><br />
+                ${esc(SUPPORT_PHONES_DISPLAY)}<br />
+                WhatsApp :
+                <a href="${esc(args.waHref)}" style="color:${EMAIL_BRAND.primary};text-decoration:none;">écrire sur WhatsApp</a>
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:16px 24px 22px;border-top:1px solid ${EMAIL_BRAND.border};text-align:center;background:#fafaf9;">
+              <p style="margin:0;font-size:11px;line-height:1.5;color:${EMAIL_BRAND.muted};">
+                © ${year} McBuleli - RCCM : ${MCBULELI_RCCM}<br />
+                <a href="${esc(args.ctaHref)}" style="color:${EMAIL_BRAND.primary};text-decoration:none;font-weight:600;">mcbuleli.com/nov26</a>
+              </p>
+              <p style="margin:12px 0 0;font-size:11px;color:${EMAIL_BRAND.muted};">
+                <a href="${esc(args.unsubscribeHref)}" style="color:${EMAIL_BRAND.muted};text-decoration:underline;">Ne plus recevoir ces communications</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
 
 export const NOV26_FORMATION_TEMPLATE_KEY = "nov26_formation_invite";
 export const NOV26_FORMATION_CAMPAIGN_SLUG = "nov26-formation-2026";
@@ -64,13 +269,13 @@ function sectorKey(input: LeadPersonalizeInput): string {
   return "general";
 }
 
-const SHARED_BULLETS = [
-  "Trois soirées en direct - de l'idée à une démo app ou outil IA (Vibe Coding)",
-  "Cursor, Claude et Codex - méthode concrète, pas un cours théorique",
-  "Avantages apprenants McBuleli : orientation X (vérifié), xAI / Grok, workflow Cursor premium (selon éligibilité)",
-  "Pré-inscription gratuite (place gardée + rappels) ou paiement immédiat MoMo / USDT",
-  "Ouvert aux développeurs, entrepreneurs et équipes - pas besoin d'être expert code",
+const FORMAT_BULLETS = [
+  "Trois soirées en direct · Google Meet · 19h30 GMT+1",
+  "Pré-inscription gratuite (place gardée + rappels) ou paiement MoMo / USDT",
+  "Développeurs, entrepreneurs et équipes - pas besoin d'être expert code",
 ];
+
+const OUTCOME_BULLETS = NOV26_OUTCOMES.map((o) => o.fr);
 
 type Angle = {
   subject: string;
@@ -248,13 +453,15 @@ export function personalizeNov26FormationEmail(args: {
     ? `${company} · formation IA en ligne · 27-29 nov.`
     : `${NOV26_FORMATION_FACTS.dates} · Google Meet · McBuleli`;
 
-  const html = renderPartnershipHtml({
+  const html = renderNov26FormationHtml({
     greeting,
     headline: NOV26_FORMATION_FACTS.headline,
     preheader,
     paragraphs,
-    bullets: SHARED_BULLETS,
-    dateHighlight,
+    outcomesTitle: NOV26_OUTCOMES_TITLE_FR,
+    outcomesIntro: NOV26_OUTCOMES_INTRO_FR,
+    outcomes: OUTCOME_BULLETS,
+    formatBullets: FORMAT_BULLETS,
     ctaLabel: angle.ctaLabel,
     ctaHref: args.ctaUrl,
     waHref: SUPPORT_WA_PATH,
@@ -262,20 +469,22 @@ export function personalizeNov26FormationEmail(args: {
     unsubscribeHref: args.unsubscribeUrl,
   });
 
-  // Formation branding in header subtitle (replace hackathon line)
-  const htmlBranded = html.replace(
-    "Innovation · Hackathon AI Kinshasa",
-    "Formation IA · En ligne · nov. 2026",
-  ).replace(
-    "mcbuleli.org/hackathon",
-    "mcbuleli.com/nov26",
-  );
+  const textBullets = [
+    "",
+    NOV26_OUTCOMES_TITLE_FR,
+    NOV26_OUTCOMES_INTRO_FR,
+    "",
+    ...OUTCOME_BULLETS.map((b) => `- ${b}`),
+    "",
+    "Format & inscription",
+    ...FORMAT_BULLETS.map((b) => `- ${b}`),
+  ].join("\n");
 
   const text = renderPartnershipText({
     greeting,
     headline: NOV26_FORMATION_FACTS.headline,
-    paragraphs,
-    bullets: SHARED_BULLETS,
+    paragraphs: [...paragraphs, textBullets],
+    bullets: [],
     dateHighlight,
     ctaLabel: angle.ctaLabel,
     ctaHref: args.ctaUrl,
@@ -299,7 +508,7 @@ export function personalizeNov26FormationEmail(args: {
 
   return {
     subject: angle.subject,
-    html: htmlBranded,
+    html,
     text,
     facts,
     personalizationRate,

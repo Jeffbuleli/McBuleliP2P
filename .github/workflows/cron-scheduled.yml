@@ -13,9 +13,8 @@ on:
     # journey-nudge daily disabled - burns Resend free transactional quota (~1k/day).
     # Marketing blasts → Resend Broadcasts. Re-enable only with ACADEMY_JOURNEY_NUDGE_EMAIL=true on API.
     - cron: "0 1 * * 0"
-    # Hackathon lead partnership / NGEMBA emails - 60/day at 08h30 Africa/Kinshasa (07:30 UTC)
-    # Gmail/iCloud first, then corporate not yet contacted
-    - cron: "30 7 * * *"
+    # Formation nov26 lead emails - 80/day at 09h30 GMT+1 / Africa/Kinshasa (08:30 UTC)
+    - cron: "30 8 * * *"
   workflow_dispatch:
     inputs:
       job:
@@ -136,10 +135,10 @@ jobs:
       - name: Top trader weekly payout
         run: node scripts/cron-top-trader-payout.mjs
 
-  # Daily lead emails (Resend) - NGEMBA / partnership · 08h30 Africa/Kinshasa · requires APPROVED + dryRun=false
+  # Daily lead emails (Resend) - formation nov26 · 09h30 GMT+1 · requires APPROVED + dryRun=false
   hackathon-lead-campaign:
     if: >
-      (github.event_name == 'schedule' && github.event.schedule == '30 7 * * *')
+      (github.event_name == 'schedule' && github.event.schedule == '30 8 * * *')
       || (github.event_name == 'workflow_dispatch' && inputs.job == 'hackathon-lead-campaign')
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -158,5 +157,5 @@ jobs:
             echo "::error::Missing MCBULELI_API_URL. Use https://mcbuleli.org"
             exit 1
           fi
-      - name: Hackathon lead campaign daily batch (60 @ 08h30 Kinshasa)
+      - name: Hackathon lead campaign daily batch (80 @ 09h30 GMT+1)
         run: node scripts/cron-hackathon-lead-campaign.mjs
