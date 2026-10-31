@@ -20,7 +20,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 35
     steps:
       - name: Deploy via SSH (git pull + docker compose)
         uses: appleboy/ssh-action@v1.2.0
@@ -29,7 +29,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script_stop: true
-          command_timeout: 20m
+          command_timeout: 30m
           script: |
             set -euo pipefail
             REPO="${{ secrets.VPS_REPO_DIR }}"

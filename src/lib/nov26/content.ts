@@ -22,38 +22,38 @@ export const NOV26_TAGLINE_EN =
 
 /** Sous-titre section Programme (Contenu · Trois soirées). */
 export const NOV26_PROGRAM_INTRO_FR =
-  "Pas seulement du code : automatiser, produire, communiquer et servir vos clients mieux — avec des outils que vous gardez après la formation.";
+  "Trois soirées pour avancer de l'idée à une démo — app ou outil IA — avec Cursor, Claude et Codex.";
 export const NOV26_PROGRAM_INTRO_EN =
-  "Not just coding: automate, create, communicate, and serve clients better — with tools you keep after the training.";
+  "Three evenings from idea to demo — an AI app or business tool — with Cursor, Claude, and Codex.";
 
-/** Bloc court « à l'issue » (même préoccupation que prospects B2B). */
+/** Bloc court « à l'issue » — promesse publique formation (≠ propositions B2B personnalisées). */
 export const NOV26_OUTCOMES_TITLE_FR = "À l'issue de la formation";
 export const NOV26_OUTCOMES_TITLE_EN = "After the training";
 export const NOV26_OUTCOMES_INTRO_FR =
-  "Vous repartez avec des gestes concrets — service client, contenu, processus — et les outils pour continuer seul.";
+  "Repartir avec une démo montrable et la méthode pour continuer seul — développeur, entrepreneur ou équipe.";
 export const NOV26_OUTCOMES_INTRO_EN =
-  "You leave with concrete skills — support, content, processes — and tools to keep going on your own.";
+  "Leave with a showable demo and a method to keep going on your own — developer, entrepreneur, or team.";
 
 export const NOV26_OUTCOMES: { fr: string; en: string }[] = [
   {
-    fr: "Messages pro (WhatsApp, e-mail) avec l'IA, validés avant envoi",
-    en: "Pro messages (WhatsApp, email) with AI, reviewed before sending",
+    fr: "Cadrer le projet : idée, utilisateurs, périmètre — objectif démo en 3 soirées",
+    en: "Frame the project: idea, users, scope — demo goal in 3 evenings",
   },
   {
-    fr: "Publications et légendes pour vos réseaux sociaux",
-    en: "Posts and captions for your social channels",
+    fr: "Vibe Coding : itérer avec l'IA en relisant et validant avant d'avancer",
+    en: "Vibe Coding: iterate with AI, review and validate before moving on",
   },
   {
-    fr: "Prospection, relances et tri des demandes clients",
-    en: "Lead follow-up and prioritizing client requests",
+    fr: "Prototyper écrans, contenu et logique sans équipe technique complète",
+    en: "Prototype screens, content, and logic without a full technical team",
   },
   {
-    fr: "Premiers pas vers un assistant métier (FAQ, rappel) via API",
-    en: "First steps toward a business assistant (FAQ, callbacks) via API",
+    fr: "Connecter API et petites automatisations lorsque votre cas l'exige",
+    en: "Connect APIs and small automations when your use case needs them",
   },
   {
-    fr: "Autonomie avec Cursor, Claude et Codex au quotidien",
-    en: "Day-to-day autonomy with Cursor, Claude, and Codex",
+    fr: "Documenter, pitcher la démo et faire évoluer le projet après la formation",
+    en: "Document, pitch the demo, and evolve the project after training",
   },
 ];
 
@@ -181,8 +181,8 @@ export const NOV26_FAQ: Nov26FaqItem[] = [
   {
     qFr: "Quelles compétences à l'issue de la formation ?",
     qEn: "What will I be able to do after the training?",
-    aFr: "Réponses clients (WhatsApp, e-mail), contenu réseaux sociaux, prospection et relances, premiers pas API / assistant métier, et autonomie avec Cursor, Claude et Codex — applicable en entreprise comme en solo.",
-    aEn: "Client replies (WhatsApp, email), social content, lead follow-up, first API / business-assistant steps, and autonomy with Cursor, Claude, and Codex — for teams or solo work.",
+    aFr: "Cadrer un projet IA, le mener jusqu'à une démo (app ou outil métier), pratiquer un flux Cursor · Claude · Codex, et savoir itérer ensuite — quel que soit votre profil.",
+    aEn: "Scope an AI project, ship a demo (app or business tool), practice a Cursor · Claude · Codex workflow, and keep iterating — whatever your background.",
   },
   {
     qFr: "Faut-il déjà savoir coder ?",
@@ -193,8 +193,8 @@ export const NOV26_FAQ: Nov26FaqItem[] = [
   {
     qFr: "C'est réservé aux développeurs ?",
     qEn: "Is this developers only?",
-    aFr: "Non. L'objectif est d'améliorer votre activité (service client, contenu, processus) avec Cursor, Claude et Codex — avec ou sans bagage technique.",
-    aEn: "No. The goal is to improve your work (support, content, processes) with Cursor, Claude, and Codex — with or without a technical background.",
+    aFr: "Non. On vise une première app ou un outil métier assisté par l'IA — pas un parcours réservé aux ingénieurs.",
+    aEn: "No. We aim for a first AI-assisted app or business tool — not an engineers-only track.",
   },
   {
     qFr: "Comment se déroule la formation ?",

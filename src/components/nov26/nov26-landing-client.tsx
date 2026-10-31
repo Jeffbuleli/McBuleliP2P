@@ -300,21 +300,24 @@ export function Nov26LandingClient({
             </span>
           ))}
         </div>
-        <div className="mb-6 rounded-2xl border border-[color:var(--hk-border,var(--fd-border))] bg-[color:var(--hk-surface,var(--fd-card))] p-4 sm:p-5">
-          <p className="text-[10px] font-extrabold uppercase tracking-wider text-[color:var(--hk-accent,var(--fd-primary))]">
+        <div
+          id="competences"
+          className="mb-6 scroll-mt-24 rounded-2xl border border-[color:var(--hk-border,var(--fd-border))] border-l-4 border-l-[color:var(--hk-accent,var(--fd-primary))] bg-gradient-to-br from-[color:var(--hk-soft,var(--fd-mint))]/35 to-[color:var(--hk-surface,var(--fd-card))] p-4 shadow-[0_10px_28px_-18px_var(--hk-shadow,rgba(0,0,0,0.1))] sm:p-5"
+        >
+          <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[color:var(--hk-accent,var(--fd-primary))]">
             {isFr ? NOV26_OUTCOMES_TITLE_FR : NOV26_OUTCOMES_TITLE_EN}
           </p>
-          <p className="mt-2 text-sm leading-relaxed text-[color:var(--hk-muted,var(--fd-muted))]">
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[color:var(--hk-text,var(--fd-text))]">
             {isFr ? NOV26_OUTCOMES_INTRO_FR : NOV26_OUTCOMES_INTRO_EN}
           </p>
-          <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+          <ul className="mt-4 grid gap-2.5 sm:grid-cols-2">
             {NOV26_OUTCOMES.map((item) => (
               <li
                 key={item.fr}
-                className="flex gap-2 text-xs leading-snug text-[color:var(--hk-text,var(--fd-text))]"
+                className="flex gap-2.5 rounded-xl border border-[color:var(--hk-border,var(--fd-border))]/80 bg-[color:var(--hk-page,var(--fd-bg))]/60 px-3 py-2.5 text-xs leading-snug text-[color:var(--hk-text,var(--fd-text))]"
               >
                 <span
-                  className="mt-0.5 shrink-0 text-[color:var(--hk-accent,var(--fd-primary))]"
+                  className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[color:var(--hk-accent,var(--fd-primary))]/15 text-[10px] font-bold text-[color:var(--hk-accent,var(--fd-primary))]"
                   aria-hidden
                 >
                   ✓
