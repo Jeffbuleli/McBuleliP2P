@@ -36,6 +36,7 @@ import {
   sendDailyLeadCampaignBatch,
   type LeadCampaignDomainMode,
 } from "../src/lib/hackathon/leads/campaign-send";
+import { NOV26_FORMATION_TEMPLATE_KEY } from "../src/lib/hackathon/leads/nov26-formation-personalize";
 import {
   canSendViaResendApi,
   resendSendBlockedReason,
@@ -211,6 +212,27 @@ async function regenerateEdition(editionId: string) {
   return out;
 }
 
+async function hasActiveNov26FormationCampaign(editionId: string) {
+  const db = getDb();
+  const [row] = await db
+    .select({ id: hackathonEmailCampaigns.id })
+    .from(hackathonEmailCampaigns)
+    .where(
+      and(
+        eq(hackathonEmailCampaigns.editionId, editionId),
+        eq(hackathonEmailCampaigns.bodyTemplate, NOV26_FORMATION_TEMPLATE_KEY),
+        inArray(hackathonEmailCampaigns.status, [
+          "APPROVED",
+          "SENDING",
+          "READY_FOR_REVIEW",
+          "PAUSED",
+        ]),
+      ),
+    )
+    .limit(1);
+  return Boolean(row);
+}
+
 async function pendingStats(editionId: string) {
   const db = getDb();
   const result = await db.execute<{
@@ -240,11 +262,16 @@ async function main() {
     process.exit(1);
   }
 
+  const nov26FormationActive = await hasActiveNov26FormationCampaign(
+    args.editionId,
+  );
+
   // Auto-reopen when expanding past C_LOW (other segments often COMPLETED).
   const shouldReopen =
-    args.reopenCompleted ||
-    args.minCategory === "UNQUALIFIED" ||
-    args.minCategory === "C_LOW";
+    !nov26FormationActive &&
+    (args.reopenCompleted ||
+      args.minCategory === "UNQUALIFIED" ||
+      args.minCategory === "C_LOW");
 
   console.log(
     JSON.stringify(
@@ -254,6 +281,7 @@ async function main() {
         limit: args.limit,
         domainMode: args.domainMode,
         corporateOnly: args.corporateOnly,
+        nov26FormationActive,
         reopenCompleted: shouldReopen,
         regenerate: Boolean(args.regenerate),
         send: Boolean(args.send),
@@ -268,10 +296,14 @@ async function main() {
     console.log("reopened_completed:", JSON.stringify(reopened, null, 2));
   }
 
-  const lowered = await setMinCategory(args.editionId, args.minCategory);
-  console.log(
-    `minCategory -> ${args.minCategory} on ${lowered.length} campaign(s)`,
-  );
+  if (!nov26FormationActive) {
+    const lowered = await setMinCategory(args.editionId, args.minCategory);
+    console.log(
+      `minCategory -> ${args.minCategory} on ${lowered.length} campaign(s)`,
+    );
+  } else {
+    console.log("minCategory: skipped (formation nov26 campaign active)");
+  }
 
   if (args.regenerate) {
     const regenerated = await regenerateEdition(args.editionId);

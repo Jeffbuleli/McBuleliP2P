@@ -213,6 +213,7 @@ export async function sendDailyLeadCampaignBatch(args: {
       dryRun: hackathonEmailCampaigns.dryRun,
       status: hackathonEmailCampaigns.status,
       bodyTemplate: hackathonEmailCampaigns.bodyTemplate,
+      createdAt: hackathonEmailCampaigns.createdAt,
     })
     .from(hackathonEmailCampaigns)
     .where(
@@ -220,7 +221,8 @@ export async function sendDailyLeadCampaignBatch(args: {
         eq(hackathonEmailCampaigns.editionId, args.editionId),
         inArray(hackathonEmailCampaigns.status, ["APPROVED", "SENDING"]),
       ),
-    );
+    )
+    .orderBy(desc(hackathonEmailCampaigns.createdAt));
 
   if (campaigns.length === 0) {
     return emptySendResult(limit, domainMode, {
@@ -228,9 +230,20 @@ export async function sendDailyLeadCampaignBatch(args: {
     });
   }
 
-  const liveCampaignIds = campaigns
+  const nov26FormationLive = campaigns.filter(
+    (c) =>
+      c.bodyTemplate === NOV26_FORMATION_TEMPLATE_KEY &&
+      (args.force || c.dryRun === false),
+  );
+
+  let liveCampaignIds = campaigns
     .filter((c) => args.force || c.dryRun === false)
     .map((c) => c.id);
+
+  /** When formation nov26 is live, ignore legacy segment packs (same edition). */
+  if (nov26FormationLive.length > 0) {
+    liveCampaignIds = [nov26FormationLive[0]!.id];
+  }
 
   if (liveCampaignIds.length === 0) {
     return emptySendResult(limit, domainMode, {
