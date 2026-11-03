@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { CommunityMediaImage } from "@/components/community/community-media-image";
 import {
   HACKATHON_GALLERY_PHOTOS,
   HACKATHON_GALLERY_READY,
@@ -11,12 +12,13 @@ import {
 import { HackathonAtmosphere } from "@/components/hackathon/hackathon-atmosphere";
 import { HkShell, useHkLocale } from "@/components/hackathon/hk-ui";
 import { HackathonPoweredBy } from "@/components/hackathon/hackathon-process-card";
+import { resolveMediaSrc } from "@/lib/media-url";
 
 type GalleryFilter = "all" | "batch-a" | "batch-b";
 
 function downloadHd(photo: HackathonGalleryPhoto): void {
   const a = document.createElement("a");
-  a.href = photo.hdUrl;
+  a.href = resolveMediaSrc(photo.hdUrl) ?? photo.hdUrl;
   a.download = photo.fileName || `${photo.id}.jpg`;
   a.rel = "noopener";
   a.target = "_blank";
@@ -35,19 +37,18 @@ function GalleryTile({
   isFr: boolean;
 }) {
   return (
-    <article className="mb-3 break-inside-avoid">
+    <article>
       <button
         type="button"
         onClick={() => onOpen(photo)}
         className="group relative block w-full overflow-hidden rounded-2xl bg-[color:var(--hk-soft)] ring-1 ring-[color:var(--hk-border)] transition hover:ring-[color:var(--hk-accent)]/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--hk-accent)]"
       >
         <div className="relative aspect-[4/3] w-full">
-          <Image
+          <CommunityMediaImage
             src={photo.thumbUrl}
             alt={photo.fileName}
             fill
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className="object-cover transition duration-500 group-hover:scale-[1.04]"
+            className="transition duration-500 group-hover:scale-[1.04]"
           />
         </div>
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent opacity-0 transition group-hover:opacity-100" />
@@ -118,14 +119,12 @@ function Lightbox({
           </div>
         </div>
         <div className="relative mx-auto max-h-[78vh] w-full overflow-hidden rounded-2xl bg-black ring-1 ring-white/10">
-          <div className="relative aspect-[4/3] w-full max-h-[78vh]">
-            <Image
+          <div className="relative aspect-[4/3] w-full max-h-[78vh] min-h-[200px]">
+            <CommunityMediaImage
               src={photo.hdUrl}
               alt={photo.fileName}
               fill
-              sizes="100vw"
-              className="object-contain"
-              priority
+              objectFit="contain"
             />
           </div>
         </div>
@@ -300,7 +299,7 @@ export function HackathonGalleryClient() {
               </div>
             </div>
 
-            <div className="mt-6 columns-2 gap-3 sm:columns-3 lg:columns-4">
+            <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
               {filtered.map((photo) => (
                 <GalleryTile key={photo.id} photo={photo} onOpen={open} isFr={isFr} />
               ))}

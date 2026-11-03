@@ -10,6 +10,8 @@ export function buildContentSecurityPolicy(): string {
     "'self'",
     "data:",
     "blob:",
+    // Hackathon gallery + community objects on R2 public buckets (*.r2.dev)
+    "https://*.r2.dev",
     "https://img.youtube.com",
     "https://i.ytimg.com",
     "https://images.unsplash.com",
