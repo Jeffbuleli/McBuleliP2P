@@ -79,6 +79,8 @@ Pas de migration DB obligatoire pour Phase 2 (champs dans `ai_payload` jsonb).
 **Phase 3** - RBAC/ABAC (users org + accreditation)  
 ou **commit + deploy-vps** Phase 1+2.
 
+Extension produit (spec) : [34-ACCOMPAGNEMENT-IA-N8N.md](./34-ACCOMPAGNEMENT-IA-N8N.md) — McBuleli IA + n8n avant handoff humain (NGEMBA RDC).
+
 ---
 
 *Document v1.0*
