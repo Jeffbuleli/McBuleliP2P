@@ -3,7 +3,7 @@
 > Plateforme de **sécurité, protection et paix citoyenne** (RDC).  
 > Plan : [`docs/ngemba/PLAN-MAITRE.md`](../../docs/ngemba/PLAN-MAITRE.md) · Phase 0 : [`docs/ngemba/PHASE0-AUDIT.md`](../../docs/ngemba/PHASE0-AUDIT.md)  
 > Accompagnement IA + n8n (avant humain) : [`docs/ngemba/34-ACCOMPAGNEMENT-IA-N8N.md`](../../docs/ngemba/34-ACCOMPAGNEMENT-IA-N8N.md)  
-> Multicanal Telegram / email (n8n) : [`docs/ngemba/35-MULTICANAL-N8N-TELEGRAM-EMAIL.md`](../../docs/ngemba/35-MULTICANAL-N8N-TELEGRAM-EMAIL.md)
+> Multicanal Telegram / email (n8n) : [`docs/ngemba/35-MULTICANAL-N8N-TELEGRAM-EMAIL.md`](../../docs/ngemba/35-MULTICANAL-N8N-TELEGRAM-EMAIL.md) · setup Telegram : [`36-TELEGRAM-N8N-SETUP.md`](../../docs/ngemba/36-TELEGRAM-N8N-SETUP.md)
 
 **URL :** [https://ngemba-rdc.org](https://ngemba-rdc.org) · **Email :** `info@ngemba-rdc.org`  
 **VPS :** `153.75.235.176` (hote Cyber Alert, domaine propre) · port local `3012`  

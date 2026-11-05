@@ -42,4 +42,10 @@ export type SessionRoutingMeta = {
     lng: number | null;
     source: "geoapify_ip" | "ipwho";
   } | null;
+  /** Multicanal n8n (spec 35). */
+  telegramChatId?: string | null;
+  telegramUserId?: string | null;
+  primaryChannel?: "app" | "telegram" | "email" | null;
+  accompanimentPhase?: string | null;
+  lastInboundIdempotencyKey?: string | null;
 };
