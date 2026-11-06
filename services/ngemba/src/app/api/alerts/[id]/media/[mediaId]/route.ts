@@ -55,7 +55,7 @@ export async function GET(req: Request, ctx: Ctx) {
   }
 
   const publicUrl = mediaPublicUrl(attachment);
-  if (publicUrl) {
+  if (publicUrl && attachment.kind !== "audio") {
     return NextResponse.redirect(publicUrl, 302);
   }
 
@@ -69,7 +69,9 @@ export async function GET(req: Request, ctx: Ctx) {
 
   return new NextResponse(new Uint8Array(buf), {
     headers: {
-      "Content-Type": attachment.mimeType,
+      "Content-Type": attachment.mimeType || "application/octet-stream",
+      "Content-Length": String(buf.length),
+      "Accept-Ranges": "none",
       "Cache-Control": "private, no-store",
       "Content-Disposition": `inline; filename="${attachment.fileName.replace(/"/g, "")}"`,
     },

@@ -6,6 +6,7 @@ const BARS = 22;
 
 function pickMime(): string {
   if (typeof MediaRecorder === "undefined") return "";
+  if (MediaRecorder.isTypeSupported("audio/mp4")) return "audio/mp4";
   if (MediaRecorder.isTypeSupported("audio/webm;codecs=opus")) {
     return "audio/webm;codecs=opus";
   }
