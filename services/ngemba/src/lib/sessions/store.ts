@@ -405,6 +405,69 @@ export function updateSession(
   return next;
 }
 
+/** Mise a jour triage / IA apres nouveau message canal (Telegram, etc.). */
+export function patchSessionAiState(
+  id: string,
+  patch: Partial<
+    Pick<
+      AlertSessionRecord,
+      | "urgency"
+      | "category"
+      | "immediateDanger"
+      | "aiSummary"
+      | "aiConfidence"
+      | "aiPayload"
+      | "routingQueue"
+      | "autoRoute"
+      | "provider"
+      | "aiMode"
+      | "slaDueAt"
+    >
+  > & {
+    routingMeta?: SessionRoutingMeta | null;
+    historyNote?: string;
+  },
+): AlertSessionRecord | null {
+  const map = ensureLoaded();
+  const current = map.get(id);
+  if (!current) return null;
+
+  const next: AlertSessionRecord = {
+    ...normalizeRecord(current),
+    ...patch,
+    routingMeta:
+      patch.routingMeta !== undefined
+        ? patch.routingMeta
+        : current.routingMeta ?? null,
+  };
+
+  if (patch.historyNote) {
+    const at = new Date().toISOString();
+    next.statusHistory = [
+      {
+        at,
+        status: next.status,
+        actor: "systeme",
+        note: patch.historyNote,
+      },
+      ...next.statusHistory,
+    ];
+    emitEvent({
+      sessionId: id,
+      eventType: "system",
+      status: next.status,
+      actor: "systeme",
+      note: patch.historyNote,
+      at,
+    });
+  }
+
+  map.set(id, next);
+  persist();
+  dualWrite(next);
+  return next;
+}
+
 /** Patch SLA / escalade / routingMeta (systeme). */
 export function patchSessionSla(
   id: string,

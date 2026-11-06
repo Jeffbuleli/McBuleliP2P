@@ -181,8 +181,14 @@ export function SessionView({
   }, [id]);
 
   const shortId = id.slice(0, 8).toUpperCase();
-  const progressLabels: [string, string, string] =
-    locale === "en"
+  const calm = session
+    ? session.urgency !== "critical" && !session.immediateDanger
+    : false;
+  const progressLabels: [string, string, string] = calm
+    ? locale === "en"
+      ? ["Listen", "Understand", "Guide"]
+      : ["Écoute", "Comprendre", "Orienter"]
+    : locale === "en"
       ? ["Received", "In care", "Closed"]
       : ["Reçue", "En charge", "Clôturée"];
 
@@ -261,7 +267,7 @@ export function SessionView({
                   <h1
                     className={`text-lg font-semibold tracking-tight ${discrete ? "text-[#e8d4e3]" : "text-ng-primary"}`}
                   >
-                    {t.alertOk}
+                    {calm ? t.listenTitle : t.alertOk}
                   </h1>
                   <span
                     className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${urgencyClass(session.urgency)}`}
@@ -272,7 +278,7 @@ export function SessionView({
                 <p
                   className={`mt-1 text-sm ${discrete ? "ng-discrete-muted" : "text-ng-muted"}`}
                 >
-                  {t.humanSoon}
+                  {calm ? t.listenBody : t.humanSoon}
                 </p>
                 {(session.locationLabel || session.commune) && (
                   <p

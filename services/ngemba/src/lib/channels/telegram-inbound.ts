@@ -1,13 +1,15 @@
 import { runTriage } from "@/lib/ai/triage";
+import { runChannelAccompaniment } from "@/lib/channels/accompaniment-chat";
 import { createChatMessage } from "@/lib/sessions/chat";
 import {
   addSessionChatMessage,
   createSession,
   getSession,
   listSessions,
-  patchSessionSla,
+  patchSessionAiState,
 } from "@/lib/sessions/store";
 import type { AlertSessionRecord } from "@/lib/sessions/types";
+import { notifyNewAlert } from "@/lib/ops/notify";
 import { computeSlaDueAt } from "@/lib/ops/sla";
 import { buildRoutingMeta } from "@/lib/partners/match";
 
@@ -41,24 +43,10 @@ function findOpenSessionByTelegramChatId(
   return open.sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0] ?? null;
 }
 
-function assistantReply(
-  locale: string,
-  urgency: AlertSessionRecord["urgency"],
+function accompanimentPhase(
   humanRequired: boolean,
-): string {
-  if (urgency === "critical") {
-    return locale === "en"
-      ? "This sounds urgent. If you are in immediate danger, call local emergency numbers. A NGEMBA operator is being alerted. You can also use SOS on https://ngemba-rdc.org/sos"
-      : "Cela semble urgent. Si vous êtes en danger immédiat, appelez les numéros d'urgence locaux. Un opérateur NGEMBA est alerté. Vous pouvez aussi utiliser SOS sur https://ngemba-rdc.org/sos";
-  }
-  if (humanRequired) {
-    return locale === "en"
-      ? "Thank you. Your message is recorded. A trained operator will follow up as soon as possible during pilot hours. For immediate danger, use SOS on the app."
-      : "Merci. Votre message est enregistré. Un opérateur formé reprendra dès que possible aux heures du pilote. En danger immédiat, utilisez SOS dans l'application.";
-  }
-  return locale === "en"
-    ? "Thank you for reaching NGEMBA. McBuleli IA is assisting you. Share what you need (listening, orientation, safety). If danger rises, write SOS or use the SOS button on ngemba-rdc.org."
-    : "Merci d'avoir contacté NGEMBA. McBuleli IA vous accompagne. Dites ce dont vous avez besoin (écoute, orientation, sécurité). Si le danger augmente, écrivez SOS ou le bouton SOS sur ngemba-rdc.org.";
+): "awaiting_operator" | "ai_accompaniment" {
+  return humanRequired ? "awaiting_operator" : "ai_accompaniment";
 }
 
 export async function handleTelegramInbound(
@@ -109,9 +97,7 @@ export async function handleTelegramInbound(
       telegramChatId: input.telegramChatId,
       telegramUserId: input.telegramUserId,
       primaryChannel: "telegram" as const,
-      accompanimentPhase: triageRun.decision.humanRequired
-        ? "awaiting_operator"
-        : "ai_accompaniment",
+      accompanimentPhase: accompanimentPhase(triageRun.decision.humanRequired),
       lastInboundIdempotencyKey: input.idempotencyKey,
     };
 
@@ -147,28 +133,70 @@ export async function handleTelegramInbound(
       createChatMessage({ role: "citizen", body: text }),
     );
     session = getSession(session.id)!;
-    patchSessionSla(session.id, {
-      routingMeta: {
-        ...(session.routingMeta ?? buildRoutingMeta({
-          commune: session.commune,
-          locationLabel: session.locationLabel,
-          category: session.category,
-        })),
-        telegramChatId: input.telegramChatId,
-        telegramUserId: input.telegramUserId,
-        primaryChannel: "telegram",
-        lastInboundIdempotencyKey: input.idempotencyKey,
-      },
-      historyNote: "Message Telegram",
+    const routingMeta = {
+      ...(session.routingMeta ?? buildRoutingMeta({
+        commune: session.commune,
+        locationLabel: session.locationLabel,
+        category: session.category,
+      })),
+      telegramChatId: input.telegramChatId,
+      telegramUserId: input.telegramUserId,
+      primaryChannel: "telegram" as const,
+      accompanimentPhase: accompanimentPhase(triageRun.decision.humanRequired),
+      lastInboundIdempotencyKey: input.idempotencyKey,
+    };
+    patchSessionAiState(session.id, {
+      urgency: triageRun.triage.urgency,
+      category: triageRun.triage.category,
+      immediateDanger: triageRun.triage.immediate_danger,
+      aiSummary:
+        triageRun.triage.summary_user_locale || triageRun.triage.summary_fr,
+      aiConfidence: triageRun.triage.confidence,
+      aiPayload: triageRun.triage,
+      routingQueue: triageRun.routing.queue,
+      autoRoute: triageRun.routing.autoRoute,
+      provider: triageRun.provider,
+      aiMode: triageRun.aiMode,
+      slaDueAt: computeSlaDueAt(
+        session.createdAt,
+        triageRun.triage.urgency,
+      ),
+      routingMeta,
+      historyNote: "Message Telegram (triage)",
     });
     session = getSession(session.id)!;
   }
 
-  const replyBody = assistantReply(
-    input.locale,
-    session.urgency,
-    Boolean(session.aiPayload?.engine_human_required ?? triageRun.decision.humanRequired),
-  );
+  const forcedAlert = triageRun.decision.humanRequired;
+  const decision = await runChannelAccompaniment({
+    locale: input.locale as "fr" | "en",
+    userMessage: text,
+    triage: triageRun.triage,
+    forcedAlert,
+    history: session.chatMessages ?? [],
+  });
+  const replyBody = decision.reply;
+  const alreadyNotified = Boolean(session.routingMeta?.agentsNotified);
+  if (decision.alertAgents && !alreadyNotified) {
+    void notifyNewAlert(session);
+  }
+  patchSessionAiState(session.id, {
+    routingMeta: {
+      ...(session.routingMeta ?? buildRoutingMeta({
+        commune: session.commune,
+        locationLabel: session.locationLabel,
+        category: session.category,
+      })),
+      telegramChatId: input.telegramChatId,
+      telegramUserId: input.telegramUserId,
+      primaryChannel: "telegram",
+      accompanimentPhase: decision.alertAgents
+        ? "awaiting_operator"
+        : "ai_accompaniment",
+      agentsNotified: alreadyNotified || decision.alertAgents,
+      lastInboundIdempotencyKey: input.idempotencyKey,
+    },
+  });
 
   addSessionChatMessage(
     session.id,
@@ -180,9 +208,7 @@ export async function handleTelegramInbound(
     created,
     telegramChatId: input.telegramChatId,
     replies: [{ body: replyBody, role: "assistant" }],
-    suggestHumanHandoff: Boolean(
-      session.aiPayload?.engine_human_required ?? triageRun.decision.humanRequired,
-    ),
-    urgency: session.urgency,
+    suggestHumanHandoff: decision.alertAgents,
+    urgency: triageRun.triage.urgency,
   };
 }

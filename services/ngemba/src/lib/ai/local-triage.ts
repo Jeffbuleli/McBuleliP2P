@@ -166,7 +166,10 @@ export function localTriage(
       services: ["prevention"],
     },
     {
-      re: /\b(danger|aide|urgence|mort|sang|menace|mbila|hatari|likama|zingu)/i,
+      re:
+        source === "chat"
+          ? /\b(danger|urgence|mort|sang|menace|mbila|hatari|likama|zingu)\b/i
+          : /\b(danger|aide|urgence|mort|sang|menace|mbila|hatari|likama|zingu)\b/i,
       category: "unknown",
       urgency: "high",
       immediate: true,
@@ -191,10 +194,12 @@ export function localTriage(
             rule.urgency,
             true,
           ),
-          missing_info: [],
+          missing_info: rule.immediate ? [] : ["précisions"],
           routing_hint: rule.routing,
           confidence: rule.conf,
-          follow_up_questions: [],
+          follow_up_questions: rule.immediate
+            ? []
+            : [calmQuestion(loc, rule.category)],
           ai_disclaimer: disclaimerForLocale(locale),
           witness_safety_reminder:
             source === "witness" ? witnessSafetyForLocale(locale) : "",
@@ -237,6 +242,38 @@ function withLocal(
   localConfidence: number,
 ): TriageResult & { localConfidence: number } {
   return { ...normalizeTriageResult(partial), localConfidence };
+}
+
+function calmQuestion(
+  locale: string,
+  category: TriageResult["category"],
+): string {
+  const sensitive = [
+    "vbg",
+    "sexual_violence",
+    "domestic_violence",
+    "child_danger",
+    "harassment",
+    "school",
+  ].includes(category);
+  if (locale === "en") {
+    return sensitive
+      ? "Are you safe where you are right now? You can answer yes or no."
+      : "What is happening right now, in a few words?";
+  }
+  if (locale === "sw") {
+    return sensitive
+      ? "Uko salama ulipo sasa? Unaweza kujibu ndiyo au hapana."
+      : "Nini kinaendelea sasa, kwa maneno machache?";
+  }
+  if (locale === "ln") {
+    return sensitive
+      ? "Ozali na kimia esika ozali sikoyo? Okoki koyanola iyo to te."
+      : "Nini ezali koleka sikoyo, na maloba moke?";
+  }
+  return sensitive
+    ? "Êtes-vous en sécurité là où vous êtes, maintenant ? Vous pouvez répondre oui ou non."
+    : "Que se passe-t-il en ce moment, en quelques mots ?";
 }
 
 function followUpsForLocale(locale: string): string[] {

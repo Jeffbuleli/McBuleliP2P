@@ -15,14 +15,24 @@
 
 ---
 
-## 2. Credential n8n Cloud
+## 2. n8n Cloud (prod actuelle)
 
-1. [mcbuleli.app.n8n.cloud](https://mcbuleli.app.n8n.cloud) → **Credentials** → **Add credential** → **Telegram API**
-2. Coller le **Access Token** du bot
-3. Ouvrir le workflow **NGEMBA Telegram Inbound**
-4. Sur **Telegram Trigger** et **Telegram** (Send) → sélectionner la **même** credential
-5. **Settings → Variables** (instance) :
-   - `NGEMBA_CHANNEL_INBOUND_SECRET` = même valeur que sur le VPS (voir §3)
+Workflow **publié** : [NGEMBA Telegram Inbound](https://mcbuleli.app.n8n.cloud/workflow/7eC4fHp2a5tM4OTs)
+
+1. **Webhook** `POST https://mcbuleli.app.n8n.cloud/webhook/ngemba-telegram-inbound`
+2. **HTTP** → NGEMBA `/api/channels/telegram/inbound` (Bearer = secret VPS)
+3. **HTTP** → Telegram `sendMessage` (token bot dans l’URL du node)
+
+Webhook Telegram (`setWebhook`) : `https://mcbuleli.app.n8n.cloud/webhook/ngemba-telegram-inbound`
+
+Token local : `.env` → `Telegram_Bot_Token` (lignes 152–153) — utilisé à la config, **pas** sur le VPS NGEMBA.
+
+---
+
+## 2bis. Alternative : credential Telegram UI
+
+1. Credentials → **Telegram API** → token @BotFather
+2. Nodes **Telegram Trigger** + **Telegram** (workflows archivés)
 
 ---
 

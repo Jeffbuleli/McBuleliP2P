@@ -1,8 +1,8 @@
 # NGEMBA RDC — Accompagnement IA + automates n8n (avant humain)
 
-> Date : **5 novembre 2026**  
-> Statut : **spécification produit** (alignée code Phase 2 Response Engine · **implémentation n8n + parcours étendu ⏳**)  
-> Périmètre : **NGEMBA RDC uniquement** (`ngemba-rdc.org`) — pas McBuleli P2P, pas Africa Insight.
+> Date : **5 novembre 2026** · mise à jour parcours **6 novembre 2026**  
+> Statut : **écoute d'abord dans l'app** (SOS, École, Témoin, chat web). L'équipe est prévenue seulement si le danger est immédiat, si le récit est grave et déjà clair, ou si la personne demande un humain. Telegram et email suivent la même règle. WhatsApp pas encore branché.  
+> Périmètre : **NGEMBA RDC uniquement** (`ngemba-rdc.org`).
 
 ---
 
@@ -15,6 +15,8 @@ Entre **« j’ai un besoin »** et **« un·e opérateur·rice ONG me répond �
 3. **Passer la main à un humain** dès que la politique l’exige ou que la situation **monte en urgence**.
 
 L’humain n’est pas remplacé sur le sensible ; il intervient **plus tard** ou **plus tôt** selon le triage — avec un dossier déjà structuré.
+
+Sur Telegram et l’email, un message non critique ne dit pas « un humain va vérifier ». McBuleli IA conseille. Elle alerte les agents seulement si le danger est immédiat, si la catégorie est une protection (violence, enfant), si la personne demande une personne de l’équipe, ou si le modèle juge qu’un conseil ne suffit plus. L’alerte ops part une seule fois (`agentsNotified`).
 
 ---
 

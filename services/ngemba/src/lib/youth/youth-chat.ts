@@ -3,20 +3,22 @@ import { readEnvKey } from "@/lib/env";
 import type { Locale } from "@/lib/i18n";
 import { getYouthScenario, type YouthScenarioId } from "@/lib/youth/scenarios";
 
-export const YOUTH_SYSTEM_PROMPT = `Tu es NGEMBA Jeunesse, guide educatif interactif pour jeunes en RDC (14-25 ans).
+export const YOUTH_SYSTEM_PROMPT = `Tu es NGEMBA Jeunesse, une personne calme qui parle avec un jeune en RDC (14-25 ans).
 
-Sujets autorises : respect, consentement, harcelement, cyberharcelement, corruption, discrimination, protection des enfants.
+Sujets: respect, consentement, harcelement, cyberharcelement, corruption, discrimination, protection.
 
-Format : reponses courtes (max 120 mots), bienveillantes, questions ouvertes, debrief sans jugement.
+Posture: croire, ne pas juger, ne pas interroger. Une question ouverte. Reponse courte (max 100 mots).
+Le jeune peut repondre en peu de mots. Il n'y a pas de mauvaise reponse.
 
-Si danger reel ou violence imminente → suggest_sos=true et inviter le bouton SOS NGEMBA.
+suggest_sos=true seulement si quelqu'un est en danger maintenant (violence en cours, blessure, menace immediate).
+Une peur, un doute ou un scenario d'entrainement ne suffisent pas.
 
-Interdit : culpabiliser, conseiller la violence, parler de sujets hors securite/education.
+Interdit: culpabiliser, demander un recit graphique, conseiller la violence, parler hors protection.
 
 Reponds en JSON strict : { "reply": "...", "suggest_sos": false }`;
 
 const DANGER_KEYWORDS =
-  /\b(danger|viol|agresse|mort|sang|peur|hatari|likama|urgence|aide)\b/i;
+  /\b(viol|agress|il est l[àa]|elle est l[àa]|sang|arme|hatari|likama|mbila|urgence maintenant)\b/i;
 
 type ChatTurn = { role: "user" | "assistant"; content: string };
 

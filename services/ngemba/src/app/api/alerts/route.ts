@@ -29,6 +29,8 @@ import { buildRoutingMeta } from "@/lib/partners/match";
 import { listPartners } from "@/lib/partners/directory";
 import { clientIp, rateLimit, rateLimitResponse } from "@/lib/security/rate-limit";
 import { createSession, getSession, listSessions } from "@/lib/sessions/store";
+import { createChatMessage } from "@/lib/sessions/chat";
+import { trustOpening } from "@/lib/channels/trust-reply";
 import {
   sanitizeCitizenSession,
   sanitizeOpsSessionForActor,
@@ -177,26 +179,16 @@ export async function POST(req: Request) {
     };
   }
 
-  const { routing, provider, aiMode } = discreteExtreme
-    ? (() => {
-        const decision = evaluateResponse({
-          triage: triageForSession,
-          source: body.source,
-        });
-        return {
-          routing: {
-            queue: decision.queue,
-            autoRoute: decision.autoRoute,
-          },
-          provider: triageRun.provider,
-          aiMode: triageRun.aiMode,
-        };
-      })()
-    : {
-        routing: triageRun.routing,
-        provider: triageRun.provider,
-        aiMode: triageRun.aiMode,
-      };
+  const decision = evaluateResponse({
+    triage: triageForSession,
+    source: body.source,
+  });
+  const routing = {
+    queue: decision.queue,
+    autoRoute: decision.autoRoute,
+  };
+  const { provider, aiMode } = triageRun;
+  const humanNow = decision.humanRequired;
 
   const jar = await cookies();
   let citizenToken = jar.get(CITIZEN_COOKIE)?.value ?? null;
@@ -246,6 +238,9 @@ export async function POST(req: Request) {
           source: ipGeo.source,
         }
       : null,
+    primaryChannel: "app" as const,
+    accompanimentPhase: humanNow ? "awaiting_operator" : "ai_accompaniment",
+    agentsNotified: humanNow,
   };
 
   let partnerSla: number | null = null;
@@ -296,6 +291,20 @@ export async function POST(req: Request) {
     schoolContext,
     routingMeta,
     slaDueAt,
+    chatMessages: [
+      ...(body.message.trim() !== "·"
+        ? [createChatMessage({ role: "citizen", body: body.message.trim() })]
+        : []),
+      createChatMessage({
+        role: "operator",
+        actor: "McBuleli IA",
+        body: trustOpening({
+          locale,
+          source: body.source,
+          humanNow,
+        }),
+      }),
+    ],
   });
 
   const referrals = buildReferrals({
@@ -310,7 +319,9 @@ export async function POST(req: Request) {
     unmatched: referrals.unmatched,
   });
 
-  await notifyNewAlert(session);
+  if (humanNow) {
+    await notifyNewAlert(session);
+  }
   if (discreteExtreme && trustedContacts.length > 0) {
     // Exception philo proches : danger extrême / mode discret → alerte auto cercle B.
     await notifyTrustedContacts(session, trustedContacts);

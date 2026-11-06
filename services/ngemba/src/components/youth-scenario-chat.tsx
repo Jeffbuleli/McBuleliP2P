@@ -96,6 +96,10 @@ export function YouthScenarioChat({
         </span>
       </header>
 
+      <p className="mt-3 rounded-2xl bg-ng-primary-muted px-3 py-2 text-xs leading-relaxed text-ng-primary">
+        {t.youthDisclaimer}
+      </p>
+
       {suggestSos ? (
         <div className="mt-4 rounded-xl bg-red-50 px-3 py-2 text-xs font-medium text-ng-urgent">
           {t.youthSosHint}{" "}
@@ -115,6 +119,9 @@ export function YouthScenarioChat({
                 : "bg-ng-surface border border-[var(--ng-border)] text-ng-text"
             }`}
           >
+            {turn.role === "assistant" ? (
+              <p className="mb-0.5 text-[10px] font-bold text-ng-secondary">Ngemba</p>
+            ) : null}
             {turn.content}
           </div>
         ))}

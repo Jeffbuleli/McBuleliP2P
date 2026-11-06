@@ -251,7 +251,7 @@ export function SessionChat({
             {closed ? null : (
               <span className="size-1.5 animate-pulse rounded-full bg-current" />
             )}
-            {closed ? (isFr ? "Clôturé" : "Closed") : "Live"}
+            {closed ? (isFr ? "Clôturé" : "Closed") : viewerRole === "citizen" ? "Ngemba" : "Live"}
           </span>
         </div>
         <p className={`text-[11px] ${headerMuted}`}>
@@ -259,7 +259,11 @@ export function SessionChat({
             ? isFr
               ? "Dossier clôturé - le chat est en lecture seule. Rouvrir le dossier pour écrire."
               : "Case closed - chat is read-only. Reopen the case to write."
-            : hint}
+            : viewerRole === "citizen"
+              ? isFr
+                ? "À votre rythme. Une question à la fois. Vous pouvez vous arrêter."
+                : "At your pace. One question at a time. You can stop."
+              : hint}
         </p>
       </header>
 
@@ -354,6 +358,17 @@ export function SessionChat({
             );
           })
         )}
+        {busy ? (
+          <div className="flex justify-start">
+            <p
+              className={`rounded-2xl rounded-bl-md px-3 py-2 text-xs ${
+                discrete ? "bg-white/10 text-[#c9a0bc]" : "bg-ng-bg text-ng-muted"
+              }`}
+            >
+              {isFr ? "Ngemba écrit…" : "Ngemba is writing…"}
+            </p>
+          </div>
+        ) : null}
         <div ref={bottomRef} />
       </div>
 

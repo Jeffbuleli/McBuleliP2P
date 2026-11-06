@@ -7,58 +7,105 @@ import type {
 } from "@/lib/response-engine/types";
 
 /** Version politique Response Engine (audit / changelog). */
-export const RESPONSE_POLICY_VERSION = "2.0.0";
+export const RESPONSE_POLICY_VERSION = "2.1.0";
 
 export type EvaluateInput = {
   triage: TriageResult;
   source?: string;
 };
 
+const PROTECTION = [
+  "vbg",
+  "sexual_violence",
+  "domestic_violence",
+  "child_danger",
+];
+
+function isSchool(input: EvaluateInput): boolean {
+  return (
+    input.source === "school" ||
+    input.triage.category === "school" ||
+    input.triage.routing_hint === "school_referent"
+  );
+}
+
+/** Assez clair et assez grave pour reveiller l'equipe. Sinon, l'IA ecoute encore. */
+function pictureIsSerious(triage: TriageResult): boolean {
+  return (
+    triage.confidence >= 0.72 &&
+    (triage.missing_info?.length ?? 0) === 0 &&
+    (triage.urgency === "high" || triage.urgency === "critical")
+  );
+}
+
 /**
- * IA recommande (triage) - ce module applique les regles autorisees.
- * Pas de verdict juridique. Humain requis pour files urgentes / VBG / ecole.
+ * L'IA recommande. Le moteur decide qui agit.
+ * Danger immediat : humain tout de suite.
+ * VBG, ecole, temoin, doute : comprendre d'abord. L'equipe n'est appelee
+ * que lorsque le recit est grave et assez clair.
  */
 export function evaluateResponse(input: EvaluateInput): ResponseDecision {
   const { triage, source } = input;
   const requiredServices = servicesForTriage(triage);
-
-  if (source === "school") {
-    return {
-      queue: "school_referent",
-      autoRoute: false,
-      requiredServices: [
-        ...new Set<RequiredService>([...requiredServices, "school_referent"]),
-      ],
-      humanRequired: true,
-      policyVersion: RESPONSE_POLICY_VERSION,
-      reason: "source_school",
-    };
-  }
+  const school = isSchool(input);
+  const services = school
+    ? [...new Set<RequiredService>([...requiredServices, "school_referent"])]
+    : requiredServices;
 
   if (triage.urgency === "critical" || triage.immediate_danger) {
     return {
-      queue: "operator_urgent",
+      queue: school ? "school_referent" : "operator_urgent",
       autoRoute: false,
-      requiredServices,
+      requiredServices: services,
       humanRequired: true,
       policyVersion: RESPONSE_POLICY_VERSION,
       reason: "critical_or_immediate_danger",
     };
   }
 
-  if (
-    ["vbg", "sexual_violence", "domestic_violence", "child_danger"].includes(
-      triage.category,
-    )
-  ) {
+  if (school || PROTECTION.includes(triage.category)) {
+    if (pictureIsSerious(triage)) {
+      return {
+        queue: school ? "school_referent" : "operator_standard",
+        autoRoute: false,
+        requiredServices: services,
+        humanRequired: true,
+        policyVersion: RESPONSE_POLICY_VERSION,
+        reason: "protection_confirmed",
+      };
+    }
     return {
-      queue: "operator_standard",
+      queue: school ? "school_referent" : "operator_standard",
       autoRoute: false,
-      requiredServices,
-      humanRequired: true,
+      requiredServices: services,
+      humanRequired: false,
       policyVersion: RESPONSE_POLICY_VERSION,
-      reason: "protection_category",
+      reason: "understand_before_act",
     };
+  }
+
+  if (source === "chat") {
+    if (triage.urgency === "high") {
+      return {
+        queue: "operator_standard",
+        autoRoute: false,
+        requiredServices,
+        humanRequired: false,
+        policyVersion: RESPONSE_POLICY_VERSION,
+        reason: "chat_ai_decides",
+      };
+    }
+    if (["medium", "low", "info"].includes(triage.urgency)) {
+      return {
+        queue:
+          triage.urgency === "info" ? "self_service" : "operator_standard",
+        autoRoute: triage.urgency === "info",
+        requiredServices,
+        humanRequired: false,
+        policyVersion: RESPONSE_POLICY_VERSION,
+        reason: "chat_ai_accompaniment",
+      };
+    }
   }
 
   if (triage.urgency === "info" && triage.confidence >= 0.7) {
@@ -83,27 +130,24 @@ export function evaluateResponse(input: EvaluateInput): ResponseDecision {
     };
   }
 
-  if (
-    triage.category === "school" ||
-    triage.routing_hint === "school_referent"
-  ) {
+  if (pictureIsSerious(triage)) {
     return {
-      queue: "school_referent",
+      queue: "operator_standard",
       autoRoute: false,
       requiredServices,
       humanRequired: true,
       policyVersion: RESPONSE_POLICY_VERSION,
-      reason: "school_referent",
+      reason: "serious_and_clear",
     };
   }
 
   return {
-    queue: "operator_standard",
-    autoRoute: false,
+    queue: triage.urgency === "info" ? "self_service" : "operator_standard",
+    autoRoute: triage.urgency === "info" || triage.urgency === "low",
     requiredServices,
-    humanRequired: true,
+    humanRequired: false,
     policyVersion: RESPONSE_POLICY_VERSION,
-    reason: "default_operator",
+    reason: "understand_before_act",
   };
 }
 

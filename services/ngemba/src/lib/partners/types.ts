@@ -45,7 +45,11 @@ export type SessionRoutingMeta = {
   /** Multicanal n8n (spec 35). */
   telegramChatId?: string | null;
   telegramUserId?: string | null;
+  emailFrom?: string | null;
+  emailMessageId?: string | null;
   primaryChannel?: "app" | "telegram" | "email" | null;
   accompanimentPhase?: string | null;
+  /** true seulement après décision d'alerter les agents (pas à chaque message). */
+  agentsNotified?: boolean | null;
   lastInboundIdempotencyKey?: string | null;
 };

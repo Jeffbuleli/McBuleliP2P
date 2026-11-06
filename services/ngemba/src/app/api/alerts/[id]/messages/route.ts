@@ -5,6 +5,7 @@ import { formatOpsActorLabel, requireOpsAuth } from "@/lib/ops/auth";
 import { emitOpsEvent } from "@/lib/ops/events";
 import { addSessionChatMessage, getSession } from "@/lib/sessions/store";
 import { createChatMessage } from "@/lib/sessions/chat";
+import { replyAsNgemba } from "@/lib/channels/web-chat";
 import { clientIp, rateLimit, rateLimitResponse } from "@/lib/security/rate-limit";
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -118,6 +119,11 @@ export async function POST(req: Request, ctx: Ctx) {
   }
 
   emitOpsEvent("chat_message", { id, messageId: message.id });
+
+  if (message.role === "citizen") {
+    const withAi = await replyAsNgemba(updated);
+    return NextResponse.json({ message, messages: withAi.chatMessages });
+  }
 
   return NextResponse.json({ message, messages: updated.chatMessages });
 }
