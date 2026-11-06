@@ -56,8 +56,10 @@ const ROUTING_FR: Record<RoutingQueue, string> = {
 };
 
 const LOCATION_SOURCE_FR: Record<string, string> = {
-  geoapify: "GPS (Geoapify)",
-  gps_offline: "GPS (estimation)",
+  geoapify: "GPS",
+  gps_offline: "GPS",
+  gps_precise: "GPS précis",
+  gps_wide: "GPS large",
   place: "Choix manuel",
   geoapify_ip: "IP (Geoapify ≈ ville)",
   ipwho: "IP (approx ville)",

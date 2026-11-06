@@ -42,6 +42,7 @@ function sessionPrimary(): "json" | "postgres" {
 function normalizeRecord(row: AlertSessionRecord): AlertSessionRecord {
   const base = {
     ...row,
+    locationAccuracyM: row.locationAccuracyM ?? null,
     citizenToken: row.citizenToken ?? null,
     clientIp: row.clientIp ?? null,
     userAgent: row.userAgent ?? null,

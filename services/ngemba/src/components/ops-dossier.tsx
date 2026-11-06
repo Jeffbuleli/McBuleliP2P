@@ -32,6 +32,7 @@ type Session = {
   locationLabel: string | null;
   commune: string | null;
   locationSource: string | null;
+  locationAccuracyM?: number | null;
   lat: number | null;
   lng: number | null;
   aiSummary: string;
@@ -186,6 +187,16 @@ function Section({
       </div>
       <div className="p-4">{children}</div>
     </section>
+  );
+}
+
+function deviceGps(source: string | null): boolean {
+  if (!source) return false;
+  return source.split("+").some((part) =>
+    part === "geoapify" ||
+    part === "gps_offline" ||
+    part === "gps_precise" ||
+    part === "gps_wide",
   );
 }
 
@@ -492,14 +503,28 @@ export function OpsDossierView({ id }: { id: string }) {
               {locationSourceLabelFr(session.locationSource)}
             </span>
           ) : null}
-          {maps ? (
+          {maps && deviceGps(session.locationSource) ? (
             <a
               href={maps}
               target="_blank"
               rel="noreferrer"
               className="rounded-lg bg-ng-primary-muted px-2 py-1 font-medium text-ng-primary"
             >
-              GPS {session.lat!.toFixed(4)}, {session.lng!.toFixed(4)} ↗
+              GPS
+              {session.locationAccuracyM != null
+                ? ` ± ${session.locationAccuracyM} m`
+                : ""}
+              {" · "}
+              {session.lat!.toFixed(6)}, {session.lng!.toFixed(6)} ↗
+            </a>
+          ) : maps ? (
+            <a
+              href={maps}
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-lg bg-ng-primary-muted px-2 py-1 font-medium text-ng-primary"
+            >
+              Lieu {session.lat!.toFixed(4)}, {session.lng!.toFixed(4)} ↗
             </a>
           ) : null}
           {ipGeo ? (

@@ -12,6 +12,8 @@ function store(): Map<string, Bucket> {
 }
 
 export function clientIp(req: Request): string {
+  const cf = req.headers.get("cf-connecting-ip")?.trim();
+  if (cf) return cf;
   const xf = req.headers.get("x-forwarded-for");
   if (xf) return xf.split(",")[0]?.trim() || "unknown";
   const xr = req.headers.get("x-real-ip");

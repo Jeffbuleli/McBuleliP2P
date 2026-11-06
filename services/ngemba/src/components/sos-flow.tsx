@@ -9,6 +9,7 @@ import { TrustedContactsEditor } from "@/components/trusted-contacts-editor";
 import { VoiceButton } from "@/components/voice-button";
 import { useCitizenLocale } from "@/hooks/use-citizen-locale";
 import { COMPOSE_MAX_CHARS } from "@/lib/compose/limits";
+import { readPrecisePosition } from "@/lib/location/precise-gps";
 import { uploadPendingMedia } from "@/lib/compose/upload-pending";
 import { vibrateDiscreteConfirm } from "@/lib/discrete/vibrate";
 import { messages } from "@/lib/i18n";
@@ -179,6 +180,7 @@ export function SosFlow({
     shareLocation?: boolean;
     lat?: number;
     lng?: number;
+    accuracyM?: number;
     provinceId?: string;
     cityId?: string;
   }) {
@@ -197,6 +199,7 @@ export function SosFlow({
           shareLocation: Boolean(opts.shareLocation) || discrete,
           lat: opts.lat ?? null,
           lng: opts.lng ?? null,
+          accuracyM: opts.accuracyM ?? null,
           provinceId: opts.provinceId || null,
           cityId: opts.cityId || null,
           discrete,
@@ -237,84 +240,46 @@ export function SosFlow({
   async function submitDiscreteUrgent() {
     setBusy(true);
     setError(null);
-    const pos = await new Promise<{ lat: number; lng: number } | null>(
-      (resolve) => {
-        if (!navigator.geolocation) {
-          resolve(null);
-          return;
-        }
-        let settled = false;
-        const finish = (value: { lat: number; lng: number } | null) => {
-          if (settled) return;
-          settled = true;
-          window.clearTimeout(timer);
-          resolve(value);
-        };
-        const timer = window.setTimeout(() => finish(null), 2500);
-        navigator.geolocation.getCurrentPosition(
-          (p) =>
-            finish({
-              lat: p.coords.latitude,
-              lng: p.coords.longitude,
-            }),
-          () => finish(null),
-          {
-            enableHighAccuracy: false,
-            timeout: 2200,
-            maximumAge: 60_000,
-          },
-        );
-      },
-    );
+    setHint(t.gpsSearching);
+    const pos = await readPrecisePosition({
+      maxWaitMs: 10_000,
+      goodEnoughM: 40,
+    });
     if (pos) {
+      setGpsHint(`± ${pos.accuracyM} m`);
       await submit({
         shareLocation: true,
         lat: pos.lat,
         lng: pos.lng,
+        accuracyM: pos.accuracyM,
       });
       return;
     }
     await submit({ shareLocation: false });
   }
 
-  function requestGps() {
+  async function requestGps() {
     if (!navigator.geolocation) {
       setHint(t.gpsUnavailable);
       return;
     }
     setBusy(true);
     setError(null);
-    setHint(null);
+    setHint(t.gpsSearching);
     setGpsHint(null);
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        try {
-          const res = await fetch("/api/location/resolve", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              mode: "gps",
-              lat: pos.coords.latitude,
-              lng: pos.coords.longitude,
-            }),
-          });
-          const data = await res.json();
-          if (data.location?.label) setGpsHint(data.location.label);
-        } catch {
-          // continue with raw coords
-        }
-        await submit({
-          shareLocation: true,
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-        });
-      },
-      () => {
-        setBusy(false);
-        setHint(t.gpsDenied);
-      },
-      { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 },
-    );
+    const pos = await readPrecisePosition();
+    if (!pos) {
+      setBusy(false);
+      setHint(t.gpsDenied);
+      return;
+    }
+    setGpsHint(`± ${pos.accuracyM} m`);
+    await submit({
+      shareLocation: true,
+      lat: pos.lat,
+      lng: pos.lng,
+      accuracyM: pos.accuracyM,
+    });
   }
 
   return (

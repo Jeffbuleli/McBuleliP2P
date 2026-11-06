@@ -56,6 +56,7 @@ type Copy = {
   usePlace: string;
   gpsUnavailable: string;
   gpsDenied: string;
+  gpsSearching: string;
   place: string;
   voice: string;
   voiceRecord: string;
@@ -160,6 +161,7 @@ const baseFr: Copy = {
   usePlace: "Utiliser ce lieu",
   gpsUnavailable: "GPS indisponible - choisissez un lieu",
   gpsDenied: "Position refusée - choisissez une province et une ville",
+  gpsSearching: "Recherche du signal GPS…",
   place: "Lieu",
   voice: "Audio",
   voiceRecord: "Parler",
@@ -274,6 +276,7 @@ export const messages: Record<Locale, Copy> = {
     usePlace: "Use this place",
     gpsUnavailable: "GPS unavailable - choose a place",
     gpsDenied: "Location denied - choose a province and a city",
+    gpsSearching: "Looking for a precise GPS signal…",
     place: "Place",
     voice: "Audio",
     voiceRecord: "Speak",
@@ -382,6 +385,7 @@ export const messages: Record<Locale, Copy> = {
     usePlace: "Tosa esika oyo",
     gpsUnavailable: "GPS ebandi te - séléctionne esika",
     gpsDenied: "Position ebandi te - séléctionne province mpe ville",
+    gpsSearching: "Koluka GPS ya sikisiki…",
     place: "Esika",
     voice: "Audio",
     voiceRecord: "Lobela",
@@ -485,6 +489,7 @@ export const messages: Record<Locale, Copy> = {
     usePlace: "Tumia mahali hapa",
     gpsUnavailable: "GPS haipatikani - chagua mahali",
     gpsDenied: "Mahali kukataliwa - chagua mkoa na jiji",
+    gpsSearching: "Inatafuta GPS sahihi…",
     place: "Mahali",
     voice: "Audio",
     voiceRecord: "Sema",
@@ -588,6 +593,7 @@ export const messages: Record<Locale, Copy> = {
     usePlace: "Tosa esika oyo",
     gpsUnavailable: "GPS ebandi te - séléctionne esika",
     gpsDenied: "Position ebandi te - séléctionne province mpe ville",
+    gpsSearching: "Koluka GPS ya sikisiki…",
     place: "Esika",
     voice: "Audio",
     voiceRecord: "Lobela",
@@ -691,6 +697,7 @@ export const messages: Record<Locale, Copy> = {
     usePlace: "Tosa esika oyo",
     gpsUnavailable: "GPS ebandi te - séléctionne esika",
     gpsDenied: "Position ebandi te - séléctionne province mpe ville",
+    gpsSearching: "Koluka GPS ya sikisiki…",
     place: "Esika",
     voice: "Audio",
     voiceRecord: "Lobela",

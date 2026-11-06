@@ -45,6 +45,7 @@ export function recordToRow(record: AlertSessionRecord) {
     locationLabel: record.locationLabel,
     commune: record.commune,
     locationSource: record.locationSource,
+    locationAccuracyM: record.locationAccuracyM,
     locationConsentAt: record.locationConsentAt
       ? new Date(record.locationConsentAt)
       : null,
@@ -85,6 +86,8 @@ export function rowToRecord(
   if (mirrored && mirrored.id === row.id && mirrored.statusHistory) {
     return {
       ...mirrored,
+      locationAccuracyM:
+        mirrored.locationAccuracyM ?? row.locationAccuracyM ?? null,
       status: row.status,
       assignedTo: row.assignedTo ?? mirrored.assignedTo,
       operatorNotes: row.operatorNotes ?? mirrored.operatorNotes,
@@ -135,6 +138,7 @@ export function rowToRecord(
     immediateDanger: row.immediateDanger,
     lat: parseNum(row.lat),
     lng: parseNum(row.lng),
+    locationAccuracyM: row.locationAccuracyM ?? null,
     locationLabel: row.locationLabel,
     commune: row.commune,
     locationSource: row.locationSource,

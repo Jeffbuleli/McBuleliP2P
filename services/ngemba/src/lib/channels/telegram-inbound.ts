@@ -118,6 +118,7 @@ export async function handleTelegramInbound(
       immediateDanger: triageRun.triage.immediate_danger,
       lat: null,
       lng: null,
+      locationAccuracyM: null,
       locationLabel: null,
       commune: null,
       locationSource: null,

@@ -16,10 +16,24 @@ export function geoapifyConfigured(): boolean {
   return Boolean(readEnvKey("GEOAPIFY_API_KEY"));
 }
 
-/** Reverse geocode GPS - Geoapify (SafeFind) ou fallback national offline. */
+function placeLabel(
+  parts: Array<string | null | undefined>,
+  fallback: string,
+): string {
+  const uniq: string[] = [];
+  for (const part of parts) {
+    const value = part?.trim();
+    if (!value || uniq[uniq.length - 1] === value) continue;
+    uniq.push(value);
+  }
+  return uniq.length ? uniq.join(", ") : fallback;
+}
+
+/** Reverse geocode GPS - rue si le relevé est serré, quartier sinon. */
 export async function reverseGeocode(
   lat: number,
   lng: number,
+  accuracyM?: number | null,
 ): Promise<ResolvedLocation> {
   const key = readEnvKey("GEOAPIFY_API_KEY");
   if (key) {
@@ -35,6 +49,9 @@ export async function reverseGeocode(
         const json = (await res.json()) as {
           results?: Array<{
             formatted?: string;
+            housenumber?: string;
+            street?: string;
+            address_line1?: string;
             suburb?: string;
             district?: string;
             county?: string;
@@ -54,14 +71,32 @@ export async function reverseGeocode(
             r.district ||
             near.city ||
             null;
+          const tight = accuracyM == null || accuracyM <= 200;
+          const door = [r.housenumber, r.street].filter(Boolean).join(" ");
+          const base = placeLabel(
+            [
+              tight ? door || r.address_line1 : null,
+              r.suburb || r.district,
+              city,
+              province,
+            ],
+            r.formatted || r.name || `${city ?? province}, RDC`,
+          );
+          const label =
+            accuracyM != null ? `${base} · ±${Math.round(accuracyM)} m` : base;
           return {
-            label: r.formatted || r.name || `${city ?? province}, RDC`,
+            label,
             province,
             commune: city,
             quartier: r.suburb || r.district || null,
             lat,
             lng,
-            precision: "exact",
+            precision:
+              accuracyM != null && accuracyM <= 80
+                ? "exact"
+                : accuracyM != null && accuracyM <= 400
+                  ? "commune"
+                  : "exact",
             source: "geoapify",
           };
         }
@@ -72,14 +107,15 @@ export async function reverseGeocode(
   }
 
   const near = nearestPlace(lat, lng);
+  const base = near.label;
   return {
-    label: near.label,
+    label: accuracyM != null ? `${base} · ±${Math.round(accuracyM)} m` : base,
     province: near.province,
     commune: near.city,
     quartier: null,
     lat,
     lng,
-    precision: "approx",
+    precision: accuracyM != null && accuracyM <= 80 ? "exact" : "approx",
     source: "gps_offline",
   };
 }

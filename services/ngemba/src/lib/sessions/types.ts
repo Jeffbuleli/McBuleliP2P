@@ -27,6 +27,8 @@ export type AlertSessionRecord = {
   immediateDanger: boolean;
   lat: number | null;
   lng: number | null;
+  /** Rayon GPS en mètres. Null si le lieu vient d'un choix ou de l'IP. */
+  locationAccuracyM: number | null;
   locationLabel: string | null;
   commune: string | null;
   locationSource: string | null;

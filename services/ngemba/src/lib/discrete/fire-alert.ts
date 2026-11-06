@@ -1,57 +1,27 @@
 "use client";
 
 import { vibrateDiscreteConfirm } from "@/lib/discrete/vibrate";
+import { readPrecisePosition } from "@/lib/location/precise-gps";
 import { readLocalTrustedContacts } from "@/lib/trusted-contacts/client-store";
 
 export type DiscreteFireResult =
   | { ok: true; id: string }
   | { ok: false; error: string };
 
-function quickGps(): Promise<{ lat: number; lng: number } | null> {
-  return new Promise((resolve) => {
-    if (typeof navigator === "undefined" || !navigator.geolocation) {
-      resolve(null);
-      return;
-    }
-    let settled = false;
-    const finish = (value: { lat: number; lng: number } | null) => {
-      if (settled) return;
-      settled = true;
-      window.clearTimeout(timer);
-      resolve(value);
-    };
-    const timer = window.setTimeout(() => finish(null), 2500);
-    navigator.geolocation.getCurrentPosition(
-      (p) =>
-        finish({
-          lat: p.coords.latitude,
-          lng: p.coords.longitude,
-        }),
-      () => finish(null),
-      { enableHighAccuracy: false, timeout: 2200, maximumAge: 60_000 },
-    );
-  });
-}
-
 /**
- * Envoi immédiat d'une alerte discrète (geste / raccourci) -
- * pas d'écran de composition voyant.
- * GPS en parallèle avec timeout court - ne bloque jamais l'envoi sur mobile.
+ * Alerte discrète. Attend un GPS frais (pas la position en cache),
+ * puis envoie. L'IP reste le recours si le GPS est refusé.
  */
 export async function fireDiscretePanicAlert(input: {
   locale: string;
 }): Promise<DiscreteFireResult> {
   const trustedContacts = readLocalTrustedContacts();
-  // Ne pas attendre le GPS avant POST : iOS affiche souvent la popup et
-  // l'utilisateur croit que ça a échoué. On envoie d'abord, GPS ensuite si dispo.
-  const posPromise = quickGps();
+  const pos = await readPrecisePosition({
+    maxWaitMs: 10_000,
+    goodEnoughM: 40,
+  });
 
   try {
-    const posRace = await Promise.race([
-      posPromise,
-      new Promise<null>((r) => setTimeout(() => r(null), 600)),
-    ]);
-
     const res = await fetch("/api/alerts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -61,9 +31,10 @@ export async function fireDiscretePanicAlert(input: {
         locale: input.locale,
         source: "shake",
         discrete: true,
-        shareLocation: Boolean(posRace),
-        lat: posRace?.lat ?? null,
-        lng: posRace?.lng ?? null,
+        shareLocation: Boolean(pos),
+        lat: pos?.lat ?? null,
+        lng: pos?.lng ?? null,
+        accuracyM: pos?.accuracyM ?? null,
         trustedContacts,
       }),
     });
@@ -72,8 +43,6 @@ export async function fireDiscretePanicAlert(input: {
       return { ok: false, error: "create_failed" };
     }
     vibrateDiscreteConfirm();
-    // GPS tardif : best-effort (session déjà créée avec IP)
-    void posPromise;
     return { ok: true, id: data.id };
   } catch {
     return { ok: false, error: "network" };

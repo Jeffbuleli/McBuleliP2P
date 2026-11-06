@@ -46,6 +46,7 @@ const createBody = z.object({
     .default("sos_button"),
   lat: z.number().nullable().optional(),
   lng: z.number().nullable().optional(),
+  accuracyM: z.number().min(0).max(100_000).nullable().optional(),
   shareLocation: z.boolean().optional(),
   provinceId: z.string().nullable().optional(),
   cityId: z.string().nullable().optional(),
@@ -94,6 +95,7 @@ export async function POST(req: Request) {
 
   let lat: number | null = null;
   let lng: number | null = null;
+  let locationAccuracyM: number | null = null;
   let locationLabel: string | null = body.locationLabel ?? null;
   let commune: string | null = body.commune ?? null;
   let locationSource: string | null = body.locationSource ?? null;
@@ -110,12 +112,20 @@ export async function POST(req: Request) {
     typeof body.lat === "number" &&
     typeof body.lng === "number"
   ) {
-    const resolved = await reverseGeocode(body.lat, body.lng);
-    lat = resolved.lat;
-    lng = resolved.lng;
+    const accuracyM =
+      typeof body.accuracyM === "number" ? Math.round(body.accuracyM) : null;
+    const resolved = await reverseGeocode(body.lat, body.lng, accuracyM);
+    lat = body.lat;
+    lng = body.lng;
+    locationAccuracyM = accuracyM;
     locationLabel = resolved.label;
     commune = resolved.commune;
-    locationSource = resolved.source;
+    locationSource =
+      accuracyM != null && accuracyM <= 80
+        ? `${resolved.source}+gps_precise`
+        : accuracyM != null && accuracyM > 400
+          ? `${resolved.source}+gps_wide`
+          : resolved.source;
     locationConsentAt = new Date().toISOString();
   } else if (body.provinceId?.trim()) {
     const resolved = resolveManualPlace(
@@ -268,6 +278,7 @@ export async function POST(req: Request) {
     immediateDanger: triageForSession.immediate_danger,
     lat,
     lng,
+    locationAccuracyM,
     locationLabel,
     commune,
     locationSource,

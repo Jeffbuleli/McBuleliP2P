@@ -149,6 +149,14 @@ async function sendOpsEmail(session: AlertSessionRecord) {
       { label: "Type", value: category },
       { label: "Source", value: source },
       { label: "Lieu", value: place },
+      ...(session.locationAccuracyM != null
+        ? [
+            {
+              label: "Précision GPS",
+              value: `± ${session.locationAccuracyM} m`,
+            },
+          ]
+        : []),
       ...(province ? [{ label: "Province", value: String(province) }] : []),
       ...(session.routingMeta?.ipGeo?.label
         ? [
