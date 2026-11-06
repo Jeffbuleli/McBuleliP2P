@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { IconMic, IconStop } from "@/components/icons";
-import { VoiceNote } from "@/components/voice-note";
 import { VoiceWave } from "@/components/voice-wave";
 import { useVoiceDraft } from "@/hooks/use-voice-draft";
 
@@ -104,7 +103,6 @@ export function SessionChat({
   const voice = useVoiceDraft();
   const fileRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const [awaitingVoice, setAwaitingVoice] = useState(false);
   const isFr = locale !== "en";
 
   const load = useCallback(async () => {
@@ -149,10 +147,6 @@ export function SessionChat({
     }
     let text = body.trim();
     if (closed || (!text && !file) || busy) return;
-    const voiceTurn = Boolean(
-      file && (file.type.startsWith("audio") || file.name.endsWith(".webm")),
-    );
-    setAwaitingVoice(voiceTurn);
     setBusy(true);
     setUploadErr(null);
     try {
@@ -232,7 +226,6 @@ export function SessionChat({
       }
     } finally {
       setBusy(false);
-      setAwaitingVoice(false);
     }
   }
 
@@ -361,12 +354,10 @@ export function SessionChat({
                       />
                     </a>
                   ) : null}
-                  {href && m.mediaKind === "audio" ? (
-                    <VoiceNote
-                      src={href}
-                      autoPlay={viewerRole === "citizen" && m.actor === "McBuleli IA"}
-                      light={mine}
-                    />
+                  {m.mediaKind === "audio" ? (
+                    <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide opacity-70">
+                      Vocal
+                    </p>
                   ) : null}
                   {href && m.mediaKind === "video" ? (
                     <video
@@ -390,7 +381,7 @@ export function SessionChat({
                       {m.mediaFileName || "Fichier"}
                     </a>
                   ) : null}
-                  {m.body && !(viewerRole === "citizen" && m.mediaKind === "audio") ? (
+                  {m.body ? (
                     <p className="whitespace-pre-wrap break-words text-sm leading-snug">
                       {m.body}
                     </p>
@@ -410,13 +401,7 @@ export function SessionChat({
                 discrete ? "bg-white/10 text-[#c9a0bc]" : "bg-ng-bg text-ng-muted"
               }`}
             >
-              {awaitingVoice
-                ? isFr
-                  ? "Ngemba parle…"
-                  : "Ngemba is speaking…"
-                : isFr
-                  ? "Ngemba écrit…"
-                  : "Ngemba is writing…"}
+              {isFr ? "Ngemba écrit…" : "Ngemba is writing…"}
             </p>
           </div>
         ) : null}

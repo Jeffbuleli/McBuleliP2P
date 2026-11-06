@@ -3,17 +3,11 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { IconMic } from "@/components/icons";
-import { VoiceNote } from "@/components/voice-note";
 import { VoiceWave } from "@/components/voice-wave";
 import { useCitizenLocale } from "@/hooks/use-citizen-locale";
 import { useVoiceDraft } from "@/hooks/use-voice-draft";
 
-type Bubble = {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  voiceSrc?: string;
-};
+type Bubble = { id: string; role: "user" | "assistant"; content: string };
 
 const GREETING =
   "Bonjour. Ici Ngemba, pour l'école. Tu peux parler à ton rythme, sans donner ton nom. Qu'est-ce qui se passe ?";
@@ -27,7 +21,6 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
   ]);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
-  const [voiceTurn, setVoiceTurn] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -63,7 +56,6 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
     const trimmed = text.trim();
     if (busy || (!trimmed && !file)) return;
     setBusy(true);
-    setVoiceTurn(Boolean(file));
     setError(null);
     const shown = trimmed || "Vocal";
     const userId = `u-${Date.now()}`;
@@ -91,15 +83,9 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
         const heard = upData.attachment?.transcription as string | undefined;
         if (heard?.trim()) body = heard.trim();
         if (!body) body = "Message vocal";
-        if (mediaId) {
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === userId
-                ? { ...m, content: "", voiceSrc: `/api/alerts/${id}/media/${mediaId}` }
-                : m,
-            ),
-          );
-        }
+        setMessages((prev) =>
+          prev.map((m) => (m.id === userId ? { ...m, content: body } : m)),
+        );
       }
       const shouldPost = alreadyOpen || Boolean(file);
       if (shouldPost && body) {
@@ -113,21 +99,13 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
         const reply = [...(data.messages ?? [])]
           .reverse()
           .find(
-            (m: { actor?: string; body?: string; mediaId?: string; mediaKind?: string }) =>
-              m.actor === "McBuleli IA" && (m.body || m.mediaKind === "audio"),
+            (m: { actor?: string; body?: string }) =>
+              m.actor === "McBuleli IA" && m.body,
           );
-        if (reply?.body || reply?.mediaId) {
+        if (reply?.body) {
           setMessages((prev) => [
             ...prev,
-            {
-              id: `a-${Date.now()}`,
-              role: "assistant",
-              content: reply.mediaKind === "audio" ? "" : reply.body,
-              voiceSrc:
-                reply.mediaKind === "audio" && reply.mediaId
-                  ? `/api/alerts/${id}/media/${reply.mediaId}`
-                  : undefined,
-            },
+            { id: `a-${Date.now()}`, role: "assistant", content: reply.body },
           ]);
         }
       } else {
@@ -152,7 +130,6 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
       setError("Connexion interrompue.");
     } finally {
       setBusy(false);
-      setVoiceTurn(false);
     }
   }
 
@@ -213,17 +190,13 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
                   : "rounded-bl-md border border-white/10 bg-white/10 text-stone-100"
               }`}
             >
-              {m.voiceSrc ? (
-                <VoiceNote src={m.voiceSrc} autoPlay={m.role === "assistant"} light={m.role === "user"} />
-              ) : (
-                <p className="whitespace-pre-wrap">{m.content}</p>
-              )}
+              <p className="whitespace-pre-wrap">{m.content}</p>
             </div>
           </div>
         ))}
         {busy ? (
           <p className="text-xs text-[#6ee7a0]">
-            {voiceTurn ? "Ngemba parle…" : "Ngemba écrit…"}
+            Ngemba écrit…
           </p>
         ) : null}
         {messages.length === 1 ? (
