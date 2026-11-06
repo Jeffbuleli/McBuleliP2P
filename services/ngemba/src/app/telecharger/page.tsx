@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PwaInstallButton } from "@/components/pwa-install";

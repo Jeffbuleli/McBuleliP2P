@@ -1,3 +1,4 @@
+-- Revue du 6 novembre 2026.
 CREATE TABLE "ng_accreditations" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"member_id" uuid NOT NULL,

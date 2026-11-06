@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 /** Page d’installation PWA (plus d’APK distribué). */
 export const NGEMBA_INSTALL_PAGE = "/telecharger";
 

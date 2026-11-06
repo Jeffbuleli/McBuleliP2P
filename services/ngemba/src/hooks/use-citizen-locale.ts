@@ -1,4 +1,5 @@
 "use client";
+/** Revue du 6 novembre 2026. */
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";

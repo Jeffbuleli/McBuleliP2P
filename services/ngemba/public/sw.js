@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 /* Minimal service worker — required for Chromium PWA installability. */
 self.addEventListener("install", (event) => {
   event.waitUntil(self.skipWaiting());

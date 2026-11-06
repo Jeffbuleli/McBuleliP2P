@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 import type { PartnerOrg } from "@/lib/partners/types";
 import type { OpsRole } from "@/lib/ops/roles";
 import { resolveOpsRole } from "@/lib/ops/auth-tokens";

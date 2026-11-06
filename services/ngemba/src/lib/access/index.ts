@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 export { resolveOpsActor, actorHasScope, hashIp } from "@/lib/access/bridge";
 export {
   decidePermission,

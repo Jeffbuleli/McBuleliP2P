@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isLocale } from "@/lib/i18n";

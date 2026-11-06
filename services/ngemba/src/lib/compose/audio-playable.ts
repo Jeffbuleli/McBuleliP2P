@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 /**
  * MediaRecorder (surtout WebM) produit souvent des blobs sans durée metadata
  * → <audio> affiche 0:00/0:00. On re-encode en WAV PCM pour lecture fiable.

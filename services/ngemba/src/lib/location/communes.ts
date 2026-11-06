@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 /** Communes Kinshasa - meme base que SafeFind (CyberAlert). */
 export const KINSHASA_COMMUNES = [
   "Bandalungwa",

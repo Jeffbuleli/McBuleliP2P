@@ -1,4 +1,5 @@
 "use client";
+/** Revue du 6 novembre 2026. */
 
 type UnitMatchRow = {
   id: string;

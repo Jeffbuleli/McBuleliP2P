@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 /**
  * Upload NGEMBA brand + email assets to Cyber Alert R2.
  *

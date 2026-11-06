@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 import type { OperationalUnit, UnitType } from "@/lib/units/types";
 import type { RequiredService } from "@/lib/response-engine/types";
 import { listPartners } from "@/lib/partners/directory";

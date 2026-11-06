@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 import type { Metadata, Viewport } from "next";
 import { Poppins } from "next/font/google";
 import { PwaRegister } from "@/components/pwa-register";

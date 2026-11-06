@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 import fs from "fs";
 import path from "path";
 

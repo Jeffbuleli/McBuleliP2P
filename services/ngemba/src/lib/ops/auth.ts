@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { decidePermission } from "@/lib/access/abac";

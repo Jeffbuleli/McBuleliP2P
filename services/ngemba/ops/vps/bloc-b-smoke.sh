@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Revue du 6 novembre 2026.
 # NGEMBA Bloc B smoke - alerte + prise en charge ops (à lancer sur le VPS).
 #
 # Usage:

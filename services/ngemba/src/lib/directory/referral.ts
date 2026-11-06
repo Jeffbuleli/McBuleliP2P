@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 import { listSeedServices, serviceLabel } from "@/lib/directory/seed";
 import type {
   DirectoryService,

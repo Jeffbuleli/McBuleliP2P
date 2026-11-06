@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 /**
  * Migrate data/sessions.json → Postgres alert_sessions (+ seed incident_events).
  * Prerequisites: npm run db:push

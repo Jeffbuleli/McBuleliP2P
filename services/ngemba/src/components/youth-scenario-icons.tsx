@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 import type { ReactElement, ReactNode, SVGProps } from "react";
 import type { YouthScenarioId } from "@/lib/youth/scenarios";
 

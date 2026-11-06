@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { readEnvKey } from "@/lib/env";

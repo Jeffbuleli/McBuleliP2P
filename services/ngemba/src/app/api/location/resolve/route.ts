@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { RDC_PROVINCES } from "@/lib/location/rdc-places";

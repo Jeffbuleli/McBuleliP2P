@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 /** Contenus statiques pilote - FR prioritaire ; autres langues en Phase 2. */
 
 export type StaticSection = { title: string; body: string[] };

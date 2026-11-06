@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 /**
  * Annuaire public « Nos partenaires » (citoyen) - cartes détaillées.
  * Ops seed + ONG réseau NGEMBA (sans contacts privés / emails ops).

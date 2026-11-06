@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 import { resolveZoneGeo } from "@/lib/observatory/geo";
 import { getPartner, listPartners, partnersForRole } from "@/lib/partners/directory";
 import type {

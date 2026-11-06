@@ -1,3 +1,4 @@
+-- Revue du 6 novembre 2026.
 CREATE TABLE "ng_operational_units" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"partner_seed_id" text,

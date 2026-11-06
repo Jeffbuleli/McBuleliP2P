@@ -1,4 +1,5 @@
 "use client";
+/** Revue du 6 novembre 2026. */
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";

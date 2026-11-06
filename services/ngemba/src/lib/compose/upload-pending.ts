@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 /** Upload local audio + photos after alert creation - awaited before navigate. */
 
 function resolveAudioFile(audio: Blob): File {

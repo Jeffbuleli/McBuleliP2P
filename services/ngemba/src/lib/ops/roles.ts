@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 /** Roles ops NGEMBA - dashboards et accreditations separes. */
 
 export type OpsRole = "admin" | "ngo" | "security" | "partner" | "school";

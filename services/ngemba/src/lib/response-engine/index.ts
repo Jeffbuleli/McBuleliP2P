@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 export { evaluateResponse, applyTriageRules, RESPONSE_POLICY_VERSION } from "@/lib/response-engine/rules";
 export { servicesForTriage } from "@/lib/response-engine/services";
 export type {

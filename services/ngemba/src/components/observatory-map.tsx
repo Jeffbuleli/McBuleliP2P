@@ -1,4 +1,5 @@
 "use client";
+/** Revue du 6 novembre 2026. */
 
 import { useEffect, useRef } from "react";
 import type { Map as LeafletMap, CircleMarker } from "leaflet";

@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 import { RDC_PROVINCES } from "@/lib/location/rdc-places";
 import { KINSHASA_COMMUNE_CENTROIDS } from "@/lib/location/communes";
 

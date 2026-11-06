@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 import type { Locale } from "@/lib/i18n";
 
 export type YouthScenarioId =

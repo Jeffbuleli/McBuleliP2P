@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 import { listPartners } from "@/lib/partners/directory";
 import type { SessionRoutingMeta } from "@/lib/partners/types";
 import {

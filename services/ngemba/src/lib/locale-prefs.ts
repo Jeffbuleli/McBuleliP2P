@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 import { isLocale, type Locale } from "@/lib/i18n";
 
 export const LOCALE_STORAGE_KEY = "ngemba_locale";

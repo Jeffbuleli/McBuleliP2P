@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 /**
  * NGEMBA schema - Phase 1 Incident Core.
  * Runtime dual-write with JSON file until Postgres is primary.

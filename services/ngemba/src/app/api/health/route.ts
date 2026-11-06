@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 import { NextResponse } from "next/server";
 import { isDatabaseConfigured } from "@/db";
 import { listDirectoryServices, listOrganizationsView } from "@/lib/directory";

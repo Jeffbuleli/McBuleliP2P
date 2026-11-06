@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 /** Types du Response Engine (regles ops - pas IA). */
 
 export type RoutingQueue =

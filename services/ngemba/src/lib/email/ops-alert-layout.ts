@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 import {
   NGEMBA_EMAIL_ASSETS,
   NGEMBA_EMAIL_BRAND as B,

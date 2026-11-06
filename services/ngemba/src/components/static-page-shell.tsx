@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 import Link from "next/link";
 import type { StaticSection } from "@/lib/static-pages";
 

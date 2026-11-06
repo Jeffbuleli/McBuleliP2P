@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 import type { AlertSessionRecord } from "@/lib/sessions/store";
 import type { TrustedContact } from "@/lib/trusted-contacts/types";
 import { NGEMBA_EMAIL_ASSETS, NGEMBA_EMAIL_FROM } from "@/lib/email/brand";

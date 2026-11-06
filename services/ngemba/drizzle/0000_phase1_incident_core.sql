@@ -1,3 +1,4 @@
+-- Revue du 6 novembre 2026.
 CREATE TYPE "public"."ng_alert_source" AS ENUM('sos_button', 'shake', 'witness', 'chat', 'school');--> statement-breakpoint
 CREATE TYPE "public"."ng_alert_status" AS ENUM('opened', 'active', 'oriented', 'closed', 'cancelled');--> statement-breakpoint
 CREATE TYPE "public"."ng_urgency" AS ENUM('critical', 'high', 'medium', 'low', 'info');--> statement-breakpoint

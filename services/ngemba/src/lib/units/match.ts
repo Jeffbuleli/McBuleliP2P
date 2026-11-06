@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 import { resolveSessionPlace } from "@/lib/partners/match";
 import type { RequiredService } from "@/lib/response-engine/types";
 import { listUnits } from "@/lib/units/store";

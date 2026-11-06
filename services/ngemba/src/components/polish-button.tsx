@@ -1,4 +1,5 @@
 "use client";
+/** Revue du 6 novembre 2026. */
 
 import { useState } from "react";
 import { IconSpark } from "@/components/icons";

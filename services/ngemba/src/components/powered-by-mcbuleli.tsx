@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 import Link from "next/link";
 
 /** Footer brand strip - same pattern as mcbuleli.org / McBuleliPoweredFooter. */

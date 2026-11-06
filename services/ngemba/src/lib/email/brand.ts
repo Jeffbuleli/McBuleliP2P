@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 /** Tokens email alignes sur McBuleli + palette NGEMBA + logo officiel. */
 
 export const NGEMBA_EMAIL_BRAND = {

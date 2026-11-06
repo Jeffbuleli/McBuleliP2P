@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Revue du 6 novembre 2026.
 """Polish Ngemba UI i18n (en/ln/sw/lua/kg) via OpenAI — short mobile-UI strings.
 
 Important: request locales as tshiluba/kikongo (not ISO `kg`, which models confuse with Kyrgyz).

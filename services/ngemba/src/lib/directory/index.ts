@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 export { listSeedServices, listOrganizationsView, serviceLabel } from "@/lib/directory/seed";
 export { buildReferrals, listDirectoryServices } from "@/lib/directory/referral";
 export { saveReferrals, getReferrals } from "@/lib/directory/store";

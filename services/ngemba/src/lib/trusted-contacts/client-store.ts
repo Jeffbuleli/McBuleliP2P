@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 /** Stockage local navigateur - proches envoyes avec l'alerte (pas de notify auto). */
 
 import type { TrustedContact } from "@/lib/trusted-contacts/types";

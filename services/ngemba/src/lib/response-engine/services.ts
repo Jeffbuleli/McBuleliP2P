@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 import type { TriageResult } from "@/lib/ai/triage-schema";
 import type { RequiredService } from "@/lib/response-engine/types";
 

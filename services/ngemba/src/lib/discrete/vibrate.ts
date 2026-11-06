@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 /** Vibrations discrètes - Web Vibration API (Android / some browsers). */
 
 export function vibrateDiscreteAlert() {

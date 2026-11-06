@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 import { readEnvKey } from "@/lib/env";
 import { categoryLabelFr, urgencyLabelFr } from "@/lib/labels";
 import { listSessions, type AlertSessionRecord } from "@/lib/sessions/store";

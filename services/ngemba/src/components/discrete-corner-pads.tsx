@@ -1,4 +1,5 @@
 "use client";
+/** Revue du 6 novembre 2026. */
 
 import type { CornerId } from "@/lib/discrete/corner-pattern";
 import { useCornerPattern } from "@/lib/discrete/corner-pattern";

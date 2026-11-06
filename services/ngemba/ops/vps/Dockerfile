@@ -1,3 +1,4 @@
+# Revue du 6 novembre 2026.
 FROM node:22-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json* ./

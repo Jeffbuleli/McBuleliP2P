@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 import { NextResponse } from "next/server";
 import { requireOpsAuth } from "@/lib/ops/auth";
 import { resolveIpGeolocation } from "@/lib/location/ip-geo";

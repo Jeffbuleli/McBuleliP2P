@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 import type { PartnerOrg } from "@/lib/partners/types";
 
 /** Annuaire seed - editable via NGEMBA_PARTNERS_JSON (tableau JSON). */

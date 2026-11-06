@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 import { polishCitizenText } from "@/lib/ai/polish";
 import {
   clientIp,

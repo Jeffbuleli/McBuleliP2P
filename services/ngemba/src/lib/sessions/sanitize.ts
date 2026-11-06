@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 import { actorHasScope } from "@/lib/access/bridge";
 import type { OpsActor } from "@/lib/access/types";
 import type { AlertSessionRecord } from "@/lib/sessions/store";

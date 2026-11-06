@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 import type { OpsPermission, OpsRole } from "@/lib/ops/roles";
 import type { PartnerOrg } from "@/lib/partners/types";
 

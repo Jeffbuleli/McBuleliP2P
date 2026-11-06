@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 import { Suspense } from "react";
 import { HomeShell } from "@/components/home-shell";
 

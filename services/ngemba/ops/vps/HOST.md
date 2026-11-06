@@ -1,3 +1,4 @@
+<!-- Revue du 6 novembre 2026. -->
 # NGEMBA production host
 
 - **Domain:** `ngemba-rdc.org` (email `info@ngemba-rdc.org`)

@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 import type { AlertSessionRecord } from "@/lib/sessions/store";
 import {
   NGEMBA_EMAIL_ASSETS,

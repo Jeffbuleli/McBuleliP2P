@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 /**
  * Demande de nouveau code ops → email McBuleli (pas d'auto-reset token).
  */

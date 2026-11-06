@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 import type { SVGProps } from "react";
 
 type IconProps = SVGProps<SVGSVGElement> & { title?: string };

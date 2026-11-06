@@ -1,4 +1,5 @@
 "use client";
+/** Revue du 6 novembre 2026. */
 
 import { useEffect, useId, useRef, useState } from "react";
 import { IconUpload, IconWaveform } from "@/components/icons";

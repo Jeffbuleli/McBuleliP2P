@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 type OpsListener = (event: string, data: unknown) => void;
 
 const g = globalThis as unknown as {

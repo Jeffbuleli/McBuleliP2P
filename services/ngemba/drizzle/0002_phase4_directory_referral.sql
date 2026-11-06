@@ -1,3 +1,4 @@
+-- Revue du 6 novembre 2026.
 CREATE TABLE "ng_referrals" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"session_id" uuid NOT NULL,
