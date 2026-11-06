@@ -9,15 +9,74 @@ import { useVoiceDraft } from "@/hooks/use-voice-draft";
 
 type Bubble = { id: string; role: "user" | "assistant"; content: string };
 
-const GREETING =
-  "Bonjour. Ici Ngemba. Vous pouvez parler de violences, à la maison ou ailleurs, sans donner votre nom. Qu'est-ce qui se passe ?";
+type VbgCopy = {
+  title: string;
+  sub: string;
+  greeting: string;
+  starters: string[];
+  placeholder: string;
+  close: string;
+  send: string;
+  writing: string;
+  talk: string;
+};
 
-const STARTERS = ["À la maison", "Violence sexuelle", "Un enfant", "Harcèlement"];
+const VBG: Record<string, VbgCopy> = {
+  fr: {
+    title: "Ngemba VBG",
+    sub: "On vous écoute d'abord",
+    greeting:
+      "Bonjour. Ici Ngemba. Vous pouvez parler de violences, à la maison ou ailleurs, sans donner votre nom. Qu'est-ce qui se passe ?",
+    starters: ["À la maison", "Violence sexuelle", "Un enfant", "Harcèlement"],
+    placeholder: "Écrivez ici…",
+    close: "Fermer",
+    send: "Envoyer",
+    writing: "Ngemba écrit…",
+    talk: "Parler",
+  },
+  en: {
+    title: "Ngemba GBV",
+    sub: "We listen first",
+    greeting:
+      "Hello. This is Ngemba. You can talk about violence, at home or elsewhere, without giving your name. What is happening?",
+    starters: ["At home", "Sexual violence", "A child", "Harassment"],
+    placeholder: "Write here…",
+    close: "Close",
+    send: "Send",
+    writing: "Ngemba is writing…",
+    talk: "Speak",
+  },
+  ln: {
+    title: "Ngemba VBG",
+    sub: "Totosa liboso",
+    greeting:
+      "Mbote. Nazali Ngemba. Oloba na makama, na ndako to na esika mosusu, nkombo ezali te. Nini ezali koleka?",
+    starters: ["Na ndako", "Likama ya nzoto", "Mwana", "Kofinga"],
+    placeholder: "Koma awa…",
+    close: "Kanga",
+    send: "Tinda",
+    writing: "Ngemba azali kokoma…",
+    talk: "Lobela",
+  },
+  sw: {
+    title: "Ngemba VBG",
+    sub: "Tunasikiliza kwanza",
+    greeting:
+      "Habari. Mimi ni Ngemba. Unaweza kuongea kuhusu vurugu, nyumbani au kwingine, bila kutoa jina. Nini kinaendelea?",
+    starters: ["Nyumbani", "Vurugu ya kingono", "Mtoto", "Unyanyasaji"],
+    placeholder: "Andika hapa…",
+    close: "Funga",
+    send: "Tuma",
+    writing: "Ngemba anaandika…",
+    talk: "Ongea",
+  },
+};
 
 export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
-  const { href } = useCitizenLocale(initialLocale);
+  const { href, locale } = useCitizenLocale(initialLocale);
+  const copy = VBG[locale] ?? VBG.fr;
   const [messages, setMessages] = useState<Bubble[]>([
-    { id: "hello", role: "assistant", content: GREETING },
+    { id: "hello", role: "assistant", content: (VBG[initialLocale ?? "fr"] ?? VBG.fr).greeting },
   ]);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
@@ -30,6 +89,14 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, busy]);
 
+  useEffect(() => {
+    setMessages((prev) =>
+      prev.length === 1 && prev[0]?.id === "hello"
+        ? [{ ...prev[0], content: copy.greeting }]
+        : prev,
+    );
+  }, [copy.greeting]);
+
   async function ensureSession(text: string): Promise<string | null> {
     if (sessionId) return sessionId;
     const res = await fetch("/api/alerts", {
@@ -38,7 +105,7 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         message: text.slice(0, 500),
-        locale: "fr",
+        locale,
         source: "school",
         schoolContext: { concernType: "other", establishmentHint: null, isMinor: true },
       }),
@@ -173,13 +240,13 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
           N
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-bold">Ngemba VBG</p>
+          <p className="truncate text-sm font-bold">{copy.title}</p>
           <p className="truncate text-[11px] text-[#6ee7a0]/80">
-            On vous écoute d&apos;abord
+            {copy.sub}
           </p>
         </div>
         <Link href={href("/")} className="text-xs font-semibold text-stone-400">
-          Fermer
+          {copy.close}
         </Link>
       </header>
 
@@ -202,17 +269,17 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
         ))}
         {busy ? (
           <p className="text-xs text-[#6ee7a0]">
-            Ngemba écrit…
+            {copy.writing}
           </p>
         ) : null}
         {messages.length === 1 ? (
           <div className="flex flex-wrap gap-2 pt-2">
-            {STARTERS.map((label) => (
+            {copy.starters.map((label) => (
               <button
                 key={label}
                 type="button"
                 disabled={busy}
-                onClick={() => void pushTurn(`Je veux parler de : ${label.toLowerCase()}.`)}
+                onClick={() => void pushTurn(label)}
                 className="rounded-full border border-white/15 px-3 py-1.5 text-xs font-semibold text-[#6ee7a0]"
               >
                 {label}
@@ -237,7 +304,7 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
           className={`inline-flex size-11 shrink-0 items-center justify-center rounded-2xl ${
             voice.recording ? "bg-red-600 text-white" : "bg-white/10 text-[#6ee7a0]"
           }`}
-          aria-label="Parler"
+          aria-label={copy.talk}
         >
           <IconMic className="size-5" />
         </button>
@@ -250,20 +317,20 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
           <input
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            placeholder="Écris ici…"
+            placeholder={copy.placeholder}
             className="min-h-11 min-w-0 flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 text-sm outline-none placeholder:text-stone-500"
           />
         )}
         <button
           type="submit"
           disabled={busy || (!draft.trim() && !voice.file && !voice.recording)}
-          aria-label="Envoyer"
+          aria-label={copy.send}
           className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-2xl bg-[#305f33] px-3.5 text-sm font-bold text-white disabled:opacity-40"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden className="shrink-0">
             <path d="M4 12h12M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          Envoyer
+          {copy.send}
         </button>
       </form>
     </main>

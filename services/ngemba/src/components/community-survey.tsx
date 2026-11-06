@@ -59,6 +59,100 @@ const FR: Question[] = [
   },
 ];
 
+const LN: Question[] = [
+  {
+    key: "concern",
+    prompt: "Nini ezali kopesa yo mawa lelo?",
+    options: [
+      { id: "home", label: "Likama na ndako" },
+      { id: "vbg", label: "Likama ya nzoto to VBG" },
+      { id: "child", label: "Kimia ya mwana" },
+      { id: "street", label: "Likama na quartier" },
+      { id: "harassment", label: "Kofinga" },
+      { id: "other", label: "Mosusu" },
+    ],
+  },
+  {
+    key: "firstHelp",
+    prompt: "Soki likama ekoki sikoyo, okokende liboso epai ya nani?",
+    options: [
+      { id: "family", label: "Libota" },
+      { id: "health", label: "Esika ya monganga" },
+      { id: "police", label: "Police" },
+      { id: "org", label: "Organisation" },
+      { id: "ngemba", label: "Ngemba" },
+      { id: "unknown", label: "Nayebi te" },
+    ],
+  },
+  {
+    key: "alertUseful",
+    prompt: "Bouton ya alerte lokola SOS ekosalisa yo?",
+    options: [
+      { id: "yes", label: "Iyo" },
+      { id: "not_yet", label: "Naino te" },
+      { id: "unknown", label: "Nayebi te" },
+    ],
+  },
+  {
+    key: "communityNeed",
+    prompt: "Nini ekosalisa communauté na yo koleka?",
+    options: [
+      { id: "listen", label: "Koyoka yo" },
+      { id: "orient", label: "Kotinda yo na esika ya lisalisi" },
+      { id: "alert", label: "Kobenga noki soki ezali makasi" },
+      { id: "rights", label: "Koyeba makoki na yo" },
+      { id: "anonymous", label: "Koloba nkombo te" },
+    ],
+  },
+];
+
+const SW: Question[] = [
+  {
+    key: "concern",
+    prompt: "Nini inakusumbua zaidi leo?",
+    options: [
+      { id: "home", label: "Vurugu nyumbani" },
+      { id: "vbg", label: "Vurugu ya kingono au VBG" },
+      { id: "child", label: "Usalama wa mtoto" },
+      { id: "street", label: "Ukosefu wa usalama mtaani" },
+      { id: "harassment", label: "Unyanyasaji" },
+      { id: "other", label: "Nyingine" },
+    ],
+  },
+  {
+    key: "firstHelp",
+    prompt: "Hatari ikitokea sasa, ungeenda kwa nani kwanza?",
+    options: [
+      { id: "family", label: "Familia" },
+      { id: "health", label: "Huduma ya afya" },
+      { id: "police", label: "Polisi" },
+      { id: "org", label: "Shirika" },
+      { id: "ngemba", label: "Ngemba" },
+      { id: "unknown", label: "Sijui" },
+    ],
+  },
+  {
+    key: "alertUseful",
+    prompt: "Kitufe cha tahadhari kama SOS kingekusaidia?",
+    options: [
+      { id: "yes", label: "Ndiyo" },
+      { id: "not_yet", label: "Bado" },
+      { id: "unknown", label: "Sijui" },
+    ],
+  },
+  {
+    key: "communityNeed",
+    prompt: "Nini kingesaidia jamii yako zaidi?",
+    options: [
+      { id: "listen", label: "Kusikilizwa" },
+      { id: "orient", label: "Kuelekezwa kwenye huduma" },
+      { id: "alert", label: "Tahadhari ya haraka ikiwa ni hatari" },
+      { id: "rights", label: "Kuelewa haki" },
+      { id: "anonymous", label: "Kuongea bila kutoa jina" },
+    ],
+  },
+];
+
 const EN: Question[] = [
   {
     key: "concern",
@@ -108,8 +202,68 @@ const EN: Question[] = [
 
 export function CommunitySurvey({ initialLocale }: { initialLocale?: string }) {
   const { href, locale } = useCitizenLocale(initialLocale);
-  const en = locale === "en";
-  const questions = en ? EN : FR;
+  const pack = locale === "en" ? EN : locale === "ln" ? LN : locale === "sw" ? SW : FR;
+  const ui =
+    locale === "en"
+      ? {
+          title: "Survey",
+          intro: "Answer when you want. Skip any question. This is not an alert. It helps Ngemba understand community needs.",
+          close: "Close",
+          thanks: "Thank you. Your answers are saved.",
+          thanksBody: "They help improve services and advocacy. If you are in danger now, use SOS.",
+          place: "City or commune, optional, no exact address",
+          note: "A few words, optional",
+          send: "Send my answers",
+          sending: "Sending...",
+          fail: "Could not save. You can try again.",
+          offline: "Connection interrupted.",
+          danger: "If you are in danger now, this form is not the right place.",
+        }
+      : locale === "ln"
+        ? {
+            title: "Mituna",
+            intro: "Yanola tango olingi. Okoki koleka motuna. Oyo ezali alerte te. Esungaka Ngemba ayeba bamposa ya communauté.",
+            close: "Kanga",
+            thanks: "Matondi. Biyanoli na yo ebombami.",
+            thanksBody: "Esungaka kobongisa misala mpe plaidoyer. Soki likama ezali sikoyo, tinda SOS.",
+            place: "Engumba to commune, soki olingi, adresse ya sikisiki te",
+            note: "Maloba moke, soki olingi",
+            send: "Tinda biyanoli",
+            sending: "Kotinda...",
+            fail: "Ebombami te. Meká lisusu.",
+            offline: "Connexion ekati.",
+            danger: "Soki likama ezali sikoyo, formulaire oyo ezali esika te.",
+          }
+        : locale === "sw"
+          ? {
+              title: "Utafiti",
+              intro: "Jibu unapotaka. Unaweza kuruka swali. Hii si tahadhari. Inasaidia Ngemba kuelewa mahitaji ya jamii.",
+              close: "Funga",
+              thanks: "Asante. Majibu yako yamehifadhiwa.",
+              thanksBody: "Yanasaidia kuboresha huduma na uhamasishaji. Ukiwa hatarini sasa, tumia SOS.",
+              place: "Mji au commune, hiari, bila anwani kamili",
+              note: "Maneno machache, hiari",
+              send: "Tuma majibu",
+              sending: "Inatumwa...",
+              fail: "Imeshindwa kuhifadhi. Unaweza kujaribu tena.",
+              offline: "Muunganisho umekatika.",
+              danger: "Ukiwa hatarini sasa, fomu hii si mahali sahihi.",
+            }
+          : {
+              title: "Enquête",
+              intro: "Répondez quand vous voulez. Vous pouvez passer une question. Ce n'est pas une alerte. Cela aide Ngemba à comprendre les besoins de la communauté.",
+              close: "Fermer",
+              thanks: "Merci. Vos réponses sont enregistrées.",
+              thanksBody: "Elles servent à améliorer les services et les plaidoyers. Si vous êtes en danger maintenant, utilisez SOS.",
+              place: "Ville ou commune, facultatif, sans adresse précise",
+              note: "Quelques mots, facultatif",
+              send: "Envoyer mes réponses",
+              sending: "Envoi...",
+              fail: "Enregistrement impossible. Vous pouvez réessayer.",
+              offline: "Connexion interrompue.",
+              danger: "Si vous êtes en danger maintenant, ce formulaire n'est pas le bon endroit.",
+            };
+  const questions = pack;
   const [picked, setPicked] = useState<Record<string, string>>({});
   const [place, setPlace] = useState("");
   const [note, setNote] = useState("");
@@ -136,12 +290,12 @@ export function CommunitySurvey({ initialLocale }: { initialLocale?: string }) {
         }),
       });
       if (!res.ok) {
-        setError(en ? "Could not save. You can try again." : "Enregistrement impossible. Vous pouvez réessayer.");
+        setError(ui.fail);
         return;
       }
       setDone(true);
     } catch {
-      setError(en ? "Connection interrupted." : "Connexion interrompue.");
+      setError(ui.offline);
     } finally {
       setBusy(false);
     }
@@ -151,28 +305,18 @@ export function CommunitySurvey({ initialLocale }: { initialLocale?: string }) {
     <main className="mx-auto flex min-h-dvh w-full max-w-lg flex-col px-4 py-5 sm:max-w-xl">
       <header className="mb-4 flex items-start justify-between gap-3">
         <div>
-          <p className="text-lg font-bold text-ng-text">{en ? "Survey" : "Enquête"}</p>
-          <p className="mt-1 text-sm leading-relaxed text-ng-muted">
-            {en
-              ? "Answer when you want. Skip any question. This is not an alert. It helps Ngemba understand community needs."
-              : "Répondez quand vous voulez. Vous pouvez passer une question. Ce n'est pas une alerte. Cela aide Ngemba à comprendre les besoins de la communauté."}
-          </p>
+          <p className="text-lg font-bold text-ng-text">{ui.title}</p>
+          <p className="mt-1 text-sm leading-relaxed text-ng-muted">{ui.intro}</p>
         </div>
         <Link href={href("/")} className="shrink-0 text-sm font-semibold text-ng-muted">
-          {en ? "Close" : "Fermer"}
+          {ui.close}
         </Link>
       </header>
 
       {done ? (
         <section className="rounded-2xl border border-black/10 bg-white p-4">
-          <p className="text-sm font-semibold text-ng-text">
-            {en ? "Thank you. Your answers are saved." : "Merci. Vos réponses sont enregistrées."}
-          </p>
-          <p className="mt-2 text-sm leading-relaxed text-ng-muted">
-            {en
-              ? "They help improve services and advocacy. If you are in danger now, use SOS."
-              : "Elles servent à améliorer les services et les plaidoyers. Si vous êtes en danger maintenant, utilisez SOS."}
-          </p>
+          <p className="text-sm font-semibold text-ng-text">{ui.thanks}</p>
+          <p className="mt-2 text-sm leading-relaxed text-ng-muted">{ui.thanksBody}</p>
           <Link
             href={href("/sos")}
             className="mt-4 inline-flex rounded-full bg-ng-urgent px-4 py-2 text-sm font-bold text-white"
@@ -219,9 +363,7 @@ export function CommunitySurvey({ initialLocale }: { initialLocale?: string }) {
           ))}
 
           <label className="block space-y-1">
-            <span className="text-sm font-semibold text-ng-text">
-              {en ? "City or commune, optional, no exact address" : "Ville ou commune, facultatif, sans adresse précise"}
-            </span>
+            <span className="text-sm font-semibold text-ng-text">{ui.place}</span>
             <input
               value={place}
               onChange={(event) => setPlace(event.target.value)}
@@ -231,9 +373,7 @@ export function CommunitySurvey({ initialLocale }: { initialLocale?: string }) {
           </label>
 
           <label className="block space-y-1">
-            <span className="text-sm font-semibold text-ng-text">
-              {en ? "A few words, optional" : "Quelques mots, facultatif"}
-            </span>
+            <span className="text-sm font-semibold text-ng-text">{ui.note}</span>
             <textarea
               value={note}
               onChange={(event) => setNote(event.target.value)}
@@ -250,12 +390,10 @@ export function CommunitySurvey({ initialLocale }: { initialLocale?: string }) {
             disabled={busy}
             className="w-full rounded-full bg-ng-primary px-4 py-3 text-sm font-bold text-white disabled:opacity-60"
           >
-            {busy ? (en ? "Sending..." : "Envoi...") : en ? "Send my answers" : "Envoyer mes réponses"}
+            {busy ? ui.sending : ui.send}
           </button>
           <p className="text-center text-xs text-ng-muted">
-            {en
-              ? "If you are in danger now, this form is not the right place."
-              : "Si vous êtes en danger maintenant, ce formulaire n'est pas le bon endroit."}{" "}
+            {ui.danger}{" "}
             <Link href={href("/sos")} className="font-semibold text-ng-urgent">
               SOS
             </Link>

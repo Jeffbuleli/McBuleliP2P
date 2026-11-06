@@ -5,14 +5,12 @@ import { useCallback, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  IconCheck,
-  IconEye,
   IconBook,
+  IconEye,
   IconHeart,
   IconShield,
 } from "@/components/icons";
 import { DiscreteCornerPads } from "@/components/discrete-corner-pads";
-import { PoweredByMcbuleli } from "@/components/powered-by-mcbuleli";
 import { PwaInstallReminder } from "@/components/pwa-install";
 import { useCitizenLocale } from "@/hooks/use-citizen-locale";
 import {
@@ -134,8 +132,7 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
               width: device === "desktop" ? 56 : device === "tablet" ? 52 : 48,
               height: device === "desktop" ? 56 : device === "tablet" ? 52 : 48,
             }}
-            aria-label={t.discrete}
-            title={t.discreteTap}
+            aria-label="Ngemba"
           >
             <img
               src="/brand/ngemba-logo.png"
@@ -233,45 +230,6 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
             device={device}
           />
         </nav>
-
-        <p className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center text-[11px] text-ng-muted md:text-xs">
-          <Link
-            href={href("/resources")}
-            className="inline-flex items-center gap-1 hover:text-ng-primary"
-          >
-            <IconHeart className="size-3" />
-            {t.resources}
-          </Link>
-          <Link
-            href={href("/prevent")}
-            className="inline-flex items-center gap-1 hover:text-ng-primary"
-          >
-            <IconCheck className="size-3" />
-            {t.prevent}
-          </Link>
-          <Link href={href("/me")} className="hover:text-ng-primary">
-            {t.myAlerts}
-          </Link>
-          <Link href={href("/discrete")} className="hover:text-ng-primary">
-            {t.discrete}
-          </Link>
-        </p>
-
-        <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-[10px] text-ng-muted md:text-[11px]">
-          <Link href={href("/legal/confidentialite")} className="underline">
-            {t.privacyLink}
-          </Link>
-          <span aria-hidden>-</span>
-          <Link href={href("/legal/cgu")} className="underline">
-            {t.cguLink}
-          </Link>
-          <span aria-hidden>-</span>
-          <Link href={href("/partenaires")} className="underline">
-            {t.partnersLink}
-          </Link>
-        </p>
-
-        <PoweredByMcbuleli className="pt-1" />
       </section>
 
       <PwaInstallReminder
