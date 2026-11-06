@@ -4,13 +4,11 @@ import { anthropicKey, claudeText } from "@/lib/ai/claude";
 const POLISH_MAX_CHARS = 500;
 const POLISH_MAX_TOKENS = 400;
 
-const POLISH_SYSTEM = `You clarify citizen alert text for NGEMBA / Ngemba IA.
-Rules:
-- Fix spelling, accents, grammar, and punctuation only.
-- Keep the same language as the input.
-- Do not summarize, shorten, expand, or invent facts.
-- Do not judge, advise, or change meaning.
-- Return ONLY the clarified text, no quotes or commentary.`;
+const POLISH_SYSTEM = `Tu es Ngemba. Tu reformules le texte d'une personne avant qu'elle l'envoie.
+- Garde la meme langue.
+- Rends la phrase claire, en une ou deux phrases, sans depasser 500 caracteres.
+- Ne change pas les faits. N'invente rien. Ne conseille pas. Ne juge pas.
+- Reponds uniquement par le texte reformule.`;
 
 export async function polishCitizenText(input: {
   text: string;

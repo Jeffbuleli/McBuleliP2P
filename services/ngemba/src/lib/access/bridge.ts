@@ -1,6 +1,6 @@
 import { createHash, createHmac } from "crypto";
 import type { OpsRole } from "@/lib/ops/roles";
-import { opsTokenForRole } from "@/lib/ops/auth-tokens";
+import { juryMemberFromToken, opsTokenForRole } from "@/lib/ops/auth-tokens";
 import { resolveOpsContext } from "@/lib/partners/bind";
 import { listPartners } from "@/lib/partners/directory";
 import type {
@@ -70,6 +70,7 @@ export function resolveOpsActor(
   const ctx = resolveOpsContext(token);
   if (!ctx.role) return null;
 
+  const member = juryMemberFromToken(token);
   const role = ctx.role;
   const partner = ctx.partner;
   const id = actorIdFromToken(token, role);
@@ -95,8 +96,8 @@ export function resolveOpsActor(
   }
 
   const orgFromRole = listPartners().find((p) => p.opsRoles.includes(role));
-  const organizationId = orgFromRole?.id ?? `role-${role}`;
-  const organizationName = orgFromRole?.name ?? `NGEMBA ${role}`;
+  const organizationId = member?.id ?? orgFromRole?.id ?? `role-${role}`;
+  const organizationName = member?.name ?? orgFromRole?.name ?? `NGEMBA ${role}`;
 
   return {
     id,

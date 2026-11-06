@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ComposePhotos } from "@/components/compose-photos";
 import { IconEye, IconShield, IconSpark } from "@/components/icons";
-import { PolishButton } from "@/components/polish-button";
 import { TrustedContactsEditor } from "@/components/trusted-contacts-editor";
 import { VoiceButton } from "@/components/voice-button";
 import { useCitizenLocale } from "@/hooks/use-citizen-locale";
@@ -128,6 +127,42 @@ export function SosFlow({
     // Internal marker for media-only alerts (ops UI); triage gets a clear summary.
     if (audioBlob || photos.length) return "·";
     return trimmed;
+  }
+
+  async function onVoiceRecorded(file: File) {
+    setBusy(true);
+    setError(null);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const heardRes = await fetch("/api/voice/transcribe", {
+        method: "POST",
+        body: form,
+      });
+      const heardData = await heardRes.json().catch(() => ({}));
+      const heard = String(heardData.text || "").trim();
+      if (!heardRes.ok || !heard) {
+        setError(
+          locale === "fr"
+            ? "La voix n'a pas pu être transcrite. Écrivez en quelques mots."
+            : "The voice could not be transcribed. Write a few words.",
+        );
+        return;
+      }
+      const polishRes = await fetch("/api/ai/polish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: heard, locale }),
+      });
+      const polishData = await polishRes.json().catch(() => ({}));
+      const clear = String(polishData.text || heard).trim() || heard;
+      setMessage(clear.slice(0, COMPOSE_MAX_CHARS));
+      setAudioBlob(null);
+    } catch {
+      setError(locale === "fr" ? "Connexion interrompue." : "Connection interrupted.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   function applyLiveTranscript(live: string) {
@@ -375,31 +410,17 @@ export function SosFlow({
             <div className="flex w-full items-start gap-2">
               <VoiceButton
                 locale={locale}
-                label={t.voiceRecord}
+                label={busy ? t.polishing : t.voiceRecord}
                 listeningLabel={t.voiceListening}
                 unsupportedLabel={t.voiceUnsupported}
                 onRecordingChange={(on) => {
                   if (on) voiceBaseRef.current = message;
                 }}
                 onLiveTranscript={applyLiveTranscript}
+                onRecorded={(file) => void onVoiceRecorded(file)}
                 onAudioChange={setAudioBlob}
                 discrete={discrete}
-                className="min-w-0 flex-[4]"
-              />
-              <PolishButton
-                text={message}
-                locale={locale}
-                label={t.polish}
-                busyLabel={t.polishing}
-                unavailableLabel={t.polishUnavailable}
-                errorLabel={t.errorGeneric}
-                discrete={discrete}
-                disabled={busy}
-                compact
-                className="min-w-0 flex-[1] self-start"
-                onPolished={(text) =>
-                  setMessage(text.slice(0, COMPOSE_MAX_CHARS))
-                }
+                className="min-w-0 flex-1"
               />
             </div>
             <ComposePhotos

@@ -5,7 +5,6 @@ import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { SessionChat } from "@/components/session-chat";
 import { SessionMediaList } from "@/components/session-media";
 import { OpsRoutingPanel } from "@/components/ops-routing-panel";
-import { OpsUnitsPanel } from "@/components/ops-units-panel";
 import { OpsTrustedContacts } from "@/components/ops-trusted-contacts";
 import {
   categoryLabelFr,
@@ -214,7 +213,7 @@ export function OpsDossierView({ id }: { id: string }) {
     }>;
     unmatched: string[];
   } | null>(null);
-  const [unitMatches, setUnitMatches] = useState<
+  const [, setUnitMatches] = useState<
     Array<{
       id: string;
       name: string;
@@ -444,7 +443,7 @@ export function OpsDossierView({ id }: { id: string }) {
             ) : null}
             {session.source === "school" || session.schoolContext ? (
               <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-[11px] font-semibold text-indigo-700">
-                Safe School
+                VBG
               </span>
             ) : null}
             {sla?.escalated || sla?.breached ? (
@@ -742,12 +741,6 @@ export function OpsDossierView({ id }: { id: string }) {
         routingMeta={session.routingMeta ?? null}
         suggestedPartners={suggestedPartners}
         referrals={referrals}
-      />
-      <OpsUnitsPanel
-        matches={unitMatches}
-        sessionId={session.id}
-        canAssign={canPatch}
-        onAssigned={() => void load()}
       />
       <OpsTrustedContacts contacts={session.trustedContacts ?? []} />
 

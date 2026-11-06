@@ -101,10 +101,10 @@ function LoginForm() {
 
       {mode === "login" ? (
         <>
-          <h1 className="text-xl font-semibold text-ng-text">Connexion</h1>
+          <h1 className="text-xl font-semibold text-ng-text">Équipe Ngemba</h1>
           <p className="mt-2 text-sm text-ng-muted">
-            Accès réservé aux opérateurs et partenaires accrédités. La session
-            reste active 14 jours (renouvelée à chaque visite OPS).
+            Jeff coordonne. Jérémie prend la protection. Joyce prend le danger
+            immédiat. Timothée prend le témoin. Entrez votre code personnel.
           </p>
 
           <form onSubmit={submit} className="mt-8 space-y-4">

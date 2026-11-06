@@ -18,6 +18,8 @@ type Props = {
   locale?: string;
   onRecordingChange?: (recording: boolean) => void;
   onAudioChange?: (blob: Blob | null) => void;
+  /** Quand vrai, pas de lecteur : le parent reçoit le fichier pour transcription. */
+  onRecorded?: (file: File) => void;
   discrete?: boolean;
   className?: string;
   /** When parent clears audio from the other source (import). */
@@ -101,6 +103,7 @@ export function VoiceButton({
   locale = "fr",
   onRecordingChange,
   onAudioChange,
+  onRecorded,
   discrete = false,
   className = "",
   resetToken = 0,
@@ -221,6 +224,11 @@ export function VoiceButton({
       `ngemba-${Date.now()}.${extForMime(mime)}`,
       { type: mime },
     );
+    if (onRecorded) {
+      onRecorded(file);
+      onAudioChange?.(null);
+      return;
+    }
     const url = URL.createObjectURL(file);
     if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
     audioUrlRef.current = url;

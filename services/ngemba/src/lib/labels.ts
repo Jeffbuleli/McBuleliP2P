@@ -18,7 +18,7 @@ const CATEGORY_FR: Record<TriageResult["category"], string> = {
   cyber_threat: "Menace numérique",
   scam: "Arnaque / escroquerie",
   harassment: "Harcèlement",
-  school: "École / mineur",
+  school: "VBG",
   other: "Autre signalement",
   unknown: "Situation à clarifier",
 };
@@ -44,7 +44,7 @@ const SOURCE_FR: Record<string, string> = {
   witness: "Témoin",
   chat: "Chat",
   shake: "Secousse",
-  school: "Safe School",
+  school: "VBG",
 };
 
 const ROUTING_FR: Record<RoutingQueue, string> = {

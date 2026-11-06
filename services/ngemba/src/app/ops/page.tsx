@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { SlaBar, UrgencyDonut } from "@/components/charts/ops-charts";
+import { JURY_TEAM } from "@/lib/ops/team";
 import {
   categoryLabelFr,
   providerLabelFr,
@@ -91,15 +92,6 @@ export default function OpsPage() {
     open: number;
     slaBreached?: number;
   } | null>(null);
-  const [unitStats, setUnitStats] = useState<{
-    total: number;
-    available: number;
-    assigned: number;
-    enRoute: number;
-    onScene: number;
-    busy: number;
-    offline: number;
-  } | null>(null);
   const [loaded, setLoaded] = useState(false);
 
   const canPatch = role !== "partner";
@@ -118,13 +110,6 @@ export default function OpsPage() {
     setLoaded(true);
   }, []);
 
-  const loadUnits = useCallback(async () => {
-    const res = await fetch("/api/ops/units");
-    if (!res.ok) return;
-    const data = await res.json();
-    if (data.stats) setUnitStats(data.stats);
-  }, []);
-
   useEffect(() => {
     void fetch("/api/ops/auth")
       .then((r) => r.json())
@@ -137,8 +122,7 @@ export default function OpsPage() {
 
   useEffect(() => {
     void load();
-    void loadUnits();
-  }, [load, loadUnits]);
+  }, [load]);
 
   useEffect(() => {
     const es = new EventSource("/api/ops/stream");
@@ -233,14 +217,6 @@ export default function OpsPage() {
               device === "mobile" ? "text-xs" : "text-sm"
             }`}
           >
-            {role === "admin" ? (
-              <Link href="/ops/partners" className="font-semibold text-ng-primary">
-                Partenaires
-              </Link>
-            ) : null}
-            <Link href="/ops/observatory" className="font-semibold text-ng-primary">
-              Observatoire
-            </Link>
             <Link href="/" className="text-ng-muted hover:text-ng-primary">
               App
             </Link>
@@ -315,31 +291,17 @@ export default function OpsPage() {
         </div>
       </section>
 
-      {unitStats ? (
-        <section
-          className={`mt-4 rounded-2xl border border-[var(--ng-border)] bg-ng-surface p-3 ${
-            device === "mobile"
-              ? "grid grid-cols-3 gap-2"
-              : "grid grid-cols-6 gap-2"
-          }`}
-        >
-          {[
-            { label: "Unités", value: unitStats.total },
-            { label: "Dispo", value: unitStats.available },
-            { label: "Assignées", value: unitStats.assigned },
-            { label: "En route", value: unitStats.enRoute },
-            { label: "Sur place", value: unitStats.onScene },
-            { label: "Offline", value: unitStats.offline + unitStats.busy },
-          ].map((c) => (
-            <div key={c.label} className="text-center">
-              <p className="text-[10px] font-semibold tracking-wide text-ng-muted uppercase">
-                {c.label}
-              </p>
-              <p className="text-base font-bold text-ng-primary">{c.value}</p>
-            </div>
-          ))}
-        </section>
-      ) : null}
+      <section className="mt-4 grid gap-2 sm:grid-cols-2">
+        {JURY_TEAM.map((member) => (
+          <p
+            key={member.id}
+            className="rounded-2xl border border-[var(--ng-border)] bg-ng-surface px-3 py-2.5 text-sm text-ng-text"
+          >
+            <span className="font-semibold">{member.name}</span>
+            <span className="mt-0.5 block text-xs text-ng-muted">{member.duty}</span>
+          </p>
+        ))}
+      </section>
 
       <div className="mt-6 flex items-end justify-between gap-3">
         <h2 className="text-sm font-semibold text-ng-text">

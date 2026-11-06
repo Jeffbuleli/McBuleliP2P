@@ -1,4 +1,5 @@
 import type { OpsRole } from "@/lib/ops/roles";
+import { JURY_TEAM, type JuryMember } from "@/lib/ops/team";
 
 export const OPS_COOKIE = "ngemba_ops";
 export const OPS_ROLE_COOKIE = "ngemba_ops_role";
@@ -34,10 +35,22 @@ function safeEqual(a: string, b: string): boolean {
   return diff === 0;
 }
 
+export function juryMemberFromToken(
+  token: string | null | undefined,
+): JuryMember | null {
+  if (!token) return null;
+  for (const member of JURY_TEAM) {
+    const expected = process.env[member.env]?.trim();
+    if (expected && safeEqual(token, expected)) return member;
+  }
+  return null;
+}
+
 export function resolveOpsRole(
   token: string | null | undefined,
 ): OpsRole | null {
   if (!token) return null;
+  if (juryMemberFromToken(token)) return "admin";
   const roles: OpsRole[] = ["admin", "ngo", "security", "partner", "school"];
   for (const role of roles) {
     const expected = opsTokenForRole(role);

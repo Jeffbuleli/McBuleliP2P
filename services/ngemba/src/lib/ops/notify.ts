@@ -14,6 +14,7 @@ import {
 } from "@/lib/labels";
 import { SCHOOL_CONCERN_LABELS_FR } from "@/lib/school/types";
 import { emitOpsEvent } from "@/lib/ops/events";
+import { juryEmails } from "@/lib/ops/team";
 
 function appUrl(): string {
   return (
@@ -25,19 +26,37 @@ function appUrl(): string {
 
 const NGEMBA_OPS_EMAIL_FALLBACK = NGEMBA_OPS_EMAIL_DEFAULT;
 
-/** Alertes → hi@mcbuleli.org (Resend mcbuleli.org). ONG pilote optionnelle si verifiee. */
-function pilotVerified(): boolean {
-  return readEnvKey("NGEMBA_OPS_PILOT_VERIFIED") === "true";
-}
-
 function opsEmails(): string[] {
-  const raw = pilotVerified()
-    ? readEnvKey("NGEMBA_OPS_EMAIL") || NGEMBA_OPS_EMAIL_FALLBACK
-    : readEnvKey("NGEMBA_OPS_EMAIL") || NGEMBA_OPS_EMAIL_FALLBACK;
-  return raw
+  const raw = readEnvKey("NGEMBA_OPS_EMAIL") || NGEMBA_OPS_EMAIL_FALLBACK;
+  const extra = raw
     .split(/[,;]/)
     .map((s) => s.trim())
     .filter(Boolean);
+  return [...new Set([...juryEmails(), ...extra])];
+}
+
+function dutyLine(session: AlertSessionRecord): string {
+  if (
+    session.immediateDanger ||
+    session.urgency === "critical" ||
+    session.source === "sos_button" ||
+    session.source === "shake" ||
+    session.discreteMode
+  ) {
+    return "Joyce Dahudi prend ce danger immédiat. Jeff Buleli confirme.";
+  }
+  if (session.source === "witness") {
+    return "Timothée S. prend ce témoignage. Jeff Buleli confirme.";
+  }
+  if (
+    session.source === "school" ||
+    ["vbg", "sexual_violence", "domestic_violence", "child_danger", "harassment"].includes(
+      session.category,
+    )
+  ) {
+    return "Jérémie Kimbiya prend cette protection. Jeff Buleli confirme.";
+  }
+  return "Jeff Buleli coordonne. L'équipe ouvre le dossier et répond dans le chat.";
 }
 
 function opsBccEmails(): string[] {
@@ -47,20 +66,6 @@ function opsBccEmails(): string[] {
     .split(/[,;]/)
     .map((s) => s.trim())
     .filter(Boolean);
-}
-
-function pilotPartnerLine(): string | undefined {
-  const name = readEnvKey("NGEMBA_OPS_PARTNER_NAME");
-  const contact = readEnvKey("NGEMBA_OPS_PARTNER_CONTACT");
-  if (!name) return undefined;
-  const referent = contact ? ` - ${contact}` : "";
-  if (pilotVerified()) {
-    return `Partenaire ONG pilote : ${name}${referent}.`;
-  }
-  return (
-    `Partenaire ONG pilote prévu : ${name}${referent}. ` +
-    `Cette alerte est transmise à hi@mcbuleli.org pour vérification (BCC McBuleli).`
-  );
 }
 
 export async function notifyNewAlert(session: AlertSessionRecord) {
@@ -73,7 +78,7 @@ export async function notifyNewAlert(session: AlertSessionRecord) {
 
   // Proches : PAS de notify auto - visibles sur dossier ops (Appeler / WhatsApp / Email).
   // Voir docs/ngemba/19-PHILO-ORIENTATION-PROCHES.md
-  await Promise.allSettled([sendOpsWebhook(session), sendOpsEmail(session)]);
+  await sendOpsEmail(session);
 }
 
 export async function notifySessionUpdated(session: AlertSessionRecord) {
@@ -83,36 +88,6 @@ export async function notifySessionUpdated(session: AlertSessionRecord) {
     urgency: session.urgency,
     updatedAt: new Date().toISOString(),
   });
-}
-
-async function sendOpsWebhook(session: AlertSessionRecord) {
-  const url = readEnvKey("NGEMBA_OPS_WEBHOOK_URL");
-  if (!url) return;
-
-  try {
-    await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        type: "ngemba.alert_created",
-        id: session.id,
-        urgency: urgencyLabelFr(session.urgency),
-        category: categoryLabelFr(session.category),
-        source: sourceLabelFr(session.source),
-        locale: session.locale,
-        message: session.message.slice(0, 500),
-        locationLabel: session.locationLabel,
-        summary: session.aiSummary,
-        opsUrl: `${appUrl()}/ops/login?next=${encodeURIComponent(`/ops/${session.id}`)}`,
-        createdAt: session.createdAt,
-        discreteMode: session.discreteMode,
-        immediateDanger: session.immediateDanger,
-        clientIp: session.clientIp,
-      }),
-    });
-  } catch (err) {
-    console.warn("[ngemba] ops webhook failed", err);
-  }
 }
 
 async function sendOpsEmail(session: AlertSessionRecord) {
@@ -154,15 +129,11 @@ async function sendOpsEmail(session: AlertSessionRecord) {
     preheader: session.discreteMode
       ? `Mode discret · ${urgency} · ouvrir le dossier ${shortId} immédiatement`
       : `${urgency} · ${source} · ouvrir le dossier ${shortId}`,
-    greeting: "Bonjour opérateur·rice,",
-    body: session.discreteMode
-      ? "Alerte MODE DISCRET : la personne a signalé un danger extrême. " +
-        "Position / IP / proches peuvent être utilisés sans consentement supplémentaire. " +
-        "Prenez en charge immédiatement, orientez le partenaire local, et contactez les proches si utile. " +
-        "NGEMBA n’est pas un substitut police / SAMU."
-      : "Une personne a signalé une situation via NGEMBA. " +
-        "Ouvrez le dossier, vérifiez le résumé IA, puis prenez en charge ou orientez. " +
-        "NGEMBA n’est pas un substitut police / SAMU.",
+    greeting: "Équipe Ngemba,",
+    body:
+      `Ngemba a écouté et vous passe la main. ${dutyLine(session)} ` +
+      "Ouvrez le dossier, lisez le résumé, puis répondez dans le chat. " +
+      "Les organisations pilotes ne sont pas prévenues.",
     tone: session.discreteMode ? "critical" : tone,
     badge: session.discreteMode ? "DANGER EXTRÊME" : urgency,
     messageExcerpt: message,
@@ -171,7 +142,7 @@ async function sendOpsEmail(session: AlertSessionRecord) {
     cta: "Ouvrir le dossier",
     secondaryUrl: `${appUrl()}/ops`,
     secondaryLabel: "Voir toute la file ops",
-    partnerLine: pilotPartnerLine(),
+    partnerLine: undefined,
     footerNote: `Réf. dossier ${shortId} · répondre sous SLA selon l’urgence.`,
     detailRows: [
       { label: "Urgence", value: urgency },
