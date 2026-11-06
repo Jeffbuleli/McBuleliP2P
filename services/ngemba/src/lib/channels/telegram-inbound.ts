@@ -1,7 +1,7 @@
 import { runTriage } from "@/lib/ai/triage";
 import { resolveReplyLocale } from "@/lib/channels/reply-locale";
 import { runChannelAccompaniment } from "@/lib/channels/accompaniment-chat";
-import { createChatMessage } from "@/lib/sessions/chat";
+import { createChatMessage, citizenTurnCount, NGEMBA_ACTOR, THREAD_USER_LIMIT } from "@/lib/sessions/chat";
 import {
   addSessionChatMessage,
   createSession,
@@ -80,6 +80,10 @@ export async function handleTelegramInbound(
       suggestHumanHandoff: Boolean(session.aiPayload?.engine_human_required),
       urgency: session.urgency,
     };
+  }
+
+  if (session && citizenTurnCount(session.chatMessages) >= THREAD_USER_LIMIT) {
+    session = null;
   }
 
   const locale = resolveReplyLocale(text, session?.locale ?? input.locale);
@@ -179,6 +183,7 @@ export async function handleTelegramInbound(
     forcedAlert,
     history: session.chatMessages ?? [],
     channel: input.channel ?? "text",
+    surface: "telegram",
   });
   const replyBody = decision.reply;
   const alreadyNotified = Boolean(session.routingMeta?.agentsNotified);
@@ -206,7 +211,7 @@ export async function handleTelegramInbound(
 
   addSessionChatMessage(
     session.id,
-    createChatMessage({ role: "operator", body: replyBody, actor: "McBuleli IA" }),
+    createChatMessage({ role: "operator", body: replyBody, actor: NGEMBA_ACTOR }),
   );
 
   return {

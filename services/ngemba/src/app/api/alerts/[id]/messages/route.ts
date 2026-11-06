@@ -4,7 +4,7 @@ import { readCitizenToken } from "@/lib/citizen/token";
 import { formatOpsActorLabel, requireOpsAuth } from "@/lib/ops/auth";
 import { emitOpsEvent } from "@/lib/ops/events";
 import { addSessionChatMessage, getSession } from "@/lib/sessions/store";
-import { createChatMessage } from "@/lib/sessions/chat";
+import { citizenTurnCount, createChatMessage, THREAD_USER_LIMIT } from "@/lib/sessions/chat";
 import { replyAsNgemba } from "@/lib/channels/web-chat";
 import { clientIp, rateLimit, rateLimitResponse } from "@/lib/security/rate-limit";
 
@@ -109,6 +109,12 @@ export async function POST(req: Request, ctx: Ctx) {
     const citizen = await readCitizenToken();
     if (!citizen || session.citizenToken !== citizen) {
       return NextResponse.json({ error: "forbidden" }, { status: 403 });
+    }
+    if (citizenTurnCount(session.chatMessages) >= THREAD_USER_LIMIT) {
+      return NextResponse.json(
+        { error: "thread_full" },
+        { status: 409 },
+      );
     }
     message = createChatMessage({
       role: "citizen",

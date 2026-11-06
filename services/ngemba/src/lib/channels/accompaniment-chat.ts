@@ -5,25 +5,24 @@ import { englishLeak } from "@/lib/channels/reply-locale";
 import { isLocale, type Locale } from "@/lib/i18n";
 import type { ChatMessage } from "@/lib/sessions/chat";
 
-const SYSTEM = `Tu es McBuleli IA pour NGEMBA RDC. Tu parles avec une personne dans l'application, sur Telegram ou par email.
+const SYSTEM = `Tu es Ngemba, l'assistant de NGEMBA RDC. Tu n'es pas McBuleli. Ne dis jamais McBuleli.
 
-Posture: croire, ralentir, proteger. Surtout si violence, VBG, ecole, denonciation ou temoignage.
-- Reponds dans la langue du dernier message : francais, english, lingala, swahili, tshiluba ou kikongo. Ne melange pas.
-- Varie l'ouverture. Ne repose pas une question deja posee. Adapte-toi s'il demande d'etre bref, plus simple, ou de changer de langue.
-- channel=voice : deux phrases orales, sans lien ni liste.
-- channel=text : deux a quatre phrases, une seule question.
+Posture: professionnel, calme, precis. Tu restes sur le sujet du fil. Tu n'ouvres pas un autre sujet. Pas de bavardage, pas de plaisanterie, pas de conversation hors de la situation.
+Langues: francais, english, lingala, swahili, tshiluba, kikongo. Tu reponds dans la langue du DERNIER message. Si la personne change de langue, tu changes avec elle et tu l'aides.
+- Application (surface=app): reponse ecrite, claire, 2 a 4 phrases, une seule question nouvelle.
+- Telegram (surface=telegram): proche, humain, bref, 1 a 3 phrases. Si channel=voice, deux phrases orales, sans lien ni liste. Si channel=text, un court message.
+- Garde le fil: les tours recents sont la conversation en cours. Ne les contredis pas. Ne melange pas deux situations.
 - Ne demande pas de details graphiques, de noms, ni de preuves. La personne peut s'arreter.
 - N'annonce pas qu'une alerte est enregistree tant que tu accompagnes.
-- alert_agents=false tant que tu n'as pas compris si c'est grave maintenant.
+- alert_agents=false tant que la situation n'est pas grave maintenant.
 - alert_agents=true seulement si le danger est en train d'arriver, si un enfant est en danger immediat, si la personne demande quelqu'un de l'equipe, ou si un conseil ne suffit plus.
-- Si alert_agents=false: reponds a ce que la personne vient de dire, puis oriente ou pose UNE question nouvelle.
 - Interdit: repondre seulement par "Etes-vous en securite maintenant ?" ou repeter ta reponse precedente.
-- Si alert_agents=true: dis qu'une personne de l'equipe reprend, et rappelle un lieu sur si besoin.
+- Si alert_agents=true: dis qu'une personne de l'equipe Ngemba reprend.
 
 Si forced_alert=true: alert_agents doit etre true.
 
 Reponds UNIQUEMENT en JSON:
-{"reply":"texte court dans la langue du message, max 80 mots","alert_agents":false,"locale":"fr","reason":"une phrase"}
+{"reply":"texte dans la langue du dernier message","alert_agents":false,"locale":"fr","reason":"une phrase"}
 
 Interdit: culpabiliser, minimiser, conseiller la violence ou la confrontation, avis juridique ferme, recit sexuel detaille.`;
 
@@ -31,6 +30,25 @@ const ASK_AGENT =
   /\b(agent|op[ée]rateur|operateur|quelqu'un de l'|parler [àa] (une )?personne|human please|operator)\b/i;
 
 type Turn = { role: "user" | "assistant"; content: string };
+
+function asNgemba(reply: string): string {
+  return reply.replace(/\bMcBuleli IA\b/gi, "Ngemba").replace(/\bMcBuleli\b/gi, "Ngemba");
+}
+
+function threadTurns(history: ChatMessage[]): Turn[] {
+  const kept: ChatMessage[] = [];
+  let users = 0;
+  for (let i = history.length - 1; i >= 0 && users < 40; i -= 1) {
+    const message = history[i];
+    if (!message.body.trim()) continue;
+    kept.push(message);
+    if (message.role === "citizen") users += 1;
+  }
+  return kept.reverse().map((message) => ({
+    role: (message.role === "citizen" ? "user" : "assistant") as Turn["role"],
+    content: message.body.trim().slice(0, 320),
+  }));
+}
 
 function localeName(locale: Locale): string {
   const map: Record<string, string> = {
@@ -148,6 +166,7 @@ export async function runChannelAccompaniment(input: {
   forcedAlert: boolean;
   history: ChatMessage[];
   channel?: "text" | "voice";
+  surface?: "app" | "telegram" | "email";
 }): Promise<{
   reply: string;
   alertAgents: boolean;
@@ -174,16 +193,14 @@ export async function runChannelAccompaniment(input: {
     };
   }
 
-  const turns: Turn[] = input.history.slice(-10).map((m) => ({
-    role: (m.role === "citizen" ? "user" : "assistant") as Turn["role"],
-    content: m.body,
-  }));
+  const turns = threadTurns(input.history);
 
   try {
     const raw = await claudeText({
       system: SYSTEM,
       user: JSON.stringify({
         locale: localeName(input.locale),
+        surface: input.surface ?? "app",
         channel: input.channel ?? "text",
         forced_alert: false,
         triage_urgency: input.triage.urgency,
@@ -200,7 +217,12 @@ export async function runChannelAccompaniment(input: {
       !stockReply(parsed.reply) &&
       !englishLeak(spoken, parsed.reply)
     ) {
-      return { ...parsed, locale: spoken, provider: "anthropic" };
+      return {
+        ...parsed,
+        reply: asNgemba(parsed.reply),
+        locale: spoken,
+        provider: "anthropic",
+      };
     }
     const prose = raw && !raw.trim().startsWith("{") ? raw.trim() : "";
     if (prose.length >= 12 && prose.length <= 900 && !stockReply(prose) && !englishLeak(input.locale, prose)) {

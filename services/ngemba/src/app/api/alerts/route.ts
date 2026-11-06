@@ -29,7 +29,7 @@ import { buildRoutingMeta } from "@/lib/partners/match";
 import { listPartners } from "@/lib/partners/directory";
 import { clientIp, rateLimit, rateLimitResponse } from "@/lib/security/rate-limit";
 import { createSession, getSession, listSessions } from "@/lib/sessions/store";
-import { createChatMessage } from "@/lib/sessions/chat";
+import { createChatMessage, NGEMBA_ACTOR } from "@/lib/sessions/chat";
 import { trustOpening } from "@/lib/channels/trust-reply";
 import {
   sanitizeCitizenSession,
@@ -297,7 +297,7 @@ export async function POST(req: Request) {
         : []),
       createChatMessage({
         role: "operator",
-        actor: "McBuleli IA",
+        actor: NGEMBA_ACTOR,
         body: trustOpening({
           locale,
           source: body.source,

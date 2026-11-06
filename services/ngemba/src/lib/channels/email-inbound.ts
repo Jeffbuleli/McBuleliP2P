@@ -1,6 +1,6 @@
 import { runTriage } from "@/lib/ai/triage";
 import { runChannelAccompaniment } from "@/lib/channels/accompaniment-chat";
-import { createChatMessage } from "@/lib/sessions/chat";
+import { createChatMessage, NGEMBA_ACTOR } from "@/lib/sessions/chat";
 import {
   addSessionChatMessage,
   createSession,
@@ -190,6 +190,7 @@ export async function handleEmailInbound(
     triage: triageRun.triage,
     forcedAlert,
     history: session.chatMessages ?? [],
+    surface: "email",
   });
   const reply = decision.reply;
   const alreadyNotified = Boolean(session.routingMeta?.agentsNotified);
@@ -215,14 +216,14 @@ export async function handleEmailInbound(
     },
   });
 
-  const replyBody = `${reply}\n\n— McBuleli IA · NGEMBA\nRéf. ${session.id}`;
+  const replyBody = `${reply}\n\n— Ngemba\nRéf. ${session.id}`;
 
   addSessionChatMessage(
     session.id,
     createChatMessage({
       role: "operator",
       body: replyBody,
-      actor: "McBuleli IA",
+      actor: NGEMBA_ACTOR,
     }),
   );
 

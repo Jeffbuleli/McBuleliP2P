@@ -96,11 +96,17 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
           body: JSON.stringify({ body, mediaId }),
         });
         const data = await res.json().catch(() => ({}));
+        if (data.error === "thread_full") {
+          setError(
+            "Cette conversation s'arrête à 40 messages. Ouvrez une nouvelle discussion pour continuer avec Ngemba.",
+          );
+          return;
+        }
         const reply = [...(data.messages ?? [])]
           .reverse()
           .find(
             (m: { actor?: string; body?: string }) =>
-              m.actor === "McBuleli IA" && m.body,
+              (m.actor === "Ngemba" || m.actor === "McBuleli IA") && m.body,
           );
         if (reply?.body) {
           setMessages((prev) => [
@@ -117,7 +123,7 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
           .reverse()
           .find(
             (m: { actor?: string; body?: string }) =>
-              m.actor === "McBuleli IA" && m.body,
+              (m.actor === "Ngemba" || m.actor === "McBuleli IA") && m.body,
           );
         if (ai?.body) {
           setMessages((prev) => [

@@ -5,7 +5,7 @@ import { notifyNewAlert } from "@/lib/ops/notify";
 import { computeSlaDueAt } from "@/lib/ops/sla";
 import { buildRoutingMeta } from "@/lib/partners/match";
 import type { SessionRoutingMeta } from "@/lib/partners/types";
-import { createChatMessage } from "@/lib/sessions/chat";
+import { createChatMessage, isNgembaActor, NGEMBA_ACTOR } from "@/lib/sessions/chat";
 import {
   addSessionChatMessage,
   getSession,
@@ -41,7 +41,7 @@ function baseMeta(session: AlertSessionRecord): SessionRoutingMeta {
 
 function humanAlreadyJoined(session: AlertSessionRecord): boolean {
   return session.chatMessages.some(
-    (m) => m.role === "operator" && Boolean(m.actor) && m.actor !== "McBuleli IA",
+    (m) => m.role === "operator" && Boolean(m.actor) && !isNgembaActor(m.actor),
   );
 }
 
@@ -84,6 +84,7 @@ export async function replyAsNgemba(
     forcedAlert,
     history: session.chatMessages,
     channel: "text",
+    surface: "app",
   });
 
   const alreadyNotified = Boolean(session.routingMeta?.agentsNotified);
@@ -131,7 +132,7 @@ export async function replyAsNgemba(
     session.id,
     createChatMessage({
       role: "operator",
-      actor: "McBuleli IA",
+      actor: NGEMBA_ACTOR,
       body: decision.reply,
     }),
   );

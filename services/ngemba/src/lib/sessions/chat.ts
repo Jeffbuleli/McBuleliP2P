@@ -1,6 +1,13 @@
 import { randomUUID } from "crypto";
 import type { MediaKind } from "@/lib/media/types";
 
+export const NGEMBA_ACTOR = "Ngemba";
+export const THREAD_USER_LIMIT = 40;
+
+export function isNgembaActor(actor?: string | null): boolean {
+  return actor === NGEMBA_ACTOR || actor === "McBuleli IA";
+}
+
 export type ChatMessage = {
   id: string;
   role: "citizen" | "operator";
@@ -30,4 +37,8 @@ export function createChatMessage(input: {
     mediaKind: input.mediaKind ?? null,
     mediaFileName: input.mediaFileName ?? null,
   };
+}
+
+export function citizenTurnCount(messages: ChatMessage[]): number {
+  return messages.filter((m) => m.role === "citizen" && m.body.trim()).length;
 }

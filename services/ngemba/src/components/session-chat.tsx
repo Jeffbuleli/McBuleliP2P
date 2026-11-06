@@ -215,6 +215,12 @@ export function SessionChat({
         setBody("");
         clearPending();
         voice.clear();
+      } else if (data.error === "thread_full") {
+        setUploadErr(
+          isFr
+            ? "Cette conversation s'arrête à 40 messages. Ouvrez une nouvelle alerte pour continuer avec Ngemba."
+            : "This conversation stops at 40 messages. Open a new alert to continue with Ngemba.",
+        );
       } else if (data.error === "session_closed") {
         setUploadErr(
           isFr
@@ -316,7 +322,9 @@ export function SessionChat({
             const mine = m.role === viewerRole;
             const peerLabel =
               m.role === "operator"
-                ? m.actor?.trim() || "Opérateur"
+                ? m.actor === "Ngemba" || m.actor === "McBuleli IA"
+                  ? "Ngemba"
+                  : m.actor?.trim() || "Opérateur"
                 : "Citoyen";
             const href =
               m.mediaId != null
