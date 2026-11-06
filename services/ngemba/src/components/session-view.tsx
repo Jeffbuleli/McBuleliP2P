@@ -326,22 +326,6 @@ export function SessionView({
                   {session.aiPayload.witness_safety_reminder}
                 </p>
               ) : null}
-              {session.aiPayload.follow_up_questions?.length ? (
-                <ul className="space-y-1.5">
-                  {session.aiPayload.follow_up_questions.map((q) => (
-                    <li
-                      key={q}
-                      className={`rounded-xl px-3 py-2 text-xs ${
-                        discrete
-                          ? "bg-white/10 text-[#e8d4e3]"
-                          : "bg-ng-primary-muted/70 text-ng-primary"
-                      }`}
-                    >
-                      {q}
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
             </div>
           </article>
 
