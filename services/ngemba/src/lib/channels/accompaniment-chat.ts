@@ -1,6 +1,5 @@
-import OpenAI from "openai";
-import { readEnvKey } from "@/lib/env";
 import { resolveAiMode } from "@/lib/ai/triage";
+import { anthropicKey, claudeText } from "@/lib/ai/claude";
 import type { TriageResult } from "@/lib/ai/triage-schema";
 import type { Locale } from "@/lib/i18n";
 import type { ChatMessage } from "@/lib/sessions/chat";
@@ -89,15 +88,14 @@ export async function runChannelAccompaniment(input: {
   triage: TriageResult;
   forcedAlert: boolean;
   history: ChatMessage[];
-}): Promise<{ reply: string; alertAgents: boolean; provider: "openai" | "local" }> {
+}): Promise<{ reply: string; alertAgents: boolean; provider: "anthropic" | "local" }> {
   const asked = ASK_AGENT.test(input.userMessage);
   if (input.forcedAlert || asked) {
     return { reply: alertReply(input.locale), alertAgents: true, provider: "local" };
   }
 
   const mode = resolveAiMode();
-  const key = readEnvKey("OPENAI_API_KEY");
-  if (!key || mode === "local") {
+  if (!anthropicKey() || mode === "local") {
     return {
       reply: adviceReply(input.locale, input.triage, input.history),
       alertAgents: false,
@@ -111,31 +109,21 @@ export async function runChannelAccompaniment(input: {
   }));
 
   try {
-    const client = new OpenAI({ apiKey: key });
-    const model = readEnvKey("OPENAI_ASSISTANT_MODEL") || "gpt-4o-mini";
-    const completion = await client.chat.completions.create({
-      model,
-      max_tokens: 280,
-      temperature: 0.4,
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: SYSTEM },
-        {
-          role: "user",
-          content: JSON.stringify({
-            locale: localeName(input.locale),
-            forced_alert: false,
-            triage_urgency: input.triage.urgency,
-            triage_category: input.triage.category,
-            recent_turns: turns,
-            latest_message: input.userMessage,
-          }),
-        },
-      ],
+    const raw = await claudeText({
+      system: SYSTEM,
+      user: JSON.stringify({
+        locale: localeName(input.locale),
+        forced_alert: false,
+        triage_urgency: input.triage.urgency,
+        triage_category: input.triage.category,
+        recent_turns: turns,
+        latest_message: input.userMessage,
+      }),
+      maxTokens: 500,
     });
-    const parsed = parseDecision(completion.choices[0]?.message?.content ?? "");
+    const parsed = raw ? parseDecision(raw) : null;
     if (parsed) {
-      return { ...parsed, provider: "openai" };
+      return { ...parsed, provider: "anthropic" };
     }
   } catch (err) {
     console.warn("[ngemba] accompaniment chat failed", err);

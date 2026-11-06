@@ -36,7 +36,7 @@ export type AlertSessionRecord = {
   aiPayload: TriageResult;
   routingQueue: RoutingQueue;
   autoRoute: boolean;
-  provider: "openai" | "local";
+  provider: "anthropic" | "openai" | "local";
   aiMode: string;
   operatorNotes: string | null;
   assignedTo: string | null;

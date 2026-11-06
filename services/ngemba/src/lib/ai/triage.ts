@@ -1,6 +1,6 @@
-import OpenAI from "openai";
 import { readEnvKey } from "@/lib/env";
 import { localTriage } from "@/lib/ai/local-triage";
+import { anthropicKey, claudeText, parseJsonObject } from "@/lib/ai/claude";
 import {
   TRIAGE_PROMPT_VERSION,
   TRIAGE_SYSTEM_PROMPT,
@@ -25,7 +25,7 @@ export type AiMode = "local" | "hybrid" | "openai";
 export function resolveAiMode(): AiMode {
   const raw = (readEnvKey("NGEMBA_AI_MODE") || "").toLowerCase();
   if (raw === "local" || raw === "hybrid" || raw === "openai") return raw;
-  const key = readEnvKey("OPENAI_API_KEY");
+  const key = anthropicKey();
   return key ? "hybrid" : "local";
 }
 
@@ -44,14 +44,14 @@ export type TriageRunResult = {
   decision: ResponseDecision;
   /** Compat Phase 1. */
   routing: { queue: ResponseDecision["queue"]; autoRoute: boolean };
-  provider: "openai" | "local";
+  provider: "anthropic" | "local";
   aiMode: AiMode;
   promptVersion: string;
 };
 
 function withEngine(
   triage: TriageResult,
-  provider: "openai" | "local",
+  provider: "anthropic" | "local",
   aiMode: AiMode,
   source: string,
 ): TriageRunResult {
@@ -95,52 +95,42 @@ export async function runTriage(input: {
     return withEngine(localResult, "local", mode, input.source);
   }
 
-  const key = readEnvKey("OPENAI_API_KEY");
+  const key = anthropicKey();
   if (!key) {
     return withEngine(localResult, "local", mode, input.source);
   }
 
   try {
-    const client = new OpenAI({ apiKey: key });
-    const model =
-      readEnvKey("OPENAI_ASSISTANT_MODEL") || "gpt-4o-mini";
-
     const messageForModel =
       input.message.trim() === "·" || input.message.trim().length === 0
         ? `[Citizen sent audio and/or photos without written text. Orient for human review. Do not invent facts. Locale=${input.locale}; source=${input.source}]`
         : input.message.slice(0, 500);
 
-    const completion = await client.chat.completions.create({
-      model,
-      temperature: 0.2,
-      max_tokens: Number.isFinite(OPENAI_MAX_TOKENS) ? OPENAI_MAX_TOKENS : 450,
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: TRIAGE_SYSTEM_PROMPT },
-        {
-          role: "user",
-          content: JSON.stringify({
-            locale: input.locale,
-            source: input.source,
-            message: messageForModel,
-            prompt_version: TRIAGE_PROMPT_VERSION,
-            local_hint: {
-              category: localResult.category,
-              urgency: localResult.urgency,
-              required_services: localResult.required_services,
-            },
-          }),
+    const raw = await claudeText({
+      system: `${TRIAGE_SYSTEM_PROMPT}\nReponds uniquement par un objet JSON, sans markdown.`,
+      user: JSON.stringify({
+        locale: input.locale,
+        source: input.source,
+        message: messageForModel,
+        prompt_version: TRIAGE_PROMPT_VERSION,
+        local_hint: {
+          category: localResult.category,
+          urgency: localResult.urgency,
+          required_services: localResult.required_services,
         },
-      ],
+      }),
+      maxTokens: Math.max(
+        800,
+        Number.isFinite(OPENAI_MAX_TOKENS) ? OPENAI_MAX_TOKENS : 800,
+      ),
     });
-
-    const raw = completion.choices[0]?.message?.content || "{}";
-    const parsed = triageSchema.safeParse(JSON.parse(raw));
+    const parsedJson = raw ? parseJsonObject(raw) : null;
+    const parsed = triageSchema.safeParse(parsedJson ?? {});
     if (!parsed.success) {
       return withEngine(localResult, "local", mode, input.source);
     }
 
-    return withEngine(parsed.data, "openai", mode, input.source);
+    return withEngine(parsed.data, "anthropic", mode, input.source);
   } catch {
     return withEngine(localResult, "local", mode, input.source);
   }

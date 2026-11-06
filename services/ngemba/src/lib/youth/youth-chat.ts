@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import { anthropicKey, claudeText, parseJsonObject } from "@/lib/ai/claude";
 import { readEnvKey } from "@/lib/env";
 import type { Locale } from "@/lib/i18n";
 import { getYouthScenario, type YouthScenarioId } from "@/lib/youth/scenarios";
@@ -45,16 +45,15 @@ export async function runYouthChat(input: {
   scenarioId: YouthScenarioId;
   locale: Locale;
   history: ChatTurn[];
-}): Promise<{ reply: string; suggestSos: boolean; provider: "openai" | "local" }> {
+}): Promise<{ reply: string; suggestSos: boolean; provider: "anthropic" | "local" }> {
   const scenario = getYouthScenario(input.scenarioId);
   const lastUser = [...input.history].reverse().find((m) => m.role === "user");
   const suggestSosLocal = lastUser
     ? DANGER_KEYWORDS.test(lastUser.content)
     : false;
 
-  const key = readEnvKey("OPENAI_API_KEY");
   const mode = (readEnvKey("NGEMBA_AI_MODE") || "hybrid").toLowerCase();
-  if (!key || mode === "local") {
+  if (!anthropicKey() || mode === "local") {
     return {
       reply: fallbackReply(input.locale, suggestSosLocal),
       suggestSos: suggestSosLocal,
@@ -63,42 +62,26 @@ export async function runYouthChat(input: {
   }
 
   try {
-    const client = new OpenAI({ apiKey: key });
-    const model =
-      readEnvKey("OPENAI_ASSISTANT_MODEL") || "gpt-4o-mini";
-
-    const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-      { role: "system", content: YOUTH_SYSTEM_PROMPT },
-      {
-        role: "user",
-        content: JSON.stringify({
-          locale: input.locale,
-          scenario: scenario?.intro[input.locale] ?? input.scenarioId,
-          history: input.history.slice(-8),
-        }),
-      },
-    ];
-
-    const completion = await client.chat.completions.create({
-      model,
-      temperature: 0.4,
-      max_tokens: 220,
-      response_format: { type: "json_object" },
-      messages,
+    const raw = await claudeText({
+      system: `${YOUTH_SYSTEM_PROMPT}\nReponds uniquement en JSON.`,
+      user: JSON.stringify({
+        locale: input.locale,
+        scenario: scenario?.intro[input.locale] ?? input.scenarioId,
+        history: input.history.slice(-8),
+      }),
+      maxTokens: 400,
     });
-
-    const raw = completion.choices[0]?.message?.content || "{}";
-    const parsed = JSON.parse(raw) as {
+    const parsed = (raw ? parseJsonObject(raw) : null) as {
       reply?: string;
       suggest_sos?: boolean;
-    };
+    } | null;
     return {
       reply:
-        typeof parsed.reply === "string" && parsed.reply.trim()
+        typeof parsed?.reply === "string" && parsed.reply.trim()
           ? parsed.reply.trim()
           : fallbackReply(input.locale, suggestSosLocal),
-      suggestSos: Boolean(parsed.suggest_sos) || suggestSosLocal,
-      provider: "openai",
+      suggestSos: Boolean(parsed?.suggest_sos) || suggestSosLocal,
+      provider: "anthropic",
     };
   } catch {
     return {
