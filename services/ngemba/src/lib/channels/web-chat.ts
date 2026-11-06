@@ -6,8 +6,11 @@ import { computeSlaDueAt } from "@/lib/ops/sla";
 import { buildRoutingMeta } from "@/lib/partners/match";
 import type { SessionRoutingMeta } from "@/lib/partners/types";
 import { createChatMessage } from "@/lib/sessions/chat";
+import { saveMedia } from "@/lib/media/store";
+import { synthesizeSpeech } from "@/lib/voice/elevenlabs";
 import {
   addSessionChatMessage,
+  addSessionMedia,
   getSession,
   patchSessionAiState,
 } from "@/lib/sessions/store";
@@ -127,12 +130,40 @@ export async function replyAsNgemba(
     void notifyNewAlert(refreshed);
   }
 
+  let voiceMedia: {
+    mediaId: string;
+    mediaKind: "audio";
+    mediaFileName: string;
+  } | null = null;
+  if (lastCitizen.mediaKind === "audio") {
+    try {
+      const spoken = await synthesizeSpeech(decision.reply);
+      if (spoken) {
+        const file = new File([new Uint8Array(spoken)], "ngemba-reponse.mp3", {
+          type: "audio/mpeg",
+        });
+        const attachment = await saveMedia({ sessionId: session.id, file });
+        addSessionMedia(session.id, attachment);
+        voiceMedia = {
+          mediaId: attachment.id,
+          mediaKind: "audio",
+          mediaFileName: attachment.fileName,
+        };
+      }
+    } catch (err) {
+      console.warn("[ngemba] voice reply failed", err);
+    }
+  }
+
   const withReply = addSessionChatMessage(
     session.id,
     createChatMessage({
       role: "operator",
       actor: "McBuleli IA",
       body: decision.reply,
+      mediaId: voiceMedia?.mediaId,
+      mediaKind: voiceMedia?.mediaKind,
+      mediaFileName: voiceMedia?.mediaFileName,
     }),
   );
   return withReply ?? getSession(session.id) ?? refreshed;

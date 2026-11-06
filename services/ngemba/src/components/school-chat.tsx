@@ -3,11 +3,17 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { IconMic } from "@/components/icons";
+import { VoiceNote } from "@/components/voice-note";
 import { VoiceWave } from "@/components/voice-wave";
 import { useCitizenLocale } from "@/hooks/use-citizen-locale";
 import { useVoiceDraft } from "@/hooks/use-voice-draft";
 
-type Bubble = { id: string; role: "user" | "assistant"; content: string };
+type Bubble = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  voiceSrc?: string;
+};
 
 const GREETING =
   "Bonjour. Ici Ngemba, pour l'école. Tu peux parler à ton rythme, sans donner ton nom. Qu'est-ce qui se passe ?";
@@ -21,6 +27,7 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
   ]);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
+  const [voiceTurn, setVoiceTurn] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -29,20 +36,6 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, busy]);
-
-  async function speak(id: string, text: string) {
-    const res = await fetch("/api/voice/speak", {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sessionId: id, text: text.slice(0, 700) }),
-    });
-    if (!res.ok) return;
-    const url = URL.createObjectURL(await res.blob());
-    const audio = new Audio(url);
-    audio.onended = () => URL.revokeObjectURL(url);
-    void audio.play().catch(() => undefined);
-  }
 
   async function ensureSession(text: string): Promise<string | null> {
     if (sessionId) return sessionId;
@@ -70,11 +63,13 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
     const trimmed = text.trim();
     if (busy || (!trimmed && !file)) return;
     setBusy(true);
+    setVoiceTurn(Boolean(file));
     setError(null);
-    const shown = trimmed || "Message vocal";
+    const shown = trimmed || "Vocal";
+    const userId = `u-${Date.now()}`;
     setMessages((prev) => [
       ...prev,
-      { id: `u-${Date.now()}`, role: "user", content: shown },
+      { id: userId, role: "user", content: shown },
     ]);
     setDraft("");
     try {
@@ -82,6 +77,7 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
       const id = await ensureSession(trimmed || "Message vocal depuis l'école");
       if (!id) return;
       let body = trimmed;
+      let mediaId: string | undefined;
       if (file) {
         const form = new FormData();
         form.append("file", file);
@@ -91,9 +87,19 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
           body: form,
         });
         const upData = await up.json().catch(() => ({}));
+        mediaId = upData.attachment?.id as string | undefined;
         const heard = upData.attachment?.transcription as string | undefined;
         if (heard?.trim()) body = heard.trim();
         if (!body) body = "Message vocal";
+        if (mediaId) {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === userId
+                ? { ...m, content: "", voiceSrc: `/api/alerts/${id}/media/${mediaId}` }
+                : m,
+            ),
+          );
+        }
       }
       const shouldPost = alreadyOpen || Boolean(file);
       if (shouldPost && body) {
@@ -101,21 +107,28 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ body }),
+          body: JSON.stringify({ body, mediaId }),
         });
         const data = await res.json().catch(() => ({}));
         const reply = [...(data.messages ?? [])]
           .reverse()
           .find(
-            (m: { actor?: string; body?: string }) =>
-              m.actor === "McBuleli IA" && m.body,
+            (m: { actor?: string; body?: string; mediaId?: string; mediaKind?: string }) =>
+              m.actor === "McBuleli IA" && (m.body || m.mediaKind === "audio"),
           );
-        if (reply?.body) {
+        if (reply?.body || reply?.mediaId) {
           setMessages((prev) => [
             ...prev,
-            { id: `a-${Date.now()}`, role: "assistant", content: reply.body },
+            {
+              id: `a-${Date.now()}`,
+              role: "assistant",
+              content: reply.mediaKind === "audio" ? "" : reply.body,
+              voiceSrc:
+                reply.mediaKind === "audio" && reply.mediaId
+                  ? `/api/alerts/${id}/media/${reply.mediaId}`
+                  : undefined,
+            },
           ]);
-          if (file) void speak(id, reply.body);
         }
       } else {
         const listed = await fetch(`/api/alerts/${id}/messages`, {
@@ -133,13 +146,13 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
             ...prev,
             { id: `a-${Date.now()}`, role: "assistant", content: ai.body },
           ]);
-          if (file) void speak(id, ai.body);
         }
       }
     } catch {
       setError("Connexion interrompue.");
     } finally {
       setBusy(false);
+      setVoiceTurn(false);
     }
   }
 
@@ -193,19 +206,25 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
             key={m.id}
             className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
           >
-            <p
-              className={`max-w-[88%] whitespace-pre-wrap rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed ${
+            <div
+              className={`max-w-[88%] rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed ${
                 m.role === "user"
                   ? "rounded-br-md bg-[#305f33] text-white"
                   : "rounded-bl-md border border-white/10 bg-white/10 text-stone-100"
               }`}
             >
-              {m.content}
-            </p>
+              {m.voiceSrc ? (
+                <VoiceNote src={m.voiceSrc} autoPlay={m.role === "assistant"} light={m.role === "user"} />
+              ) : (
+                <p className="whitespace-pre-wrap">{m.content}</p>
+              )}
+            </div>
           </div>
         ))}
         {busy ? (
-          <p className="text-xs text-[#6ee7a0]">Ngemba écrit…</p>
+          <p className="text-xs text-[#6ee7a0]">
+            {voiceTurn ? "Ngemba parle…" : "Ngemba écrit…"}
+          </p>
         ) : null}
         {messages.length === 1 ? (
           <div className="flex flex-wrap gap-2 pt-2">

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { IconMic, IconStop } from "@/components/icons";
+import { VoiceNote } from "@/components/voice-note";
 import { VoiceWave } from "@/components/voice-wave";
 import { useVoiceDraft } from "@/hooks/use-voice-draft";
 
@@ -100,11 +101,10 @@ export function SessionChat({
   const [uploadErr, setUploadErr] = useState<string | null>(null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [pendingPreview, setPendingPreview] = useState<string | null>(null);
-  const [speaking, setSpeaking] = useState(false);
   const voice = useVoiceDraft();
   const fileRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [awaitingVoice, setAwaitingVoice] = useState(false);
   const isFr = locale !== "en";
 
   const load = useCallback(async () => {
@@ -142,36 +142,6 @@ export function SessionChat({
     if (fileRef.current) fileRef.current.value = "";
   }
 
-  async function playVoice(text: string) {
-    const spoken = text.trim();
-    if (!spoken || speaking) return;
-    setSpeaking(true);
-    try {
-      const res = await fetch("/api/voice/speak", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, text: spoken.slice(0, 700) }),
-      });
-      if (!res.ok) return;
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      if (audioRef.current) {
-        audioRef.current.pause();
-        URL.revokeObjectURL(audioRef.current.src);
-      }
-      const audio = new Audio(url);
-      audioRef.current = audio;
-      audio.onended = () => {
-        URL.revokeObjectURL(url);
-        setSpeaking(false);
-      };
-      await audio.play();
-    } catch {
-      setSpeaking(false);
-    }
-  }
-
   async function send(fileOverride?: File) {
     let file = fileOverride ?? pendingFile ?? voice.file;
     if (voice.recording) {
@@ -179,6 +149,10 @@ export function SessionChat({
     }
     let text = body.trim();
     if (closed || (!text && !file) || busy) return;
+    const voiceTurn = Boolean(
+      file && (file.type.startsWith("audio") || file.name.endsWith(".webm")),
+    );
+    setAwaitingVoice(voiceTurn);
     setBusy(true);
     setUploadErr(null);
     try {
@@ -247,12 +221,6 @@ export function SessionChat({
         setBody("");
         clearPending();
         voice.clear();
-        if (file?.type.startsWith("audio")) {
-          const reply = [...next]
-            .reverse()
-            .find((m) => m.actor === "McBuleli IA" && m.body.trim());
-          if (reply) void playVoice(reply.body);
-        }
       } else if (data.error === "session_closed") {
         setUploadErr(
           isFr
@@ -264,6 +232,7 @@ export function SessionChat({
       }
     } finally {
       setBusy(false);
+      setAwaitingVoice(false);
     }
   }
 
@@ -393,11 +362,10 @@ export function SessionChat({
                     </a>
                   ) : null}
                   {href && m.mediaKind === "audio" ? (
-                    <audio
-                      controls
-                      preload="metadata"
+                    <VoiceNote
                       src={href}
-                      className="mb-1.5 w-full max-w-[16rem]"
+                      autoPlay={viewerRole === "citizen" && m.actor === "McBuleli IA"}
+                      light={mine}
                     />
                   ) : null}
                   {href && m.mediaKind === "video" ? (
@@ -422,25 +390,10 @@ export function SessionChat({
                       {m.mediaFileName || "Fichier"}
                     </a>
                   ) : null}
-                  {m.body ? (
+                  {m.body && !(viewerRole === "citizen" && m.mediaKind === "audio") ? (
                     <p className="whitespace-pre-wrap break-words text-sm leading-snug">
                       {m.body}
                     </p>
-                  ) : null}
-                  {viewerRole === "citizen" && m.actor === "McBuleli IA" && m.body ? (
-                    <button
-                      type="button"
-                      onClick={() => void playVoice(m.body)}
-                      className="mt-1 text-[10px] font-semibold underline opacity-80"
-                    >
-                      {speaking
-                        ? isFr
-                          ? "Lecture…"
-                          : "Playing…"
-                        : isFr
-                          ? "Écouter"
-                          : "Listen"}
-                    </button>
                   ) : null}
                   <p className={bubbleTimeClass(mine, discrete)}>
                     {formatTime(m.createdAt, locale)}
@@ -457,7 +410,13 @@ export function SessionChat({
                 discrete ? "bg-white/10 text-[#c9a0bc]" : "bg-ng-bg text-ng-muted"
               }`}
             >
-              {isFr ? "Ngemba écrit…" : "Ngemba is writing…"}
+              {awaitingVoice
+                ? isFr
+                  ? "Ngemba parle…"
+                  : "Ngemba is speaking…"
+                : isFr
+                  ? "Ngemba écrit…"
+                  : "Ngemba is writing…"}
             </p>
           </div>
         ) : null}
