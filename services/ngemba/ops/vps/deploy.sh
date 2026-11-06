@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Revue du 6 novembre 2026.
 # Deploy NGEMBA on Cyber Alert VPS.
 #
 # Usage on the VPS:

@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 import { NextResponse } from "next/server";
 import { readCitizenToken } from "@/lib/citizen/token";
 import { MEDIA_MAX_PER_SESSION, MEDIA_MAX_PHOTOS } from "@/lib/media/types";

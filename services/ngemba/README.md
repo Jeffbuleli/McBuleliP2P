@@ -1,3 +1,4 @@
+<!-- Revue du 6 novembre 2026. -->
 # NGEMBA
 
 > Plateforme de **sécurité, protection et paix citoyenne** (RDC).  

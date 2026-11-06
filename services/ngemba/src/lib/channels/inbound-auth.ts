@@ -1,3 +1,4 @@
+/** Revue du 6 novembre 2026. */
 import { readEnvKey } from "@/lib/env";
 
 export function verifyChannelInboundAuth(req: Request): boolean {
