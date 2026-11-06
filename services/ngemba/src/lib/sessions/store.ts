@@ -406,6 +406,38 @@ export function updateSession(
   return next;
 }
 
+/** Point GPS du téléphone. Ne remplace pas un relevé déjà plus serré. */
+export function updateSessionGps(
+  id: string,
+  patch: Pick<
+    AlertSessionRecord,
+    | "lat"
+    | "lng"
+    | "locationLabel"
+    | "locationSource"
+    | "locationAccuracyM"
+    | "commune"
+    | "locationConsentAt"
+  >,
+): AlertSessionRecord | null {
+  const map = ensureLoaded();
+  const current = map.get(id);
+  if (!current) return null;
+  if (
+    current.lat != null &&
+    current.locationAccuracyM != null &&
+    patch.locationAccuracyM != null &&
+    patch.locationAccuracyM >= current.locationAccuracyM
+  ) {
+    return current;
+  }
+  const next: AlertSessionRecord = { ...normalizeRecord(current), ...patch };
+  map.set(id, next);
+  persist();
+  dualWrite(next);
+  return next;
+}
+
 /** Mise a jour triage / IA apres nouveau message canal (Telegram, etc.). */
 export function patchSessionAiState(
   id: string,

@@ -6,6 +6,10 @@ import { IconMic } from "@/components/icons";
 import { VoiceWave } from "@/components/voice-wave";
 import { useCitizenLocale } from "@/hooks/use-citizen-locale";
 import { useVoiceDraft } from "@/hooks/use-voice-draft";
+import {
+  readPrecisePosition,
+  type PreciseFix,
+} from "@/lib/location/precise-gps";
 
 type Bubble = { id: string; role: "user" | "assistant"; content: string };
 
@@ -84,6 +88,21 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
   const [error, setError] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const voice = useVoiceDraft();
+  const gpsPromise = useRef<Promise<PreciseFix | null> | null>(null);
+
+  function gpsSearch(): Promise<PreciseFix | null> {
+    if (!gpsPromise.current) {
+      gpsPromise.current = readPrecisePosition({
+        maxWaitMs: 18_000,
+        goodEnoughM: 40,
+      });
+    }
+    return gpsPromise.current;
+  }
+
+  useEffect(() => {
+    void gpsSearch();
+  }, []);
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
@@ -97,8 +116,18 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
     );
   }, [copy.greeting]);
 
+  async function deviceFix(): Promise<PreciseFix | null> {
+    const fix = await Promise.race([
+      gpsSearch(),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 8000)),
+    ]);
+    if (!fix || fix.accuracyM > 1000) return null;
+    return fix;
+  }
+
   async function ensureSession(text: string): Promise<string | null> {
     if (sessionId) return sessionId;
+    const fix = await deviceFix();
     const res = await fetch("/api/alerts", {
       method: "POST",
       credentials: "include",
@@ -107,6 +136,10 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
         message: text.slice(0, 500),
         locale,
         source: "school",
+        shareLocation: Boolean(fix),
+        lat: fix?.lat ?? null,
+        lng: fix?.lng ?? null,
+        accuracyM: fix?.accuracyM ?? null,
         schoolContext: { concernType: "other", establishmentHint: null, isMinor: true },
       }),
     });
@@ -115,8 +148,22 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
       setError("Envoi impossible. Réessayez.");
       return null;
     }
-    setSessionId(data.id as string);
-    return data.id as string;
+    const id = data.id as string;
+    setSessionId(id);
+    void gpsSearch().then((later) => {
+      if (!later || later.accuracyM > 1000) return;
+      void fetch(`/api/alerts/${id}/location`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lat: later.lat,
+          lng: later.lng,
+          accuracyM: later.accuracyM,
+        }),
+      });
+    });
+    return id;
   }
 
   async function pushTurn(text: string, file?: File) {

@@ -212,13 +212,10 @@ export async function POST(req: Request) {
     }),
   ]);
 
-  // Sans GPS / lieu manuel : utiliser l'approx IP pour orientation partenaires.
+  // L'IP donne la ville, jamais le point du dossier. Un pin unique
+  // pour tout le monde venait de ce repli.
   const hadPreciseLocation = lat != null && lng != null;
   if (!hadPreciseLocation && ipGeo) {
-    if (ipGeo.lat != null && ipGeo.lng != null) {
-      lat = ipGeo.lat;
-      lng = ipGeo.lng;
-    }
     if (!locationLabel) {
       locationLabel = `≈ ${ipGeo.label} (IP)`;
     }

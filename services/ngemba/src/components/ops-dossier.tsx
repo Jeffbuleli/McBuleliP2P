@@ -200,6 +200,20 @@ function deviceGps(source: string | null): boolean {
   );
 }
 
+/** Ville déduite de l'IP : pas un point à ouvrir comme une adresse. */
+function ipOnlyPlace(source: string | null): boolean {
+  if (!source) return false;
+  const parts = source.split("+").filter(Boolean);
+  if (!parts.length) return false;
+  return parts.every((part) =>
+    part === "ipwho" ||
+    part === "geoapify_ip" ||
+    part === "ip_geo" ||
+    part === "discrete_extreme" ||
+    part === "discrete_extreme_ip",
+  );
+}
+
 export function OpsDossierView({ id }: { id: string }) {
   const [session, setSession] = useState<Session | null>(null);
   const [suggestedPartners, setSuggestedPartners] = useState<
@@ -410,8 +424,9 @@ export function OpsDossierView({ id }: { id: string }) {
   const open =
     session.status !== "closed" && session.status !== "cancelled";
   const shortId = session.id.slice(0, 8).toUpperCase();
+  const ipOnly = ipOnlyPlace(session.locationSource);
   const maps =
-    session.lat != null && session.lng != null
+    !ipOnly && session.lat != null && session.lng != null
       ? `https://maps.google.com/?q=${session.lat},${session.lng}`
       : null;
   const ipGeo = ipGeoLive || session.routingMeta?.ipGeo || null;
