@@ -3,6 +3,7 @@ import os from "os";
 import path from "path";
 import OpenAI from "openai";
 import { readEnvKey } from "@/lib/env";
+import { transcribeWithEleven } from "@/lib/voice/elevenlabs";
 import type { MediaAttachment } from "@/lib/media/types";
 import { mediaFilePath } from "@/lib/media/store";
 import { ALLOWED_MEDIA } from "@/lib/media/types";
@@ -25,7 +26,6 @@ export async function transcribeAudioIfConfigured(
 ): Promise<string | null> {
   if (attachment.kind !== "audio") return null;
   const key = readEnvKey("OPENAI_API_KEY");
-  if (!key) return null;
 
   let filePath: string | null = null;
   let tmpPath: string | null = null;
@@ -58,6 +58,20 @@ export async function transcribeAudioIfConfigured(
   if (!filePath) return null;
 
   try {
+    try {
+      const audio = fs.readFileSync(filePath);
+      const spoken = await transcribeWithEleven(
+        audio,
+        attachment.mimeType || "audio/webm",
+        attachment.fileName || "audio.webm",
+      );
+      if (spoken) return spoken;
+    } catch (err) {
+      console.warn("[ngemba] elevenlabs read failed", err);
+    }
+
+    if (!key) return null;
+
     const client = new OpenAI({ apiKey: key });
     const res = await client.audio.transcriptions.create({
       file: fs.createReadStream(filePath),

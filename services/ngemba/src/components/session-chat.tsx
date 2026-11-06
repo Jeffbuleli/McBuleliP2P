@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { IconMic, IconStop } from "@/components/icons";
 
 type ChatMessage = {
   id: string;
@@ -97,8 +98,13 @@ export function SessionChat({
   const [uploadErr, setUploadErr] = useState<string | null>(null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [pendingPreview, setPendingPreview] = useState<string | null>(null);
+  const [recording, setRecording] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const isFr = locale !== "en";
 
   const load = useCallback(async () => {
@@ -136,16 +142,48 @@ export function SessionChat({
     if (fileRef.current) fileRef.current.value = "";
   }
 
-  async function send() {
-    const text = body.trim();
-    if (closed || (!text && !pendingFile) || busy) return;
+  async function playVoice(text: string) {
+    const spoken = text.trim();
+    if (!spoken || speaking) return;
+    setSpeaking(true);
+    try {
+      const res = await fetch("/api/voice/speak", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId, text: spoken.slice(0, 700) }),
+      });
+      if (!res.ok) return;
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      if (audioRef.current) {
+        audioRef.current.pause();
+        URL.revokeObjectURL(audioRef.current.src);
+      }
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      audio.onended = () => {
+        URL.revokeObjectURL(url);
+        setSpeaking(false);
+      };
+      await audio.play();
+    } catch {
+      setSpeaking(false);
+    }
+  }
+
+  async function send(fileOverride?: File) {
+    const file = fileOverride ?? pendingFile;
+    let text = body.trim();
+    if (closed || (!text && !file) || busy) return;
     setBusy(true);
     setUploadErr(null);
     try {
       let mediaId: string | undefined;
-      if (pendingFile) {
+      let heard: string | null = null;
+      if (file) {
         const form = new FormData();
-        form.append("file", pendingFile);
+        form.append("file", file);
         const up = await fetch(`/api/alerts/${sessionId}/media`, {
           method: "POST",
           body: form,
@@ -182,23 +220,35 @@ export function SessionChat({
           return;
         }
         mediaId = upData.attachment.id as string;
+        heard =
+          typeof upData.attachment.transcription === "string"
+            ? upData.attachment.transcription.trim()
+            : null;
         onMediaChange?.();
       }
 
+      const messageBody = text || heard || "";
       const res = await fetch(`/api/alerts/${sessionId}/messages`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          body: text,
+          body: messageBody,
           mediaId,
         }),
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
-        setMessages(data.messages ?? []);
+        const next = (data.messages ?? []) as ChatMessage[];
+        setMessages(next);
         setBody("");
         clearPending();
+        if (file?.type.startsWith("audio")) {
+          const reply = [...next]
+            .reverse()
+            .find((m) => m.actor === "McBuleli IA" && m.body.trim());
+          if (reply) void playVoice(reply.body);
+        }
       } else if (data.error === "session_closed") {
         setUploadErr(
           isFr
@@ -210,6 +260,51 @@ export function SessionChat({
       }
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function toggleRecord() {
+    if (recording && recorderRef.current) {
+      recorderRef.current.stop();
+      return;
+    }
+    if (busy || closed || !navigator.mediaDevices?.getUserMedia) {
+      setUploadErr(
+        isFr ? "Micro non disponible sur cet appareil" : "Microphone unavailable",
+      );
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mime = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+        ? "audio/webm;codecs=opus"
+        : MediaRecorder.isTypeSupported("audio/webm")
+          ? "audio/webm"
+          : "";
+      const recorder = mime
+        ? new MediaRecorder(stream, { mimeType: mime })
+        : new MediaRecorder(stream);
+      chunksRef.current = [];
+      recorder.ondataavailable = (ev) => {
+        if (ev.data.size > 0) chunksRef.current.push(ev.data);
+      };
+      recorder.onstop = () => {
+        stream.getTracks().forEach((t) => t.stop());
+        setRecording(false);
+        const blob = new Blob(chunksRef.current, {
+          type: recorder.mimeType || "audio/webm",
+        });
+        if (blob.size < 800) return;
+        const voiceFile = new File([blob], "voix.webm", {
+          type: blob.type || "audio/webm",
+        });
+        void send(voiceFile);
+      };
+      recorderRef.current = recorder;
+      recorder.start();
+      setRecording(true);
+    } catch {
+      setUploadErr(isFr ? "Micro refusé" : "Microphone denied");
     }
   }
 
@@ -350,6 +445,21 @@ export function SessionChat({
                       {m.body}
                     </p>
                   ) : null}
+                  {viewerRole === "citizen" && m.actor === "McBuleli IA" && m.body ? (
+                    <button
+                      type="button"
+                      onClick={() => void playVoice(m.body)}
+                      className="mt-1 text-[10px] font-semibold underline opacity-80"
+                    >
+                      {speaking
+                        ? isFr
+                          ? "Lecture…"
+                          : "Playing…"
+                        : isFr
+                          ? "Écouter"
+                          : "Listen"}
+                    </button>
+                  ) : null}
                   <p className={bubbleTimeClass(mine, discrete)}>
                     {formatTime(m.createdAt, locale)}
                   </p>
@@ -423,6 +533,30 @@ export function SessionChat({
               setUploadErr(null);
             }}
           />
+          <button
+            type="button"
+            disabled={busy || closed}
+            onClick={() => void toggleRecord()}
+            className={
+              recording
+                ? "inline-flex size-11 shrink-0 items-center justify-center rounded-2xl bg-ng-urgent text-white"
+                : discrete
+                  ? "inline-flex size-11 shrink-0 items-center justify-center rounded-2xl border border-white/15 text-[#c9a0bc] disabled:opacity-50"
+                  : "inline-flex size-11 shrink-0 items-center justify-center rounded-2xl border border-[var(--ng-border)] text-ng-primary disabled:opacity-50"
+            }
+            aria-label={isFr ? "Parler à Ngemba" : "Speak to Ngemba"}
+            title={
+              isFr
+                ? "Parler, Ngemba répond à voix haute"
+                : "Speak, Ngemba replies aloud"
+            }
+          >
+            {recording ? (
+              <IconStop className="size-5" />
+            ) : (
+              <IconMic className="size-5" />
+            )}
+          </button>
           <button
             type="button"
             disabled={busy || closed}

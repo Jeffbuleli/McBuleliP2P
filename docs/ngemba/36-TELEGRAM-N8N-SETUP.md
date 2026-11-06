@@ -78,6 +78,10 @@ curl -sS -X POST 'https://ngemba-rdc.org/api/channels/telegram/inbound' \
 
 Réponse attendue : `sessionId`, `replies[]` avec texte McBuleli IA (pilote).
 
+Message vocal : envoyer aussi `audioBase64` (ogg/webm) et `audioMime`. La réponse ajoute `transcript` et `voiceBase64` (mp3 ElevenLabs) pour un node Telegram `sendVoice`. `wantVoice: true` demande la voix même si le message était du texte.
+
+Dans l'app, le micro du chat transcrit avec ElevenLabs et Ngemba répond à voix haute. Variable : `ELEVEN_LABS` (déjà dans le `.env` racine, recopiée sur le VPS).
+
 ---
 
 ## 6. Limites v1

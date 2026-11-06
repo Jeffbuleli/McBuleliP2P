@@ -77,6 +77,12 @@ export async function POST(req: Request, ctx: Ctx) {
   }
 
   let caption = parsed.data.body?.trim() || "";
+  if (mediaKind === "audio") {
+    const heard = session.media
+      .find((m) => m.id === mediaId)
+      ?.transcription?.trim();
+    if (heard) caption = heard;
+  }
   if (!caption && mediaFileName) {
     caption =
       mediaKind === "photo"
