@@ -1,8 +1,9 @@
-# NGEMBA — Telegram + n8n (mise en service)
+# NGEMBA — Telegram
 
-> Workflow n8n : **[NGEMBA Telegram Inbound](https://mcbuleli.app.n8n.cloud/workflow/b0DapGbD9FIcKc9h)** (`b0DapGbD9FIcKc9h`)  
-> API : `POST https://ngemba-rdc.org/api/channels/telegram/inbound`  
-> Spec : [35-MULTICANAL-N8N-TELEGRAM-EMAIL.md](./35-MULTICANAL-N8N-TELEGRAM-EMAIL.md)
+> **6 nov. 2026 :** le bot répond lui-même, texte et vocal, via `POST https://ngemba-rdc.org/api/channels/telegram/hook`. `setWebhook` pointe ici. Le token `Telegram_Bot_Token` et `NGEMBA_TELEGRAM_WEBHOOK_SECRET` sont dans `/opt/ngemba/ops/vps/.env`. n8n n'est plus sur le chemin de la réponse.
+
+> Ancien chemin n8n : **[NGEMBA Telegram Inbound](https://mcbuleli.app.n8n.cloud/workflow/b0DapGbD9FIcKc9h)**  
+> API relais (toujours là) : `POST https://ngemba-rdc.org/api/channels/telegram/inbound`
 
 ---
 
@@ -25,7 +26,7 @@ Workflow **publié** : [NGEMBA Telegram Inbound](https://mcbuleli.app.n8n.cloud/
 
 Webhook Telegram (`setWebhook`) : `https://mcbuleli.app.n8n.cloud/webhook/ngemba-telegram-inbound`
 
-Token local : `.env` → `Telegram_Bot_Token` (lignes 152–153) — utilisé à la config, **pas** sur le VPS NGEMBA.
+Token : `.env` racine `Telegram_Bot_Token`, recopié sur le VPS NGEMBA. Le vocal entrant est transcrit (ElevenLabs), la réponse part en texte, et aussi en audio si le message reçu était un vocal.
 
 ---
 

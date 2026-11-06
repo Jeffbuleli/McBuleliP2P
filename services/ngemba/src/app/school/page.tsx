@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { SchoolFlow } from "@/components/school-flow";
+import { SchoolChat } from "@/components/school-chat";
 
 type Props = { searchParams: Promise<{ lang?: string }> };
 
@@ -7,7 +7,7 @@ export default async function SchoolPage({ searchParams }: Props) {
   const sp = await searchParams;
   return (
     <Suspense fallback={null}>
-      <SchoolFlow initialLocale={sp.lang} />
+      <SchoolChat initialLocale={sp.lang} />
     </Suspense>
   );
 }
