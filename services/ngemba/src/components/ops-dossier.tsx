@@ -424,15 +424,20 @@ export function OpsDossierView({ id }: { id: string }) {
   const open =
     session.status !== "closed" && session.status !== "cancelled";
   const shortId = session.id.slice(0, 8).toUpperCase();
-  const ipOnly = ipOnlyPlace(session.locationSource);
-  const maps =
-    !ipOnly && session.lat != null && session.lng != null
-      ? `https://maps.google.com/?q=${session.lat},${session.lng}`
-      : null;
   const ipGeo = ipGeoLive || session.routingMeta?.ipGeo || null;
-  const ipMaps =
-    ipGeo?.lat != null && ipGeo?.lng != null
-      ? `https://maps.google.com/?q=${ipGeo.lat},${ipGeo.lng}`
+  const copiedFromIp =
+    ipGeo?.lat != null &&
+    ipGeo?.lng != null &&
+    session.lat != null &&
+    session.lng != null &&
+    Math.abs(session.lat - ipGeo.lat) < 0.00005 &&
+    Math.abs(session.lng - ipGeo.lng) < 0.00005;
+  const maps =
+    !ipOnlyPlace(session.locationSource) &&
+    !copiedFromIp &&
+    session.lat != null &&
+    session.lng != null
+      ? `https://maps.google.com/?q=${session.lat},${session.lng}`
       : null;
 
   return (
@@ -544,18 +549,8 @@ export function OpsDossierView({ id }: { id: string }) {
           ) : null}
           {ipGeo ? (
             <span className="rounded-lg bg-amber-50 px-2 py-1 font-medium text-amber-900">
-              IP ≈ {ipGeo.label}
+              IP ≈ {ipGeo.city || ipGeo.label}
             </span>
-          ) : null}
-          {ipMaps ? (
-            <a
-              href={ipMaps}
-              target="_blank"
-              rel="noreferrer"
-              className="rounded-lg bg-amber-50 px-2 py-1 font-medium text-amber-900"
-            >
-              Carte IP ↗
-            </a>
           ) : null}
         </div>
         {session.schoolContext ? (
@@ -632,27 +627,9 @@ export function OpsDossierView({ id }: { id: string }) {
                   · {locationSourceLabelFr(ipGeo.source)}
                 </span>
               </p>
-              {ipGeo.lat != null && ipGeo.lng != null ? (
-                <p className="text-ng-muted">
-                  Coords ≈ {ipGeo.lat.toFixed(3)}, {ipGeo.lng.toFixed(3)}
-                  {ipMaps ? (
-                    <>
-                      {" · "}
-                      <a
-                        href={ipMaps}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="font-medium text-ng-primary underline-offset-2 hover:underline"
-                      >
-                        Ouvrir la carte
-                      </a>
-                    </>
-                  ) : null}
-                </p>
-              ) : null}
               <p className="text-[10px] leading-relaxed text-ng-muted">
-                Estimation ville / région via IP (pas une adresse exacte). Utile
-                si GPS refusé ou indisponible.
+                L&apos;IP ne donne que la ville. Aucune carte : ce point était
+                le même pour toutes les alertes.
               </p>
             </div>
           ) : session.clientIp ? (
