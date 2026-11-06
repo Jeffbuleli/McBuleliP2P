@@ -49,7 +49,6 @@ export async function POST(req: Request) {
   const userId = String(message.from?.id ?? chatId);
   const voiceId = message.voice?.file_id || message.audio?.file_id;
   let text = message.text?.trim() ?? "";
-  const wasVoice = Boolean(voiceId);
 
   if (!text && voiceId) {
     const audio = await telegramDownloadFile(voiceId);
@@ -67,13 +66,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  const lang = message.from?.language_code === "en" ? "en" : "fr";
   const result = await handleTelegramInbound({
     idempotencyKey: `tg:${update.update_id ?? message.message_id ?? Date.now()}`,
     telegramUserId: userId,
     telegramChatId: chat,
     text,
-    locale: lang,
+    locale: "fr",
   });
 
   if ("error" in result) {
@@ -87,10 +85,8 @@ export async function POST(req: Request) {
   const reply = result.replies[0]?.body?.trim();
   if (reply) {
     await telegramSendMessage(chat, reply);
-    if (wasVoice) {
-      const spoken = await synthesizeSpeech(reply);
-      if (spoken) await telegramSendAudio(chat, spoken);
-    }
+    const spoken = await synthesizeSpeech(reply);
+    if (spoken) await telegramSendAudio(chat, spoken);
   }
 
   return NextResponse.json({ ok: true });

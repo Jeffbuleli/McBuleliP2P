@@ -422,6 +422,7 @@ export function patchSessionAiState(
       | "provider"
       | "aiMode"
       | "slaDueAt"
+      | "locale"
     >
   > & {
     routingMeta?: SessionRoutingMeta | null;

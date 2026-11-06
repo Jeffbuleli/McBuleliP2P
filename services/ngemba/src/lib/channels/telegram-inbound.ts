@@ -1,4 +1,5 @@
 import { runTriage } from "@/lib/ai/triage";
+import { resolveReplyLocale } from "@/lib/channels/reply-locale";
 import { runChannelAccompaniment } from "@/lib/channels/accompaniment-chat";
 import { createChatMessage } from "@/lib/sessions/chat";
 import {
@@ -80,9 +81,10 @@ export async function handleTelegramInbound(
     };
   }
 
+  const locale = resolveReplyLocale(text, session?.locale ?? input.locale);
   const triageRun = await runTriage({
     message: text,
-    locale: input.locale,
+    locale,
     source: "chat",
   });
 
@@ -104,7 +106,7 @@ export async function handleTelegramInbound(
     const createdAt = new Date().toISOString();
     session = createSession({
       source: "chat",
-      locale: input.locale,
+      locale,
       message: text,
       urgency: triageRun.triage.urgency,
       category: triageRun.triage.category,
@@ -146,6 +148,7 @@ export async function handleTelegramInbound(
       lastInboundIdempotencyKey: input.idempotencyKey,
     };
     patchSessionAiState(session.id, {
+      locale,
       urgency: triageRun.triage.urgency,
       category: triageRun.triage.category,
       immediateDanger: triageRun.triage.immediate_danger,
@@ -169,7 +172,7 @@ export async function handleTelegramInbound(
 
   const forcedAlert = triageRun.decision.humanRequired;
   const decision = await runChannelAccompaniment({
-    locale: input.locale as "fr" | "en",
+    locale: locale as "fr" | "en",
     userMessage: text,
     triage: triageRun.triage,
     forcedAlert,

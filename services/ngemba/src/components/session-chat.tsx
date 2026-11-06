@@ -243,12 +243,10 @@ export function SessionChat({
         setMessages(next);
         setBody("");
         clearPending();
-        if (file?.type.startsWith("audio")) {
-          const reply = [...next]
-            .reverse()
-            .find((m) => m.actor === "McBuleli IA" && m.body.trim());
-          if (reply) void playVoice(reply.body);
-        }
+        const reply = [...next]
+          .reverse()
+          .find((m) => m.actor === "McBuleli IA" && m.body.trim());
+        if (reply) void playVoice(reply.body);
       } else if (data.error === "session_closed") {
         setUploadErr(
           isFr
@@ -329,7 +327,7 @@ export function SessionChat({
 
   return (
     <section
-      className={`flex h-[min(58vh,520px)] min-h-[340px] flex-col overflow-hidden rounded-2xl border shadow-[0_10px_28px_-18px_rgba(6,64,43,0.35)] ${shell}`}
+      className={`flex min-h-[320px] flex-col overflow-hidden rounded-2xl border shadow-[0_10px_28px_-18px_rgba(6,64,43,0.35)] h-[min(56vh,460px)] sm:h-[min(64vh,600px)] lg:h-[min(72vh,760px)] ${shell}`}
     >
       <header className="shrink-0 border-b border-[var(--ng-border)] px-4 py-2.5">
         <div className="flex items-center justify-between gap-2">
@@ -483,7 +481,7 @@ export function SessionChat({
       </div>
 
       <form
-        className="shrink-0 border-t border-[var(--ng-border)] p-3"
+        className="shrink-0 border-t border-[var(--ng-border)] p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
         onSubmit={(e) => {
           e.preventDefault();
           void send();
@@ -521,7 +519,28 @@ export function SessionChat({
             </button>
           </div>
         ) : null}
-        <div className="flex items-end gap-2">
+        <div className="flex flex-col gap-2 lg:flex-row lg:items-end">
+          <textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value.slice(0, 2000))}
+            onKeyDown={onKeyDown}
+            placeholder={
+              closed
+                ? isFr
+                  ? "Dossier clôturé"
+                  : "Case closed"
+                : labels.chatPlaceholder
+            }
+            rows={2}
+            maxLength={2000}
+            disabled={closed}
+            className={
+              discrete
+                ? "min-h-[2.75rem] w-full min-w-0 flex-1 resize-none rounded-2xl border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-[#f5f0f4] outline-none ring-[#882364] placeholder:text-[#c9a0bc] focus:ring-2 disabled:opacity-50"
+                : "min-h-[2.75rem] w-full min-w-0 flex-1 resize-none rounded-2xl border border-[var(--ng-border)] bg-ng-bg px-3 py-2.5 text-sm text-ng-text outline-none ring-ng-primary focus:ring-2 disabled:opacity-50"
+            }
+          />
+          <div className="flex shrink-0 items-center justify-end gap-2">
           <input
             ref={fileRef}
             type="file"
@@ -571,37 +590,18 @@ export function SessionChat({
           >
             <AttachIcon className="size-5" />
           </button>
-          <textarea
-            value={body}
-            onChange={(e) => setBody(e.target.value.slice(0, 2000))}
-            onKeyDown={onKeyDown}
-            placeholder={
-              closed
-                ? isFr
-                  ? "Dossier clôturé"
-                  : "Case closed"
-                : labels.chatPlaceholder
-            }
-            rows={2}
-            maxLength={2000}
-            disabled={closed}
-            className={
-              discrete
-                ? "min-h-[2.75rem] flex-1 resize-none rounded-2xl border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-[#f5f0f4] outline-none ring-[#882364] placeholder:text-[#c9a0bc] focus:ring-2 disabled:opacity-50"
-                : "min-h-[2.75rem] flex-1 resize-none rounded-2xl border border-[var(--ng-border)] bg-ng-bg px-3 py-2.5 text-sm text-ng-text outline-none ring-ng-primary focus:ring-2 disabled:opacity-50"
-            }
-          />
           <button
             type="submit"
             disabled={closed || busy || (!body.trim() && !pendingFile)}
             className={
               discrete
-                ? "inline-flex min-h-11 shrink-0 items-center justify-center rounded-2xl bg-[#882364] px-4 text-sm font-semibold text-white disabled:opacity-50"
-                : "inline-flex min-h-11 shrink-0 items-center justify-center rounded-2xl bg-ng-primary px-4 text-sm font-semibold text-white disabled:opacity-50"
+                ? "inline-flex min-h-11 min-w-[6.5rem] shrink-0 items-center justify-center rounded-2xl bg-[#882364] px-4 text-sm font-semibold text-white disabled:opacity-50"
+                : "inline-flex min-h-11 min-w-[6.5rem] shrink-0 items-center justify-center rounded-2xl bg-ng-primary px-4 text-sm font-semibold text-white disabled:opacity-50"
             }
           >
             {labels.chatSend}
           </button>
+          </div>
         </div>
       </form>
     </section>

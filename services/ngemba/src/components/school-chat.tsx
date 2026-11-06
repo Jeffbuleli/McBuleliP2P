@@ -166,7 +166,9 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
   }
 
   return (
-    <main className="mx-auto flex h-dvh max-w-lg flex-col bg-[#102016] text-stone-100">
+    <main
+      className={`mx-auto flex h-dvh w-full max-w-lg flex-col bg-[#102016] text-stone-100 sm:max-w-xl lg:max-w-2xl`}
+    >
       <header className="flex items-center gap-3 border-b border-white/10 px-4 py-3">
         <span className="inline-flex size-9 items-center justify-center rounded-full bg-[#305f33] text-sm font-bold text-white">
           N
@@ -222,32 +224,34 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
       {error ? <p className="px-4 text-xs text-red-300">{error}</p> : null}
 
       <form
-        className="flex items-end gap-2 border-t border-white/10 px-3 py-3"
+        className="flex flex-col gap-2 border-t border-white/10 px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:flex-row sm:items-end"
         onSubmit={(e) => {
           e.preventDefault();
           void pushTurn(draft);
         }}
       >
-        <button
-          type="button"
-          onClick={() => void toggleMic()}
-          className={`inline-flex size-11 items-center justify-center rounded-full ${
-            recording ? "bg-red-600 text-white" : "bg-white/10 text-[#6ee7a0]"
-          }`}
-          aria-label="Parler"
-        >
-          <IconMic className="size-5" />
-        </button>
-        <input
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          placeholder="Écris ici…"
-          className="min-h-11 flex-1 rounded-full border border-white/10 bg-white/5 px-4 text-sm outline-none placeholder:text-stone-500"
-        />
+        <div className="flex min-w-0 flex-1 items-end gap-2">
+          <button
+            type="button"
+            onClick={() => void toggleMic()}
+            className={`inline-flex size-11 shrink-0 items-center justify-center rounded-full ${
+              recording ? "bg-red-600 text-white" : "bg-white/10 text-[#6ee7a0]"
+            }`}
+            aria-label="Parler"
+          >
+            <IconMic className="size-5" />
+          </button>
+          <input
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder="Écris ici…"
+            className="min-h-11 w-full min-w-0 flex-1 rounded-full border border-white/10 bg-white/5 px-4 text-sm outline-none placeholder:text-stone-500"
+          />
+        </div>
         <button
           type="submit"
           disabled={busy || !draft.trim()}
-          className="min-h-11 rounded-full bg-[#305f33] px-4 text-sm font-semibold text-white disabled:opacity-40"
+          className="min-h-11 w-full shrink-0 rounded-full bg-[#305f33] px-4 text-sm font-semibold text-white disabled:opacity-40 sm:w-auto sm:min-w-[7.5rem]"
         >
           Envoyer
         </button>

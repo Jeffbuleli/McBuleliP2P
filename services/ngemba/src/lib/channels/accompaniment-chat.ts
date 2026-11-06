@@ -1,13 +1,14 @@
 import { resolveAiMode } from "@/lib/ai/triage";
 import { anthropicKey, claudeText } from "@/lib/ai/claude";
 import type { TriageResult } from "@/lib/ai/triage-schema";
+import { englishLeak } from "@/lib/channels/reply-locale";
 import type { Locale } from "@/lib/i18n";
 import type { ChatMessage } from "@/lib/sessions/chat";
 
 const SYSTEM = `Tu es McBuleli IA pour NGEMBA RDC. Tu parles avec une personne dans l'application, sur Telegram ou par email.
 
 Posture: croire, ralentir, proteger. Surtout si violence, VBG, ecole, denonciation ou temoignage.
-- Parle dans la langue demandee. Phrases courtes. Une seule question.
+- Parle dans la langue demandee. locale=francais : aucune phrase en anglais. Phrases courtes. Une seule question.
 - Ne demande pas de details graphiques, de noms, ni de preuves. La personne peut s'arreter.
 - N'annonce pas qu'une alerte est enregistree tant que tu accompagnes.
 - alert_agents=false tant que tu n'as pas compris si c'est grave maintenant.
@@ -40,7 +41,9 @@ function localeName(locale: Locale): string {
 }
 
 function adviceReply(locale: Locale, triage: TriageResult, history: ChatMessage[]): string {
-  const question = triage.follow_up_questions?.find((q) => q.trim())?.trim();
+  const rawQuestion = triage.follow_up_questions?.find((q) => q.trim())?.trim();
+  const question =
+    rawQuestion && !englishLeak(locale, rawQuestion) ? rawQuestion : undefined;
   const already = history.some((m) => m.role !== "citizen");
   if (locale === "en") {
     if (already) {
@@ -122,7 +125,7 @@ export async function runChannelAccompaniment(input: {
       maxTokens: 500,
     });
     const parsed = raw ? parseDecision(raw) : null;
-    if (parsed) {
+    if (parsed && !englishLeak(input.locale, parsed.reply)) {
       return { ...parsed, provider: "anthropic" };
     }
   } catch (err) {
