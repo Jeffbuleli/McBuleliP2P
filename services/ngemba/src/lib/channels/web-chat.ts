@@ -1,6 +1,6 @@
 import { runTriage } from "@/lib/ai/triage";
 import { runChannelAccompaniment } from "@/lib/channels/accompaniment-chat";
-import { isLocale, type Locale } from "@/lib/i18n";
+import { resolveReplyLocale } from "@/lib/channels/reply-locale";
 import { notifyNewAlert } from "@/lib/ops/notify";
 import { computeSlaDueAt } from "@/lib/ops/sla";
 import { buildRoutingMeta } from "@/lib/partners/match";
@@ -63,7 +63,7 @@ export async function replyAsNgemba(
     .find((m) => m.role === "citizen" && m.body.trim().length > 0);
   if (!lastCitizen) return session;
 
-  const locale: Locale = isLocale(session.locale) ? session.locale : "fr";
+  const locale = resolveReplyLocale(lastCitizen.body, session.locale);
   const source =
     session.source === "school" || session.source === "witness"
       ? session.source
@@ -83,6 +83,7 @@ export async function replyAsNgemba(
     triage: triageRun.triage,
     forcedAlert,
     history: session.chatMessages,
+    channel: lastCitizen.mediaKind === "audio" ? "voice" : "text",
   });
 
   const alreadyNotified = Boolean(session.routingMeta?.agentsNotified);
@@ -91,6 +92,7 @@ export async function replyAsNgemba(
   const immediate = session.immediateDanger || triageRun.triage.immediate_danger;
 
   patchSessionAiState(session.id, {
+    locale: decision.locale,
     urgency,
     category: triageRun.triage.category,
     immediateDanger: immediate,

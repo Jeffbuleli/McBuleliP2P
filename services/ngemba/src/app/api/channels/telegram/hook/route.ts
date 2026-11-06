@@ -72,6 +72,7 @@ export async function POST(req: Request) {
     telegramChatId: chat,
     text,
     locale: "fr",
+    channel: voiceId ? "voice" : "text",
   });
 
   if ("error" in result) {
@@ -83,10 +84,12 @@ export async function POST(req: Request) {
   }
 
   const reply = result.replies[0]?.body?.trim();
-  if (reply) {
-    await telegramSendMessage(chat, reply);
+  if (reply && voiceId) {
     const spoken = await synthesizeSpeech(reply);
     if (spoken) await telegramSendAudio(chat, spoken);
+    else await telegramSendMessage(chat, reply);
+  } else if (reply) {
+    await telegramSendMessage(chat, reply);
   }
 
   return NextResponse.json({ ok: true });

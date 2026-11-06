@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { IconMic } from "@/components/icons";
+import { VoiceWave } from "@/components/voice-wave";
 import { useCitizenLocale } from "@/hooks/use-citizen-locale";
+import { useVoiceDraft } from "@/hooks/use-voice-draft";
 
 type Bubble = { id: string; role: "user" | "assistant"; content: string };
 
@@ -22,8 +24,7 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
-  const recorderRef = useRef<MediaRecorder | null>(null);
-  const [recording, setRecording] = useState(false);
+  const voice = useVoiceDraft();
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
@@ -114,7 +115,7 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
             ...prev,
             { id: `a-${Date.now()}`, role: "assistant", content: reply.body },
           ]);
-          void speak(id, reply.body);
+          if (file) void speak(id, reply.body);
         }
       } else {
         const listed = await fetch(`/api/alerts/${id}/messages`, {
@@ -132,7 +133,7 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
             ...prev,
             { id: `a-${Date.now()}`, role: "assistant", content: ai.body },
           ]);
-          void speak(id, ai.body);
+          if (file) void speak(id, ai.body);
         }
       }
     } catch {
@@ -143,26 +144,28 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
   }
 
   async function toggleMic() {
-    if (recording && recorderRef.current) {
-      recorderRef.current.stop();
+    if (voice.recording) {
+      await voice.stop();
       return;
     }
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const recorder = new MediaRecorder(stream);
-    const chunks: Blob[] = [];
-    recorder.ondataavailable = (ev) => {
-      if (ev.data.size) chunks.push(ev.data);
-    };
-    recorder.onstop = () => {
-      stream.getTracks().forEach((t) => t.stop());
-      setRecording(false);
-      const blob = new Blob(chunks, { type: recorder.mimeType || "audio/webm" });
-      if (blob.size < 800) return;
-      void pushTurn("", new File([blob], "voix.webm", { type: blob.type }));
-    };
-    recorderRef.current = recorder;
-    recorder.start();
-    setRecording(true);
+    if (voice.file) {
+      voice.clear();
+      return;
+    }
+    try {
+      setDraft("");
+      await voice.start();
+    } catch {
+      setError("Micro refusé.");
+    }
+  }
+
+  async function submit() {
+    let file = voice.file;
+    if (voice.recording) file = await voice.stop();
+    const text = draft;
+    voice.clear();
+    await pushTurn(text, file ?? undefined);
   }
 
   return (
@@ -224,35 +227,44 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
       {error ? <p className="px-4 text-xs text-red-300">{error}</p> : null}
 
       <form
-        className="flex flex-col gap-2 border-t border-white/10 px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:flex-row sm:items-end"
+        className="flex items-end gap-2 border-t border-white/10 px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
         onSubmit={(e) => {
           e.preventDefault();
-          void pushTurn(draft);
+          void submit();
         }}
       >
-        <div className="flex min-w-0 flex-1 items-end gap-2">
-          <button
-            type="button"
-            onClick={() => void toggleMic()}
-            className={`inline-flex size-11 shrink-0 items-center justify-center rounded-full ${
-              recording ? "bg-red-600 text-white" : "bg-white/10 text-[#6ee7a0]"
-            }`}
-            aria-label="Parler"
-          >
-            <IconMic className="size-5" />
-          </button>
+        <button
+          type="button"
+          onClick={() => void toggleMic()}
+          className={`inline-flex size-11 shrink-0 items-center justify-center rounded-2xl ${
+            voice.recording ? "bg-red-600 text-white" : "bg-white/10 text-[#6ee7a0]"
+          }`}
+          aria-label="Parler"
+        >
+          <IconMic className="size-5" />
+        </button>
+        {voice.recording || voice.file ? (
+          <VoiceWave
+            levels={voice.levels}
+            className="border border-white/10 bg-white/5 text-[#6ee7a0]"
+          />
+        ) : (
           <input
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             placeholder="Écris ici…"
-            className="min-h-11 w-full min-w-0 flex-1 rounded-full border border-white/10 bg-white/5 px-4 text-sm outline-none placeholder:text-stone-500"
+            className="min-h-11 min-w-0 flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 text-sm outline-none placeholder:text-stone-500"
           />
-        </div>
+        )}
         <button
           type="submit"
-          disabled={busy || !draft.trim()}
-          className="min-h-11 w-full shrink-0 rounded-full bg-[#305f33] px-4 text-sm font-semibold text-white disabled:opacity-40 sm:w-auto sm:min-w-[7.5rem]"
+          disabled={busy || (!draft.trim() && !voice.file && !voice.recording)}
+          aria-label="Envoyer"
+          className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-2xl bg-[#305f33] px-3.5 text-sm font-bold text-white disabled:opacity-40"
         >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden className="shrink-0">
+            <path d="M4 12h12M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
           Envoyer
         </button>
       </form>

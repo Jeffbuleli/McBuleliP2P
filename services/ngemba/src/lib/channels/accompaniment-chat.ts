@@ -2,13 +2,16 @@ import { resolveAiMode } from "@/lib/ai/triage";
 import { anthropicKey, claudeText } from "@/lib/ai/claude";
 import type { TriageResult } from "@/lib/ai/triage-schema";
 import { englishLeak } from "@/lib/channels/reply-locale";
-import type { Locale } from "@/lib/i18n";
+import { isLocale, type Locale } from "@/lib/i18n";
 import type { ChatMessage } from "@/lib/sessions/chat";
 
 const SYSTEM = `Tu es McBuleli IA pour NGEMBA RDC. Tu parles avec une personne dans l'application, sur Telegram ou par email.
 
 Posture: croire, ralentir, proteger. Surtout si violence, VBG, ecole, denonciation ou temoignage.
-- Parle dans la langue demandee. locale=francais : aucune phrase en anglais. Phrases courtes. Une seule question.
+- Reponds dans la langue du dernier message : francais, english, lingala, swahili, tshiluba ou kikongo. Ne melange pas.
+- Varie l'ouverture. Ne repose pas une question deja posee. Adapte-toi s'il demande d'etre bref, plus simple, ou de changer de langue.
+- channel=voice : deux phrases orales, sans lien ni liste.
+- channel=text : deux a quatre phrases, une seule question.
 - Ne demande pas de details graphiques, de noms, ni de preuves. La personne peut s'arreter.
 - N'annonce pas qu'une alerte est enregistree tant que tu accompagnes.
 - alert_agents=false tant que tu n'as pas compris si c'est grave maintenant.
@@ -19,7 +22,7 @@ Posture: croire, ralentir, proteger. Surtout si violence, VBG, ecole, denonciati
 Si forced_alert=true: alert_agents doit etre true.
 
 Reponds UNIQUEMENT en JSON:
-{"reply":"texte court dans la langue demandee, max 90 mots","alert_agents":false,"reason":"une phrase"}
+{"reply":"texte court dans la langue du message, max 80 mots","alert_agents":false,"locale":"fr","reason":"une phrase"}
 
 Interdit: culpabiliser, minimiser, conseiller la violence ou la confrontation, avis juridique ferme, recit sexuel detaille.`;
 
@@ -34,7 +37,7 @@ function localeName(locale: Locale): string {
     en: "english",
     ln: "lingala",
     sw: "swahili",
-    lu: "tshiluba",
+    lua: "tshiluba",
     kg: "kikongo",
   };
   return map[locale] ?? "francais";
@@ -53,6 +56,26 @@ function adviceReply(locale: Locale, triage: TriageResult, history: ChatMessage[
     }
     return "I am here with you. Tell me what you need, at your pace. I can give advice first. If you want someone from the team, say so.";
   }
+  if (locale === "ln") {
+    return already
+      ? "Nazali na yo. Yebisa ngai mwa makambo, na tempo na yo."
+      : "Mbote. Nazali na yo. Yebisa ngai oyo ezali koleka, na tempo na yo.";
+  }
+  if (locale === "sw") {
+    return already
+      ? "Niko nawe. Niambie kidogo zaidi, kwa kasi yako."
+      : "Niko hapa nawe. Niambie unachohitaji, kwa kasi yako.";
+  }
+  if (locale === "lua") {
+    return already
+      ? "Ndi nanyi. Amba kashidi, ku lungenyi webe."
+      : "Ndi nanyi. Amba bualu bua kudi, ku lungenyi webe.";
+  }
+  if (locale === "kg") {
+    return already
+      ? "Mono kele ti nge. Zaba mono mwa diambu, na ntangu na nge."
+      : "Mbote. Mono kele ti nge. Zaba mono nki kele na kwisa, na ntangu na nge.";
+  }
   if (already) {
     return question
       ? question
@@ -65,10 +88,26 @@ function alertReply(locale: Locale): string {
   if (locale === "en") {
     return "I hear you. I am asking someone from the NGEMBA team to take this up. If you are in immediate danger, use SOS: https://ngemba-rdc.org/sos";
   }
+  if (locale === "ln") {
+    return "Nayoki yo. Nasengi moto moko ya ekipi NGEMBA azwa likambo oyo. Soki likama ezali sikoyo: SOS https://ngemba-rdc.org/sos";
+  }
+  if (locale === "sw") {
+    return "Nakusikia. Naomba mtu wa timu ya NGEMBA achukue hili. Hatari sasa hivi: SOS https://ngemba-rdc.org/sos";
+  }
+  if (locale === "lua") {
+    return "Nayuka. Ndi mujinga muntu wa ekipi NGEMBA. Dikama lelu: SOS https://ngemba-rdc.org/sos";
+  }
+  if (locale === "kg") {
+    return "Mono me wa. Mono ke lomba muntu ya ekipi NGEMBA kubaka diambu yai. Nkatu bubu: SOS https://ngemba-rdc.org/sos";
+  }
   return "Je vous entends. Je demande à une personne de l'équipe NGEMBA de reprendre cet échange. En danger immédiat : SOS https://ngemba-rdc.org/sos";
 }
 
-function parseDecision(raw: string): { reply: string; alertAgents: boolean } | null {
+function parseDecision(raw: string): {
+  reply: string;
+  alertAgents: boolean;
+  locale?: Locale;
+} | null {
   const start = raw.indexOf("{");
   const end = raw.lastIndexOf("}");
   if (start < 0 || end <= start) return null;
@@ -76,10 +115,19 @@ function parseDecision(raw: string): { reply: string; alertAgents: boolean } | n
     const data = JSON.parse(raw.slice(start, end + 1)) as {
       reply?: unknown;
       alert_agents?: unknown;
+      locale?: unknown;
     };
     const reply = typeof data.reply === "string" ? data.reply.trim() : "";
     if (reply.length < 5) return null;
-    return { reply: reply.slice(0, 900), alertAgents: data.alert_agents === true };
+    const locale =
+      typeof data.locale === "string" && isLocale(data.locale)
+        ? data.locale
+        : undefined;
+    return {
+      reply: reply.slice(0, 900),
+      alertAgents: data.alert_agents === true,
+      locale,
+    };
   } catch {
     return null;
   }
@@ -91,10 +139,21 @@ export async function runChannelAccompaniment(input: {
   triage: TriageResult;
   forcedAlert: boolean;
   history: ChatMessage[];
-}): Promise<{ reply: string; alertAgents: boolean; provider: "anthropic" | "local" }> {
+  channel?: "text" | "voice";
+}): Promise<{
+  reply: string;
+  alertAgents: boolean;
+  provider: "anthropic" | "local";
+  locale: Locale;
+}> {
   const asked = ASK_AGENT.test(input.userMessage);
   if (input.forcedAlert || asked) {
-    return { reply: alertReply(input.locale), alertAgents: true, provider: "local" };
+    return {
+      reply: alertReply(input.locale),
+      alertAgents: true,
+      provider: "local",
+      locale: input.locale,
+    };
   }
 
   const mode = resolveAiMode();
@@ -103,6 +162,7 @@ export async function runChannelAccompaniment(input: {
       reply: adviceReply(input.locale, input.triage, input.history),
       alertAgents: false,
       provider: "local",
+      locale: input.locale,
     };
   }
 
@@ -116,6 +176,7 @@ export async function runChannelAccompaniment(input: {
       system: SYSTEM,
       user: JSON.stringify({
         locale: localeName(input.locale),
+        channel: input.channel ?? "text",
         forced_alert: false,
         triage_urgency: input.triage.urgency,
         triage_category: input.triage.category,
@@ -125,8 +186,9 @@ export async function runChannelAccompaniment(input: {
       maxTokens: 500,
     });
     const parsed = raw ? parseDecision(raw) : null;
-    if (parsed && !englishLeak(input.locale, parsed.reply)) {
-      return { ...parsed, provider: "anthropic" };
+    const spoken = parsed?.locale ?? input.locale;
+    if (parsed && !englishLeak(spoken, parsed.reply)) {
+      return { ...parsed, locale: spoken, provider: "anthropic" };
     }
   } catch (err) {
     console.warn("[ngemba] accompaniment chat failed", err);
@@ -136,5 +198,6 @@ export async function runChannelAccompaniment(input: {
     reply: adviceReply(input.locale, input.triage, input.history),
     alertAgents: false,
     provider: "local",
+    locale: input.locale,
   };
 }

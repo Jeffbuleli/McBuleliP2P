@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { IconMic, IconStop } from "@/components/icons";
+import { VoiceWave } from "@/components/voice-wave";
+import { useVoiceDraft } from "@/hooks/use-voice-draft";
 
 type ChatMessage = {
   id: string;
@@ -98,12 +100,10 @@ export function SessionChat({
   const [uploadErr, setUploadErr] = useState<string | null>(null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [pendingPreview, setPendingPreview] = useState<string | null>(null);
-  const [recording, setRecording] = useState(false);
   const [speaking, setSpeaking] = useState(false);
+  const voice = useVoiceDraft();
   const fileRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const recorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const isFr = locale !== "en";
 
@@ -173,7 +173,10 @@ export function SessionChat({
   }
 
   async function send(fileOverride?: File) {
-    const file = fileOverride ?? pendingFile;
+    let file = fileOverride ?? pendingFile ?? voice.file;
+    if (voice.recording) {
+      file = (await voice.stop()) ?? file;
+    }
     let text = body.trim();
     if (closed || (!text && !file) || busy) return;
     setBusy(true);
@@ -243,10 +246,13 @@ export function SessionChat({
         setMessages(next);
         setBody("");
         clearPending();
-        const reply = [...next]
-          .reverse()
-          .find((m) => m.actor === "McBuleli IA" && m.body.trim());
-        if (reply) void playVoice(reply.body);
+        voice.clear();
+        if (file?.type.startsWith("audio")) {
+          const reply = [...next]
+            .reverse()
+            .find((m) => m.actor === "McBuleli IA" && m.body.trim());
+          if (reply) void playVoice(reply.body);
+        }
       } else if (data.error === "session_closed") {
         setUploadErr(
           isFr
@@ -262,8 +268,12 @@ export function SessionChat({
   }
 
   async function toggleRecord() {
-    if (recording && recorderRef.current) {
-      recorderRef.current.stop();
+    if (voice.recording) {
+      await voice.stop();
+      return;
+    }
+    if (voice.file) {
+      voice.clear();
       return;
     }
     if (busy || closed || !navigator.mediaDevices?.getUserMedia) {
@@ -273,34 +283,8 @@ export function SessionChat({
       return;
     }
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mime = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-        ? "audio/webm;codecs=opus"
-        : MediaRecorder.isTypeSupported("audio/webm")
-          ? "audio/webm"
-          : "";
-      const recorder = mime
-        ? new MediaRecorder(stream, { mimeType: mime })
-        : new MediaRecorder(stream);
-      chunksRef.current = [];
-      recorder.ondataavailable = (ev) => {
-        if (ev.data.size > 0) chunksRef.current.push(ev.data);
-      };
-      recorder.onstop = () => {
-        stream.getTracks().forEach((t) => t.stop());
-        setRecording(false);
-        const blob = new Blob(chunksRef.current, {
-          type: recorder.mimeType || "audio/webm",
-        });
-        if (blob.size < 800) return;
-        const voiceFile = new File([blob], "voix.webm", {
-          type: blob.type || "audio/webm",
-        });
-        void send(voiceFile);
-      };
-      recorderRef.current = recorder;
-      recorder.start();
-      setRecording(true);
+      setBody("");
+      await voice.start();
     } catch {
       setUploadErr(isFr ? "Micro refusé" : "Microphone denied");
     }
@@ -519,28 +503,7 @@ export function SessionChat({
             </button>
           </div>
         ) : null}
-        <div className="flex flex-col gap-2 lg:flex-row lg:items-end">
-          <textarea
-            value={body}
-            onChange={(e) => setBody(e.target.value.slice(0, 2000))}
-            onKeyDown={onKeyDown}
-            placeholder={
-              closed
-                ? isFr
-                  ? "Dossier clôturé"
-                  : "Case closed"
-                : labels.chatPlaceholder
-            }
-            rows={2}
-            maxLength={2000}
-            disabled={closed}
-            className={
-              discrete
-                ? "min-h-[2.75rem] w-full min-w-0 flex-1 resize-none rounded-2xl border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-[#f5f0f4] outline-none ring-[#882364] placeholder:text-[#c9a0bc] focus:ring-2 disabled:opacity-50"
-                : "min-h-[2.75rem] w-full min-w-0 flex-1 resize-none rounded-2xl border border-[var(--ng-border)] bg-ng-bg px-3 py-2.5 text-sm text-ng-text outline-none ring-ng-primary focus:ring-2 disabled:opacity-50"
-            }
-          />
-          <div className="flex shrink-0 items-center justify-end gap-2">
+        <div className="flex items-end gap-2">
           <input
             ref={fileRef}
             type="file"
@@ -557,28 +520,54 @@ export function SessionChat({
             disabled={busy || closed}
             onClick={() => void toggleRecord()}
             className={
-              recording
+              voice.recording
                 ? "inline-flex size-11 shrink-0 items-center justify-center rounded-2xl bg-ng-urgent text-white"
                 : discrete
                   ? "inline-flex size-11 shrink-0 items-center justify-center rounded-2xl border border-white/15 text-[#c9a0bc] disabled:opacity-50"
                   : "inline-flex size-11 shrink-0 items-center justify-center rounded-2xl border border-[var(--ng-border)] text-ng-primary disabled:opacity-50"
             }
             aria-label={isFr ? "Parler à Ngemba" : "Speak to Ngemba"}
-            title={
-              isFr
-                ? "Parler, Ngemba répond à voix haute"
-                : "Speak, Ngemba replies aloud"
-            }
           >
-            {recording ? (
+            {voice.recording ? (
               <IconStop className="size-5" />
             ) : (
               <IconMic className="size-5" />
             )}
           </button>
+          {voice.recording || voice.file ? (
+            <VoiceWave
+              levels={voice.levels}
+              className={
+                discrete
+                  ? "border border-white/15 bg-white/5 text-[#c9a0bc]"
+                  : "border border-[var(--ng-border)] bg-ng-bg text-ng-primary"
+              }
+            />
+          ) : (
+            <textarea
+              value={body}
+              onChange={(e) => setBody(e.target.value.slice(0, 2000))}
+              onKeyDown={onKeyDown}
+              placeholder={
+                closed
+                  ? isFr
+                    ? "Dossier clôturé"
+                    : "Case closed"
+                  : labels.chatPlaceholder
+              }
+              rows={1}
+              maxLength={2000}
+              disabled={closed}
+              className={
+                discrete
+                  ? "min-h-11 w-auto min-w-0 flex-1 resize-none rounded-2xl border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-[#f5f0f4] outline-none ring-[#882364] placeholder:text-[#c9a0bc] focus:ring-2 disabled:opacity-50"
+                  : "min-h-11 w-auto min-w-0 flex-1 resize-none rounded-2xl border border-[var(--ng-border)] bg-ng-bg px-3 py-2.5 text-sm text-ng-text outline-none ring-ng-primary focus:ring-2 disabled:opacity-50"
+              }
+            />
+          )}
           <button
             type="button"
-            disabled={busy || closed}
+            disabled={busy || closed || voice.recording}
             onClick={() => fileRef.current?.click()}
             className={
               discrete
@@ -586,22 +575,28 @@ export function SessionChat({
                 : "inline-flex size-11 shrink-0 items-center justify-center rounded-2xl border border-[var(--ng-border)] text-ng-muted hover:border-ng-primary hover:text-ng-primary disabled:opacity-50"
             }
             aria-label={isFr ? "Joindre un fichier" : "Attach a file"}
-            title={isFr ? "Joindre photo, audio ou vidéo" : "Attach photo, audio or video"}
           >
             <AttachIcon className="size-5" />
           </button>
           <button
             type="submit"
-            disabled={closed || busy || (!body.trim() && !pendingFile)}
+            disabled={
+              closed ||
+              busy ||
+              (!body.trim() && !pendingFile && !voice.file && !voice.recording)
+            }
+            aria-label={labels.chatSend}
             className={
               discrete
-                ? "inline-flex min-h-11 min-w-[6.5rem] shrink-0 items-center justify-center rounded-2xl bg-[#882364] px-4 text-sm font-semibold text-white disabled:opacity-50"
-                : "inline-flex min-h-11 min-w-[6.5rem] shrink-0 items-center justify-center rounded-2xl bg-ng-primary px-4 text-sm font-semibold text-white disabled:opacity-50"
+                ? "inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-2xl bg-[#882364] px-3.5 text-sm font-bold text-white disabled:opacity-50"
+                : "inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-2xl bg-ng-primary px-3.5 text-sm font-bold text-white disabled:opacity-50"
             }
           >
-            {labels.chatSend}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden className="shrink-0">
+              <path d="M4 12h12M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span>{labels.chatSend}</span>
           </button>
-          </div>
         </div>
       </form>
     </section>

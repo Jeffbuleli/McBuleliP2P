@@ -20,6 +20,7 @@ export type TelegramInboundInput = {
   telegramChatId: string;
   text: string;
   locale: string;
+  channel?: "text" | "voice";
   sessionId?: string | null;
 };
 
@@ -172,11 +173,12 @@ export async function handleTelegramInbound(
 
   const forcedAlert = triageRun.decision.humanRequired;
   const decision = await runChannelAccompaniment({
-    locale: locale as "fr" | "en",
+    locale,
     userMessage: text,
     triage: triageRun.triage,
     forcedAlert,
     history: session.chatMessages ?? [],
+    channel: input.channel ?? "text",
   });
   const replyBody = decision.reply;
   const alreadyNotified = Boolean(session.routingMeta?.agentsNotified);
@@ -184,6 +186,7 @@ export async function handleTelegramInbound(
     void notifyNewAlert(session);
   }
   patchSessionAiState(session.id, {
+    locale: decision.locale,
     routingMeta: {
       ...(session.routingMeta ?? buildRoutingMeta({
         commune: session.commune,
