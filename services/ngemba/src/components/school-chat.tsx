@@ -10,9 +10,9 @@ import { useVoiceDraft } from "@/hooks/use-voice-draft";
 type Bubble = { id: string; role: "user" | "assistant"; content: string };
 
 const GREETING =
-  "Bonjour. Ici Ngemba, pour l'école. Tu peux parler à ton rythme, sans donner ton nom. Qu'est-ce qui se passe ?";
+  "Bonjour. Ici Ngemba. Vous pouvez parler de violences, à la maison ou ailleurs, sans donner votre nom. Qu'est-ce qui se passe ?";
 
-const STARTERS = ["Harcèlement", "Violence", "Cyber", "Autre"];
+const STARTERS = ["À la maison", "Violence sexuelle", "Un enfant", "Harcèlement"];
 
 export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
   const { href } = useCitizenLocale(initialLocale);
@@ -66,7 +66,7 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
     setDraft("");
     try {
       const alreadyOpen = Boolean(sessionId);
-      const id = await ensureSession(trimmed || "Message vocal depuis l'école");
+      const id = await ensureSession(trimmed || "Message vocal");
       if (!id) return;
       let body = trimmed;
       let mediaId: string | undefined;
@@ -173,9 +173,9 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
           N
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-bold">Ngemba École</p>
+          <p className="truncate text-sm font-bold">Ngemba VBG</p>
           <p className="truncate text-[11px] text-[#6ee7a0]/80">
-            On t&apos;écoute d&apos;abord
+            On vous écoute d&apos;abord
           </p>
         </div>
         <Link href={href("/")} className="text-xs font-semibold text-stone-400">

@@ -7,10 +7,9 @@ import { useRouter } from "next/navigation";
 import {
   IconCheck,
   IconEye,
-  IconGraduation,
+  IconBook,
   IconHeart,
   IconShield,
-  IconUsers,
 } from "@/components/icons";
 import { DiscreteCornerPads } from "@/components/discrete-corner-pads";
 import { PoweredByMcbuleli } from "@/components/powered-by-mcbuleli";
@@ -222,15 +221,15 @@ export function HomeShell({ initialLocale }: { initialLocale?: string }) {
             device={device}
           />
           <IconLink
-            icon={<IconGraduation className="size-5" />}
+            icon={<IconHeart className="size-5" />}
             label={t.school}
-            href={href("/school")}
+            href={href("/vbg")}
             device={device}
           />
           <IconLink
-            icon={<IconUsers className="size-5" />}
+            icon={<IconBook className="size-5" />}
             label={t.youth}
-            href={href("/jeunesse")}
+            href={href("/enquete")}
             device={device}
           />
         </nav>

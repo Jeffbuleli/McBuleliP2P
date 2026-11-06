@@ -6,6 +6,7 @@ import { computeSlaDueAt } from "@/lib/ops/sla";
 import { buildRoutingMeta } from "@/lib/partners/match";
 import type { SessionRoutingMeta } from "@/lib/partners/types";
 import { createChatMessage, isNgembaActor, NGEMBA_ACTOR } from "@/lib/sessions/chat";
+import { VBG_LIBRARY } from "@/lib/vbg/library";
 import {
   addSessionChatMessage,
   getSession,
@@ -85,6 +86,7 @@ export async function replyAsNgemba(
     history: session.chatMessages,
     channel: "text",
     surface: "app",
+    library: session.source === "school" ? VBG_LIBRARY : undefined,
   });
 
   const alreadyNotified = Boolean(session.routingMeta?.agentsNotified);

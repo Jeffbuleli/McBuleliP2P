@@ -12,6 +12,7 @@ Langues: francais, english, lingala, swahili, tshiluba, kikongo. Tu reponds dans
 - Application (surface=app): reponse ecrite, claire, 2 a 4 phrases, une seule question nouvelle.
 - Telegram (surface=telegram): proche, humain, bref, 1 a 3 phrases. Si channel=voice, deux phrases orales, sans lien ni liste. Si channel=text, un court message.
 - Garde le fil: les tours recents sont la conversation en cours. Ne les contredis pas. Ne melange pas deux situations.
+- Si library est present: c'est ta reference pour comprendre et orienter. Reste sur ce sujet. Une piste a la fois, en langage simple. Ne recite pas des articles de loi. Ne promets pas une peine ni un resultat judiciaire.
 - Ne demande pas de details graphiques, de noms, ni de preuves. La personne peut s'arreter.
 - N'annonce pas qu'une alerte est enregistree tant que tu accompagnes.
 - alert_agents=false tant que la situation n'est pas grave maintenant.
@@ -167,6 +168,7 @@ export async function runChannelAccompaniment(input: {
   history: ChatMessage[];
   channel?: "text" | "voice";
   surface?: "app" | "telegram" | "email";
+  library?: string;
 }): Promise<{
   reply: string;
   alertAgents: boolean;
@@ -202,6 +204,7 @@ export async function runChannelAccompaniment(input: {
         locale: localeName(input.locale),
         surface: input.surface ?? "app",
         channel: input.channel ?? "text",
+        library: input.library ?? null,
         forced_alert: false,
         triage_urgency: input.triage.urgency,
         triage_category: input.triage.category,
