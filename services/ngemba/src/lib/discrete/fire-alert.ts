@@ -1,7 +1,7 @@
 "use client";
 
 import { vibrateDiscreteConfirm } from "@/lib/discrete/vibrate";
-import { readPrecisePosition } from "@/lib/location/precise-gps";
+import { trackPrecisePosition } from "@/lib/location/precise-gps";
 import { readLocalTrustedContacts } from "@/lib/trusted-contacts/client-store";
 
 export type DiscreteFireResult =
@@ -16,10 +16,11 @@ export async function fireDiscretePanicAlert(input: {
   locale: string;
 }): Promise<DiscreteFireResult> {
   const trustedContacts = readLocalTrustedContacts();
-  const pos = await readPrecisePosition({
-    maxWaitMs: 10_000,
-    goodEnoughM: 40,
-  });
+  // Démarre dans le geste. L'autorisation peut arriver après l'envoi du dossier.
+  const track = trackPrecisePosition({ maxWaitMs: 45_000, goodEnoughM: 40 });
+  await new Promise((resolve) => setTimeout(resolve, 2500));
+  const first = track.best();
+  const sent = first && first.accuracyM <= 1000 ? first : null;
 
   try {
     const res = await fetch("/api/alerts", {
@@ -31,20 +32,37 @@ export async function fireDiscretePanicAlert(input: {
         locale: input.locale,
         source: "shake",
         discrete: true,
-        shareLocation: Boolean(pos),
-        lat: pos?.lat ?? null,
-        lng: pos?.lng ?? null,
-        accuracyM: pos?.accuracyM ?? null,
+        shareLocation: Boolean(sent),
+        lat: sent?.lat ?? null,
+        lng: sent?.lng ?? null,
+        accuracyM: sent?.accuracyM ?? null,
         trustedContacts,
       }),
     });
     const data = (await res.json().catch(() => ({}))) as { id?: string };
     if (!res.ok || !data.id) {
+      track.stop();
       return { ok: false, error: "create_failed" };
     }
+    const id = data.id;
+    void track.done.then((fix) => {
+      if (!fix || fix.accuracyM > 1000) return;
+      if (sent && fix.accuracyM >= sent.accuracyM) return;
+      void fetch(`/api/alerts/${id}/location`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lat: fix.lat,
+          lng: fix.lng,
+          accuracyM: fix.accuracyM,
+        }),
+      });
+    });
     vibrateDiscreteConfirm();
-    return { ok: true, id: data.id };
+    return { ok: true, id };
   } catch {
+    track.stop();
     return { ok: false, error: "network" };
   }
 }
