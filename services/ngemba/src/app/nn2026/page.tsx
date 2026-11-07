@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 const VIDEO =
-  "https://media.cyberalert-rdc.org/ngemba/nn2026/presentation.mp4";
+  "https://media.cyberalert-rdc.org/ngemba/nn2026/presentation-1080p.mp4";
 const POSTER =
-  "https://media.cyberalert-rdc.org/ngemba/nn2026/poster.png";
+  "https://media.cyberalert-rdc.org/ngemba/nn2026/poster-1080p.jpg";
 
 export const metadata: Metadata = {
   title: "Ngemba — présentation",
@@ -40,8 +40,7 @@ export default function PresentationPage() {
           <a href={VIDEO}>Voir la présentation</a>
         </video>
         <p className="mt-3 text-xs text-[#5c6b63]">
-          Deux minutes cinquante. Voix ElevenLabs. Écrans de
-          l&apos;application.
+          Deux minutes vingt-huit. La présentation du jury.
         </p>
       </div>
     </main>
