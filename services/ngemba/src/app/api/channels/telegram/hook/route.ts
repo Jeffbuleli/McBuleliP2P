@@ -91,6 +91,9 @@ export async function POST(req: Request) {
   } else if (reply) {
     await telegramSendMessage(chat, reply);
   }
+  if (result.handoffText) {
+    await telegramSendMessage(chat, result.handoffText);
+  }
 
   return NextResponse.json({ ok: true });
 }

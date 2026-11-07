@@ -201,6 +201,19 @@ export function createSession(
   return record;
 }
 
+/** Jeton citoyen du dossier. Créé une fois, pour ouvrir le même chat depuis Telegram. */
+export function ensureSessionCitizenToken(id: string): string | null {
+  const map = ensureLoaded();
+  const current = map.get(id);
+  if (!current) return null;
+  if (current.citizenToken) return current.citizenToken;
+  const next = { ...normalizeRecord(current), citizenToken: randomUUID() };
+  map.set(id, next);
+  persist();
+  dualWrite(next);
+  return next.citizenToken;
+}
+
 export function getSession(id: string): AlertSessionRecord | null {
   if (sessionPrimary() === "postgres") {
     // Sync path cannot await - warm from JSON; async helper for routes

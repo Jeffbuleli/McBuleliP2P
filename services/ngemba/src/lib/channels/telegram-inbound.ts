@@ -1,10 +1,17 @@
 import { runTriage } from "@/lib/ai/triage";
 import { resolveReplyLocale } from "@/lib/channels/reply-locale";
 import { runChannelAccompaniment } from "@/lib/channels/accompaniment-chat";
+import { newCitizenToken } from "@/lib/citizen/token";
+import {
+  handoffLink,
+  holdReply,
+  telegramAppChatUrl,
+} from "@/lib/channels/telegram-join";
 import { createChatMessage, citizenTurnCount, NGEMBA_ACTOR, THREAD_USER_LIMIT } from "@/lib/sessions/chat";
 import {
   addSessionChatMessage,
   createSession,
+  ensureSessionCitizenToken,
   getSession,
   listSessions,
   patchSessionAiState,
@@ -29,6 +36,8 @@ export type TelegramInboundResult = {
   created: boolean;
   telegramChatId: string;
   replies: Array<{ body: string; role: "assistant" }>;
+  /** Texte séparé, avec le lien vers le même chat dans l'application. */
+  handoffText: string | null;
   suggestHumanHandoff: boolean;
   urgency: AlertSessionRecord["urgency"];
 };
@@ -77,7 +86,43 @@ export async function handleTelegramInbound(
       created: false,
       telegramChatId: input.telegramChatId,
       replies: [],
+      handoffText: null,
       suggestHumanHandoff: Boolean(session.aiPayload?.engine_human_required),
+      urgency: session.urgency,
+    };
+  }
+
+  const localeEarly = resolveReplyLocale(text, session?.locale ?? input.locale);
+  if (
+    session &&
+    session.routingMeta?.accompanimentPhase === "awaiting_operator" &&
+    session.routingMeta?.agentsNotified
+  ) {
+    addSessionChatMessage(
+      session.id,
+      createChatMessage({ role: "citizen", body: text }),
+    );
+    const token = ensureSessionCitizenToken(session.id);
+    const note = holdReply(localeEarly);
+    addSessionChatMessage(
+      session.id,
+      createChatMessage({ role: "operator", body: note, actor: NGEMBA_ACTOR }),
+    );
+    patchSessionAiState(session.id, {
+      routingMeta: {
+        ...(getSession(session.id)?.routingMeta ?? session.routingMeta),
+        lastInboundIdempotencyKey: input.idempotencyKey,
+      },
+    });
+    return {
+      sessionId: session.id,
+      created: false,
+      telegramChatId: input.telegramChatId,
+      replies: [{ body: note, role: "assistant" }],
+      handoffText: token
+        ? handoffLink(localeEarly, telegramAppChatUrl(session.id, token))
+        : null,
+      suggestHumanHandoff: true,
       urgency: session.urgency,
     };
   }
@@ -133,6 +178,7 @@ export async function handleTelegramInbound(
       routingMeta,
       slaDueAt: computeSlaDueAt(createdAt, triageRun.triage.urgency),
       chatMessages: [createChatMessage({ role: "citizen", body: text })],
+      citizenToken: newCitizenToken(),
     });
     created = true;
   } else {
@@ -215,11 +261,23 @@ export async function handleTelegramInbound(
     createChatMessage({ role: "operator", body: replyBody, actor: NGEMBA_ACTOR }),
   );
 
+  let handoffText: string | null = null;
+  if (decision.alertAgents) {
+    const token = ensureSessionCitizenToken(session.id);
+    if (token) {
+      handoffText = handoffLink(
+        decision.locale,
+        telegramAppChatUrl(session.id, token),
+      );
+    }
+  }
+
   return {
     sessionId: session.id,
     created,
     telegramChatId: input.telegramChatId,
     replies: [{ body: replyBody, role: "assistant" }],
+    handoffText,
     suggestHumanHandoff: decision.alertAgents,
     urgency: triageRun.triage.urgency,
   };

@@ -133,6 +133,8 @@ async function sendOpsEmail(session: AlertSessionRecord) {
     body:
       `Ngemba a écouté et vous passe la main. ${dutyLine(session)} ` +
       "Ouvrez le dossier, lisez le résumé, puis répondez dans le chat. " +
+      "Si la personne est sur Telegram, votre texte lui arrive dans le bot, " +
+      "et elle a le lien du même chat dans l'application. " +
       "Les organisations pilotes ne sont pas prévenues.",
     tone: session.discreteMode ? "critical" : tone,
     badge: session.discreteMode ? "DANGER EXTRÊME" : urgency,

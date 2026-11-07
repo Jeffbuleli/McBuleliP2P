@@ -773,6 +773,13 @@ export function OpsDossierView({ id }: { id: string }) {
         </div>
 
         <div className="space-y-4">
+      {session.routingMeta?.primaryChannel === "telegram" ? (
+        <p className="rounded-xl border border-[var(--ng-border)] bg-ng-primary-muted px-3 py-2 text-xs text-ng-primary">
+          Cette personne est sur Telegram. Ce que vous écrivez ici lui arrive
+          dans le bot. Le lien qu'elle a reçu ouvre ce même chat dans
+          l'application.
+        </p>
+      ) : null}
       <SessionChat
         sessionId={session.id}
         viewerRole="operator"

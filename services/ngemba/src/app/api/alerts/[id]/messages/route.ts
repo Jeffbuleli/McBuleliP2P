@@ -6,6 +6,7 @@ import { emitOpsEvent } from "@/lib/ops/events";
 import { addSessionChatMessage, getSession } from "@/lib/sessions/store";
 import { citizenTurnCount, createChatMessage, THREAD_USER_LIMIT } from "@/lib/sessions/chat";
 import { replyAsNgemba } from "@/lib/channels/web-chat";
+import { telegramSendMessage } from "@/lib/channels/telegram-reply";
 import { clientIp, rateLimit, rateLimitResponse } from "@/lib/security/rate-limit";
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -135,6 +136,15 @@ export async function POST(req: Request, ctx: Ctx) {
   if (message.role === "citizen") {
     const withAi = await replyAsNgemba(updated);
     return NextResponse.json({ message, messages: withAi.chatMessages });
+  }
+
+  const telegramChatId = updated.routingMeta?.telegramChatId;
+  if (telegramChatId && caption) {
+    const who = message.actor?.split("·")[0]?.trim() || "Équipe NGEMBA";
+    void telegramSendMessage(
+      telegramChatId,
+      `${who}, équipe NGEMBA\n\n${caption}`,
+    );
   }
 
   return NextResponse.json({ message, messages: updated.chatMessages });
