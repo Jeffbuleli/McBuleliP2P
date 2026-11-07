@@ -85,6 +85,8 @@ type Session = {
       lng: number | null;
       source: string;
     } | null;
+    primaryChannel?: "app" | "telegram" | "email" | null;
+    telegramChatId?: string | null;
   } | null;
   schoolContext?: {
     concernType: string;
