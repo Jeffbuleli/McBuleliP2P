@@ -1,4 +1,5 @@
-import { anthropicKey, claudeText, parseJsonObject } from "@/lib/ai/claude";
+import { parseJsonObject } from "@/lib/ai/claude";
+import { openaiKey, openaiText } from "@/lib/ai/openai";
 import { readEnvKey } from "@/lib/env";
 import type { Locale } from "@/lib/i18n";
 import { getYouthScenario, type YouthScenarioId } from "@/lib/youth/scenarios";
@@ -45,7 +46,7 @@ export async function runYouthChat(input: {
   scenarioId: YouthScenarioId;
   locale: Locale;
   history: ChatTurn[];
-}): Promise<{ reply: string; suggestSos: boolean; provider: "anthropic" | "local" }> {
+}): Promise<{ reply: string; suggestSos: boolean; provider: "openai" | "local" }> {
   const scenario = getYouthScenario(input.scenarioId);
   const lastUser = [...input.history].reverse().find((m) => m.role === "user");
   const suggestSosLocal = lastUser
@@ -53,7 +54,7 @@ export async function runYouthChat(input: {
     : false;
 
   const mode = (readEnvKey("NGEMBA_AI_MODE") || "hybrid").toLowerCase();
-  if (!anthropicKey() || mode === "local") {
+  if (!openaiKey() || mode === "local") {
     return {
       reply: fallbackReply(input.locale, suggestSosLocal),
       suggestSos: suggestSosLocal,
@@ -62,7 +63,7 @@ export async function runYouthChat(input: {
   }
 
   try {
-    const raw = await claudeText({
+    const raw = await openaiText({
       system: `${YOUTH_SYSTEM_PROMPT}\nReponds uniquement en JSON.`,
       user: JSON.stringify({
         locale: input.locale,
@@ -81,7 +82,7 @@ export async function runYouthChat(input: {
           ? parsed.reply.trim()
           : fallbackReply(input.locale, suggestSosLocal),
       suggestSos: Boolean(parsed?.suggest_sos) || suggestSosLocal,
-      provider: "anthropic",
+      provider: "openai",
     };
   } catch {
     return {

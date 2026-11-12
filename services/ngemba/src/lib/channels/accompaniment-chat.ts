@@ -1,5 +1,5 @@
 import { resolveAiMode } from "@/lib/ai/triage";
-import { anthropicKey, claudeText } from "@/lib/ai/claude";
+import { openaiKey, openaiText } from "@/lib/ai/openai";
 import type { TriageResult } from "@/lib/ai/triage-schema";
 import { englishLeak } from "@/lib/channels/reply-locale";
 import { isLocale, type Locale } from "@/lib/i18n";
@@ -172,7 +172,7 @@ export async function runChannelAccompaniment(input: {
 }): Promise<{
   reply: string;
   alertAgents: boolean;
-  provider: "anthropic" | "local";
+  provider: "openai" | "local";
   locale: Locale;
 }> {
   const asked = ASK_AGENT.test(input.userMessage);
@@ -186,7 +186,7 @@ export async function runChannelAccompaniment(input: {
   }
 
   const mode = resolveAiMode();
-  if (!anthropicKey() || mode === "local") {
+  if (!openaiKey() || mode === "local") {
     return {
       reply: adviceReply(input.locale, input.triage, input.history),
       alertAgents: false,
@@ -198,7 +198,7 @@ export async function runChannelAccompaniment(input: {
   const turns = threadTurns(input.history);
 
   try {
-    const raw = await claudeText({
+    const raw = await openaiText({
       system: SYSTEM,
       user: JSON.stringify({
         locale: localeName(input.locale),
@@ -224,7 +224,7 @@ export async function runChannelAccompaniment(input: {
         ...parsed,
         reply: asNgemba(parsed.reply),
         locale: spoken,
-        provider: "anthropic",
+        provider: "openai",
       };
     }
     const prose = raw && !raw.trim().startsWith("{") ? raw.trim() : "";
@@ -232,7 +232,7 @@ export async function runChannelAccompaniment(input: {
       return {
         reply: prose,
         alertAgents: false,
-        provider: "anthropic",
+        provider: "openai",
         locale: input.locale,
       };
     }

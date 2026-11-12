@@ -1,6 +1,7 @@
 import { readEnvKey } from "@/lib/env";
 import { localTriage } from "@/lib/ai/local-triage";
-import { anthropicKey, claudeText, parseJsonObject } from "@/lib/ai/claude";
+import { parseJsonObject } from "@/lib/ai/claude";
+import { openaiKey, openaiText } from "@/lib/ai/openai";
 import {
   TRIAGE_PROMPT_VERSION,
   TRIAGE_SYSTEM_PROMPT,
@@ -25,8 +26,7 @@ export type AiMode = "local" | "hybrid" | "openai";
 export function resolveAiMode(): AiMode {
   const raw = (readEnvKey("NGEMBA_AI_MODE") || "").toLowerCase();
   if (raw === "local" || raw === "hybrid" || raw === "openai") return raw;
-  const key = anthropicKey();
-  return key ? "hybrid" : "local";
+  return openaiKey() ? "hybrid" : "local";
 }
 
 const OPENAI_MAX_TOKENS = Number(
@@ -44,14 +44,14 @@ export type TriageRunResult = {
   decision: ResponseDecision;
   /** Compat Phase 1. */
   routing: { queue: ResponseDecision["queue"]; autoRoute: boolean };
-  provider: "anthropic" | "local";
+  provider: "openai" | "local";
   aiMode: AiMode;
   promptVersion: string;
 };
 
 function withEngine(
   triage: TriageResult,
-  provider: "anthropic" | "local",
+  provider: "openai" | "local",
   aiMode: AiMode,
   source: string,
 ): TriageRunResult {
@@ -95,8 +95,7 @@ export async function runTriage(input: {
     return withEngine(localResult, "local", mode, input.source);
   }
 
-  const key = anthropicKey();
-  if (!key) {
+  if (!openaiKey()) {
     return withEngine(localResult, "local", mode, input.source);
   }
 
@@ -106,7 +105,7 @@ export async function runTriage(input: {
         ? `[Citizen sent audio and/or photos without written text. Orient for human review. Do not invent facts. Locale=${input.locale}; source=${input.source}]`
         : input.message.slice(0, 500);
 
-    const raw = await claudeText({
+    const raw = await openaiText({
       system: `${TRIAGE_SYSTEM_PROMPT}\nReponds uniquement par un objet JSON, sans markdown.`,
       user: JSON.stringify({
         locale: input.locale,
@@ -130,7 +129,7 @@ export async function runTriage(input: {
       return withEngine(localResult, "local", mode, input.source);
     }
 
-    return withEngine(parsed.data, "anthropic", mode, input.source);
+    return withEngine(parsed.data, "openai", mode, input.source);
   } catch {
     return withEngine(localResult, "local", mode, input.source);
   }

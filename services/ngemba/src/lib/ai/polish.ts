@@ -1,5 +1,5 @@
 import { resolveAiMode } from "@/lib/ai/triage";
-import { anthropicKey, claudeText } from "@/lib/ai/claude";
+import { openaiKey, openaiText } from "@/lib/ai/openai";
 
 const POLISH_MAX_CHARS = 500;
 const POLISH_MAX_TOKENS = 400;
@@ -13,20 +13,20 @@ const POLISH_SYSTEM = `Tu es Ngemba. Tu reformules le texte d'une personne avant
 export async function polishCitizenText(input: {
   text: string;
   locale: string;
-}): Promise<{ text: string; provider: "anthropic" | "local" }> {
+}): Promise<{ text: string; provider: "openai" | "local" }> {
   const trimmed = input.text.trim().slice(0, POLISH_MAX_CHARS);
   if (trimmed.length < 3) {
     return { text: input.text, provider: "local" };
   }
 
   const mode = resolveAiMode();
-  if (mode === "local" || !anthropicKey()) {
+  if (mode === "local" || !openaiKey()) {
     return { text: trimmed, provider: "local" };
   }
 
   try {
     const out = (
-      (await claudeText({
+      (await openaiText({
         system: POLISH_SYSTEM,
         user: JSON.stringify({ locale: input.locale, text: trimmed }),
         maxTokens: POLISH_MAX_TOKENS,
@@ -35,7 +35,7 @@ export async function polishCitizenText(input: {
     if (!out || out.length < 2) {
       return { text: trimmed, provider: "local" };
     }
-    return { text: out.slice(0, POLISH_MAX_CHARS), provider: "anthropic" };
+    return { text: out.slice(0, POLISH_MAX_CHARS), provider: "openai" };
   } catch {
     return { text: trimmed, provider: "local" };
   }
