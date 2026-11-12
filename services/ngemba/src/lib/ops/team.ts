@@ -38,6 +38,11 @@ export const JURY_TEAM: JuryMember[] = [
   },
 ];
 
+/** Après le hackathon, seul Jeff reçoit les alertes par courriel. */
+const ALERT_EMAIL_IDS = new Set(["jeff"]);
+
 export function juryEmails(): string[] {
-  return JURY_TEAM.map((member) => member.email);
+  return JURY_TEAM.filter((member) => ALERT_EMAIL_IDS.has(member.id)).map(
+    (member) => member.email,
+  );
 }

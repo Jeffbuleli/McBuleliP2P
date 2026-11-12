@@ -35,28 +35,8 @@ function opsEmails(): string[] {
   return [...new Set([...juryEmails(), ...extra])];
 }
 
-function dutyLine(session: AlertSessionRecord): string {
-  if (
-    session.immediateDanger ||
-    session.urgency === "critical" ||
-    session.source === "sos_button" ||
-    session.source === "shake" ||
-    session.discreteMode
-  ) {
-    return "Joyce Dahudi prend ce danger immédiat. Jeff Buleli confirme.";
-  }
-  if (session.source === "witness") {
-    return "Timothée S. prend ce témoignage. Jeff Buleli confirme.";
-  }
-  if (
-    session.source === "school" ||
-    ["vbg", "sexual_violence", "domestic_violence", "child_danger", "harassment"].includes(
-      session.category,
-    )
-  ) {
-    return "Jérémie Kimbiya prend cette protection. Jeff Buleli confirme.";
-  }
-  return "Jeff Buleli coordonne. L'équipe ouvre le dossier et répond dans le chat.";
+function dutyLine(_session: AlertSessionRecord): string {
+  return "Jeff Buleli ouvre le dossier et répond dans le chat.";
 }
 
 function opsBccEmails(): string[] {
