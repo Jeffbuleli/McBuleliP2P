@@ -15,6 +15,7 @@ const bodySchema = z
   .object({
     body: z.string().trim().max(2000).optional().default(""),
     mediaId: z.string().uuid().optional(),
+    as: z.enum(["citizen", "operator"]).optional(),
   })
   .refine((d) => Boolean(d.body?.length) || Boolean(d.mediaId), {
     message: "body_or_media_required",
@@ -96,8 +97,12 @@ export async function POST(req: Request, ctx: Ctx) {
   }
 
   const auth = await requireOpsAuth(req);
+  const opsOk = !(auth instanceof NextResponse);
+  const citizen = await readCitizenToken();
+  const citizenMatch = Boolean(citizen && session.citizenToken === citizen);
+  const asOperator = parsed.data.as === "operator" && opsOk;
   let message;
-  if (!(auth instanceof NextResponse)) {
+  if (asOperator && !(auth instanceof NextResponse)) {
     message = createChatMessage({
       role: "operator",
       body: caption,
@@ -106,9 +111,8 @@ export async function POST(req: Request, ctx: Ctx) {
       mediaKind,
       mediaFileName,
     });
-  } else {
-    const citizen = await readCitizenToken();
-    if (!citizen || session.citizenToken !== citizen) {
+  } else if (citizenMatch || !opsOk) {
+    if (!citizenMatch) {
       return NextResponse.json({ error: "forbidden" }, { status: 403 });
     }
     if (citizenTurnCount(session.chatMessages) >= THREAD_USER_LIMIT) {
@@ -124,6 +128,17 @@ export async function POST(req: Request, ctx: Ctx) {
       mediaKind,
       mediaFileName,
     });
+  } else if (!(auth instanceof NextResponse)) {
+    message = createChatMessage({
+      role: "operator",
+      body: caption,
+      actor: formatOpsActorLabel(auth.actor),
+      mediaId,
+      mediaKind,
+      mediaFileName,
+    });
+  } else {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
   const updated = addSessionChatMessage(id, message);

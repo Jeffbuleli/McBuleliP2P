@@ -206,6 +206,7 @@ export function SessionChat({
         body: JSON.stringify({
           body: messageBody,
           mediaId,
+          as: viewerRole === "operator" ? "operator" : "citizen",
         }),
       });
       const data = await res.json().catch(() => ({}));
