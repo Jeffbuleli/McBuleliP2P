@@ -79,9 +79,7 @@ const VBG: Record<string, VbgCopy> = {
 export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
   const { href, locale } = useCitizenLocale(initialLocale);
   const copy = VBG[locale] ?? VBG.fr;
-  const [messages, setMessages] = useState<Bubble[]>([
-    { id: "hello", role: "assistant", content: (VBG[initialLocale ?? "fr"] ?? VBG.fr).greeting },
-  ]);
+  const [messages, setMessages] = useState<Bubble[]>([]);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -107,14 +105,6 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, busy]);
-
-  useEffect(() => {
-    setMessages((prev) =>
-      prev.length === 1 && prev[0]?.id === "hello"
-        ? [{ ...prev[0], content: copy.greeting }]
-        : prev,
-    );
-  }, [copy.greeting]);
 
   async function deviceFix(): Promise<PreciseFix | null> {
     const fix = await Promise.race([
@@ -305,7 +295,12 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
             {copy.writing}
           </p>
         ) : null}
-        {messages.length === 1 ? (
+        {messages.length === 0 ? (
+          <div className="max-w-[88%] rounded-2xl rounded-bl-md border border-white/10 bg-white/10 px-3.5 py-2.5 text-[13px] leading-relaxed text-stone-100">
+            <p className="whitespace-pre-wrap">{copy.greeting}</p>
+          </div>
+        ) : null}
+        {messages.length === 0 ? (
           <div className="flex flex-wrap gap-2 pt-2">
             {copy.starters.map((label) => (
               <button

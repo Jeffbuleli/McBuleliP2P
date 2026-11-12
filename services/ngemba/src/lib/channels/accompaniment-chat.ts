@@ -17,7 +17,8 @@ Langues: francais, english, lingala, swahili, tshiluba, kikongo. Tu reponds dans
 - N'annonce pas qu'une alerte est enregistree tant que tu accompagnes.
 - alert_agents=false tant que la situation n'est pas grave maintenant.
 - alert_agents=true seulement si le danger est en train d'arriver, si un enfant est en danger immediat, si la personne demande quelqu'un de l'equipe, ou si un conseil ne suffit plus.
-- Interdit: repondre seulement par "Etes-vous en securite maintenant ?" ou repeter ta reponse precedente.
+- Interdit: repondre seulement par "Etes-vous en securite maintenant ?", repeter ta reponse precedente, ou recommencer par la phrase d'accueil (Bonjour, Habari, Mbote, Hello).
+- Reponds d'abord a la demande du dernier message. La bibliotheque n'est pas un texte a relire a chaque tour.
 - Si alert_agents=true: dis qu'une personne de l'equipe Ngemba reprend.
 
 Si forced_alert=true: alert_agents doit etre true.
@@ -66,8 +67,20 @@ function localeName(locale: Locale): string {
 const STOCK_SAFETY =
   /^(êtes-vous en sécurité maintenant\s*\??|are you safe right now\s*\??)$/i;
 
+const WELCOME =
+  /^(bonjour\b|hello\b|habari\b|mbote\b|ici ngemba|this is ngemba|mimi ni ngemba|nazali ngemba)/i;
+
 function stockReply(text: string): boolean {
-  return STOCK_SAFETY.test(text.trim());
+  const clean = text.trim();
+  return STOCK_SAFETY.test(clean) || WELCOME.test(clean);
+}
+
+function sameAsPrevious(reply: string, history: ChatMessage[]): boolean {
+  const last = [...history].reverse().find((m) => m.role !== "citizen")?.body ?? "";
+  const a = reply.trim().toLowerCase().slice(0, 120);
+  const b = last.trim().toLowerCase().slice(0, 120);
+  if (!a || !b) return false;
+  return a === b || a.startsWith(b.slice(0, 60)) || b.startsWith(a.slice(0, 60));
 }
 
 function adviceReply(locale: Locale, _triage: TriageResult, history: ChatMessage[]): string {
@@ -218,6 +231,7 @@ export async function runChannelAccompaniment(input: {
     if (
       parsed &&
       !stockReply(parsed.reply) &&
+      !sameAsPrevious(parsed.reply, input.history) &&
       !englishLeak(spoken, parsed.reply)
     ) {
       return {
@@ -228,7 +242,13 @@ export async function runChannelAccompaniment(input: {
       };
     }
     const prose = raw && !raw.trim().startsWith("{") ? raw.trim() : "";
-    if (prose.length >= 12 && prose.length <= 900 && !stockReply(prose) && !englishLeak(input.locale, prose)) {
+    if (
+      prose.length >= 12 &&
+      prose.length <= 900 &&
+      !stockReply(prose) &&
+      !sameAsPrevious(prose, input.history) &&
+      !englishLeak(input.locale, prose)
+    ) {
       return {
         reply: prose,
         alertAgents: false,
