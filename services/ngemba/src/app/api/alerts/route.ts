@@ -31,6 +31,7 @@ import { clientIp, rateLimit, rateLimitResponse } from "@/lib/security/rate-limi
 import { createSession, getSession, listSessions } from "@/lib/sessions/store";
 import { createChatMessage, NGEMBA_ACTOR } from "@/lib/sessions/chat";
 import { trustOpening } from "@/lib/channels/trust-reply";
+import { replyAsNgemba } from "@/lib/channels/web-chat";
 import {
   sanitizeCitizenSession,
   sanitizeOpsSessionForActor,
@@ -303,15 +304,19 @@ export async function POST(req: Request) {
       ...(body.message.trim() !== "·"
         ? [createChatMessage({ role: "citizen", body: body.message.trim() })]
         : []),
-      createChatMessage({
-        role: "operator",
-        actor: NGEMBA_ACTOR,
-        body: trustOpening({
-          locale,
-          source: body.source,
-          humanNow,
-        }),
-      }),
+      ...(body.source === "school"
+        ? []
+        : [
+            createChatMessage({
+              role: "operator",
+              actor: NGEMBA_ACTOR,
+              body: trustOpening({
+                locale,
+                source: body.source,
+                humanNow,
+              }),
+            }),
+          ]),
     ],
   });
 
@@ -329,6 +334,9 @@ export async function POST(req: Request) {
 
   if (humanNow) {
     await notifyNewAlert(session);
+  }
+  if (body.source === "school" && body.message.trim() && body.message.trim() !== "·") {
+    await replyAsNgemba(getSession(session.id) ?? session);
   }
   if (discreteExtreme && trustedContacts.length > 0) {
     // Exception philo proches : danger extrême / mode discret → alerte auto cercle B.

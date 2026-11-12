@@ -202,6 +202,7 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
         );
       }
       const shouldPost = alreadyOpen || Boolean(file);
+      let listed: { messages?: Array<{ id?: string; role?: string; body?: string }> } = {};
       if (shouldPost && body) {
         const res = await fetch(`/api/alerts/${id}/messages`, {
           method: "POST",
@@ -216,36 +217,21 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
           );
           return;
         }
-        const reply = [...(data.messages ?? [])]
-          .reverse()
-          .find(
-            (m: { actor?: string; body?: string }) =>
-              (m.actor === "Ngemba" || m.actor === "McBuleli IA") && m.body,
-          );
-        if (reply?.body) {
-          setMessages((prev) => [
-            ...prev,
-            { id: `a-${Date.now()}`, role: "assistant", content: reply.body },
-          ]);
-        }
+        listed = data;
       } else {
-        const listed = await fetch(`/api/alerts/${id}/messages`, {
+        const res = await fetch(`/api/alerts/${id}/messages`, {
           credentials: "include",
         });
-        const data = await listed.json().catch(() => ({}));
-        const ai = [...(data.messages ?? [])]
-          .reverse()
-          .find(
-            (m: { actor?: string; body?: string }) =>
-              (m.actor === "Ngemba" || m.actor === "McBuleli IA") && m.body,
-          );
-        if (ai?.body) {
-          setMessages((prev) => [
-            ...prev,
-            { id: `a-${Date.now()}`, role: "assistant", content: ai.body },
-          ]);
-        }
+        listed = await res.json().catch(() => ({}));
       }
+      const next = (listed.messages ?? [])
+        .filter((m) => typeof m.body === "string" && m.body.trim())
+        .map((m) => ({
+          id: m.id || `m-${m.role}`,
+          role: (m.role === "citizen" ? "user" : "assistant") as "user" | "assistant",
+          content: m.body!.trim(),
+        }));
+      if (next.length) setMessages(next);
     } catch {
       setError("Connexion interrompue.");
     } finally {
