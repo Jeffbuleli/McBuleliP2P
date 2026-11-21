@@ -1,252 +1,232 @@
 "use client";
 
 import { useState } from "react";
-import {
-  DRC_PROVINCES,
-  TRAVEL_AGENCIES,
-  type LeadTier,
-  type TravelAgency,
-} from "@/lib/leads/travel-agencies";
-
-const TIER_LABEL: Record<LeadTier, string> = {
-  A: "Complet",
-  B: "Joignable",
-  C: "À compléter",
-};
-
-function join(values: string[]): string {
-  return values.length ? values.join(" · ") : "—";
-}
+import Image from "next/image";
+import Link from "next/link";
+import { PROVINCES, TRAVEL_AGENCIES, type ProvinceId, type TravelAgency } from "@/lib/leads/travel-agencies";
 
 export function AgencesBoard() {
-  const [province, setProvince] = useState<(typeof DRC_PROVINCES)[number]>("Kinshasa");
+  const [province, setProvince] = useState<ProvinceId>("Kinshasa");
   const [commune, setCommune] = useState("Toutes");
-  const [tier, setTier] = useState<"Tous" | LeadTier>("Tous");
   const [query, setQuery] = useState("");
 
   const inProvince = TRAVEL_AGENCIES.filter((row) => row.province === province);
-  const communes = ["Toutes", ...Array.from(new Set(inProvince.map((row) => row.commune))).sort()];
-
+  const communes = ["Toutes", ...Array.from(new Set(inProvince.map((row) => row.commune))).sort((a, b) => a.localeCompare(b, "fr"))];
   const q = query.trim().toLowerCase();
-  const rows = inProvince
-    .filter((row) => (commune === "Toutes" ? true : row.commune === commune))
-    .filter((row) => (tier === "Tous" ? true : row.tier === tier))
-    .filter((row) => {
-      if (!q) return true;
-      const blob = [
-        row.name,
-        row.activity,
-        row.address,
-        row.commune,
-        row.representative ?? "",
-        ...row.phones,
-        ...row.emails,
-      ]
-        .join(" ")
-        .toLowerCase();
-      return blob.includes(q);
-    })
-    .sort((a, b) => a.commune.localeCompare(b.commune, "fr") || a.name.localeCompare(b.name, "fr"));
+  const rows = inProvince.filter((row) => {
+    if (commune !== "Toutes" && row.commune !== commune) return false;
+    if (!q) return true;
+    return [row.name, row.activity, row.address, row.commune, ...row.phones, ...row.emails].join(" ").toLowerCase().includes(q);
+  });
 
-  const counts = {
-    total: inProvince.length,
-    complete: inProvince.filter((row) => row.tier === "A").length,
-    gombe: inProvince.filter((row) => row.commune === "Gombe").length,
-  };
+  const groups = communes
+    .filter((name) => name !== "Toutes")
+    .map((name) => ({ name, rows: rows.filter((row) => row.commune === name) }))
+    .filter((group) => group.rows.length > 0);
 
   return (
-    <div>
-      <div className="flex gap-2 overflow-x-auto pb-2">
-        {DRC_PROVINCES.map((name) => {
-          const n = TRAVEL_AGENCIES.filter((row) => row.province === name).length;
-          const active = name === province;
-          return (
-            <button
-              key={name}
-              type="button"
-              onClick={() => {
-                setProvince(name);
-                setCommune("Toutes");
-              }}
-              className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold ${
-                active
-                  ? "border-[#305F33] bg-[#305F33] text-white"
-                  : "border-stone-200 bg-white text-stone-600"
-              }`}
-            >
-              {name}
-              <span className={active ? "text-white/80" : "text-stone-400"}> · {n || "—"}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      {inProvince.length === 0 ? (
-        <p className="mt-8 rounded-2xl border border-dashed border-stone-300 bg-white px-4 py-8 text-center text-sm text-stone-600">
-          {province} n&apos;est pas encore scanné. La première vague est Kinshasa.
-        </p>
-      ) : (
-        <>
-          <div className="mt-4 grid grid-cols-3 gap-2">
-            <Stat label="Fiches" value={String(counts.total)} />
-            <Stat label="Contact complet" value={String(counts.complete)} />
-            <Stat label="Gombe" value={String(counts.gombe)} />
+    <div className="min-h-dvh bg-[#f4f1ea] text-stone-900">
+      <header className="relative overflow-hidden bg-[#16351c] text-white">
+        <RouteLines />
+        <div className="relative mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
+          <Link href="/" className="flex items-center gap-2">
+            <Image src="/brand/logo-256.png" alt="" width={32} height={32} className="h-8 w-8 rounded-full" />
+            <span className="text-sm font-extrabold">McBuleli</span>
+          </Link>
+          <Link href="/" className="text-xs font-semibold text-white/80 hover:text-white">
+            Accueil
+          </Link>
+        </div>
+        <div className="relative mx-auto max-w-6xl px-4 pb-8 pt-2">
+          <div className="flex items-center gap-3">
+            <span className="grid h-12 w-12 place-items-center rounded-2xl bg-white/10">
+              <PlaneIcon />
+            </span>
+            <div>
+              <h1 className="text-3xl font-black tracking-tight">Agences</h1>
+              <p className="text-sm text-white/70">{TRAVEL_AGENCIES.length} bureaux</p>
+            </div>
           </div>
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            {PROVINCES.map((item) => {
+              const count = TRAVEL_AGENCIES.filter((row) => row.province === item.id).length;
+              const active = item.id === province;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => {
+                    setProvince(item.id);
+                    setCommune("Toutes");
+                  }}
+                  className={`flex items-center justify-between rounded-2xl border px-4 py-4 text-left ${
+                    active ? "border-white bg-white text-[#16351c]" : "border-white/15 bg-white/5 text-white"
+                  }`}
+                >
+                  <span className="flex items-center gap-3">
+                    <PinIcon className={active ? "text-[#16351c]" : "text-white"} />
+                    <span className="text-lg font-black">{item.label}</span>
+                  </span>
+                  <span className={`text-2xl font-black ${active ? "text-[#305F33]" : "text-white/80"}`}>{count}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </header>
 
-          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+      <main className="mx-auto max-w-6xl px-4 py-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <label className="flex min-w-0 flex-1 items-center gap-2 rounded-2xl border border-stone-200 bg-white px-3 py-2.5">
+            <SearchIcon />
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Nom, téléphone, e-mail, rue…"
-              className="w-full rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm outline-none ring-[#305F33] focus:ring-2"
+              placeholder="Nom, rue, numéro"
+              className="w-full bg-transparent text-sm outline-none"
             />
-            <select
-              value={commune}
-              onChange={(event) => setCommune(event.target.value)}
-              className="rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm"
-            >
-              {communes.map((name) => (
-                <option key={name}>{name}</option>
-              ))}
-            </select>
-            <select
-              value={tier}
-              onChange={(event) => setTier(event.target.value as "Tous" | LeadTier)}
-              className="rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm"
-            >
-              <option value="Tous">Toutes les fiches</option>
-              <option value="A">Complet</option>
-              <option value="B">Joignable</option>
-              <option value="C">À compléter</option>
-            </select>
-          </div>
-
-          <p className="mt-3 text-xs text-stone-500">{rows.length} fiche{rows.length > 1 ? "s" : ""} affichée{rows.length > 1 ? "s" : ""}</p>
-
-          <div className="mt-3 hidden overflow-x-auto rounded-2xl border border-stone-200 bg-white md:block">
-            <table className="w-full min-w-[980px] border-collapse text-left text-sm">
-              <thead className="bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
-                <tr>
-                  <th className="px-3 py-3 font-semibold">Agence</th>
-                  <th className="px-3 py-3 font-semibold">Commune</th>
-                  <th className="px-3 py-3 font-semibold">Activité</th>
-                  <th className="px-3 py-3 font-semibold">Adresse</th>
-                  <th className="px-3 py-3 font-semibold">Téléphone</th>
-                  <th className="px-3 py-3 font-semibold">E-mail</th>
-                  <th className="px-3 py-3 font-semibold">Fiche</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => (
-                  <tr key={row.id} className="border-t border-stone-100 align-top">
-                    <td className="px-3 py-3">
-                      <div className="font-semibold text-stone-900">{row.name}</div>
-                      {row.representative ? (
-                        <div className="mt-1 text-xs text-stone-500">FEC · {row.representative}</div>
-                      ) : null}
-                      <Tier tier={row.tier} />
-                    </td>
-                    <td className="px-3 py-3 text-stone-700">{row.commune}</td>
-                    <td className="px-3 py-3 text-stone-700">{row.activity}</td>
-                    <td className="px-3 py-3 text-stone-700">{row.address}</td>
-                    <td className="px-3 py-3">
-                      <Lines values={row.phones} kind="tel" />
-                    </td>
-                    <td className="px-3 py-3">
-                      <Lines values={row.emails} kind="mail" />
-                    </td>
-                    <td className="px-3 py-3">
-                      <Sources row={row} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="mt-3 space-y-3 md:hidden">
-            {rows.map((row) => (
-              <article key={row.id} className="rounded-2xl border border-stone-200 bg-white p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <h2 className="text-base font-bold">{row.name}</h2>
-                  <Tier tier={row.tier} />
-                </div>
-                <p className="mt-1 text-xs font-semibold text-[#305F33]">
-                  {row.commune} · {row.activity}
-                </p>
-                <p className="mt-2 text-sm text-stone-700">{row.address}</p>
-                <p className="mt-2 text-sm">{join(row.phones)}</p>
-                <p className="text-sm text-stone-700">{join(row.emails)}</p>
-                {row.representative ? (
-                  <p className="mt-1 text-xs text-stone-500">Interlocuteur FEC · {row.representative}</p>
-                ) : null}
-                {row.note ? <p className="mt-2 text-xs leading-relaxed text-stone-500">{row.note}</p> : null}
-                <div className="mt-2">
-                  <Sources row={row} />
-                </div>
-              </article>
+          </label>
+          <div className="flex gap-2 overflow-x-auto">
+            {communes.map((name) => (
+              <button
+                key={name}
+                type="button"
+                onClick={() => setCommune(name)}
+                className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold ${
+                  commune === name ? "bg-[#16351c] text-white" : "bg-white text-stone-600"
+                }`}
+              >
+                {name}
+              </button>
             ))}
           </div>
-        </>
-      )}
+        </div>
+
+        <div className="mt-6 space-y-8">
+          {groups.map((group) => (
+            <section key={group.name}>
+              <h2 className="mb-3 flex items-center gap-2 text-sm font-black uppercase tracking-[0.14em] text-[#305F33]">
+                <PinIcon className="h-4 w-4" />
+                {group.name}
+                <span className="text-stone-400">{group.rows.length}</span>
+              </h2>
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {group.rows.map((row) => (
+                  <AgencyCard key={row.id} row={row} />
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      </main>
     </div>
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function AgencyCard({ row }: { row: TravelAgency }) {
   return (
-    <div className="rounded-2xl border border-stone-200 bg-white px-3 py-3">
-      <div className="text-lg font-black text-[#305F33]">{value}</div>
-      <div className="text-[11px] font-semibold uppercase tracking-wide text-stone-500">{label}</div>
-    </div>
-  );
-}
-
-function Tier({ tier }: { tier: LeadTier }) {
-  const tone =
-    tier === "A"
-      ? "bg-emerald-50 text-emerald-800"
-      : tier === "B"
-        ? "bg-amber-50 text-amber-800"
-        : "bg-stone-100 text-stone-600";
-  return (
-    <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-bold ${tone}`}>
-      {TIER_LABEL[tier]}
-    </span>
-  );
-}
-
-function Lines({ values, kind }: { values: string[]; kind: "tel" | "mail" }) {
-  if (!values.length) return <span className="text-stone-400">—</span>;
-  return (
-    <div className="space-y-1">
-      {values.map((value) => (
-        <a
-          key={value}
-          href={kind === "tel" ? `tel:${value.replace(/\s/g, "")}` : `mailto:${value}`}
-          className="block text-[#305F33] hover:underline"
-        >
-          {value}
-        </a>
-      ))}
-    </div>
-  );
-}
-
-function Sources({ row }: { row: TravelAgency }) {
-  return (
-    <div className="space-y-1 text-xs">
+    <article className="flex flex-col rounded-3xl border border-stone-200 bg-white p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-base font-black leading-tight">{row.name}</h3>
+          <p className="mt-1 text-xs font-semibold text-[#305F33]">{row.activity}</p>
+        </div>
+        <TierDot tier={row.tier} />
+      </div>
+      <p className="mt-3 flex gap-2 text-sm leading-snug text-stone-600">
+        <PinIcon className="mt-0.5 h-4 w-4 shrink-0 text-stone-400" />
+        <span>{row.address}</span>
+      </p>
+      <div className="mt-3 space-y-1.5 text-sm">
+        {row.phones.map((phone) => (
+          <a key={phone} href={`tel:${phone.replace(/\s/g, "")}`} className="flex items-center gap-2 font-semibold text-stone-800 hover:text-[#305F33]">
+            <PhoneIcon />
+            {phone}
+          </a>
+        ))}
+        {row.emails.map((email) => (
+          <a key={email} href={`mailto:${email}`} className="flex items-center gap-2 text-stone-600 hover:text-[#305F33]">
+            <MailIcon />
+            <span className="truncate">{email}</span>
+          </a>
+        ))}
+      </div>
       {row.website ? (
-        <a href={row.website} className="block font-semibold text-[#305F33] hover:underline" target="_blank" rel="noreferrer">
+        <a href={row.website} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-2 text-xs font-bold text-[#305F33]">
+          <GlobeIcon />
           Site
         </a>
       ) : null}
-      {row.sources.map((source) => (
-        <a key={source.href + source.label} href={source.href} className="block text-stone-500 hover:underline" target="_blank" rel="noreferrer">
-          {source.label}
-        </a>
-      ))}
-      {row.note ? <p className="pt-1 leading-relaxed text-stone-400">{row.note}</p> : null}
-    </div>
+    </article>
+  );
+}
+
+function TierDot({ tier }: { tier: TravelAgency["tier"] }) {
+  const color = tier === "A" ? "bg-emerald-500" : tier === "B" ? "bg-amber-400" : "bg-stone-300";
+  const label = tier === "A" ? "Complet" : tier === "B" ? "Joignable" : "Partiel";
+  return <span title={label} className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${color}`} />;
+}
+
+function PlaneIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
+      <path d="M3 13.5 21 4l-7.2 16-2.3-6.2L3 13.5Z" strokeLinejoin="round" />
+      <path d="M11.5 13.8 21 4" />
+    </svg>
+  );
+}
+
+function PinIcon({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
+      <path d="M12 21s6-5.2 6-10a6 6 0 1 0-12 0c0 4.8 6 10 6 10Z" />
+      <circle cx="12" cy="11" r="2" />
+    </svg>
+  );
+}
+
+function PhoneIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
+      <path d="M8 3.5h3l1.2 3-1.8 1.1a12 12 0 0 0 5 5L17.5 11 20.5 12.2v3A2 2 0 0 1 18.4 17 15.5 15.5 0 0 1 7 5.6 2 2 0 0 1 8 3.5Z" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function MailIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
+      <rect x="3.5" y="5.5" width="17" height="13" rx="2" />
+      <path d="m4 7 8 6 8-6" />
+    </svg>
+  );
+}
+
+function GlobeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
+      <circle cx="12" cy="12" r="8" />
+      <path d="M4 12h16M12 4c2.2 2.4 3.3 5.1 3.3 8S14.2 17.6 12 20c-2.2-2.4-3.3-5.1-3.3-8S9.8 6.4 12 4Z" />
+    </svg>
+  );
+}
+
+function SearchIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4 text-stone-400" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+      <circle cx="11" cy="11" r="6" />
+      <path d="m16 16 4 4" />
+    </svg>
+  );
+}
+
+function RouteLines() {
+  return (
+    <svg className="pointer-events-none absolute inset-0 h-full w-full opacity-30" viewBox="0 0 800 280" fill="none" aria-hidden>
+      <path d="M-20 210C120 160 180 80 320 110s180 90 280 40 180-90 260-30" stroke="white" strokeWidth="1.2" />
+      <path d="M40 40c80 70 140 30 220 70s150 20 250-20 180 10 260 50" stroke="white" strokeWidth="1.2" />
+      <circle cx="320" cy="110" r="4" fill="white" />
+      <circle cx="600" cy="150" r="4" fill="white" />
+    </svg>
   );
 }
