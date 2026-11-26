@@ -8,7 +8,7 @@ export function backfillSessionGps(
   if (alreadyHasDeviceGps) return;
   if (typeof navigator === "undefined" || !navigator.geolocation) return;
 
-  const track = trackPrecisePosition({ maxWaitMs: 35_000, goodEnoughM: 55 });
+  const track = trackPrecisePosition({ maxWaitMs: 50_000, goodEnoughM: 55 });
   void track.done.then((fix) => {
     if (!fix || fix.accuracyM > 1200) return;
     void fetch(`/api/alerts/${sessionId}/location`, {

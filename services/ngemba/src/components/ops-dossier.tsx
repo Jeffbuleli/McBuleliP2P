@@ -462,20 +462,23 @@ export function OpsDossierView({ id }: { id: string }) {
     session.lng != null &&
     Math.abs(session.lat - ipGeo.lat) < 0.00005 &&
     Math.abs(session.lng - ipGeo.lng) < 0.00005;
+  const phoneGpsRecorded =
+    session.locationAccuracyM != null ||
+    deviceGps(session.locationSource);
   const victimGps =
     session.lat != null &&
     session.lng != null &&
+    phoneGpsRecorded &&
     !copiedFromIp &&
     !ipOnlyPlace(session.locationSource);
   const maps = victimGps
     ? `https://maps.google.com/?q=${session.lat},${session.lng}`
     : null;
-  const ipApproxMap =
-    !victimGps &&
-    ipGeo?.lat != null &&
-    ipGeo?.lng != null
-      ? `https://maps.google.com/?q=${ipGeo.lat},${ipGeo.lng}`
-      : null;
+  const manualPlaceOnly =
+    session.lat != null &&
+    session.lng != null &&
+    !phoneGpsRecorded &&
+    (session.locationSource?.includes("place") ?? false);
 
   return (
     <main
@@ -576,42 +579,49 @@ export function OpsDossierView({ id }: { id: string }) {
               {locationSourceLabelFr(session.locationSource)}
             </span>
           ) : null}
+        </div>
+        <div className="mt-3 rounded-xl border border-[var(--ng-border)] bg-ng-bg/50 px-3 py-3 text-xs leading-relaxed">
+          <p className="font-semibold text-ng-primary">Localisation</p>
           {maps ? (
-            <a
-              href={maps}
-              target="_blank"
-              rel="noreferrer"
-              className="rounded-lg bg-ng-primary-muted px-2 py-1 font-medium text-ng-primary"
-            >
-              {deviceGps(session.locationSource) ||
-              session.locationAccuracyM != null
-                ? "GPS victime"
-                : "Point lieu"}
-              {session.locationAccuracyM != null
-                ? ` ± ${session.locationAccuracyM} m`
-                : ""}
-              {" · "}
-              {session.lat!.toFixed(6)}, {session.lng!.toFixed(6)} ↗
-            </a>
-          ) : ipApproxMap ? (
-            <a
-              href={ipApproxMap}
-              target="_blank"
-              rel="noreferrer"
-              className="rounded-lg bg-amber-50 px-2 py-1 font-medium text-amber-900"
-            >
-              Zone IP ≈ (pas le GPS victime) ↗
-            </a>
+            <p className="mt-1.5">
+              <a
+                href={maps}
+                target="_blank"
+                rel="noreferrer"
+                className="font-semibold text-ng-primary underline"
+              >
+                GPS du téléphone
+                {session.locationAccuracyM != null
+                  ? ` (± ${session.locationAccuracyM} m)`
+                  : ""}
+                {" — "}
+                ouvrir la carte ↗
+              </a>
+              <span className="mt-1 block font-mono text-[10px] text-ng-muted">
+                {session.lat!.toFixed(6)}, {session.lng!.toFixed(6)}
+              </span>
+            </p>
+          ) : manualPlaceOnly ? (
+            <p className="mt-1.5 text-ng-text">
+              Lieu choisi sur l&apos;écran (province / commune) — ce n&apos;est
+              pas un point GPS. Ne pas utiliser une carte pour ce dossier.
+            </p>
           ) : (
-            <span className="rounded-lg bg-amber-50 px-2 py-1 font-medium text-amber-900">
-              Pas de point GPS — la victime peut encore autoriser la position
-              sur son écran dossier (rafraîchir ce dossier).
-            </span>
+            <p className="mt-1.5 text-amber-900">
+              Aucun GPS téléphone enregistré sur ce dossier. Si la personne a
+              accepté la position, demandez-lui de laisser la page dossier
+              ouverte quelques secondes puis rafraîchissez ici.
+            </p>
           )}
-          {ipGeo ? (
-            <span className="rounded-lg bg-amber-50 px-2 py-1 font-medium text-amber-900">
-              IP ≈ {ipGeo.city || ipGeo.label}
-            </span>
+          {ipGeo && !maps ? (
+            <p className="mt-2 border-t border-[var(--ng-border)] pt-2 text-ng-muted">
+              Connexion mobile ≈{" "}
+              <span className="text-ng-text">{ipGeo.city || ipGeo.label}</span>
+              {" — "}
+              indicateur de ville seulement (souvent identique pour tout
+              Kinshasa). <strong>Pas de carte</strong> : ce n&apos;est pas la
+              position du téléphone.
+            </p>
           ) : null}
         </div>
         {session.schoolContext ? (
@@ -689,8 +699,9 @@ export function OpsDossierView({ id }: { id: string }) {
                 </span>
               </p>
               <p className="text-[10px] leading-relaxed text-ng-muted">
-                L&apos;IP ne donne que la ville. Aucune carte : ce point était
-                le même pour toutes les alertes.
+                L&apos;IP ne donne que la ville. Ce n&apos;est pas le GPS du
+                téléphone et ne doit pas être ouvert sur une carte (même
+                coordonnées pour beaucoup d&apos;alertes à Kinshasa).
               </p>
             </div>
           ) : session.clientIp ? (

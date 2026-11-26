@@ -444,6 +444,17 @@ export function updateSessionGps(
   ) {
     return current;
   }
+  const ip = current.routingMeta?.ipGeo;
+  if (
+    ip?.lat != null &&
+    ip?.lng != null &&
+    patch.lat != null &&
+    patch.lng != null &&
+    Math.abs(patch.lat - ip.lat) < 0.00006 &&
+    Math.abs(patch.lng - ip.lng) < 0.00006
+  ) {
+    return current;
+  }
   const next: AlertSessionRecord = { ...normalizeRecord(current), ...patch };
   map.set(id, next);
   persist();
