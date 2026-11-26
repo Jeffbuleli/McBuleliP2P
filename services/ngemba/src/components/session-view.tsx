@@ -9,6 +9,10 @@ import { useCitizenLocale } from "@/hooks/use-citizen-locale";
 import { messages } from "@/lib/i18n";
 import { urgencyLabel } from "@/lib/labels";
 import {
+  backfillSessionGps,
+  hasDeviceGpsOnRecord,
+} from "@/lib/location/push-session-gps";
+import {
   citizenPagePad,
   citizenShellMaxWidth,
   useDeviceClass,
@@ -36,6 +40,7 @@ type SessionPayload = {
   lat: number | null;
   lng: number | null;
   locationAccuracyM?: number | null;
+  locationSource?: string | null;
   citizenTracking?: {
     phase: string;
     channel?: string;
@@ -166,8 +171,19 @@ export function SessionView({
         }
         if (!cancelled) {
           setError(false);
-          setSession(data.session);
-          setMedia(data.session.media ?? []);
+          const loaded = data.session as SessionPayload;
+          setSession(loaded);
+          setMedia(loaded.media ?? []);
+          if (
+            !hasDeviceGpsOnRecord({
+              lat: loaded.lat,
+              lng: loaded.lng,
+              locationSource: loaded.locationSource ?? null,
+              locationAccuracyM: loaded.locationAccuracyM,
+            })
+          ) {
+            backfillSessionGps(id, false);
+          }
         }
       } catch {
         if (attempts < 3 && !cancelled) {

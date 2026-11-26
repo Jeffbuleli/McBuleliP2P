@@ -462,12 +462,19 @@ export function OpsDossierView({ id }: { id: string }) {
     session.lng != null &&
     Math.abs(session.lat - ipGeo.lat) < 0.00005 &&
     Math.abs(session.lng - ipGeo.lng) < 0.00005;
-  const maps =
-    !ipOnlyPlace(session.locationSource) &&
-    !copiedFromIp &&
+  const victimGps =
     session.lat != null &&
-    session.lng != null
-      ? `https://maps.google.com/?q=${session.lat},${session.lng}`
+    session.lng != null &&
+    !copiedFromIp &&
+    !ipOnlyPlace(session.locationSource);
+  const maps = victimGps
+    ? `https://maps.google.com/?q=${session.lat},${session.lng}`
+    : null;
+  const ipApproxMap =
+    !victimGps &&
+    ipGeo?.lat != null &&
+    ipGeo?.lng != null
+      ? `https://maps.google.com/?q=${ipGeo.lat},${ipGeo.lng}`
       : null;
 
   return (
@@ -569,30 +576,38 @@ export function OpsDossierView({ id }: { id: string }) {
               {locationSourceLabelFr(session.locationSource)}
             </span>
           ) : null}
-          {maps && deviceGps(session.locationSource) ? (
+          {maps ? (
             <a
               href={maps}
               target="_blank"
               rel="noreferrer"
               className="rounded-lg bg-ng-primary-muted px-2 py-1 font-medium text-ng-primary"
             >
-              GPS
+              {deviceGps(session.locationSource) ||
+              session.locationAccuracyM != null
+                ? "GPS victime"
+                : "Point lieu"}
               {session.locationAccuracyM != null
                 ? ` ± ${session.locationAccuracyM} m`
                 : ""}
               {" · "}
               {session.lat!.toFixed(6)}, {session.lng!.toFixed(6)} ↗
             </a>
-          ) : maps ? (
+          ) : ipApproxMap ? (
             <a
-              href={maps}
+              href={ipApproxMap}
               target="_blank"
               rel="noreferrer"
-              className="rounded-lg bg-ng-primary-muted px-2 py-1 font-medium text-ng-primary"
+              className="rounded-lg bg-amber-50 px-2 py-1 font-medium text-amber-900"
             >
-              Lieu {session.lat!.toFixed(4)}, {session.lng!.toFixed(4)} ↗
+              Zone IP ≈ (pas le GPS victime) ↗
             </a>
-          ) : null}
+          ) : (
+            <span className="rounded-lg bg-amber-50 px-2 py-1 font-medium text-amber-900">
+              Pas de point GPS — la victime peut encore autoriser la position
+              sur son écran dossier (rafraîchir ce dossier).
+            </span>
+          )}
           {ipGeo ? (
             <span className="rounded-lg bg-amber-50 px-2 py-1 font-medium text-amber-900">
               IP ≈ {ipGeo.city || ipGeo.label}

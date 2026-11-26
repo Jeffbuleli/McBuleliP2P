@@ -9,7 +9,11 @@ import { TrustedContactsEditor } from "@/components/trusted-contacts-editor";
 import { VoiceButton } from "@/components/voice-button";
 import { useCitizenLocale } from "@/hooks/use-citizen-locale";
 import { COMPOSE_MAX_CHARS } from "@/lib/compose/limits";
-import { readPrecisePosition } from "@/lib/location/precise-gps";
+import { backfillSessionGps } from "@/lib/location/push-session-gps";
+import {
+  readPrecisePosition,
+  trackPrecisePosition,
+} from "@/lib/location/precise-gps";
 import { uploadPendingMedia } from "@/lib/compose/upload-pending";
 import { vibrateDiscreteConfirm } from "@/lib/discrete/vibrate";
 import { messages } from "@/lib/i18n";
@@ -220,6 +224,10 @@ export function SosFlow({
           photos,
         });
       }
+      backfillSessionGps(
+        data.id as string,
+        typeof opts.lat === "number" && typeof opts.lng === "number",
+      );
       if (discrete) vibrateDiscreteConfirm();
       const dest = discrete
         ? `${href(`/session/${data.id}`)}&discrete=1`
@@ -241,11 +249,18 @@ export function SosFlow({
     setBusy(true);
     setError(null);
     setHint(t.gpsSearching);
-    const pos = await readPrecisePosition({
-      maxWaitMs: 10_000,
-      goodEnoughM: 40,
-    });
-    if (pos) {
+    const track = trackPrecisePosition({ maxWaitMs: 22_000, goodEnoughM: 50 });
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    let pos = track.best();
+    if (!pos || pos.accuracyM > 1200) {
+      pos = (await Promise.race([
+        track.done,
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 14_000)),
+      ])) ?? track.best();
+    }
+    track.stop();
+
+    if (pos && pos.accuracyM <= 1200) {
       setGpsHint(`± ${pos.accuracyM} m`);
       await submit({
         shareLocation: true,

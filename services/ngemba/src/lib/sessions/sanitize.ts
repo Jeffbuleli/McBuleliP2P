@@ -22,6 +22,7 @@ export function sanitizeCitizenSession(session: AlertSessionRecord) {
     citizenToken: null,
     clientIp: null,
     userAgent: null,
+    locationSource: session.locationSource,
     citizenTracking: {
       phase:
         phase ??

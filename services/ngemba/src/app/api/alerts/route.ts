@@ -128,9 +128,9 @@ export async function POST(req: Request) {
     locationSource =
       accuracyM != null && accuracyM <= 80
         ? `${resolved.source}+gps_precise`
-        : accuracyM != null && accuracyM > 400
+        : accuracyM != null
           ? `${resolved.source}+gps_wide`
-          : resolved.source;
+          : `${resolved.source}+gps_wide`;
     locationConsentAt = new Date().toISOString();
   } else if (body.provinceId?.trim()) {
     const resolved = resolveManualPlace(

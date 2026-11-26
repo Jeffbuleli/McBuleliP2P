@@ -53,9 +53,7 @@ export async function POST(req: Request, ctx: Ctx) {
   const locationSource =
     accuracyM <= 80
       ? `${resolved.source}+gps_precise`
-      : accuracyM > 400
-        ? `${resolved.source}+gps_wide`
-        : resolved.source;
+      : `${resolved.source}+gps_wide`;
 
   const next = updateSessionGps(id, {
     lat: parsed.data.lat,
