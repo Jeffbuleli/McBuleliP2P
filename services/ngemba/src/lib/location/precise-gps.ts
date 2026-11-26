@@ -54,6 +54,13 @@ export function trackPrecisePosition(options?: {
   };
 
   const onError = (err: GeolocationPositionError) => {
+    const code =
+      err.code === err.PERMISSION_DENIED
+        ? "denied"
+        : err.code === err.TIMEOUT
+          ? "timeout"
+          : "unavailable";
+    console.info("[ngemba] gps browser", { code });
     if (err.code === err.PERMISSION_DENIED) {
       best = null;
       stop();

@@ -6,10 +6,12 @@ import { IconMic } from "@/components/icons";
 import { VoiceWave } from "@/components/voice-wave";
 import { useCitizenLocale } from "@/hooks/use-citizen-locale";
 import { useVoiceDraft } from "@/hooks/use-voice-draft";
+import { persistSessionCitizenKey } from "@/lib/citizen/session-client";
 import {
   readPrecisePosition,
   type PreciseFix,
 } from "@/lib/location/precise-gps";
+import { postSessionGps } from "@/lib/location/push-session-gps";
 
 type Bubble = { id: string; role: "user" | "assistant"; content: string };
 
@@ -111,7 +113,7 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
       gpsSearch(),
       new Promise<null>((resolve) => setTimeout(() => resolve(null), 8000)),
     ]);
-    if (!fix || fix.accuracyM > 1000) return null;
+    if (!fix || fix.accuracyM > 2500) return null;
     return fix;
   }
 
@@ -133,25 +135,20 @@ export function SchoolChat({ initialLocale }: { initialLocale?: string }) {
         schoolContext: { concernType: "other", establishmentHint: null, isMinor: true },
       }),
     });
-    const data = await res.json().catch(() => ({}));
+    const data = (await res.json().catch(() => ({}))) as {
+      id?: string;
+      sessionKey?: string;
+    };
     if (!res.ok || !data.id) {
       setError("Envoi impossible. Réessayez.");
       return null;
     }
-    const id = data.id as string;
+    const id = data.id;
+    persistSessionCitizenKey(id, data.sessionKey);
     setSessionId(id);
     void gpsSearch().then((later) => {
-      if (!later || later.accuracyM > 1000) return;
-      void fetch(`/api/alerts/${id}/location`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          lat: later.lat,
-          lng: later.lng,
-          accuracyM: later.accuracyM,
-        }),
-      });
+      if (!later || later.accuracyM > 2500) return;
+      void postSessionGps(id, later);
     });
     return id;
   }

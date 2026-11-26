@@ -445,7 +445,9 @@ export function updateSessionGps(
     return current;
   }
   const ip = current.routingMeta?.ipGeo;
+  const acc = patch.locationAccuracyM ?? 99_999;
   if (
+    acc > 1200 &&
     ip?.lat != null &&
     ip?.lng != null &&
     patch.lat != null &&

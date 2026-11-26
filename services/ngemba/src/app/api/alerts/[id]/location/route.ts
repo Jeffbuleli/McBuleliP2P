@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { readCitizenToken } from "@/lib/citizen/token";
+import { citizenCanAccessSession } from "@/lib/citizen/access";
 import { reverseGeocode } from "@/lib/location/geoapify";
+import { notifySessionUpdated } from "@/lib/ops/notify";
 import { getSession, updateSessionGps } from "@/lib/sessions/store";
 import { clientIp, rateLimit, rateLimitResponse } from "@/lib/security/rate-limit";
 
@@ -24,8 +25,8 @@ export async function POST(req: Request, ctx: Ctx) {
   if (!session) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
-  const citizen = await readCitizenToken();
-  if (!citizen || session.citizenToken !== citizen) {
+  if (!(await citizenCanAccessSession(req, session))) {
+    console.warn("[ngemba] location forbidden", id.slice(0, 8));
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
@@ -41,8 +42,8 @@ export async function POST(req: Request, ctx: Ctx) {
   }
 
   const accuracyM = Math.round(parsed.data.accuracyM);
-  if (accuracyM > 1000) {
-    return NextResponse.json({ ok: false, reason: "too_wide" });
+  if (accuracyM > 2500) {
+    return NextResponse.json({ ok: false, reason: "too_wide", persisted: false });
   }
 
   const resolved = await reverseGeocode(
@@ -55,6 +56,10 @@ export async function POST(req: Request, ctx: Ctx) {
       ? `${resolved.source}+gps_precise`
       : `${resolved.source}+gps_wide`;
 
+  const hadGps =
+    session.lat != null &&
+    session.lng != null &&
+    session.locationAccuracyM != null;
   const next = updateSessionGps(id, {
     lat: parsed.data.lat,
     lng: parsed.data.lng,
@@ -67,9 +72,34 @@ export async function POST(req: Request, ctx: Ctx) {
   if (!next) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
+  const persisted =
+    next.lat != null &&
+    next.lng != null &&
+    (next.locationAccuracyM != null ||
+      /gps_precise|gps_wide/.test(next.locationSource ?? "")) &&
+    (!hadGps ||
+      next.lat !== session.lat ||
+      next.lng !== session.lng ||
+      (next.locationAccuracyM != null &&
+        session.locationAccuracyM != null &&
+        next.locationAccuracyM < session.locationAccuracyM));
+  if (persisted) {
+    console.info("[ngemba] location saved", {
+      id: id.slice(0, 8),
+      accuracyM,
+    });
+    void notifySessionUpdated(next);
+  } else {
+    console.warn("[ngemba] location not persisted", {
+      id: id.slice(0, 8),
+      accuracyM,
+    });
+  }
   return NextResponse.json({
-    ok: true,
+    ok: persisted,
+    persisted,
     locationLabel: next.locationLabel,
     accuracyM: next.locationAccuracyM,
+    reason: persisted ? undefined : "not_saved",
   });
 }

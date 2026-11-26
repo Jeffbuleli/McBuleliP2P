@@ -9,6 +9,7 @@ import { TrustedContactsEditor } from "@/components/trusted-contacts-editor";
 import { VoiceButton } from "@/components/voice-button";
 import { useCitizenLocale } from "@/hooks/use-citizen-locale";
 import { COMPOSE_MAX_CHARS } from "@/lib/compose/limits";
+import { persistSessionCitizenKey } from "@/lib/citizen/session-client";
 import { backfillSessionGps } from "@/lib/location/push-session-gps";
 import {
   readPrecisePosition,
@@ -216,6 +217,10 @@ export function SosFlow({
         setBusy(false);
         return;
       }
+      persistSessionCitizenKey(
+        String(data.id),
+        typeof data.sessionKey === "string" ? data.sessionKey : null,
+      );
       // Critical path: wait for audio/photos before leaving SOS (PWA-safe).
       if (audioBlob || photos.length > 0) {
         await uploadPendingMedia({
@@ -252,7 +257,7 @@ export function SosFlow({
     const track = trackPrecisePosition({ maxWaitMs: 22_000, goodEnoughM: 50 });
     await new Promise((resolve) => setTimeout(resolve, 800));
     let pos = track.best();
-    if (!pos || pos.accuracyM > 1200) {
+    if (!pos || pos.accuracyM > 2500) {
       pos = (await Promise.race([
         track.done,
         new Promise<null>((resolve) => setTimeout(() => resolve(null), 14_000)),
@@ -260,7 +265,7 @@ export function SosFlow({
     }
     track.stop();
 
-    if (pos && pos.accuracyM <= 1200) {
+    if (pos && pos.accuracyM <= 2500) {
       setGpsHint(`± ${pos.accuracyM} m`);
       await submit({
         shareLocation: true,

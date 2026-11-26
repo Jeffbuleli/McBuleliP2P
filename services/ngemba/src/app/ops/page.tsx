@@ -306,7 +306,13 @@ export default function OpsPage() {
       <div className="mt-6 flex items-end justify-between gap-3">
         <h2 className="text-sm font-semibold text-ng-text">
           Alertes ouvertes
-          <span className="ml-2 text-ng-muted">({open.length})</span>
+          <span className="ml-2 text-ng-muted">
+            ({open.length} affichées
+            {stats?.open != null && stats.open !== open.length
+              ? ` · ${stats.open} au total`
+              : ""}
+            )
+          </span>
         </h2>
       </div>
 

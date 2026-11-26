@@ -1,6 +1,6 @@
 /** Revue du 6 novembre 2026. */
 import { NextResponse } from "next/server";
-import { readCitizenToken } from "@/lib/citizen/token";
+import { citizenCanAccessSession } from "@/lib/citizen/access";
 import { MEDIA_MAX_PER_SESSION, MEDIA_MAX_PHOTOS } from "@/lib/media/types";
 import { saveMedia } from "@/lib/media/store";
 import { transcribeAudioIfConfigured } from "@/lib/media/transcribe";
@@ -23,8 +23,7 @@ async function canAccessSession(sessionId: string, req: Request) {
     return { session, allowed: true };
   }
 
-  const citizen = await readCitizenToken();
-  if (citizen && session.citizenToken === citizen) {
+  if (await citizenCanAccessSession(req, session)) {
     return { session, allowed: true };
   }
 

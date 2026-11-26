@@ -326,30 +326,9 @@ export function OpsDossierView({ id }: { id: string }) {
   }, [id]);
 
   useEffect(() => {
-    const timer = window.setInterval(() => {
-      void fetch(`/api/alerts/${id}`, { credentials: "include" })
-        .then((res) => res.json())
-        .then((data: { session?: Session }) => {
-          const next = data.session;
-          if (!next) return;
-          setSession((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  lat: next.lat,
-                  lng: next.lng,
-                  locationLabel: next.locationLabel,
-                  locationSource: next.locationSource,
-                  locationAccuracyM: next.locationAccuracyM,
-                  commune: next.commune,
-                }
-              : prev,
-          );
-        })
-        .catch(() => undefined);
-    }, 8000);
+    const timer = window.setInterval(() => void load(), 8000);
     return () => window.clearInterval(timer);
-  }, [id]);
+  }, [load]);
 
   useEffect(() => {
     void load();

@@ -11,6 +11,7 @@ import { urgencyLabel } from "@/lib/labels";
 import {
   backfillSessionGps,
   hasDeviceGpsOnRecord,
+  type GpsBackfillResult,
 } from "@/lib/location/push-session-gps";
 import {
   citizenPagePad,
@@ -139,6 +140,7 @@ export function SessionView({
   const [session, setSession] = useState<SessionPayload | null>(null);
   const [media, setMedia] = useState<SessionPayload["media"]>([]);
   const [error, setError] = useState(false);
+  const [gpsBackfill, setGpsBackfill] = useState<GpsBackfillResult | null>(null);
 
   useEffect(() => {
     if (!discrete) return;
@@ -150,7 +152,7 @@ export function SessionView({
     let cancelled = false;
     let attempts = 0;
 
-    async function load() {
+    async function load(opts?: { quiet?: boolean }) {
       attempts += 1;
       try {
         const res = await fetch(`/api/alerts/${id}`, {
@@ -162,7 +164,7 @@ export function SessionView({
           // Mobile: cookie ops / race persist - un retry court
           if (attempts < 3 && !cancelled) {
             window.setTimeout(() => {
-              if (!cancelled) void load();
+              if (!cancelled) void load(opts);
             }, 400 * attempts);
             return;
           }
@@ -182,7 +184,14 @@ export function SessionView({
               locationAccuracyM: loaded.locationAccuracyM,
             })
           ) {
-            backfillSessionGps(id, false);
+            if (!opts?.quiet) setGpsBackfill(null);
+            backfillSessionGps(id, false, (status) => {
+              if (cancelled) return;
+              setGpsBackfill(status);
+              if (status === "saved") void load({ quiet: true });
+            });
+          } else if (!opts?.quiet) {
+            setGpsBackfill("already");
           }
         }
       } catch {
@@ -320,6 +329,44 @@ export function SessionView({
                       : null}
                   </p>
                 )}
+                {gpsBackfill === null &&
+                !hasDeviceGpsOnRecord({
+                  lat: session.lat,
+                  lng: session.lng,
+                  locationSource: session.locationSource ?? null,
+                  locationAccuracyM: session.locationAccuracyM,
+                }) ? (
+                  <p
+                    className={`mt-2 text-xs ${discrete ? "text-[#c9a0bc]" : "text-ng-muted"}`}
+                  >
+                    {locale === "en"
+                      ? "Sending your GPS to the ops team — keep this page open a few seconds."
+                      : "Envoi de votre position à l’équipe — gardez cette page ouverte quelques secondes."}
+                  </p>
+                ) : null}
+                {gpsBackfill === "saved" ||
+                (gpsBackfill === "already" &&
+                  hasDeviceGpsOnRecord({
+                    lat: session.lat,
+                    lng: session.lng,
+                    locationSource: session.locationSource ?? null,
+                    locationAccuracyM: session.locationAccuracyM,
+                  })) ? (
+                  <p
+                    className={`mt-2 text-xs font-medium ${discrete ? "text-[#c9a0bc]" : "text-ng-primary"}`}
+                  >
+                    {locale === "en"
+                      ? "GPS recorded for this case."
+                      : "Position GPS enregistrée sur ce dossier."}
+                  </p>
+                ) : null}
+                {gpsBackfill === "denied" || gpsBackfill === "unavailable" ? (
+                  <p className="mt-2 text-xs text-amber-700">
+                    {locale === "en"
+                      ? "GPS blocked — allow location for this site in phone settings."
+                      : "GPS refusé — autorisez la localisation pour ce site dans les réglages du téléphone."}
+                  </p>
+                ) : null}
                 {session.citizenTracking?.phase ? (
                   <p
                     className={`mt-2 inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${

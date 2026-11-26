@@ -354,6 +354,7 @@ export async function POST(req: Request) {
 
   const response = NextResponse.json({
     id: session.id,
+    sessionKey: citizenToken,
     urgency: session.urgency,
     category: session.category,
     queue: session.routingQueue,
@@ -387,31 +388,33 @@ export async function GET(req: Request) {
   const auth = await requireOpsAuth(req, { permission: "alerts.list" });
   if (auth instanceof NextResponse) return auth;
 
-  const sessions = listSessions(80)
+  const visible = listSessions(80)
     .map((s) => applySlaEscalationIfNeeded(s))
-    .filter((s) => sessionVisibleToActor(auth.actor, s, "operational"))
-    .map((s) => {
-      const base = sanitizeOpsSessionForActor(s, auth.actor);
-      // File liste : pas d'IP/UA (investigation = dossier détail).
-      return {
-        ...base,
-        clientIp: null,
-        userAgent: null,
-        trustedContacts: [],
-        media: [],
-        sla: slaUiState(s),
-      };
-    });
+    .filter((s) => sessionVisibleToActor(auth.actor, s, "operational"));
+
+  const sessions = visible.map((s) => {
+    const base = sanitizeOpsSessionForActor(s, auth.actor);
+    // File liste : pas d'IP/UA (investigation = dossier détail).
+    return {
+      ...base,
+      clientIp: null,
+      userAgent: null,
+      trustedContacts: [],
+      media: [],
+      sla: slaUiState(s),
+    };
+  });
+
+  const isOpen = (status: string) =>
+    status !== "closed" && status !== "cancelled";
 
   const stats =
     auth.role === "admin"
       ? {
-          total: sessions.length,
-          critical: sessions.filter((s) => s.urgency === "critical").length,
-          high: sessions.filter((s) => s.urgency === "high").length,
-          open: sessions.filter(
-            (s) => s.status !== "closed" && s.status !== "cancelled",
-          ).length,
+          total: visible.length,
+          critical: visible.filter((s) => s.urgency === "critical").length,
+          high: visible.filter((s) => s.urgency === "high").length,
+          open: visible.filter((s) => isOpen(s.status)).length,
           slaBreached: sessions.filter((s) => s.sla.breached || s.sla.escalated)
             .length,
         }

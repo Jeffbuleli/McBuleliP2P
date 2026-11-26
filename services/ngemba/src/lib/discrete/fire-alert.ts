@@ -1,7 +1,9 @@
 "use client";
 
+import { persistSessionCitizenKey } from "@/lib/citizen/session-client";
 import { vibrateDiscreteConfirm } from "@/lib/discrete/vibrate";
 import { trackPrecisePosition } from "@/lib/location/precise-gps";
+import { postSessionGps } from "@/lib/location/push-session-gps";
 import { readLocalTrustedContacts } from "@/lib/trusted-contacts/client-store";
 
 export type DiscreteFireResult =
@@ -17,10 +19,14 @@ export async function fireDiscretePanicAlert(input: {
 }): Promise<DiscreteFireResult> {
   const trustedContacts = readLocalTrustedContacts();
   // Démarre dans le geste. L'autorisation peut arriver après l'envoi du dossier.
-  const track = trackPrecisePosition({ maxWaitMs: 45_000, goodEnoughM: 40 });
+  const track = trackPrecisePosition({ maxWaitMs: 45_000, goodEnoughM: 80 });
   await new Promise((resolve) => setTimeout(resolve, 2500));
   const first = track.best();
-  const sent = first && first.accuracyM <= 1000 ? first : null;
+  const sent = first && first.accuracyM <= 2500 ? first : null;
+  console.info("[ngemba] gps discrete create", {
+    hasFix: Boolean(sent),
+    accuracyBucket: sent ? Math.min(2500, Math.round(sent.accuracyM / 100) * 100) : null,
+  });
 
   try {
     const res = await fetch("/api/alerts", {
@@ -39,24 +45,26 @@ export async function fireDiscretePanicAlert(input: {
         trustedContacts,
       }),
     });
-    const data = (await res.json().catch(() => ({}))) as { id?: string };
+    const data = (await res.json().catch(() => ({}))) as {
+      id?: string;
+      sessionKey?: string;
+    };
     if (!res.ok || !data.id) {
       track.stop();
       return { ok: false, error: "create_failed" };
     }
     const id = data.id;
+    persistSessionCitizenKey(id, data.sessionKey);
     void track.done.then((fix) => {
-      if (!fix || fix.accuracyM > 1000) return;
+      if (!fix || fix.accuracyM > 2500) {
+        console.info("[ngemba] gps discrete backfill skip", {
+          reason: fix ? "too_wide" : "no_fix",
+        });
+        return;
+      }
       if (sent && fix.accuracyM >= sent.accuracyM) return;
-      void fetch(`/api/alerts/${id}/location`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          lat: fix.lat,
-          lng: fix.lng,
-          accuracyM: fix.accuracyM,
-        }),
+      void postSessionGps(id, fix).then((status) => {
+        console.info("[ngemba] gps discrete backfill", { status });
       });
     });
     vibrateDiscreteConfirm();
