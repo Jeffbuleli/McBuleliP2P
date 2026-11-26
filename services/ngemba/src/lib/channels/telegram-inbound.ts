@@ -18,6 +18,10 @@ import {
 } from "@/lib/sessions/store";
 import type { AlertSessionRecord } from "@/lib/sessions/types";
 import { notifyNewAlert } from "@/lib/ops/notify";
+import {
+  postNgembaWebhook,
+  sessionWebhookPayload,
+} from "@/lib/ops/n8n-webhook";
 import { computeSlaDueAt } from "@/lib/ops/sla";
 import { buildRoutingMeta } from "@/lib/partners/match";
 
@@ -181,6 +185,13 @@ export async function handleTelegramInbound(
       citizenToken: newCitizenToken(),
     });
     created = true;
+    if (!triageRun.decision.humanRequired) {
+      void postNgembaWebhook("ngemba.session.ai_accompaniment_started", {
+        ...sessionWebhookPayload(session),
+        summary: session.aiSummary,
+        primaryChannel: "telegram",
+      });
+    }
   } else {
     addSessionChatMessage(
       session.id,

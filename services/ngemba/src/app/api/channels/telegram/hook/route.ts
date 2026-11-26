@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { handleTelegramInbound } from "@/lib/channels/telegram-inbound";
+import { resolveReplyLocale } from "@/lib/channels/reply-locale";
 import {
   telegramBotToken,
   telegramDownloadFile,
@@ -66,12 +67,17 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true });
   }
 
+  const locale = resolveReplyLocale(
+    text,
+    message.from?.language_code === "en" ? "en" : "fr",
+  );
+
   const result = await handleTelegramInbound({
     idempotencyKey: `tg:${update.update_id ?? message.message_id ?? Date.now()}`,
     telegramUserId: userId,
     telegramChatId: chat,
     text,
-    locale: "fr",
+    locale,
     channel: voiceId ? "voice" : "text",
   });
 

@@ -13,6 +13,8 @@ export function sanitizeCitizenSession(session: AlertSessionRecord) {
     userAgent: _ua,
     ...rest
   } = session;
+  const phase = session.routingMeta?.accompanimentPhase;
+  const channel = session.routingMeta?.primaryChannel ?? session.source;
   return {
     ...rest,
     trustedContacts: [] as AlertSessionRecord["trustedContacts"],
@@ -20,6 +22,19 @@ export function sanitizeCitizenSession(session: AlertSessionRecord) {
     citizenToken: null,
     clientIp: null,
     userAgent: null,
+    citizenTracking: {
+      phase:
+        phase ??
+        (session.status === "closed" || session.status === "cancelled"
+          ? "closed"
+          : session.status === "oriented" || session.status === "active"
+            ? "active"
+            : "received"),
+      channel,
+      lastEventAt:
+        session.statusHistory?.[session.statusHistory.length - 1]?.at ??
+        session.createdAt,
+    },
   };
 }
 

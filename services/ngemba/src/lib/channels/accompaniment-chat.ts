@@ -1,5 +1,5 @@
 import { resolveAiMode } from "@/lib/ai/triage";
-import { openaiKey, openaiText } from "@/lib/ai/openai";
+import { chatText, resolveLlmProvider } from "@/lib/ai/llm-text";
 import type { TriageResult } from "@/lib/ai/triage-schema";
 import { englishLeak } from "@/lib/channels/reply-locale";
 import { isLocale, type Locale } from "@/lib/i18n";
@@ -207,7 +207,7 @@ export async function runChannelAccompaniment(input: {
   }
 
   const mode = resolveAiMode();
-  if (!openaiKey() || mode === "local") {
+  if (resolveLlmProvider() === "none" || mode === "local") {
     return {
       reply: adviceReply(input.locale, input.triage, input.history),
       alertAgents: false,
@@ -219,7 +219,7 @@ export async function runChannelAccompaniment(input: {
   const turns = threadTurns(input.history);
 
   try {
-    const raw = await openaiText({
+    const { text: raw, provider: llmProvider } = await chatText({
       system: SYSTEM,
       user: JSON.stringify({
         locale: localeName(input.locale),
@@ -232,7 +232,8 @@ export async function runChannelAccompaniment(input: {
         recent_turns: turns,
         latest_message: input.userMessage,
       }),
-      maxTokens: 900,
+      maxTokens: 700,
+      temperature: 0.25,
     });
     const parsed = raw ? parseDecision(raw) : null;
     const spoken = parsed?.locale ?? input.locale;

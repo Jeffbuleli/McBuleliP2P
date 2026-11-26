@@ -14,6 +14,10 @@ import {
 } from "@/lib/labels";
 import { SCHOOL_CONCERN_LABELS_FR } from "@/lib/school/types";
 import { emitOpsEvent } from "@/lib/ops/events";
+import {
+  postNgembaWebhook,
+  sessionWebhookPayload,
+} from "@/lib/ops/n8n-webhook";
 import { juryEmails } from "@/lib/ops/team";
 
 function appUrl(): string {
@@ -58,6 +62,10 @@ export async function notifyNewAlert(session: AlertSessionRecord) {
 
   // Proches : PAS de notify auto - visibles sur dossier ops (Appeler / WhatsApp / Email).
   // Voir docs/ngemba/19-PHILO-ORIENTATION-PROCHES.md
+  void postNgembaWebhook("ngemba.session.handoff_requested", {
+    ...sessionWebhookPayload(session),
+    summary: session.aiSummary,
+  });
   await sendOpsEmail(session);
 }
 

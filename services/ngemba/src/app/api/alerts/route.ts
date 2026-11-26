@@ -20,6 +20,10 @@ import { opsSummaryFr } from "@/lib/labels";
 import { buildReferrals } from "@/lib/directory/referral";
 import { saveReferrals } from "@/lib/directory/store";
 import { notifyNewAlert } from "@/lib/ops/notify";
+import {
+  postNgembaWebhook,
+  sessionWebhookPayload,
+} from "@/lib/ops/n8n-webhook";
 import { notifyTrustedContacts } from "@/lib/ops/notify-trusted-contacts";
 import { requireOpsAuth } from "@/lib/ops/auth";
 import { sessionVisibleToActor } from "@/lib/ops/visibility";
@@ -334,6 +338,11 @@ export async function POST(req: Request) {
 
   if (humanNow) {
     await notifyNewAlert(session);
+  } else {
+    void postNgembaWebhook("ngemba.session.ai_accompaniment_started", {
+      ...sessionWebhookPayload(session),
+      summary: session.aiSummary,
+    });
   }
   if (body.source === "school" && body.message.trim() && body.message.trim() !== "·") {
     await replyAsNgemba(getSession(session.id) ?? session);

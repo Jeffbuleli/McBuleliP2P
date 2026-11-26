@@ -9,6 +9,10 @@ import {
 import { renderOpsAlertEmail } from "@/lib/email/ops-alert-layout";
 import { readEnvKey } from "@/lib/env";
 import { categoryLabelFr, urgencyLabelFr } from "@/lib/labels";
+import {
+  postNgembaWebhook,
+  sessionWebhookPayload,
+} from "@/lib/ops/n8n-webhook";
 
 function appUrl(): string {
   return (
@@ -26,25 +30,12 @@ export async function notifyEscalation(session: AlertSessionRecord) {
 }
 
 async function sendEscalationWebhook(session: AlertSessionRecord) {
-  const url = readEnvKey("NGEMBA_OPS_WEBHOOK_URL");
-  if (!url) return;
-  try {
-    await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        type: "ngemba.alert_escalated",
-        sessionId: session.id,
-        urgency: session.urgency,
-        category: session.category,
-        escalation: session.escalation,
-        routingMeta: session.routingMeta,
-        url: `${appUrl()}/ops/${session.id}`,
-      }),
-    });
-  } catch (err) {
-    console.warn("[ngemba] escalation webhook failed", err);
-  }
+  void postNgembaWebhook("ngemba.alert_escalated", {
+    ...sessionWebhookPayload(session),
+    escalation: session.escalation,
+    routingMeta: session.routingMeta,
+    url: `${appUrl()}/ops/${session.id}`,
+  });
 }
 
 async function sendEscalationEmail(session: AlertSessionRecord) {

@@ -87,6 +87,8 @@ type Session = {
     } | null;
     primaryChannel?: "app" | "telegram" | "email" | null;
     telegramChatId?: string | null;
+    accompanimentPhase?: string | null;
+    agentsNotified?: boolean | null;
   } | null;
   schoolContext?: {
     concernType: string;
@@ -520,6 +522,22 @@ export function OpsDossierView({ id }: { id: string }) {
         </div>
       </header>
 
+      {session.routingMeta?.accompanimentPhase ? (
+        <p className="rounded-xl border border-[var(--ng-border)] bg-ng-surface px-3 py-2 text-xs text-ng-primary">
+          Phase ·{" "}
+          <span className="font-semibold">
+            {session.routingMeta.accompanimentPhase === "ai_accompaniment"
+              ? "Accompagnement IA"
+              : session.routingMeta.accompanimentPhase === "awaiting_operator"
+                ? "Attente opérateur"
+                : session.routingMeta.accompanimentPhase}
+          </span>
+          {session.routingMeta.primaryChannel
+            ? ` · canal ${session.routingMeta.primaryChannel}`
+            : ""}
+          {session.routingMeta.agentsNotified ? " · équipe notifiée" : ""}
+        </p>
+      ) : null}
       {session.immediateDanger ? (
         <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-xs font-semibold text-ng-urgent">
           Danger immédiat signalé - prioriser la sécurité.

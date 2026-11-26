@@ -25,7 +25,9 @@
 | **Phase 4 Directory + Referral** (orgs/services + orientation) | ✅ v1 |
 | **Phase 5 Operational Units** (unites + matching + soft-assign) | ✅ v1 |
 | **Accompagnement IA + n8n** (auto victime non urgent → humain) | 📄 spec [34-ACCOMPAGNEMENT-IA-N8N.md](./34-ACCOMPAGNEMENT-IA-N8N.md) · impl ⏳ |
-| **Multicanal Telegram / email / WhatsApp** (n8n hub) | 📄 [35-MULTICANAL-N8N-TELEGRAM-EMAIL.md](./35-MULTICANAL-N8N-TELEGRAM-EMAIL.md) · API Telegram ✅ · n8n workflow ✅ · credential bot ⏳ |
+| **Multicanal Telegram / email / WhatsApp** (n8n hub) | 📄 [35](./35-MULTICANAL-N8N-TELEGRAM-EMAIL.md) · hook Telegram direct ✅ · webhooks n8n sortants ✅ [38](./38-FLOWS-N8N-TELEGRAM-LLM.md) · workflow n8n timers ⏳ |
+| **LLM aligné OpenAI + NVIDIA NIM** | ✅ `llm-text.ts` · env VPS ⏳ |
+| **Suivi dossier citoyen + phase ops** | ✅ v0.4 (GPS ± m, `citizenTracking`) |
 
 Live : https://ngemba-rdc.org · email `info@ngemba-rdc.org`  
 Cutover : [24-DOMAINE-NGEMBA-RDC.md](./24-DOMAINE-NGEMBA-RDC.md) (DNS / TLS / Resend / APK)

@@ -35,6 +35,12 @@ type SessionPayload = {
   routingQueue: string;
   lat: number | null;
   lng: number | null;
+  locationAccuracyM?: number | null;
+  citizenTracking?: {
+    phase: string;
+    channel?: string;
+    lastEventAt?: string;
+  } | null;
   media?: Array<{
     id: string;
     kind: string;
@@ -184,6 +190,14 @@ export function SessionView({
   const calm = session
     ? session.urgency !== "critical" && !session.immediateDanger
     : false;
+  function trackingLabel(phase: string | undefined): string {
+    if (phase === "ai_accompaniment") return t.trackingAi;
+    if (phase === "awaiting_operator") return t.trackingHuman;
+    if (phase === "active" || phase === "oriented") return t.trackingActive;
+    if (phase === "closed" || phase === "cancelled") return t.trackingClosed;
+    return calm ? t.trackingAi : t.trackingHuman;
+  }
+
   const progressLabels: [string, string, string] = calm
     ? locale === "en"
       ? ["Listen", "Understand", "Guide"]
@@ -285,8 +299,22 @@ export function SessionView({
                     className={`mt-2 text-xs font-medium ${discrete ? "text-[#c9a0bc]" : "text-ng-primary"}`}
                   >
                     {t.place} · {session.locationLabel || session.commune}
+                    {typeof session.locationAccuracyM === "number"
+                      ? ` · ${t.gpsPrecision} ± ${Math.round(session.locationAccuracyM)} m`
+                      : null}
                   </p>
                 )}
+                {session.citizenTracking?.phase ? (
+                  <p
+                    className={`mt-2 inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
+                      discrete
+                        ? "bg-white/10 text-[#e8d4e3]"
+                        : "bg-ng-primary-muted text-ng-primary"
+                    }`}
+                  >
+                    {trackingLabel(session.citizenTracking.phase)}
+                  </p>
+                ) : null}
               </div>
             </div>
             <div className="mt-4">

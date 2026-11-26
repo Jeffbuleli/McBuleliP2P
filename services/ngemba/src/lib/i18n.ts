@@ -58,6 +58,11 @@ type Copy = {
   gpsDenied: string;
   gpsSearching: string;
   place: string;
+  gpsPrecision: string;
+  trackingAi: string;
+  trackingHuman: string;
+  trackingActive: string;
+  trackingClosed: string;
   voice: string;
   voiceRecord: string;
   voiceListening: string;
@@ -163,6 +168,11 @@ const baseFr: Copy = {
   gpsDenied: "Position refusée - choisissez une province et une ville",
   gpsSearching: "Recherche du signal GPS…",
   place: "Lieu",
+  gpsPrecision: "Précision position",
+  trackingAi: "Ngemba vous accompagne",
+  trackingHuman: "Équipe alertée",
+  trackingActive: "Prise en charge",
+  trackingClosed: "Dossier clos",
   voice: "Audio",
   voiceRecord: "Parler",
   voiceListening: "Enregistrement...",
@@ -278,6 +288,11 @@ export const messages: Record<Locale, Copy> = {
     gpsDenied: "Location denied - choose a province and a city",
     gpsSearching: "Looking for a precise GPS signal…",
     place: "Place",
+    gpsPrecision: "Location accuracy",
+    trackingAi: "Ngemba is guiding you",
+    trackingHuman: "Team alerted",
+    trackingActive: "In care",
+    trackingClosed: "Case closed",
     voice: "Audio",
     voiceRecord: "Speak",
     voiceListening: "Recording...",
@@ -387,6 +402,11 @@ export const messages: Record<Locale, Copy> = {
     gpsDenied: "Position ebandi te - séléctionne province mpe ville",
     gpsSearching: "Koluka GPS ya sikisiki…",
     place: "Esika",
+    gpsPrecision: "Bonene ya esika",
+    trackingAi: "Ngemba azali kopesa bolulu",
+    trackingHuman: "Ekipi ebobami",
+    trackingActive: "Bazwi likambo",
+    trackingClosed: "Likambo esili",
     voice: "Audio",
     voiceRecord: "Lobela",
     voiceListening: "Ezali kokanga...",
@@ -491,6 +511,11 @@ export const messages: Record<Locale, Copy> = {
     gpsDenied: "Mahali kukataliwa - chagua mkoa na jiji",
     gpsSearching: "Inatafuta GPS sahihi…",
     place: "Mahali",
+    gpsPrecision: "Usahihi wa mahali",
+    trackingAi: "Ngemba anakuongoza",
+    trackingHuman: "Timu imearifiwa",
+    trackingActive: "Inashughulikiwa",
+    trackingClosed: "Imefungwa",
     voice: "Audio",
     voiceRecord: "Sema",
     voiceListening: "Inarekodi...",
@@ -595,6 +620,11 @@ export const messages: Record<Locale, Copy> = {
     gpsDenied: "Position ebandi te - séléctionne province mpe ville",
     gpsSearching: "Koluka GPS ya sikisiki…",
     place: "Esika",
+    gpsPrecision: "Bonene ya esika",
+    trackingAi: "Ngemba azali kopesa bolulu",
+    trackingHuman: "Ekipi ebobami",
+    trackingActive: "Bazwi likambo",
+    trackingClosed: "Likambo esili",
     voice: "Audio",
     voiceRecord: "Lobela",
     voiceListening: "Ezali kokanga...",
@@ -699,6 +729,11 @@ export const messages: Record<Locale, Copy> = {
     gpsDenied: "Position ebandi te - séléctionne province mpe ville",
     gpsSearching: "Koluka GPS ya sikisiki…",
     place: "Esika",
+    gpsPrecision: "Bonene ya esika",
+    trackingAi: "Ngemba azali kopesa bolulu",
+    trackingHuman: "Ekipi ebobami",
+    trackingActive: "Bazwi likambo",
+    trackingClosed: "Likambo esili",
     voice: "Audio",
     voiceRecord: "Lobela",
     voiceListening: "Ezali kokanga...",
