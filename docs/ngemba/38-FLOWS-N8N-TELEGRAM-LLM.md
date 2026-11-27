@@ -36,6 +36,7 @@ Module : `services/ngemba/src/lib/ai/llm-text.ts`
 
 - **Citoyen** : badge de phase (`citizenTracking`), précision GPS ± m sur la session.
 - **Ops** : bannière phase / canal / équipe notifiée sur le dossier.
+- **GPS** : le LLM ne voit pas lat/lng. Cause et vérif : [39-GPS-DOSSIER.md](./39-GPS-DOSSIER.md).
 
 ## Checklist Silikin / démo
 

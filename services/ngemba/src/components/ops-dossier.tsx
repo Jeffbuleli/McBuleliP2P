@@ -18,6 +18,7 @@ import {
 import { SCHOOL_CONCERN_LABELS_FR } from "@/lib/school/types";
 import type { StatusHistoryEntry } from "@/lib/sessions/store";
 import type { TrustedContact } from "@/lib/trusted-contacts/types";
+import { buildSituationBrief } from "@/lib/ops/situation-brief";
 import { opsPagePad, opsShellMaxWidth, useDeviceClass } from "@/lib/ui/device";
 
 type Session = {
@@ -42,6 +43,11 @@ type Session = {
     ai_disclaimer?: string;
     summary_user_locale?: string;
     missing_info?: string[];
+    brief_who?: string;
+    brief_what?: string;
+    brief_where?: string;
+    brief_when?: string;
+    brief_why?: string;
     required_services?: string[];
     people_at_risk?: string[];
     recommended_actions?: string[];
@@ -190,6 +196,111 @@ function Section({
         </h2>
       </div>
       <div className="p-4">{children}</div>
+    </section>
+  );
+}
+
+function SituationPanel({
+  session,
+  victimGps,
+  ipCity,
+  createdLabel,
+}: {
+  session: Session;
+  victimGps: boolean;
+  ipCity: string | null;
+  createdLabel: string;
+}) {
+  const brief = buildSituationBrief({
+    sourceLabel: sourceLabelFr(session.source),
+    categoryLabel: categoryLabelFr(session.category),
+    message: session.message,
+    createdLabel,
+    immediateDanger: session.immediateDanger,
+    peopleAtRisk: session.aiPayload.people_at_risk,
+    missingInfo: session.aiPayload.missing_info,
+    aiWho: session.aiPayload.brief_who,
+    aiWhat: session.aiPayload.brief_what,
+    aiWhere: session.aiPayload.brief_where,
+    aiWhen: session.aiPayload.brief_when,
+    aiWhy: session.aiPayload.brief_why,
+    gps: victimGps ? { accuracyM: session.locationAccuracyM ?? null } : null,
+    placeLabel: session.locationLabel,
+    ipCity,
+  });
+  const rows: Array<[string, string, boolean]> = [
+    ["Qui", brief.who, brief.gaps.includes("who")],
+    ["Quoi", brief.what, brief.gaps.includes("what")],
+    ["Où", brief.where, brief.gaps.includes("where")],
+    ["Quand", brief.when, brief.gaps.includes("when")],
+    ["Pourquoi", brief.why, brief.gaps.includes("why")],
+  ];
+  const mapSrc =
+    victimGps && session.lat != null && session.lng != null
+      ? `https://maps.google.com/maps?q=${session.lat},${session.lng}&z=16&output=embed`
+      : null;
+
+  return (
+    <section className="overflow-hidden rounded-2xl border border-ng-primary/25 bg-ng-surface">
+      <div className="border-b border-[var(--ng-border)] px-4 py-3">
+        <h2 className="text-sm font-semibold text-ng-text">
+          Avant d&apos;intervenir
+        </h2>
+        <p className="mt-0.5 text-xs text-ng-muted">
+          {brief.gaps.length
+            ? `Il manque encore : ${brief.gaps
+                .map((slot) =>
+                  slot === "who"
+                    ? "qui"
+                    : slot === "what"
+                      ? "quoi"
+                      : slot === "where"
+                        ? "où"
+                        : slot === "when"
+                          ? "quand"
+                          : "pourquoi",
+                )
+                .join(", ")}. Ne partez pas sur un fait marqué « Non dit ».`
+            : "Les cinq points utiles sont renseignés."}
+        </p>
+      </div>
+      <dl className="divide-y divide-[var(--ng-border)]">
+        {rows.map(([label, value, missing]) => (
+          <div key={label} className="grid grid-cols-[5.5rem_1fr] gap-2 px-4 py-2.5">
+            <dt className="text-xs font-semibold text-ng-primary">{label}</dt>
+            <dd
+              className={`text-sm leading-snug ${
+                missing ? "text-amber-800" : "text-ng-text"
+              }`}
+            >
+              {value}
+            </dd>
+          </div>
+        ))}
+      </dl>
+      {mapSrc ? (
+        <div className="border-t border-[var(--ng-border)]">
+          <iframe
+            title="Position GPS du téléphone"
+            src={mapSrc}
+            className="h-64 w-full border-0"
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+          />
+          <p className="px-4 py-2 text-[11px] text-ng-muted">
+            GPS téléphone
+            {session.locationAccuracyM != null
+              ? ` · ± ${session.locationAccuracyM} m`
+              : ""}
+            {session.locationLabel ? ` · ${session.locationLabel}` : ""}
+          </p>
+        </div>
+      ) : (
+        <p className="border-t border-[var(--ng-border)] px-4 py-3 text-xs text-ng-muted">
+          Pas de carte : le GPS du téléphone n&apos;est pas encore sur ce
+          dossier. La ville IP n&apos;est pas affichée comme un point.
+        </p>
+      )}
     </section>
   );
 }
@@ -450,9 +561,6 @@ export function OpsDossierView({ id }: { id: string }) {
     phoneGpsRecorded &&
     !copiedFromIp &&
     !ipOnlyPlace(session.locationSource);
-  const maps = victimGps
-    ? `https://maps.google.com/?q=${session.lat},${session.lng}`
-    : null;
   const manualPlaceOnly =
     session.lat != null &&
     session.lng != null &&
@@ -527,6 +635,13 @@ export function OpsDossierView({ id }: { id: string }) {
           {session.routingMeta.agentsNotified ? " · équipe notifiée" : ""}
         </p>
       ) : null}
+      <SituationPanel
+        session={session}
+        victimGps={victimGps}
+        ipCity={ipGeo?.city || ipGeo?.label || null}
+        createdLabel={fmt(session.createdAt)}
+      />
+
       {session.immediateDanger ? (
         <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-xs font-semibold text-ng-urgent">
           Danger immédiat signalé - prioriser la sécurité.
@@ -559,50 +674,11 @@ export function OpsDossierView({ id }: { id: string }) {
             </span>
           ) : null}
         </div>
-        <div className="mt-3 rounded-xl border border-[var(--ng-border)] bg-ng-bg/50 px-3 py-3 text-xs leading-relaxed">
-          <p className="font-semibold text-ng-primary">Localisation</p>
-          {maps ? (
-            <p className="mt-1.5">
-              <a
-                href={maps}
-                target="_blank"
-                rel="noreferrer"
-                className="font-semibold text-ng-primary underline"
-              >
-                GPS du téléphone
-                {session.locationAccuracyM != null
-                  ? ` (± ${session.locationAccuracyM} m)`
-                  : ""}
-                {" — "}
-                ouvrir la carte ↗
-              </a>
-              <span className="mt-1 block font-mono text-[10px] text-ng-muted">
-                {session.lat!.toFixed(6)}, {session.lng!.toFixed(6)}
-              </span>
-            </p>
-          ) : manualPlaceOnly ? (
-            <p className="mt-1.5 text-ng-text">
-              Lieu choisi sur l&apos;écran (province / commune) — ce n&apos;est
-              pas un point GPS. Ne pas utiliser une carte pour ce dossier.
-            </p>
-          ) : (
-            <p className="mt-1.5 text-amber-900">
-              Aucun GPS téléphone enregistré sur ce dossier. Si la personne a
-              accepté la position, demandez-lui de laisser la page dossier
-              ouverte quelques secondes puis rafraîchissez ici.
-            </p>
-          )}
-          {ipGeo && !maps ? (
-            <p className="mt-2 border-t border-[var(--ng-border)] pt-2 text-ng-muted">
-              Connexion mobile ≈{" "}
-              <span className="text-ng-text">{ipGeo.city || ipGeo.label}</span>
-              {" — "}
-              indicateur de ville seulement (souvent identique pour tout
-              Kinshasa). <strong>Pas de carte</strong> : ce n&apos;est pas la
-              position du téléphone.
-            </p>
-          ) : null}
-        </div>
+        {manualPlaceOnly ? (
+          <p className="mt-3 text-xs text-ng-muted">
+            Lieu choisi à l&apos;écran (province / commune), pas un GPS.
+          </p>
+        ) : null}
         {session.schoolContext ? (
           <p className="mt-3 text-xs text-ng-muted">
             Safe School :{" "}
@@ -621,33 +697,27 @@ export function OpsDossierView({ id }: { id: string }) {
           <p className="mt-1.5 text-sm leading-relaxed text-ng-text">
             {session.aiSummary}
           </p>
-          <p className="mt-2 text-[11px] text-ng-muted">
-            {providerLabelFr(session.provider)} ·{" "}
-            {Math.round(session.aiConfidence * 100)}% ·{" "}
-            {routingLabelFr(session.routingQueue)}
-          </p>
-          {session.aiPayload.required_services?.length ? (
+          <details className="mt-2">
+            <summary className="cursor-pointer text-[11px] text-ng-muted">
+              Détail technique
+            </summary>
             <p className="mt-1 text-[11px] text-ng-muted">
-              Services : {session.aiPayload.required_services.join(" · ")}
-            </p>
-          ) : null}
-          {session.aiPayload.people_at_risk?.length ? (
-            <p className="mt-1 text-[11px] text-ng-muted">
-              Personnes à risque :{" "}
-              {session.aiPayload.people_at_risk.join(" · ")}
-            </p>
-          ) : null}
-          {session.aiPayload.engine_reason ? (
-            <p className="mt-1 text-[11px] text-ng-muted">
-              Moteur : {session.aiPayload.engine_reason}
-              {session.aiPayload.engine_policy_version
-                ? ` (${session.aiPayload.engine_policy_version})`
+              {providerLabelFr(session.provider)} ·{" "}
+              {Math.round(session.aiConfidence * 100)}% ·{" "}
+              {routingLabelFr(session.routingQueue)}
+              {session.aiPayload.required_services?.length
+                ? ` · ${session.aiPayload.required_services.join(" · ")}`
                 : ""}
             </p>
-          ) : null}
+          </details>
         </div>
       </Section>
 
+      <details className="rounded-2xl border border-[var(--ng-border)] bg-ng-surface px-4 py-3">
+        <summary className="cursor-pointer text-xs font-semibold text-ng-muted">
+          Qui a alerté · IP (investigation)
+        </summary>
+        <div className="mt-3">
       <Section title="2 · Qui a alerté">
         <p className="text-sm text-ng-text">
           <strong>{sourceLabelFr(session.source)}</strong> ·{" "}
@@ -657,7 +727,7 @@ export function OpsDossierView({ id }: { id: string }) {
           Identité citoyenne non demandée. Dossier anonyme — IP / appareil
           réservés à une investigation si besoin.
         </p>
-        <details className="mt-3 rounded-xl bg-ng-bg px-3 py-2" open>
+        <details className="mt-3 rounded-xl bg-ng-bg px-3 py-2">
           <summary className="cursor-pointer text-xs font-semibold text-ng-muted">
             Track IP · lieu approximatif
           </summary>
@@ -704,6 +774,8 @@ export function OpsDossierView({ id }: { id: string }) {
           </ul>
         ) : null}
       </Section>
+        </div>
+      </details>
 
       <Section title="3 · Actions OPS" accent>
         <textarea
@@ -805,12 +877,19 @@ export function OpsDossierView({ id }: { id: string }) {
         </div>
       </Section>
 
-      <OpsRoutingPanel
-        routingMeta={session.routingMeta ?? null}
-        suggestedPartners={suggestedPartners}
-        referrals={referrals}
-      />
-      <OpsTrustedContacts contacts={session.trustedContacts ?? []} />
+      <details className="rounded-2xl border border-[var(--ng-border)] bg-ng-surface px-4 py-3">
+        <summary className="cursor-pointer text-xs font-semibold text-ng-muted">
+          Partenaires, proches et routage
+        </summary>
+        <div className="mt-3 space-y-4">
+          <OpsRoutingPanel
+            routingMeta={session.routingMeta ?? null}
+            suggestedPartners={suggestedPartners}
+            referrals={referrals}
+          />
+          <OpsTrustedContacts contacts={session.trustedContacts ?? []} />
+        </div>
+      </details>
 
       {session.media?.length ? (
         <Section title="Médias">
@@ -846,6 +925,11 @@ export function OpsDossierView({ id }: { id: string }) {
         }}
       />
 
+      <details className="rounded-2xl border border-[var(--ng-border)] bg-ng-surface px-4 py-3">
+        <summary className="cursor-pointer text-xs font-semibold text-ng-muted">
+          Chronologie
+        </summary>
+        <div className="mt-3">
       <Section title="Chronologie">
         <ul className="relative space-y-0 border-l-2 border-ng-primary-muted pl-4">
           {events.length
@@ -880,6 +964,8 @@ export function OpsDossierView({ id }: { id: string }) {
               ))}
         </ul>
       </Section>
+        </div>
+      </details>
         </div>
       </div>
 

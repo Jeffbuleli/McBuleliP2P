@@ -28,6 +28,8 @@
 | **Multicanal Telegram / email / WhatsApp** (n8n hub) | 📄 [35](./35-MULTICANAL-N8N-TELEGRAM-EMAIL.md) · hook Telegram direct ✅ · webhooks n8n sortants ✅ [38](./38-FLOWS-N8N-TELEGRAM-LLM.md) · workflow n8n timers ⏳ |
 | **LLM aligné OpenAI + NVIDIA NIM** | ✅ `llm-text.ts` · env VPS ⏳ |
 | **Suivi dossier citoyen + phase ops** | ✅ v0.4 (GPS ± m, `citizenTracking`) |
+| **GPS téléphone persisté (discret / PWA)** | ✅ 26 nov. 2026 · [39-GPS-DOSSIER.md](./39-GPS-DOSSIER.md) · `50c342f6` |
+| **Brief ops Qui / Quoi / Où / Quand / Pourquoi** | ✅ carte GPS dans le dossier · [40-BRIEF-OPS-W5.md](./40-BRIEF-OPS-W5.md) |
 
 Live : https://ngemba-rdc.org · email `info@ngemba-rdc.org`  
 Cutover : [24-DOMAINE-NGEMBA-RDC.md](./24-DOMAINE-NGEMBA-RDC.md) (DNS / TLS / Resend / APK)

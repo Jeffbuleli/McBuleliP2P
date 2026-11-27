@@ -36,6 +36,7 @@ type SessionPayload = {
     ai_disclaimer?: string;
     summary_user_locale?: string;
     witness_safety_reminder?: string;
+    missing_info?: string[];
   };
   routingQueue: string;
   lat: number | null;
@@ -412,6 +413,24 @@ export function SessionView({
               >
                 {session.aiPayload.summary_user_locale || session.aiSummary}
               </p>
+              {session.aiPayload.follow_up_questions?.[0] ? (
+                <p
+                  className={`text-sm font-medium leading-relaxed ${
+                    discrete ? "text-[#e8d4e3]" : "text-ng-primary"
+                  }`}
+                >
+                  {session.aiPayload.follow_up_questions[0]}
+                </p>
+              ) : null}
+              <p
+                className={`text-xs leading-relaxed ${
+                  discrete ? "ng-discrete-muted" : "text-ng-muted"
+                }`}
+              >
+                {locale === "en"
+                  ? "The team needs five facts: who is involved, what is happening, where, since when, and why it is dangerous. Answer the question above in the chat. One fact is enough."
+                  : "L’équipe a besoin de cinq faits : qui est concerné, ce qui se passe, où, depuis quand, et pourquoi c’est dangereux. Répondez à la question ci-dessus dans le chat. Un seul fait suffit."}
+              </p>
               {session.aiPayload.witness_safety_reminder ? (
                 <p className="rounded-xl bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900">
                   {session.aiPayload.witness_safety_reminder}
@@ -445,7 +464,8 @@ export function SessionView({
               }}
               labels={{
                 chatTitle: t.chatTitle,
-                chatPlaceholder: t.chatPlaceholder,
+                chatPlaceholder:
+                  session.aiPayload.follow_up_questions?.[0] ?? t.chatPlaceholder,
                 chatSend: t.chatSend,
                 chatEmpty: t.chatEmpty,
               }}

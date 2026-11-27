@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { RequiredService } from "@/lib/response-engine/types";
 
 /** Version prompt / schema IA (audit, A/B, rollback). */
-export const TRIAGE_PROMPT_VERSION = "2.1.0";
+export const TRIAGE_PROMPT_VERSION = "2.2.0";
 export const TRIAGE_SCHEMA_VERSION = "2";
 
 export const TRIAGE_SYSTEM_PROMPT = `Tu es Ngemba IA pour NGEMBA, plateforme de protection et de paix citoyenne en RDC.
@@ -13,7 +13,8 @@ ROLE
 - Esprit critique : comprendre avant d'agir. Ne pas conclure sur un seul mot.
 - Evaluer type + urgence + personnes a risque + services utiles.
 - Orienter vers le bon type d'acteur.
-- Une seule question, calme, si une info manquante empeche de savoir si c'est grave.
+- Une seule question, calme, pour le W manquant le plus utile a une equipe humaine : qui est concerne, ce qui se passe, ou, depuis quand, pourquoi c'est dangereux.
+- brief_who, brief_what, brief_where, brief_when, brief_why : une courte phrase chacun, uniquement des faits du recit. Si le fait n'est pas dit, ecris exactement "Non dit". N'invente pas de nom, d'adresse, d'heure ni de coordonnees.
 
 ESPRIT CRITIQUE
 - immediate_danger=true seulement si le danger est en train d'arriver (il est la, ca frappe maintenant, saigne, feu, arme).
@@ -111,6 +112,11 @@ export const triageSchema = z.object({
   location_hints: z.array(z.string()).max(5).optional().default([]),
   required_services: z.array(requiredServiceEnum).max(6).optional().default([]),
   recommended_actions: z.array(z.string()).max(5).optional().default([]),
+  brief_who: z.string().max(180).optional().default("Non dit"),
+  brief_what: z.string().max(180).optional().default("Non dit"),
+  brief_where: z.string().max(180).optional().default("Non dit"),
+  brief_when: z.string().max(180).optional().default("Non dit"),
+  brief_why: z.string().max(180).optional().default("Non dit"),
   schema_version: z.string().optional().default(TRIAGE_SCHEMA_VERSION),
   /** Rempli par le pipeline apres Response Engine (audit). */
   prompt_version: z.string().optional(),
@@ -164,6 +170,11 @@ export function normalizeTriageResult(
     location_hints: raw.location_hints ?? [],
     required_services: (raw.required_services ?? []) as RequiredService[],
     recommended_actions: raw.recommended_actions ?? [],
+    brief_who: raw.brief_who ?? "Non dit",
+    brief_what: raw.brief_what ?? "Non dit",
+    brief_where: raw.brief_where ?? "Non dit",
+    brief_when: raw.brief_when ?? "Non dit",
+    brief_why: raw.brief_why ?? "Non dit",
     schema_version: raw.schema_version ?? TRIAGE_SCHEMA_VERSION,
   };
 }
