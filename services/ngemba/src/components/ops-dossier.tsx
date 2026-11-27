@@ -235,10 +235,20 @@ function SituationPanel({
     ["Quand", brief.when, brief.gaps.includes("when")],
     ["Pourquoi", brief.why, brief.gaps.includes("why")],
   ];
-  const mapSrc =
-    victimGps && session.lat != null && session.lng != null
-      ? `https://maps.google.com/maps?q=${session.lat},${session.lng}&z=16&output=embed`
-      : null;
+  const mapSrc = (() => {
+    if (!victimGps || session.lat == null || session.lng == null) return null;
+    const pad = Math.min(
+      0.05,
+      Math.max(0.004, ((session.locationAccuracyM ?? 200) / 111_000) * 4),
+    );
+    const bbox = [
+      session.lng - pad,
+      session.lat - pad,
+      session.lng + pad,
+      session.lat + pad,
+    ].join(",");
+    return `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${session.lat},${session.lng}`;
+  })();
 
   return (
     <section className="overflow-hidden rounded-2xl border border-ng-primary/25 bg-ng-surface">

@@ -8,7 +8,7 @@ En haut du dossier, bloc **Avant d’intervenir** :
 
 - cinq lignes, uniquement des faits déjà connus (triage OpenAI / NVIDIA, sinon le message et le GPS) ;
 - une ligne en ambre si le fait n’est pas dit ;
-- la carte GPS **dans la page** (iframe) dès que `lat` / `lng` viennent du téléphone.
+- la carte GPS **dans la page** (iframe OpenStreetMap, seul domaine autorisé par `frame-src`) dès que `lat` / `lng` viennent du téléphone. Une iframe Google Maps affiche « This content is blocked ».
 
 La ville IP n’est pas une carte. Partenaires, IP, chronologie et détail technique sont repliés.
 
